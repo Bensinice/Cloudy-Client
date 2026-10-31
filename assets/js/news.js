@@ -20,10 +20,10 @@
       const v = (await window.cloudy.appVersion()).v; if (!v) return;
       let seen = localStorage.getItem('cloudy.seenVer');
       if (!seen && localStorage.length > 2) seen = '0.9.0'; // Update von einer Version ohne Neuigkeiten-Fenster
-      if (!seen) { localStorage.setItem('cloudy.seenVer', v); return; } // frische Installation
+      if (!seen) { const fresh = !localStorage.getItem('cloudy.onb') && !localStorage.getItem('cloudy.user'); if (fresh && localStorage.length === 0) { localStorage.setItem('cloudy.seenVer', v); return; } seen = '0.0.0'; }
       if (seen === v) return;
       const cmp = (a, b) => { const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); } return 0; };
-      const e = (await all()).filter(x => /^\d+\.\d+\.\d+$/.test(x.v) && cmp(x.v, seen) > 0 && cmp(x.v, v) <= 0); if (!e.length) return; // alle Versionen seit dem letzten Start
+      let e = (await all()).filter(x => /^\d+\.\d+\.\d+$/.test(x.v) && cmp(x.v, seen) > 0 && cmp(x.v, v) <= 0); if (seen === '0.0.0') e = e.slice(0, 1); if (!e.length) return; // alle Versionen seit dem letzten Start
       const wait = setInterval(() => { const blocked = document.getElementById('cdIntro') || document.querySelector('#login:not(.off)') || document.getElementById('onb'); if (!blocked) { clearInterval(wait); show(e, 'Cloudy wurde aktualisiert'); localStorage.setItem('cloudy.seenVer', v); } }, 800);
       setTimeout(() => clearInterval(wait), 120000);
     } catch {}

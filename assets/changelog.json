@@ -1,5 +1,15 @@
 [
  {
+  "v": "0.9.22",
+  "date": "2026-10-31",
+  "added": [],
+  "fixed": [
+   "Lyrics: Falsche chinesische Treffer bei englischen Songs werden aussortiert (chinesische Zeilen werden bei lateinischen Songs verworfen)",
+   "Neuigkeiten: Nach einem Update öffnet sich „Was ist neu“ jetzt zuverlässig direkt beim ersten Start"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.21",
   "date": "2026-10-31",
   "added": [],
