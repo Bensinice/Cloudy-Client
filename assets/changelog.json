@@ -1,5 +1,15 @@
 [
  {
+  "v": "0.9.26",
+  "date": "2026-10-31",
+  "added": [],
+  "fixed": [
+   "Virenscanner-Fehlalarm: Cloudy startet unter Windows kein verstecktes PowerShell mit Tastendruck-Simulation mehr (typisches Schadsoftware-Muster); Spotify wird über die Anmeldung gesteuert, ZIPs werden mit dem Windows-Programm tar entpackt",
+   "Windows-Programm trägt jetzt Name, Version und Beschreibung (weniger Fehlalarme)"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.25",
   "date": "2026-10-31",
   "added": [],

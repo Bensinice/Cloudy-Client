@@ -198,7 +198,8 @@ function extractZipWin(zip, dir) {
   try { execFileSync('tar', ['-xf', zip, '-C', dir, '--strip-components=1'], { windowsHide: true }); return; } catch {}
   const tmp = dir + '_tmp';
   fs.rmSync(tmp, { recursive: true, force: true });
-  execFileSync('powershell', ['-NoProfile', '-Command', `Expand-Archive -LiteralPath '${zip.replace(/'/g, "''")}' -DestinationPath '${tmp.replace(/'/g, "''")}' -Force`], { windowsHide: true });
+  fs.mkdirSync(tmp, { recursive: true });
+  try { execFileSync('tar', ['-xf', zip, '-C', tmp], { windowsHide: true }); } catch { fs.rmSync(tmp, { recursive: true, force: true }); fs.mkdirSync(tmp, { recursive: true }); execFileSync('powershell', ['-NoProfile', '-Command', `Expand-Archive -LiteralPath '${zip.replace(/'/g, "''")}' -DestinationPath '${tmp.replace(/'/g, "''")}' -Force`], { windowsHide: true }); }
   const inner = fs.readdirSync(tmp);
   const top = inner.length === 1 ? path.join(tmp, inner[0]) : tmp;
   for (const f of fs.readdirSync(top)) fs.renameSync(path.join(top, f), path.join(dir, f));
@@ -1823,10 +1824,7 @@ setInterval(() => { if (!mcProc || lyBusy) return; lyBusy = true; lyricsTick().c
 const mediaKeyRun = k => new Promise(res => {
   const code = { playpause: 0xB3, next: 0xB0, prev: 0xB1, volup: 0xAF, voldown: 0xAE }[k]; if (!code) return res(false);
   try {
-    if (IS_WIN) { // -EncodedCommand (UTF-16LE/Base64): Anführungszeichen im Skript werden sonst von der Kommandozeile zerlegt, dann tat der Knopf nichts
-      const ps = `Add-Type -TypeDefinition 'using System.Runtime.InteropServices; public class CK{ [DllImport("user32.dll")] public static extern void keybd_event(byte b, byte s, uint f, System.UIntPtr e); }'; [CK]::keybd_event(${code},0,1,[System.UIntPtr]::Zero); [CK]::keybd_event(${code},0,3,[System.UIntPtr]::Zero)`;
-      execFile('powershell', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', Buffer.from(ps, 'utf16le').toString('base64')], { windowsHide: true, timeout: 10000 }, err => res(!err));
-    }
+    if (IS_WIN) res(false); // bewusst keine Tastendruck-Simulation per PowerShell (loest Virenscanner aus); Steuerung laeuft ueber die Spotify-Anmeldung
     else if (IS_MAC) execFile('osascript', ['-e', `tell application "Spotify" to ${k === 'playpause' ? 'playpause' : k === 'next' ? 'next track' : k === 'prev' ? 'previous track' : k === 'volup' ? 'set sound volume to (sound volume + 10)' : 'set sound volume to (sound volume - 10)'}`], { timeout: 4000 }, err => res(!err));
     else res(false);
   } catch { res(false); }
