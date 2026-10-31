@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.25",
+  "date": "2026-10-31",
+  "added": [],
+  "fixed": [
+   "Lyrics im Spiel ruckeln nicht mehr: die Song-Position wird weich nachgeführt statt alle 1,5 s zu springen; der Zeitpunkt der Spotify-Messung wird korrekt mitgegeben"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.24",
   "date": "2026-10-31",
   "added": [

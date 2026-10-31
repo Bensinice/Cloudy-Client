@@ -26,7 +26,8 @@ public final class Lyrics {
 	private static String title = "", artist = "";
 	private static long[] times = new long[0];
 	private static String[] texts = new String[0];
-	private static long posMs, ts;
+	private static long posMs, ts, baseMs, baseAt;
+	private static String lastTitle = "";
 	private static String status = "";
 	private static boolean playing;
 	private static int shownLine = -2;
@@ -59,9 +60,15 @@ public final class Lyrics {
 			artist = o.has("artist") ? o.get("artist").getAsString() : "";
 			durMs = o.has("dur") ? o.get("dur").getAsLong() : 0;
 			loadCover(f, o.has("cover") ? o.get("cover").getAsString() : "");
-			posMs = o.has("posMs") ? o.get("posMs").getAsLong() : 0;
-			ts = o.has("ts") ? o.get("ts").getAsLong() : now;
-			playing = o.has("playing") && o.get("playing").getAsBoolean();
+			long pm = o.has("posMs") ? o.get("posMs").getAsLong() : 0, tsn = o.has("ts") ? o.get("ts").getAsLong() : now;
+			boolean pl = o.has("playing") && o.get("playing").getAsBoolean();
+			long est = pm + (pl ? Math.max(0, Math.min(3000, now - tsn)) : 0), cur = baseMs + (playing ? now - baseAt : 0);
+			boolean same = title.equals(lastTitle) && pl && playing;
+			lastTitle = title;
+			if (!same || Math.abs(est - cur) > 700) baseMs = est; else baseMs = cur + (est - cur) / 5; // kleine Abweichungen weich ausgleichen, sonst ruckeln Woerter und Fortschritt
+			baseAt = now;
+			posMs = baseMs; ts = baseAt;
+			playing = pl;
 			status = o.has("status") ? o.get("status").getAsString() : "";
 			JsonArray a = o.has("lines") ? o.getAsJsonArray("lines") : new JsonArray();
 			List<long[]> tt = new ArrayList<>();
