@@ -1,5 +1,15 @@
 [
  {
+  "v": "0.9.28",
+  "date": "2026-11-01",
+  "added": [],
+  "fixed": [
+   "Mit angelegter Elytra werden Cosmetic-Flügel und -Umhang ausgeblendet (kein Doppel mehr)",
+   "Hunger-Leiste hat jetzt dieselbe Höhe, denselben Farbverlauf und Look wie die Herzen (Knochen in abgetönter Hungerfarbe)"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.27",
   "date": "2026-11-01",
   "added": [

@@ -80,7 +80,7 @@ public final class Hotbar {
 
 	private static final String[] HEART8 = {".XX..XX.", "XXXXXXXX", "XXXXXXXX", "XXXXXXXX", ".XXXXXX.", "..XXXX..", "...XX..."};
 	private static final String[] SHIELD8 = {"XXXXXXXX", "XXXXXXXX", "XXXXXXXX", "XXXXXXXX", ".XXXXXX.", ".XXXXXX.", "..XXXX..", "...XX..."};
-	private static final String[] FOOD8 = {"...XXXX.", "..XXXXXX", "..XXXXXX", "..XXXXXX", ".XXXXXX.", "BB.XXX..", "BBB.....", ".BB....."};
+	private static final String[] FOOD8 = {"...XXXX.", "..XXXXXX", "..XXXXXX", ".XXXXXX.", "BXXXXX..", "BB.X....", ".BB....."}; // 7 Zeilen wie das Herz: beide Leisten liegen genau auf einer Linie
 	private static final String[] BUBBLE8 = {"..XXXX..", ".XXXXXX.", "XXXXXXXX", "XXXXXXXX", "XXXXXXXX", "XXXXXXXX", ".XXXXXX.", "..XXXX.."};
 
 	private static boolean px(String[] b, int x, int y) { return y >= 0 && y < b.length && x >= 0 && x < b[y].length() && b[y].charAt(x) != '.'; }
@@ -126,7 +126,7 @@ public final class Hotbar {
 		}
 		int food = p.getHungerManager().getFoodLevel();
 		int fc = 0xFF000000 | ModConfig.lcol(ModConfig.foodCol, 9);
-		for (int i = 0; i < 10; i++) icon(c, w / 2 + 91 - 8 - i * 9, y0 + 1, FOOD8, fc, food >= i * 2 + 2 ? 8 : food == i * 2 + 1 ? 4 : 0, 0xFFE9DCC4);
+		for (int i = 0; i < 10; i++) icon(c, w / 2 + 91 - 8 - i * 9, y0 + 1, FOOD8, fc, food >= i * 2 + 2 ? 8 : food == i * 2 + 1 ? 4 : 0, Ui.mix(fc, 0xFFFFFFFF, 0.6f));
 		if (p.isSubmergedInWater() || p.getAir() < p.getMaxAir()) {
 			int air = Math.max(0, p.getAir()), bubbles = (int) Math.ceil(air * 10f / p.getMaxAir());
 			for (int i = 0; i < 10; i++) if (i < bubbles) icon(c, w / 2 + 91 - 8 - i * 9, y0 - 10, BUBBLE8, 0xFF7FD0FF, 8, 0);

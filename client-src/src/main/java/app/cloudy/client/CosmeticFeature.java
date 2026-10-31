@@ -28,7 +28,9 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 				boolean off = pl != null && pl.getOffHandStack().isOf(net.minecraft.item.Items.SHIELD), main = pl != null && pl.getMainHandStack().isOf(net.minecraft.item.Items.SHIELD);
 				held = off ? 1 : main ? 2 : 0;
 			}
-			drawAll(matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV, m.head, m.body, m.leftArm, m.rightArm, Cosmetics.hat, Cosmetics.wings, Cosmetics.shield, held, ZZ4.handles(Cosmetics.cape) ? Cosmetics.cape : null, limbDistance);
+			net.minecraft.client.network.ClientPlayerEntity me = net.minecraft.client.MinecraftClient.getInstance().player;
+			boolean ely = me != null && me.getEquippedStack(net.minecraft.entity.EquipmentSlot.CHEST).isOf(net.minecraft.item.Items.ELYTRA); // mit Elytra: Fluegel und Umhang ausblenden (sonst doppelt)
+			drawAll(matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV, m.head, m.body, m.leftArm, m.rightArm, Cosmetics.hat, ely ? null : Cosmetics.wings, Cosmetics.shield, held, !ely && ZZ4.handles(Cosmetics.cape) ? Cosmetics.cape : null, limbDistance);
 		} catch (RuntimeException e) { /* Cosmetics duerfen das Spiel nie zum Absturz bringen */ }
 	}
 
