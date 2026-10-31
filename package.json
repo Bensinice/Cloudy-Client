@@ -1,0 +1,90 @@
+{
+  "name": "cloudy",
+  "productName": "Cloudy",
+  "version": "0.9.20",
+  "versionEpoch": 1,
+  "description": "Cloudy – ein Minecraft-Launcher in Babyblau und Liquid Glass",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "app": "electron-builder --mac dir --publish never",
+    "dist": "electron-builder --mac --publish never",
+    "app:win": "electron-builder --win dir --publish never",
+    "dist:win": "electron-builder --win nsis portable --x64 --publish never"
+  },
+  "dependencies": {
+    "minecraft-launcher-core": "^3.18.2",
+    "msmc": "^5.0.5"
+  },
+  "devDependencies": {
+    "electron": "^45.1.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "app.cloudy.launcher",
+    "productName": "Cloudy",
+    "mac": {
+      "category": "public.app-category.games",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Cloudy-${arch}.${ext}"
+    },
+    "files": [
+      "**/*",
+      "!.github/**",
+      "!scripts/**",
+      "!*.md",
+      "!dist/**",
+      "!*.bat",
+      "!*.command"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "requestedExecutionLevel": "asInvoker",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Cloudy",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "Cloudy-Setup.${ext}",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "uninstallDisplayName": "Cloudy"
+    },
+    "portable": {
+      "artifactName": "Cloudy-Portable.${ext}"
+    },
+    "publish": null,
+    "asar": false,
+    "directories": {
+      "output": "dist"
+    }
+  },
+  "allowScripts": {
+    "electron@31.7.7": true
+  },
+  "versionSuffix": "Beta",
+  "author": "Cloudy"
+}

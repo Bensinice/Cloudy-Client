@@ -1,0 +1,148 @@
+/* Cloudy-Themes: jede Farbwelt ist ein Satz CSS-Variablen. Neues Theme = neuer Block + Eintrag in assets/js/features.js (THEMES). */
+:root,[data-theme="light"]{
+  color-scheme:light;--mode:light;
+  --bg1:#eaf5ff;--bg2:#cfe8ff;--bg3:#a9d4ff;--blob1:#ffffff;--blob2:#7fbfff;--blob3:#ffffff;--blob-op:.85;
+  --accent:#4aa3ff;--accent2:#9ad4ff;--accent3:#7b9cff;--ink:#1d3b66;--ink2:#5578a8;--on-accent:#fff;
+  --g1:rgba(255,255,255,.66);--g2:rgba(255,255,255,.22);--gb:rgba(255,255,255,.7);--gh:rgba(255,255,255,.95);--gl:rgba(120,150,220,.2);--gs:rgba(80,100,180,.24);
+  --field:rgba(255,255,255,.85);--field-b:rgba(255,255,255,.85);--chip:rgba(255,255,255,.5);--overlay:rgba(20,30,70,.38);
+  --glass-tint:#ffffff;--gm-def:.76;
+  --title-bg:#cfe8ff;
+}
+[data-theme="dark"]{
+  color-scheme:dark;--mode:dark;
+  --bg1:#0a1328;--bg2:#11244a;--bg3:#18356b;--blob1:#2b5bb5;--blob2:#4aa3ff;--blob3:#1e3f8a;--blob-op:.5;
+  --accent:#4aa3ff;--accent2:#6bb8ff;--accent3:#3b6fe0;--ink:#e8f1ff;--ink2:#9db8e0;--on-accent:#fff;
+  --g1:rgba(255,255,255,.14);--g2:rgba(255,255,255,.04);--gb:rgba(255,255,255,.16);--gh:rgba(255,255,255,.26);--gl:rgba(0,0,0,.28);--gs:rgba(0,0,0,.5);
+  --field:rgba(255,255,255,.12);--field-b:rgba(255,255,255,.18);--chip:rgba(255,255,255,.1);--overlay:rgba(3,2,12,.6);
+  --glass-tint:color-mix(in srgb,var(--bg3) 85%,#ffffff);--gm-def:.62;
+  --title-bg:#11244a;
+}
+[data-theme="pink-light"]{
+  color-scheme:light;--mode:light;
+  --bg1:#fff3f8;--bg2:#ffdcec;--bg3:#ffbfdc;--blob1:#ffffff;--blob2:#ff8fbf;--blob3:#ffffff;--blob-op:.85;
+  --accent:#ff5fa2;--accent2:#ffa8cd;--accent3:#ff7fb0;--ink:#5a1f3d;--ink2:#a5527c;--on-accent:#fff;
+  --g1:rgba(255,255,255,.66);--g2:rgba(255,255,255,.22);--gb:rgba(255,255,255,.7);--gh:rgba(255,255,255,.95);--gl:rgba(120,150,220,.2);--gs:rgba(80,100,180,.24);
+  --field:rgba(255,255,255,.85);--field-b:rgba(255,255,255,.85);--chip:rgba(255,255,255,.5);--overlay:rgba(20,30,70,.38);
+  --glass-tint:#ffffff;--gm-def:.76;
+  --title-bg:#ffdcec;
+}
+[data-theme="pink-dark"]{
+  color-scheme:dark;--mode:dark;
+  --bg1:#1c0a14;--bg2:#2e0f21;--bg3:#481634;--blob1:#a3245f;--blob2:#ff5fa2;--blob3:#6b1a45;--blob-op:.5;
+  --accent:#ff5fa2;--accent2:#ff8fbf;--accent3:#d6397f;--ink:#ffe8f2;--ink2:#e6a3c4;--on-accent:#fff;
+  --g1:rgba(255,255,255,.14);--g2:rgba(255,255,255,.04);--gb:rgba(255,255,255,.16);--gh:rgba(255,255,255,.26);--gl:rgba(0,0,0,.28);--gs:rgba(0,0,0,.5);
+  --field:rgba(255,255,255,.12);--field-b:rgba(255,255,255,.18);--chip:rgba(255,255,255,.1);--overlay:rgba(3,2,12,.6);
+  --glass-tint:color-mix(in srgb,var(--bg3) 85%,#ffffff);--gm-def:.62;
+  --title-bg:#2e0f21;
+}
+[data-theme="purple-light"]{
+  color-scheme:light;--mode:light;
+  --bg1:#f5eeff;--bg2:#e3d2ff;--bg3:#cdb0ff;--blob1:#ffffff;--blob2:#b08cff;--blob3:#ffffff;--blob-op:.85;
+  --accent:#8b5cf6;--accent2:#c4a8ff;--accent3:#6d7bff;--ink:#2f1b5c;--ink2:#6b55a3;--on-accent:#fff;
+  --g1:rgba(255,255,255,.66);--g2:rgba(255,255,255,.22);--gb:rgba(255,255,255,.7);--gh:rgba(255,255,255,.95);--gl:rgba(120,150,220,.2);--gs:rgba(80,100,180,.24);
+  --field:rgba(255,255,255,.85);--field-b:rgba(255,255,255,.85);--chip:rgba(255,255,255,.5);--overlay:rgba(20,30,70,.38);
+  --glass-tint:#ffffff;--gm-def:.76;
+  --title-bg:#e3d2ff;
+}
+[data-theme="purple-dark"]{
+  color-scheme:dark;--mode:dark;
+  --bg1:#120a24;--bg2:#1e1040;--bg3:#2f1a63;--blob1:#5b2fc0;--blob2:#9d6bff;--blob3:#3d1f8a;--blob-op:.5;
+  --accent:#9d6bff;--accent2:#b99aff;--accent3:#6d4be0;--ink:#efe8ff;--ink2:#b5a2e6;--on-accent:#fff;
+  --g1:rgba(255,255,255,.14);--g2:rgba(255,255,255,.04);--gb:rgba(255,255,255,.16);--gh:rgba(255,255,255,.26);--gl:rgba(0,0,0,.28);--gs:rgba(0,0,0,.5);
+  --field:rgba(255,255,255,.12);--field-b:rgba(255,255,255,.18);--chip:rgba(255,255,255,.1);--overlay:rgba(3,2,12,.6);
+  --glass-tint:color-mix(in srgb,var(--bg3) 85%,#ffffff);--gm-def:.62;
+  --title-bg:#1e1040;
+}
+[data-theme="lavender"]{
+  color-scheme:light;--mode:light;
+  --bg1:#f7f3ff;--bg2:#e8defa;--bg3:#d6c8f3;--blob1:#ffffff;--blob2:#c9b6f2;--blob3:#fbf7ff;--blob-op:.85;
+  --accent:#a58be0;--accent2:#cdbdf5;--accent3:#d89be0;--ink:#3d2f63;--ink2:#7d6ba8;--on-accent:#fff;
+  --g1:rgba(255,255,255,.66);--g2:rgba(255,255,255,.22);--gb:rgba(255,255,255,.7);--gh:rgba(255,255,255,.95);--gl:rgba(120,150,220,.2);--gs:rgba(80,100,180,.24);
+  --field:rgba(255,255,255,.85);--field-b:rgba(255,255,255,.85);--chip:rgba(255,255,255,.5);--overlay:rgba(20,30,70,.38);
+  --glass-tint:#ffffff;--gm-def:.76;
+  --title-bg:#e8defa;
+}
+[data-theme="midnight"]{
+  color-scheme:dark;--mode:dark;
+  --bg1:#07050f;--bg2:#120b26;--bg3:#1b1040;--blob1:#3a1f9a;--blob2:#7c5cff;--blob3:#24127a;--blob-op:.5;
+  --accent:#7c5cff;--accent2:#a78bfa;--accent3:#5b3fd9;--ink:#e6e1ff;--ink2:#9b92c9;--on-accent:#fff;
+  --g1:rgba(255,255,255,.14);--g2:rgba(255,255,255,.04);--gb:rgba(255,255,255,.16);--gh:rgba(255,255,255,.26);--gl:rgba(0,0,0,.28);--gs:rgba(0,0,0,.5);
+  --field:rgba(255,255,255,.12);--field-b:rgba(255,255,255,.18);--chip:rgba(255,255,255,.1);--overlay:rgba(3,2,12,.6);
+  --glass-tint:color-mix(in srgb,var(--bg3) 85%,#ffffff);--gm-def:.62;
+  --title-bg:#120b26;
+}
+
+/* Zusaetzliche Themes: eigene Farbwelten und eigene Formensprache */
+[data-theme="lunar"]{
+  color-scheme:dark;--mode:dark;
+  --bg1:#070b14;--bg2:#0d1422;--bg3:#131d33;--blob1:#12324f;--blob2:#2fb8ff;--blob3:#0e2a44;--blob-op:.28;
+  --accent:#38bdf8;--accent2:#7dd3fc;--accent3:#0ea5e9;--ink:#e6eefc;--ink2:#8aa0c4;--on-accent:#04121f;
+  --g1:rgba(18,28,48,.92);--g2:rgba(14,22,40,.92);--gb:rgba(120,160,220,.16);--gh:rgba(255,255,255,.1);--gl:rgba(0,0,0,.35);--gs:rgba(0,0,0,.55);
+  --field:rgba(255,255,255,.07);--field-b:rgba(120,160,220,.22);--chip:rgba(255,255,255,.06);--overlay:rgba(2,4,10,.7);
+  --glass-tint:#101a2e;--gm-def:.92;--title-bg:#0d1422;
+}
+[data-theme="lunar"] .glass,[data-theme="lunar"] .tile,[data-theme="lunar"] .srv{border-radius:10px;backdrop-filter:none;-webkit-backdrop-filter:none}
+[data-theme="lunar"] .btn,[data-theme="lunar"] .chip,[data-theme="lunar"] .field,[data-theme="lunar"] .play{border-radius:8px}
+[data-theme="lunar"] .nav{border-radius:8px}
+[data-theme="ember"]{
+  color-scheme:dark;--mode:dark;
+  --bg1:#150a07;--bg2:#2a130b;--bg3:#42200f;--blob1:#8a3a12;--blob2:#ff7a3c;--blob3:#5a2208;--blob-op:.45;
+  --accent:#ff7a3c;--accent2:#ffa56b;--accent3:#e8551a;--ink:#fff1e8;--ink2:#e0b49b;--on-accent:#2a0f04;
+  --g1:rgba(255,255,255,.12);--g2:rgba(255,255,255,.04);--gb:rgba(255,200,160,.18);--gh:rgba(255,255,255,.24);--gl:rgba(0,0,0,.3);--gs:rgba(0,0,0,.5);
+  --field:rgba(255,255,255,.1);--field-b:rgba(255,200,160,.2);--chip:rgba(255,255,255,.08);--overlay:rgba(12,4,2,.62);
+  --glass-tint:color-mix(in srgb,var(--bg3) 85%,#ffffff);--gm-def:.62;--title-bg:#2a130b;
+}
+[data-theme="forest"]{
+  color-scheme:dark;--mode:dark;
+  --bg1:#07140d;--bg2:#0d2417;--bg3:#143823;--blob1:#1d6b3f;--blob2:#3fd08a;--blob3:#0f4a2a;--blob-op:.42;
+  --accent:#3fd08a;--accent2:#7ee8b3;--accent3:#1fa862;--ink:#e8fff2;--ink2:#9cc9b0;--on-accent:#04180d;
+  --g1:rgba(255,255,255,.12);--g2:rgba(255,255,255,.04);--gb:rgba(170,255,210,.16);--gh:rgba(255,255,255,.24);--gl:rgba(0,0,0,.3);--gs:rgba(0,0,0,.5);
+  --field:rgba(255,255,255,.1);--field-b:rgba(170,255,210,.2);--chip:rgba(255,255,255,.08);--overlay:rgba(2,10,5,.62);
+  --glass-tint:color-mix(in srgb,var(--bg3) 85%,#ffffff);--gm-def:.62;--title-bg:#0d2417;
+}
+[data-theme="paper"]{
+  color-scheme:light;--mode:light;
+  --bg1:#fafaf7;--bg2:#efeee8;--bg3:#e2e0d6;--blob1:#ffffff;--blob2:#d8d4c4;--blob3:#ffffff;--blob-op:.7;
+  --accent:#2b2b2b;--accent2:#6a6a6a;--accent3:#111111;--ink:#1c1c1c;--ink2:#6b6b66;--on-accent:#ffffff;
+  --g1:rgba(255,255,255,.9);--g2:rgba(255,255,255,.7);--gb:rgba(0,0,0,.1);--gh:rgba(255,255,255,1);--gl:rgba(0,0,0,.08);--gs:rgba(0,0,0,.18);
+  --field:rgba(255,255,255,.95);--field-b:rgba(0,0,0,.12);--chip:rgba(0,0,0,.05);--overlay:rgba(20,20,16,.35);
+  --glass-tint:#ffffff;--gm-def:.9;--title-bg:#efeee8;
+}
+[data-theme="paper"] .glass,[data-theme="paper"] .tile,[data-theme="paper"] .srv{border-radius:4px}
+[data-theme="paper"] .btn,[data-theme="paper"] .chip,[data-theme="paper"] .field,[data-theme="paper"] .play,[data-theme="paper"] .nav{border-radius:3px}
+
+/* Dark: echtes Dunkel, Paper umgedreht */
+[data-theme="mono"]{
+  color-scheme:dark;--mode:dark;
+  --bg1:#0b0b0c;--bg2:#141415;--bg3:#1e1e20;--blob1:#2a2a2d;--blob2:#3a3a3e;--blob3:#18181a;--blob-op:.35;
+  --accent:#f2f2f2;--accent2:#bdbdbd;--accent3:#ffffff;--ink:#f2f2f0;--ink2:#9a9a96;--on-accent:#111111;
+  --g1:rgba(255,255,255,.1);--g2:rgba(255,255,255,.04);--gb:rgba(255,255,255,.12);--gh:rgba(255,255,255,.22);--gl:rgba(0,0,0,.35);--gs:rgba(0,0,0,.6);
+  --field:rgba(255,255,255,.08);--field-b:rgba(255,255,255,.16);--chip:rgba(255,255,255,.08);--overlay:rgba(0,0,0,.6);
+  --glass-tint:#1a1a1c;--gm-def:.88;--title-bg:#141415;
+}
+[data-theme="mono"] .glass,[data-theme="mono"] .tile,[data-theme="mono"] .srv{border-radius:4px}
+[data-theme="mono"] .btn,[data-theme="mono"] .chip,[data-theme="mono"] .field,[data-theme="mono"] .play,[data-theme="mono"] .nav{border-radius:3px}
+/* Glas: Fenster komplett durchsichtig (Desktop scheint durch) */
+[data-theme="glass"]{
+  color-scheme:dark;--mode:dark;
+  --bg1:transparent;--bg2:transparent;--bg3:transparent;--blob1:transparent;--blob2:transparent;--blob3:transparent;--blob-op:0;
+  --accent:#8ccbff;--accent2:#bfe3ff;--accent3:#4aa3ff;--ink:#ffffff;--ink2:rgba(255,255,255,.78);--on-accent:#06223d;
+  --g1:rgba(255,255,255,.14);--g2:rgba(255,255,255,.05);--gb:rgba(255,255,255,.28);--gh:rgba(255,255,255,.38);--gl:rgba(0,0,0,.12);--gs:rgba(0,0,0,.28);
+  --field:rgba(255,255,255,.14);--field-b:rgba(255,255,255,.3);--chip:rgba(255,255,255,.14);--overlay:rgba(10,25,50,.28);
+  --glass-tint:#0c1b30;--gm-def:.16;--title-bg:#00000000;
+}
+html[data-theme="glass"],[data-theme="glass"] body{background:transparent!important}
+[data-theme="glass"] .sky{display:none}
+[data-theme="glass"] #login,[data-theme="glass"] #cdIntro{background:rgba(10,25,50,.3)}
+[data-theme="glass"] body{text-shadow:0 1px 3px rgba(0,0,0,.45)}
+[data-theme="glass"] .btn,[data-theme="glass"] .play{text-shadow:none}
+/* Overlays (Willkommen, Intro, Anmeldung, Dialoge) sehen in jedem Theme aus wie bei Cloudy Blau: grosse runde Glaskarte, weicher Hintergrund-Blur */
+[data-theme="paper"] .ob,[data-theme="mono"] .ob,[data-theme="paper"] #login .glass,[data-theme="mono"] #login .glass{border-radius:34px}
+[data-theme="paper"] .ob .art,[data-theme="mono"] .ob .art{border-radius:34px}
+[data-theme="paper"] .ob .btn,[data-theme="mono"] .ob .btn,[data-theme="paper"] #login .btn,[data-theme="mono"] #login .btn,[data-theme="paper"] #login .field,[data-theme="mono"] #login .field{border-radius:99px}
+[data-theme="paper"] #login .field,[data-theme="mono"] #login .field{border-radius:16px}
+#onb{backdrop-filter:blur(14px) saturate(140%)}
+/* Dark: Banner dunkel statt hellgrau, damit weisser Text lesbar bleibt */
+[data-theme="mono"] .hero{background:linear-gradient(135deg,#3a3a3e,#1a1a1c 60%,#0e0e0f)}
+[data-theme="mono"] .hero .cloud{opacity:.5}
+[data-theme="mono"] .hero #heroPlay,[data-theme="mono"] .hero #heroVer{color:#111!important;text-shadow:none}

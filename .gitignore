@@ -1,0 +1,5 @@
+node_modules/
+dist/
+jre/
+client-src/build/
+client-src/.gradle/

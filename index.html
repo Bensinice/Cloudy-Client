@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="de"><head><meta charset="UTF-8"><title>Cloudy</title>
+<link rel="stylesheet" href="themes/themes.css">
+<link rel="stylesheet" href="assets/css/app.css"></head><body>
+<div class="drag"></div>
+<div class="wc" id="wc"><button id="wcMin" aria-label="Minimieren"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button><button id="wcMax" aria-label="Maximieren"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button><button id="wcX" aria-label="Schließen"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button></div>
+<div class="sky"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<div class="app">
+<aside class="side glass">
+  <div class="brand"><svg width="30" height="30" viewBox="0 0 32 32"><path d="M9 24a6 6 0 0 1-.6-12A8 8 0 0 1 24 10a7 7 0 0 1-1 14z" fill="#fff"/></svg>Cloudy</div>
+  <button class="nav on" data-p="home"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Start</button>
+  <button class="nav" data-p="versions"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5M3 17l9 5 9-5"/></svg>Versionen</button>
+  <button class="nav" data-p="servers"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>Server</button>
+  <button class="nav" data-p="friends"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2 20a7 7 0 0 1 14 0zM16 4.5a3.5 3.5 0 0 1 0 7M18 14a7 7 0 0 1 4 6"/></svg>Freunde<span class="badge" id="frBadge" style="display:none;margin-left:auto"></span></button>
+  <button class="nav" data-p="mods"><svg viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7zM12 12l9-5M12 12v10M12 12L3 7"/></svg>Mods</button>
+  <button class="nav" data-p="skins"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21a8 8 0 0 1 16 0z"/></svg>Skins</button>
+  <button class="nav" data-p="shop"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9.5c0-1 1-1.8 3-1.8s3 .8 3 1.8-1 1.6-3 2-3 1-3 2 1 1.8 3 1.8 3-.8 3-1.8"/></svg>Shop</button>
+  <button class="nav" data-p="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Einstellungen</button>
+  <div class="sp"></div>
+  <button class="nav" id="musicBtn"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span>Musik an</span></button>
+  <button class="nav" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><span>Dunkelmodus</span></button>
+  <div class="acc"><div class="av" id="av"></div><div><b id="accName">Spieler</b><small id="accType">Offline-Konto</small><small id="accCC" style="display:block;font-weight:800;color:var(--accent)"></small></div></div>
+</aside>
+<section class="stage">
+  <div class="page on" id="p-home">
+    <div class="hero">
+      <i class="orb o1"></i><i class="orb o2"></i><i class="orb o3"></i>
+      <svg class="cloud" viewBox="0 0 300 180"><defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity=".12"/></linearGradient></defs><path d="M70 150a46 46 0 0 1-4-92A62 62 0 0 1 184 44a54 54 0 0 1 14 106z" fill="url(#cg)" stroke="rgba(255,255,255,.7)" stroke-width="2"/></svg>
+      <div id="heroSkin" aria-hidden="true"></div>
+      <div style="display:flex;gap:8px;align-self:flex-start;position:relative"><span class="eyebrow">Minecraft Launcher</span><span class="eyebrow" id="heroVer" style="background:rgba(255,255,255,.9);color:var(--accent);text-transform:uppercase;letter-spacing:.06em"></span></div>
+      <h1 id="hi">Hallo!</h1><p id="heroSub">Bereit für dein Abenteuer?</p>
+      <div class="act"><button class="play" id="heroPlay">Jetzt spielen</button><button class="chip" data-go="versions">Version wählen</button><button class="chip" data-go="mods">Mods entdecken</button><button class="chip" id="updHome">Nach Updates suchen</button><button class="chip" id="newsBtn">Neuigkeiten</button></div>
+    </div>
+    <div class="glass upd" id="updBanner"><div class="t"><b id="updBT">Update verfügbar</b><div class="muted" id="updBS"></div><div class="ubar"><i></i></div></div><button class="btn" id="updNow">Jetzt aktualisieren</button></div>
+    <div class="qa">
+      <button class="glass tile" data-go="lib"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 4h4v16H4zM10 4h4v16h-4zM16.5 5l3.8-1 3 15-3.8 1z"/></svg></span><b>Bibliothek</b><span class="muted">Versionen &amp; Mods verwalten</span></button>
+      <button class="glass tile" data-go="mods"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7zM12 12l9-5M12 12v10M12 12L3 7"/></svg></span><b>Mods</b><span class="muted">Fabric &amp; Modrinth</span></button>
+      <button class="glass tile" data-go="packs"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg></span><b>Ressourcen</b><span class="muted">Pakete &amp; Shader</span></button>
+      <button class="glass tile" data-go="settings"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></span><b>Themes</b><span class="muted">8 Farbwelten</span></button>
+    </div>
+    <div class="sec"><h2>System</h2></div>
+    <div class="glass set wide" style="max-width:none;margin-top:8px" id="sysCard"><div id="sysRows" style="display:grid;gap:12px"></div></div>
+    <div class="sec"><h2>Deine Server</h2></div>
+    <div class="row" id="homeSrv"></div>
+  </div>
+  <div class="page" id="p-versions">
+    <h2>Versionen</h2><p class="muted">Wähle, welche Minecraft-Version du spielen willst.</p>
+    <div class="tools"><input id="q" class="field" placeholder="Suchen, z. B. 1.21" autocomplete="off">
+      <button class="chip on" data-f="release">Releases</button><button class="chip" data-f="snapshot">Snapshots</button><button class="chip" data-f="all">Alle</button></div>
+    <div class="row" id="vgrid"></div>
+  </div>
+  <div class="page" id="p-lib">
+    <div id="libList"><h2>Bibliothek</h2><p class="muted">Deine heruntergeladenen Versionen. Klicke auf eine Version, um sie anzupassen.</p><div class="row" id="libGrid"></div></div>
+    <div id="libDetail" style="display:none"></div>
+  </div>
+  <div class="page" id="p-servers">
+    <h2>Server</h2><p class="muted">Mit dem Offline-Konto kannst du nur Server im Offline-Modus betreten.</p>
+    <div class="tools" id="srvTabs"><button class="chip on" data-ss="mine">Meine Server</button><button class="chip" data-ss="public">Öffentliche Server</button><button class="chip" data-ss="own">Eigener Server</button><button class="chip" data-ss="plugins">Plugins</button></div>
+    <div class="srvsec" data-ss="mine"><div class="tools"><input id="sn" class="field" placeholder="Name"><input id="sh" class="field" placeholder="Adresse, z. B. play.beispiel.de"><button class="btn" id="sadd">Hinzufügen</button></div>
+    <div id="slist"></div></div>
+    <div class="srvsec" data-ss="public" style="display:none"><p class="muted">Beliebte öffentliche Server. Die meisten großen Server verlangen ein echtes Minecraft-Konto (Microsoft-Anmeldung in den Einstellungen).</p><div id="pubList"></div></div>
+    <div class="srvsec" data-ss="own" style="display:none"><div class="glass set" id="hostCard" ><h3>Eigenen Server auf diesem PC hosten</h3>
+      <p class="muted">Cloudy lädt den Minecraft-Server für die gewählte Version und startet ihn. Cloudy versucht den Port automatisch im Router freizugeben (UPnP). Deine Freunde brauchen keine IP: Sie sehen deinen Server im Freunde-Tab und treten mit einem Klick bei.</p>
+      <div class="tools"><select id="hv" class="field" title="Version"></select><select id="hType" class="field" title="Server-Art"><option value="vanilla">Vanilla</option><option value="paper">Paper (mit Plugins)</option></select><select id="hr" class="field" title="Arbeitsspeicher"><option value="2">2 GB RAM</option><option value="4">4 GB RAM</option><option value="6">6 GB RAM</option><option value="8">8 GB RAM</option></select><input id="hp" class="field" value="25565" style="width:110px" title="Port"><input id="hMotd" class="field" placeholder="Servername (MOTD)" maxlength="60" style="flex:1;min-width:150px"></div>
+      <label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="hOnline"> Nur echte Minecraft-Konten erlauben (sonst können auch Offline-Konten beitreten)</label>
+      <label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="hEula"> Ich akzeptiere die <a href="#" id="hEulaLink" style="color:var(--accent)">Minecraft-EULA</a></label>
+      <div class="tools"><button class="btn" id="hStart">Server starten</button><button class="btn ghost" id="hStop">Stoppen</button><button class="btn ghost" id="hJoin">Selbst beitreten</button><button class="btn ghost" id="hFolder">Server-Ordner</button></div>
+      <p class="muted" id="hInfo"></p><pre id="hLog" style="max-height:220px;overflow:auto;background:rgba(10,20,40,.55);color:#d6ecff;padding:10px 12px;border-radius:12px;font:12px/1.4 ui-monospace,Consolas,monospace;white-space:pre-wrap;margin:0"></pre>
+      <div class="tools"><input id="hCmd" class="field" placeholder="Befehl, z. B. op DeinName" style="flex:1"><button class="btn ghost" id="hSend">Senden</button></div></div>
+    </div>
+    <div class="srvsec" data-ss="plugins" style="display:none"><div class="glass set"><h3>Plugins für deinen eigenen Server</h3><p class="muted">Plugins laufen nur auf der Server-Art „Paper (mit Plugins)“. Wähle Version und suche ein Plugin – Cloudy lädt es in deinen Server.</p>
+      <div class="tools"><select id="pv" class="field"></select><input id="plQ" class="field" placeholder="Plugin suchen, z. B. EssentialsX" style="flex:1;min-width:160px"><button class="btn" id="plGo">Suchen</button></div><p class="muted" id="plMsg"></p>
+      <h3>Installiert</h3><div id="plInst"></div><h3>Ergebnisse</h3><div id="plRes"></div></div></div>
+  </div>
+  <div class="page" id="p-friends">
+    <h2>Freunde</h2><p class="muted">Füge Freunde per Benutzername hinzu und chatte mit ihnen. Das läuft über dein Cloudy-Konto, ein extra Freundesserver ist nicht nötig.</p>
+    <div class="tools" id="frTabs"><button class="chip on" data-ft="chat">Freunde &amp; Chat</button><button class="chip" data-ft="conn">Verbindung &amp; Server</button></div>
+    <div class="glass set" id="frOffline" style="display:none;max-width:560px"><h3>Noch nicht verbunden</h3><p class="muted">Freunde hinzufügen und chatten geht, sobald du mit einem Freundesserver verbunden bist. Das dauert eine Minute.</p><div class="tools" style="margin:0"><button class="btn" id="frGoConn">Jetzt verbinden</button></div></div>
+    <div class="glass set" id="frConnect" style="max-width:560px;display:none"><h3>Mit einem Freundesserver verbinden</h3>
+      <p class="muted" style="font-size:12.5px"><b>So geht’s:</b> 1) Einer von euch klickt unten „Freundesserver hier starten“ und schickt den Freundescode. 2) Alle anderen fügen den Code hier ein und klicken „Konto erstellen“. 3) Danach Freunde per Namen hinzufügen und chatten.</p>
+      <input id="frUrl" class="field" placeholder="Freundescode (CLD-…) oder Adresse" autocomplete="off"><input id="frName" class="field" placeholder="Dein Name (3–16 Zeichen)" maxlength="16" autocomplete="off"><input id="frPass" class="field" type="password" placeholder="Passwort für den Freundesserver" autocomplete="off">
+      <div class="tools" style="margin:0"><button class="btn" id="frLogin">Anmelden</button><button class="btn ghost" id="frReg">Konto erstellen</button></div><p class="muted" id="frMsg" style="color:var(--accent);min-height:18px"></p>
+      <h3 style="margin-top:8px">Freundesserver selbst hosten</h3><p class="muted">Startet den Server auf diesem PC (Port 7777, wird automatisch im Router freigegeben, wenn möglich). Gib Freunden nur deinen Freundescode – keine IP nötig.</p>
+      <div class="tools" style="margin:0"><button class="btn ghost" id="frHostBtn">Freundesserver hier starten</button><button class="btn ghost" id="frCodeCopy" style="display:none">Code kopieren</button></div><p class="muted" id="frHostInfo"></p></div>
+    <div id="frMain" style="display:none"><p class="muted"><span id="frMe"></span> · <a href="#" id="frOut" style="color:var(--accent);font-weight:600">Trennen</a> <span id="frOff" style="color:var(--accent)"></span></p>
+      <div class="frgrid"><div class="glass set frside"><div class="tools" style="margin:0"><input id="frAddName" class="field" placeholder="Freund hinzufügen (Name)" style="flex:1;min-width:0"><button class="btn" id="frAdd">+</button></div><small class="muted" id="frAddMsg"></small><div id="frReq"></div><div id="frList"></div></div>
+        <div class="glass set frchat"><h3 id="frChatHead">Wähle einen Freund</h3><div id="frChatBox" style="display:none"><div id="frMsgs"></div><div class="tools" style="margin:8px 0 0"><input id="frText" class="field" placeholder="Nachricht …" maxlength="500" style="flex:1" autocomplete="off"><button class="btn" id="frSend">Senden</button></div></div></div></div></div>
+  </div>
+  <div class="page" id="p-mods">
+    <h2>Mods</h2><p class="muted">Suche Mods auf Modrinth und installiere sie. Verwalten kannst du sie in der Bibliothek.</p>
+    <div class="tools"><select id="mver" class="field" title="Installieren für Version"></select><input id="mq" class="field" style="flex:1;min-width:180px" placeholder="Mods auf Modrinth suchen … (auch nach Kategorie, z. B. Optimierung)" autocomplete="off"><button class="btn" id="msearch">Suchen</button></div>
+    <div class="tools" id="mCatBar"></div>
+    <div id="mres"></div>
+  </div>
+  <div class="page" id="p-packs">
+    <h2>Ressourcen</h2><p class="muted">Ressourcenpakete und Shader installieren, ein- und ausschalten und löschen.</p>
+    <div class="tools"><button class="chip on" data-pt="resourcepack">Ressourcenpakete</button><button class="chip" data-pt="shader">Shader</button><select id="pver" class="field" title="Version"></select><button class="btn ghost" id="pfolder">Ordner öffnen</button></div>
+    <p class="muted" id="phint"></p>
+    <div class="tools"><input id="pq" class="field" style="flex:1;min-width:180px" placeholder="Installierte durchsuchen …" autocomplete="off"></div>
+    <div class="tools" id="pcats"></div>
+    <div id="plist"></div>
+    <div class="sec"><h2>Auf Modrinth finden</h2></div>
+    <div class="tools"><input id="pmq" class="field" style="flex:1;min-width:180px" placeholder="Pakete suchen … (auch nach Kategorie, z. B. Dekoration)" autocomplete="off"><button class="btn" id="pmsearch">Suchen</button></div>
+    <div class="tools" id="pmCats"></div>
+    <div id="pmres"></div>
+  </div>
+  <div class="page" id="p-shots">
+    <h2>Screenshots</h2><p class="muted">Deine Bilder aus dem Spiel (F2). Klick öffnet sie, der Papierkorb-Knopf löscht sie in den Papierkorb.</p>
+    <div class="tools"><select id="sver" class="field" title="Version"></select><button class="btn ghost" id="sfolder">Ordner öffnen</button></div>
+    <div class="row" id="sgrid"></div>
+  </div>
+  <div class="page" id="p-skins">
+    <h2>Skins</h2><p class="muted">Hole dir Skins von Websites: per Spielername, direktem PNG-Link oder Datei. Mit einem Microsoft-Konto lädst du den Skin mit „Anwenden“ direkt zu Minecraft hoch.</p>
+    <div class="tools"><input id="skName" class="field" placeholder="Spielername, z. B. jeb_" maxlength="16" autocomplete="off"><button class="btn" id="skNameGo">Skin holen</button>
+      <input id="skUrl" class="field" placeholder="Link zu einer Skin-PNG (https://…)" autocomplete="off" style="min-width:260px"><button class="btn ghost" id="skUrlGo">Link laden</button><button class="btn ghost" id="skFile">PNG laden …</button></div>
+    <div class="tools"><span class="muted">Skins finden:</span><button class="chip" data-site="https://namemc.com/minecraft-skins">NameMC</button><button class="chip" data-site="https://www.minecraftskins.com/">The Skindex</button><button class="chip" data-site="https://www.planetminecraft.com/skins/">Planet Minecraft</button>
+      <span class="muted">Beliebt:</span><button class="chip" data-skn="jeb_">jeb_</button><button class="chip" data-skn="Dinnerbone">Dinnerbone</button><button class="chip" data-skn="Notch">Notch</button><button class="chip" data-skn="Grumm">Grumm</button></div>
+    <p class="muted" id="skMsg" style="min-height:20px;color:var(--accent)"></p>
+    <div class="row skg" id="skGrid"></div>
+    <div class="sec"><h2>Entdecken</h2></div><p class="muted" id="skDiscMsg"></p><div class="row skg" id="skDisc"></div>
+  </div>
+  <div class="page" id="p-shop">
+    <h2>Shop</h2><p class="muted">Kaufe Cosmetics mit Cloudy Coins (CC). CC verdienst du beim Spielen (5 CC pro Minute) und mit dem Tagesbonus (50 CC). Neue Konten starten mit 100 CC.</p>
+    <div class="shtop"><div class="glass shp"><div id="shop3d"></div><canvas id="shopPrev" width="256" height="336" style="display:none"></canvas><div class="muted" style="text-align:center">3D-Vorschau mit deinem Skin · ziehen zum Drehen</div></div>
+      <div style="flex:1;min-width:0"><div class="tools"><div class="coin"><i></i><b id="shopCC">0 CC</b></div><button class="btn ghost" id="shopDaily">Tagesbonus abholen (+50 CC)</button><button class="btn ghost" id="shopPerf" title="Schaltet Unschärfe und Animationen im Shop ab">Performance: aus</button><button class="btn ghost" id="shopFriends">Freunde &amp; Chat</button></div>
+        <div class="glass" id="shopCl" style="padding:14px 16px;margin:6px 0 10px;display:grid;gap:8px"></div>
+        <p class="muted" id="shopMsg" style="min-height:20px;color:var(--accent)"></p>
+        <p class="muted" style="font-size:13px">Im Spiel sichtbar: Umhänge, Hüte, Flügel und Schilde (Minecraft 1.21.4 mit Fabric und der Cloudy-Client-Mod).</p><div class="glass set" id="shopAdmin" style="display:none;margin:0 0 12px"><h3>Admin · Eigenes Item hinzufügen</h3>
+          <div class="tools" style="margin:0"><input id="ciName" class="field" placeholder="Name des Items" maxlength="40" style="flex:1;min-width:140px"><select id="ciCat" class="field"><option value="cape">Umhang (PNG 64×32)</option><option value="sky">Himmel (2 Farben)</option></select><input id="ciPrice" class="field" type="number" min="0" value="500" style="width:90px" title="Preis in CC"><span id="ciSky" style="display:none;gap:6px;align-items:center"><input id="ciC1" type="color" value="#12062e"><input id="ciC2" type="color" value="#5b3df5"></span><button class="btn" id="ciAdd">Item erstellen</button></div>
+          <small class="muted" id="ciMsg">Umhang: Nach „Item erstellen“ wählst du die PNG-Datei. Namen kannst du später direkt auf der Karte ändern.</small></div><div id="shopItems"></div></div></div>
+  </div>
+  <div class="page" id="p-client">
+    <h2>Client</h2><p class="muted">Eigene Client-Mods für Cloudy: bau dir deinen Umhang, schalte Anzeigen ein und löse Codes ein.</p>
+    <div class="sgrid">
+      <div class="glass set wide"><h3>Eigener Umhang</h3>
+        <p class="muted">Male deinen Umhang selbst oder lade eine PNG (64×32). Du siehst ihn im Spiel – andere Spieler sehen ihn nicht.</p>
+        <div class="cl2">
+          <div style="flex:1;min-width:300px"><canvas id="capeEd" class="ed" width="640" height="320"></canvas>
+            <div class="tools" style="margin:10px 0 0"><input type="color" id="capeCol" value="#4aa3ff" title="Farbe">
+              <button class="chip on" data-tool="pen">Stift</button><button class="chip" data-tool="erase">Radierer</button><button class="chip" data-tool="fill">Füllen</button><button class="chip" data-tool="pick">Pipette</button></div></div>
+          <div style="width:150px;text-align:center"><b style="font-size:13px">Vorschau</b><br><canvas id="capePrev" width="80" height="128" style="width:120px;height:192px;image-rendering:pixelated;border-radius:12px;margin-top:8px;background:rgba(255,255,255,.4)"></canvas></div>
+        </div>
+        <div class="tools" style="margin:6px 0 0"><button class="btn" id="capeSave">Umhang speichern</button><button class="btn ghost" id="capeLoad">PNG laden …</button><button class="btn ghost" id="capeTpl">Vorlage</button><button class="btn ghost" id="capeClr">Entfernen</button></div>
+        <p class="muted" id="capeMsg"></p></div>
+      <div class="glass set"><h3>Client-Mods</h3>
+        <p class="muted" id="clMsg"></p>
+        <label class="cb"><input type="checkbox" id="cmCape"> Eigenen Umhang anzeigen</label>
+        <label class="cb"><input type="checkbox" id="cmHud"> Anzeige: FPS und Koordinaten</label>
+        <p class="muted" style="font-size:12px">Brauchen Fabric. Cloudy installiert sie beim Spielstart automatisch.</p></div>
+      <div class="glass set"><h3>Code einlösen</h3>
+        <label>Hast du einen Code?<input id="codeIn" class="field lock" placeholder="Code eingeben" autocomplete="off" spellcheck="false"></label>
+        <div><button class="btn" id="codeBtn">Einlösen</button></div><p class="muted" id="codeMsg"></p></div>
+      <div class="glass set" id="cCheat" style="display:none"><h3>Wurst × Meteor Client</h3>
+        <p class="muted">Freigeschaltet. Cheat-Client mit KillAura, Fly, Speed, Sprint und Fullbright. Im Spiel öffnet <b>Rechts-Shift</b> das Menü.</p>
+        <label class="cb"><input type="checkbox" id="cmCheat"> Cheat-Client aktivieren</label>
+        <p class="muted" style="font-size:12px">Auf den meisten Servern verboten und führt dort zum Bann. Nutze ihn in Einzelspieler oder wo es erlaubt ist.</p></div>
+    </div>
+  </div>
+  <div class="page" id="p-settings">
+    <h2>Einstellungen</h2>
+    <div class="tools" id="setTabs"><button class="chip on" data-st="gen">Allgemein</button><button class="chip" data-st="adm" id="admTab" style="display:none">Admin</button></div>
+    <div class="sgrid">
+      <div class="glass set"><h3>Konto</h3>
+        <p class="muted" id="msOut"></p>
+        <label>Spielername (Offline)<input id="name" class="field" maxlength="16" placeholder="Steve" autocomplete="off"></label>
+        <label>Anzeigename in Cloudy (Banner, Begrüßung)<input id="dispName" class="field" maxlength="24" placeholder="z. B. Ben" autocomplete="off"></label>
+        
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="msBtn">Mit Microsoft anmelden</button><button class="btn ghost" id="authOut">Cloudy abmelden</button><button class="btn ghost" id="pwBtn">Passwort ändern</button><button class="btn ghost" id="delBtn">Konto löschen</button></div>
+        <div id="pwRow" style="display:none;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px"><input id="pwOld" class="field" type="password" placeholder="Altes Passwort" autocomplete="current-password" style="max-width:220px"><input id="pwNew" class="field" type="password" placeholder="Neues Passwort (mind. 6)" autocomplete="new-password" style="max-width:220px"><button class="btn" id="pwGo">Speichern</button><span class="muted" id="pwMsg" style="color:var(--accent)"></span></div>
+        <div id="delRow" style="display:none;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px"><input id="delPass" class="field" type="password" placeholder="Passwort zur Bestätigung" autocomplete="current-password" style="max-width:260px"><button class="btn" id="delGo">Endgültig löschen</button><span class="muted" id="delMsg" style="color:var(--accent)"></span></div></div>
+      <div class="glass set" id="redeemCard"><h3>Code einlösen</h3><p class="muted">Hast du einen Code bekommen? Gib ihn hier ein und erhalte Items oder Coins.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><input id="rdCode" class="field" placeholder="z. B. CLD-A1B2C3" autocomplete="off" spellcheck="false" style="flex:1;min-width:160px;text-transform:uppercase"><button class="btn" id="rdGo">Einlösen</button></div>
+        <p class="muted" id="rdMsg" style="min-height:18px;margin:6px 0 0"></p></div>
+      <div class="glass set"><h3>Spiel</h3>
+        <label>Leistungs-Preset<select id="preset" class="field"><option value="">Eigene Einstellungen</option><option value="lowend">Low-End-PC</option><option value="performance">Leistung</option><option value="balanced">Ausgewogen</option><option value="quality">Qualität</option></select></label>
+        <label>Arbeitsspeicher<div class="ram"><input id="ram" type="range" min="2" max="16" value="4"><b id="ramv">4 GB</b></div></label>
+        <label>Fenstergröße (leer = Standard)<div class="ram"><input id="ww" class="field" style="width:100px" placeholder="1280"> ×<input id="wh" class="field" style="width:100px" placeholder="720"></div></label>
+        <label>Zusätzliche Java-Argumente<input id="jvm" class="field" placeholder="-XX:+UseZGC" autocomplete="off"></label>
+        <label class="cb"><input type="checkbox" id="fab"> Fabric aktivieren (nötig für Mods)</label>
+        <label class="cb"><input type="checkbox" id="perf"> Leistungs-Mods automatisch installieren</label>
+        <label>Grafik-Schnittstelle<select id="gfx" class="field"><option value="opengl">OpenGL (Standard, Sodium)</option><option value="vulkan">Vulkan (experimentell, VulkanMod)</option></select></label>
+        <p class="muted" style="font-size:11px;margin:-4px 0 6px">Vulkan braucht „Leistungs-Mods automatisch installieren“, Minecraft 1.17–1.21 mit Fabric und eine Vulkan-fähige Grafikkarte. Läuft es nicht, wieder auf OpenGL stellen.</p>
+        <label class="cb"><input type="checkbox" id="min"> Cloudy beim Spielstart minimieren</label>
+        <label class="cb"><input type="checkbox" id="sync"> Einstellungen zwischen Versionen übernehmen (Maus, Lautstärke, Tasten …)</label></div>
+      <div class="glass set wide" data-adm id="admCard"><h3>Konten verwalten</h3><p class="muted">Nur für Administratoren. Hier kannst du Konten pausieren, sperren (auch zeitlich), Items entfernen und Coins vergeben.</p><div class="tools" style="margin:0 0 8px"><button class="btn ghost" id="admRef">Aktualisieren</button></div><p class="muted" id="admStat" style="min-height:18px;margin:0 0 6px"></p><div id="admBox"><div id="admList" class="muted"></div></div></div>
+      <div class="glass set wide" data-adm id="codeCard"><h3>Codes erstellen</h3><p class="muted">Ein Code gibt Coins und/oder Items. Jeder Spieler kann ihn einmal einlösen. „Einlösungen“ 0 = unbegrenzt viele Spieler.</p>
+        <div class="tools" style="margin:0 0 8px;gap:8px;flex-wrap:wrap"><input id="cdName" class="field" placeholder="Code (leer = 12 zufällige Zeichen)" maxlength="24" autocomplete="off" style="max-width:190px"><input id="cdCoins" class="field" type="number" min="0" placeholder="Coins" style="max-width:110px"><button class="btn ghost" id="cdRnd" type="button" title="12 zufällige Zeichen">🎲 Zufall</button><input id="cdUses" class="field" type="number" min="0" placeholder="Einlösungen" style="max-width:130px"><label class="muted" style="display:flex;align-items:center;gap:6px;font-size:12px">Läuft ab am <input id="cdExp" class="field" type="date" style="max-width:150px"></label><button class="btn ghost" id="cdItems">Items wählen …</button><button class="btn" id="cdMake">Code erstellen</button></div>
+        <p class="muted" id="cdSel" style="margin:0 0 6px"></p><p class="muted" id="cdMsg" style="min-height:18px;margin:0 0 6px"></p><div id="cdList"></div></div>
+      <div class="glass set wide" data-adm id="gateCard"><h3>Zugangscodes für den Launcher</h3><p class="muted">Wer Cloudy neu installiert, muss beim ersten Start einen Zugangscode eingeben. Sobald du hier den ersten Code erstellst, funktioniert der alte feste Code nicht mehr (bereits freigeschaltete Installationen bleiben freigeschaltet). „Einlösungen“ 0 = unbegrenzt, „Tage“ 0 = läuft nie ab. Braucht den Konto-Server.</p>
+        <div class="tools" style="margin:0 0 8px;gap:8px;flex-wrap:wrap"><input id="gcName" class="field" placeholder="Code (leer = 12 zufällige Zeichen)" maxlength="24" autocomplete="off" style="max-width:190px"><button class="btn ghost" id="gcRnd" type="button" title="12 zufällige Zeichen">🎲 Zufall</button><input id="gcUses" class="field" type="number" min="0" placeholder="Einlösungen" style="max-width:130px"><input id="gcDays" class="field" type="number" min="0" placeholder="Tage gültig" style="max-width:120px"><button class="btn" id="gcMake">Zugangscode erstellen</button></div>
+        <p class="muted" id="gcMsg" style="min-height:18px;margin:0 0 6px"></p><div id="gcList"></div></div>
+      <div class="glass set wide" data-adm id="srvCard" style="display:none"><h3>Konto-Server (nur Admin)</h3><p class="muted">Optional: Trage die Adresse deines Cloudy-Servers ein, dann liegen alle Konten zentral dort und der Admin sieht alle Tester. Leer lassen = Konten nur auf diesem PC. Nach dem Speichern musst du dich neu anmelden.</p><div class="tools" style="margin:0"><input id="srvUrl" class="field" placeholder="https://konten.deinedomain.de" style="flex:1;min-width:220px"><button class="btn" id="srvSave">Speichern</button></div><p class="muted" id="srvMsg" style="margin:8px 0 0"></p></div>
+      <div class="glass set wide"><h3>Darstellung</h3><p class="muted">Wähle ein Farbthema. Es wird gespeichert.</p><label style="display:grid;gap:6px;max-width:240px;margin-bottom:12px">Layout<select id="layout" class="field"><option value="cloudy">Cloudy (schwebende Karten)</option><option value="lunar">Lunar (flach, Leiste links)</option><option value="compact">Kompakt (Symbolleiste)</option><option value="top">Oben (Leiste oben)</option></select></label><label style="display:grid;gap:6px;max-width:240px;margin-bottom:12px">Knopfform<select id="shape" class="field"><option value="auto">Theme-Standard</option><option value="round">Rund</option><option value="square">Eckig</option></select></label><label style="display:grid;gap:6px;max-width:240px;margin-bottom:12px">Sprache<select id="lang" class="field"><option value="de">Deutsch</option><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option></select></label><div class="themes" id="themeGrid"></div>
+        <h3 style="margin-top:6px">Intro &amp; Tour</h3>
+        <div class="tools" style="margin:0 0 8px"><label class="cb"><input type="checkbox" id="introOn"> Intro überspringen</label><label class="cb"><input type="checkbox" id="heroSkinOn"> Skin im Start-Banner zeigen</label><button class="btn ghost" id="tourBtn">Einführung erneut zeigen</button><button class="btn ghost" id="introBtn">Intro ansehen</button></div>
+        <div class="tools" style="margin:0 0 8px;flex-wrap:wrap;gap:8px 16px">
+          <label class="cb"><input type="checkbox" id="toolTexOn"> Werkzeuge &amp; Schwerter (Kopf/Klinge)</label>
+          <label class="cb"><input type="checkbox" id="texTotemOn"> Totem</label>
+          <label class="cb"><input type="checkbox" id="texInvOn"> Inventare &amp; Slots</label>
+          <label class="cb"><input type="checkbox" id="texThemeOn"> Farbe vom Theme</label>
+          <label class="cb">Eigene Farbe <input type="color" id="texColor" value="#4aa3ff" style="margin-left:6px;vertical-align:middle"></label>
+        </div>
+        <div class="muted" style="font-size:11px;margin:0 0 8px">Die Texturen werden beim Spielstart aus deinem installierten Minecraft umgefärbt (Form bleibt vanilla). Aus = originales Aussehen.</div>
+        <h3 style="margin-top:6px">Eigenes Theme</h3>
+        <div class="tools" style="margin:0"><button class="btn" id="bgPick">Hintergrundbild wählen</button><button class="btn ghost" id="bgClear">Entfernen</button><label class="cb" style="gap:8px">Akzentfarbe <input type="color" id="accCol" value="#4aa3ff"></label><button class="btn ghost" id="accReset">Zurücksetzen</button></div>
+        <h3 style="margin-top:6px">Glas</h3>
+        <label>Milchigkeit (Deckkraft)<input id="glassOp" type="range" min="20" max="98" value="76"></label>
+        <label>Unschärfe<input id="glassBlur" type="range" min="0" max="50" value="30"></label>
+        <label>Fenster-Transparenz (Glas-Theme: Desktop scheint durch)<input id="glassWin" type="range" min="0" max="100" value="0"></label>
+        <div><button class="btn ghost" id="glassReset">Glas zurücksetzen</button></div>
+        <label>Abdunklung des Bildes<input id="bgDim" type="range" min="0" max="90" value="35"></label>
+        <label>Unschärfe des Bildes<input id="bgBlur" type="range" min="0" max="30" value="0"></label>
+        <p class="muted" id="bgMsg"></p></div>
+      <div class="glass set"><h3>Updates</h3>
+        <p class="muted" id="updMsg">Cloudy</p>
+        <label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="autoUpd"> Auto-Accept: Updates ohne Rückfrage installieren</label>
+        <label id="repoRow">GitHub-Quelle (name/repo)<input id="repo" class="field" placeholder="deinname/cloudy" autocomplete="off"></label>
+        <div class="ubar"><i></i></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="upd">Nach Updates suchen</button><button class="btn ghost" id="updForce" title="Lädt das neueste GitHub-Release und installiert es – egal ob neuer, gleich oder älter">Update erzwingen</button><button class="btn ghost" id="newsBtn2">Neuigkeiten &amp; alte Updates</button></div>
+        <p class="muted" style="margin-top:4px">Oder lege eine Update-Datei (.zip) in den Update-Ordner. Cloudy installiert sie beim nächsten Start automatisch.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost" id="luPick">Update-Datei wählen …</button><button class="btn ghost" id="luOpen">Update-Ordner öffnen</button><button class="btn ghost" id="luRun">Update aus Ordner installieren</button></div><p class="muted" id="luMsg"></p>
+        </div>
+      <div class="glass set"><h3>Cloudy Creamkeys</h3><p class="muted">Cremige Klänge bei jedem Tastendruck und Mausklick – im Launcher und in Minecraft (Minecraft 1.21.4 mit Fabric und der Cloudy-Client-Mod). Du kannst auch eigene Sounds verwenden.</p>
+        <label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="crOn"> Creamkeys aktivieren</label>
+        <label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="crLaun"> Im Launcher</label>
+        <label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="crGame"> In Minecraft</label>
+        <div class="tools"><b style="min-width:90px">Tastatur</b><select id="crKb" class="field"></select><input type="range" id="crKbV" min="0" max="100" style="width:120px" title="Lautstärke"><button class="btn ghost" id="crKbTest">Testen</button><button class="btn ghost" id="crKbAdd">Eigener Sound …</button><button class="btn ghost" id="crKbDel">Entfernen</button></div>
+        <div class="tools"><b style="min-width:90px">Maus</b><select id="crMs" class="field"></select><input type="range" id="crMsV" min="0" max="100" style="width:120px" title="Lautstärke"><button class="btn ghost" id="crMsTest">Testen</button><button class="btn ghost" id="crMsAdd">Eigener Sound …</button><button class="btn ghost" id="crMsDel">Entfernen</button></div>
+        <p class="muted" id="crAuthor"></p><p class="muted" id="crNote" style="color:var(--accent)"></p></div>
+      <div class="glass set"><h3>Minecraft-HUD</h3><p class="muted">Anzeigen im Spiel (Minecraft 1.21.4 mit Fabric und der Cloudy-Client-Mod).</p>
+        <label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="hFps"> FPS</label><label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="hPing"> Ping</label><label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="hArmor"> Rüstung (mit Haltbarkeit)</label><label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="hCoords"> Koordinaten</label>
+        <p class="muted">Im Spiel: Taste K oder der Knopf „Cosmetics“ oben rechts im Pause-Menü öffnet deine Cosmetics.</p></div>
+      <div class="glass set"><h3>Hintergrundmusik</h3><p class="muted">Eingebaute Ambient-Musik oder eigene Dateien (MP3, OGG, WAV, FLAC). Die Musik pausiert, solange Minecraft läuft.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="btn" id="mPlay">Abspielen</button><button class="btn ghost" id="mNext">Weiter</button><button class="btn ghost" id="mMute">Stumm</button><input id="mVol" type="range" min="0" max="100" style="flex:1;min-width:140px" title="Lautstärke"></div>
+        <p class="muted" id="mNow"></p><div id="mList"></div>
+        <label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="mAuto"> Beim Start automatisch abspielen</label>
+        <div><button class="btn ghost" id="mAdd">Eigene Musik hinzufügen …</button></div></div>
+      <div class="glass set"><h3>Wartung</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost" id="folder">Spielordner öffnen</button><button class="btn ghost" id="resetJava">Java neu laden</button><button class="btn ghost" id="reloadBtn">Neu laden</button><button class="btn ghost" id="forceUpd">Update erzwingen</button><button class="btn ghost" id="cfgExp">Einstellungen exportieren</button><button class="btn ghost" id="cfgImp">Importieren</button><button class="btn ghost" id="onbAgain">Einführung neu starten</button></div></div>
+    </div>
+  </div>
+  <footer class="dock glass">
+    <button class="chip" id="vchip" style="height:44px;font-size:15px">1.21.4</button>
+    <div class="info"><b id="dockT">Bereit</b><div class="bar" id="bar" style="display:none"><i id="fill"></i></div><small id="status"></small></div>
+    <button class="chip" id="cancel" style="display:none;height:44px">✕ Abbrechen</button>
+    <button class="play" id="play">Spielen</button>
+  </footer>
+  <div class="vpop glass" id="vpop" style="display:none"><div class="vph">Installierte Versionen</div><div id="vpl"></div><button class="vpm" id="vpMore">Weitere Versionen installieren …</button></div>
+</section></div>
+<div id="login"><div id="lgBar" class="lgbar"><span class="lgb-logo"><svg width="30" height="30" viewBox="0 0 32 32"><path d="M9 24a6 6 0 0 1-.6-12A8 8 0 0 1 24 10a7 7 0 0 1-1 14z" fill="currentColor"/></svg></span>
+  <button id="lgMore" title="Mehr Sound-Optionen" aria-label="Mehr"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M1 3l5 6 5-6z" fill="currentColor"/></svg></button>
+  <button id="lgMute" title="Musik stumm / an" aria-label="Musik stumm"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z" fill="currentColor"/><path class="wv" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="xx" d="M16 9l5 6M21 9l-5 6"/></svg></button>
+  <input type="range" id="lgVol" min="0" max="100" title="Lautstärke">
+  <div id="lgMenu" class="lgmenu"><label><input type="checkbox" id="lgKb"> Tastatur-Sound</label><label><input type="checkbox" id="lgMs"> Maus-Sound</label></div></div>
+<div class="glass lg">
+  <div class="lgbrand"><svg width="40" height="40" viewBox="0 0 32 32"><path d="M9 24a6 6 0 0 1-.6-12A8 8 0 0 1 24 10a7 7 0 0 1-1 14z" fill="#fff"/></svg>Cloudy</div>
+  <div class="tools" style="justify-content:center;margin:0"><button class="chip on" data-lt="in">Anmelden</button><button class="chip" data-lt="up">Registrieren</button></div>
+  <select id="lgLang" class="field" style="width:auto;justify-self:end;height:34px;padding:0 10px"><option value="de">Deutsch</option><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option></select>
+  <form id="lgForm" autocomplete="off">
+    <label id="lgUserRow">Benutzername<input id="lgUser" class="field" maxlength="16" autocomplete="username" spellcheck="false"></label>
+    <label>Passwort<input id="lgPass" class="field" type="password" autocomplete="current-password"></label>
+    <label id="lgPass2Row" style="display:none">Passwort wiederholen<input id="lgPass2" class="field" type="password" autocomplete="new-password"></label>
+    <p class="muted" id="lgHint" style="display:none;font-weight:600"></p>
+    <label class="cb" id="lgRemRow"><input type="checkbox" id="lgRem" checked> Angemeldet bleiben</label>
+    <p class="muted" id="lgMsg" style="min-height:18px;color:var(--accent)"></p>
+    <button class="btn" id="lgGo" type="submit" style="height:48px;width:100%">Anmelden</button>
+  </form>
+  <p class="muted" style="font-size:12px;text-align:center">Dein Cloudy-Konto gilt nur auf diesem Computer (kein Online-Konto). <a href="#" id="lgForgot" style="color:var(--accent);font-weight:600">Passwort vergessen?</a></p>
+</div></div>
+<div id="onb"><div class="glass ob" id="obBox"></div></div>
+<div id="mmodal" class="mm"><div class="glass set box" id="mbox"></div></div>
+<div id="modal" style="display:none;position:fixed;inset:0;z-index:20;place-items:center;background:rgba(10,30,70,.4)"><div class="glass set" style="max-width:640px;width:90%"><h2 style="font-size:22px">Minecraft wurde mit einem Fehler beendet</h2><p class="muted" id="crashHint" style="display:none"></p><p class="muted">Letzte Zeilen aus dem Log:</p><pre id="logtxt" style="max-height:260px;overflow:auto;font-size:12px;white-space:pre-wrap;user-select:text"></pre><div style="display:flex;gap:10px"><button class="btn" id="copylog">Log kopieren</button><button class="btn" id="vanillaBtn">Ohne Mods starten</button><button class="btn ghost" id="closelog">Schließen</button></div></div></div>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const st={get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+let all=[],filter='release',version=st.get('version',''),servers=st.get('servers',[{name:'Mein Server',host:'localhost',port:25565}]);
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function go(p){if(window.paintSub)window.paintSub(p);if(p==='home'&&window.restartHero)setTimeout(window.restartHero,60);if(p==='shots')loadShots();if(p==='packs')loadPacks();if(p==='mods')loadMods();if(p==='lib')loadLib();if(p==='client')loadClient();$$('.page').forEach(e=>e.classList.toggle('on',e.id==='p-'+p));$$('.nav').forEach(b=>b.classList.toggle('on',b.dataset.p===({lib:'versions',packs:'mods',shots:'settings'}[p]||p)))}
+$$('.nav').forEach(b=>b.onclick=()=>go(b.dataset.p));
+const vpop=$('#vpop');
+function vpClose(){vpop.style.display='none'}
+async function vpOpen(){
+  if(vpop.style.display==='block')return vpClose();
+  let l=[];try{l=await window.cloudy.libList()||[]}catch{}
+  $('#vpl').innerHTML=l.length?l.map(x=>`<button class="vpi ${x.id===version?'on':''}" data-pv="${esc(x.id)}"><b>${esc(iname(x.id))}</b><span>${x.fabric?'Fabric':'Vanilla'}${x.inst?' · Kopie':''} · ${x.mods} Mods</span></button>`).join(''):'<p class="muted" style="padding:6px 12px;font-size:13px">Noch keine Version installiert.</p>';
+  $$('#vpl [data-pv]').forEach(b=>b.onclick=()=>{version=b.dataset.pv;st.set('version',version);paintVersion();renderVersions&&renderVersions();vpClose()});
+  vpop.style.display='block';
+}
+$('#vchip').onclick=e=>{e.stopPropagation();vpOpen()};
+$('#vpMore').onclick=()=>{vpClose();go('versions')};
+document.addEventListener('click',e=>{if(vpop.style.display==='block'&&!vpop.contains(e.target))vpClose()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')vpClose()});
+
+function who(){return (st.get('name','')||'').trim()}
+function dispName(){return (st.get('display','')||'').trim()||who()}
+const bvr=k=>String(k||'').split('~')[0];
+function iname(k){const n=(st.get('instNames',{})||{})[k];return n||(String(k).includes('~')?bvr(k)+' (Kopie)':k)}
+function paintUser(){
+  const m=who()||'Spieler',n=dispName()||'Spieler';$('#accName').textContent=n;$('#hi').textContent='Hallo, '+n+'!';window.paintHome&&window.paintHome();
+  $('#av').innerHTML=`<img alt="" src="https://mc-heads.net/avatar/${encodeURIComponent(m)}/64" onerror="this.remove()">`+n[0].toUpperCase();
+}
+function paintVersion(){$('#mres').innerHTML='';$('#vchip').textContent=version?iname(version):'…';$('#heroSub').textContent=version?(iname(version)!==version?`${iname(version)} (Minecraft ${bvr(version)}) ist startklar.`:`Minecraft ${version} ist startklar.`):'Wähle eine Version.';window.paintHome&&window.paintHome();try{version&&window.cloudy.libPin&&window.cloudy.libPin(version)}catch{}}
+function renderVersions(){
+  const q=$('#q').value.trim();
+  const list=all.filter(v=>(filter==='all'||v.type===filter)&&v.id.includes(q)).slice(0,80);
+  $('#vgrid').innerHTML=list.map(v=>`<div class="glass tile ${v.id===version?'sel':''}" data-v="${v.id}"><b>${v.id}</b><br><span class="pill">${v.type==='release'?'Release':'Snapshot'}</span><div class="muted" style="margin-top:8px;font-size:12px">${v.date?new Date(v.date).toLocaleDateString('de-DE'):''}</div></div>`).join('')||'<p class="muted">Nichts gefunden.</p>';
+  $$('#vgrid .tile').forEach(t=>t.onclick=()=>{version=t.dataset.v;st.set('version',version);paintVersion();renderVersions();go('home')});
+}
+$('#q').oninput=renderVersions;
+$$('[data-f]').forEach(c=>c.onclick=()=>{filter=c.dataset.f;$$('[data-f]').forEach(x=>x.classList.toggle('on',x===c));renderVersions()});
+
+function renderServers(){
+  const html=servers.map((s,i)=>`<div class="glass srv"><div class="av">${esc(s.name[0]||'S').toUpperCase()}</div><div><b>${esc(s.name)}</b><br><small>${esc(s.host)}${s.port!=25565?':'+s.port:''}</small></div><button class="btn" data-j="${i}">Beitreten</button><button class="btn ghost" data-d="${i}">Entfernen</button></div>`).join('')||'<p class="muted">Noch keine Server. Füge oben einen hinzu.</p>';
+  $('#slist').innerHTML=html;
+  $('#homeSrv').innerHTML=servers.slice(0,4).map((s,i)=>`<div class="glass tile" data-j="${i}"><b>${esc(s.name)}</b><br><small class="muted">${esc(s.host)}</small><br><span class="pill">Beitreten</span></div>`).join('')||'<p class="muted">Füge Server im Reiter „Server“ hinzu.</p>';
+  $$('[data-j]').forEach(b=>b.onclick=()=>play(servers[b.dataset.j]));
+  $$('[data-d]').forEach(b=>b.onclick=()=>{servers.splice(b.dataset.d,1);st.set('servers',servers);renderServers()});
+}
+$('#sadd').onclick=()=>{
+  let h=$('#sh').value.trim();if(!h)return;let port=25565;
+  const m=h.match(/^(.+):(\d+)$/);if(m){h=m[1];port=+m[2]}
+  servers.push({name:$('#sn').value.trim()||h,host:h,port});st.set('servers',servers);$('#sn').value=$('#sh').value='';renderServers();
+};
+
+$('#name').value=who();$('#name').oninput=e=>{st.set('name',e.target.value);paintUser()};
+$('#dispName').value=st.get('display','');$('#dispName').oninput=e=>{st.set('display',e.target.value);paintUser()};
+$('.acc').style.cursor='pointer';$('.acc').onclick=()=>{go('settings');setTimeout(()=>{$('#dispName').scrollIntoView({block:'center'});$('#dispName').focus()},80)};
+$('#ram').value=st.get('ram',4);$('#ramv').textContent=$('#ram').value+' GB';
+$('#ram').oninput=e=>{$('#ramv').textContent=e.target.value+' GB';st.set('ram',+e.target.value)};
+$('#folder').onclick=()=>window.cloudy.openFolder();
+
+function reset(msg){$('#cancel').style.display='none';$('#play').disabled=false;$('#play').textContent='Spielen';$('#bar').style.display='none';$('#dockT').textContent='Bereit';$('#status').textContent=msg||''}
+async function play(server,opt={}){
+  if(!version)return go('versions');
+  const v=all.find(x=>x.id===bvr(version));
+  window.__cancelAt=0;$('#cancel').style.display='';$('#play').disabled=true;$('#play').textContent='Lädt …';$('#bar').style.display='block';$('#fill').style.width='0%';
+  $('#dockT').textContent='Minecraft '+version;$('#status').textContent='Starte …';
+  const r=await window.cloudy.launch({safe:opt.safe||0,hud:st.get('hud',{fps:true,ping:true,armor:true,coords:false}),username:who()||'Cloudy',version,type:v?v.type:'release',ram:cfg(version).ram,server,fabric:opt.vanilla?false:cfg(version).fabric,perf:cfg(version).perf,jvm:st.get('jvm',''),ww:st.get('ww',''),wh:st.get('wh',''),minimize:st.get('min',false),preset:st.get('preset',''),syncOpts:st.get('sync',true),clientMods:clientList(),cheats:st.get('cheats',false),gfx:st.get('gfx','opengl')});
+  if(!r.ok&&!window.__cancelAt)reset(r.error);
+}
+$('#cancel').onclick=()=>{window.__cancelAt=Date.now();window.cloudy.launchCancel();reset('Start abgebrochen.')};
+$('#play').onclick=()=>play();
+window.cloudy.on('progress',p=>{$('#fill').style.width=Math.min(100,p.task/p.total*100)+'%';$('#status').textContent=`Lade ${p.type} (${p.task}/${p.total})`});
+window.cloudy.on('log',m=>{if(/Launching|Started|Setting/i.test(m))$('#status').textContent='Minecraft startet …'});
+window.cloudy.on('status',t=>$('#status').textContent=t);
+window.cloudy.on('closed',({code,log})=>{if(Date.now()-(window.__cancelAt||0)<10000){reset('Start abgebrochen.');return}reset(code?`Minecraft wurde beendet (Code ${code}).`:'Bis bald!');if(code){$('#logtxt').textContent=log||'(kein Log)';$('#modal').style.display='grid'}});
+$('#closelog').onclick=()=>$('#modal').style.display='none';
+$('#copylog').onclick=()=>navigator.clipboard.writeText($('#logtxt').textContent);
+
+
+
+$('#vanillaBtn').onclick=()=>{$('#modal').style.display='none';play(undefined,{vanilla:true})};
+
+async function refreshAccount(){
+  const a=await window.cloudy.accountGet();window._ms=a.ms;if(a.ms)st.set('name',a.name);
+  $('#accType').textContent=a.ms?'Microsoft-Konto':'Offline-Konto';
+  $('#msOut').textContent=a.ms?`Angemeldet als ${a.name}`:'Nicht angemeldet – du spielst offline.';
+  $('#msBtn').textContent=a.ms?'Abmelden':'Mit Microsoft anmelden';
+  $('#name').disabled=a.ms;$('#name').value=who();paintUser();
+}
+$('#msBtn').onclick=async()=>{const b=$('#msBtn');b.disabled=true;if(window._ms)await window.cloudy.accountLogout();else{$('#msOut').textContent='Fenster zur Anmeldung geöffnet …';const r=await window.cloudy.msLogin();if(!r.ok)$('#msOut').textContent=r.error}b.disabled=false;if(window._ms||!$('#msOut').textContent.startsWith('Anmeldung')&&!$('#msOut').textContent.startsWith('Paket'))refreshAccount()};
+refreshAccount();
+
+$('#jvm').value=st.get('jvm','');$('#jvm').oninput=e=>st.set('jvm',e.target.value);
+$('#ww').value=st.get('ww','');$('#ww').oninput=e=>st.set('ww',e.target.value);
+$('#wh').value=st.get('wh','');$('#wh').oninput=e=>st.set('wh',e.target.value);
+$('#min').checked=st.get('min',false);$('#min').onchange=e=>st.set('min',e.target.checked);
+$('#resetJava').onclick=async()=>{await window.cloudy.resetJava();$('#status').textContent='Java wird beim nächsten Start neu geladen.'};
+$('#sync').checked=st.get('sync',true);$('#sync').onchange=e=>st.set('sync',e.target.checked);
+$('#fab').checked=st.get('fabric',true);$('#fab').onchange=e=>st.set('fabric',e.target.checked);
+$('#gfx').value=st.get('gfx','opengl');$('#gfx').onchange=e=>st.set('gfx',e.target.value);$('#perf').checked=st.get('perf',true);$('#perf').onchange=e=>st.set('perf',e.target.checked);
+
+const fmt=n=>n>=1e6?(n/1e6).toFixed(1)+' Mio.':n>=1e3?Math.round(n/1e3)+' Tsd.':n;
+let modVer='';
+async function loadMods(){
+  const lib=await window.cloudy.libList();
+  const ids=[...new Set([version,...lib.map(x=>x.id)].filter(Boolean))];
+  if(!modVer||!ids.includes(modVer))modVer=version;
+  $('#mver').innerHTML=ids.map(i=>`<option value="${esc(i)}" ${i===modVer?'selected':''}>${esc(iname(i))}</option>`).join('');
+  if(!$('#mres').children.length)searchMods();
+}
+$('#mver').onchange=e=>{modVer=e.target.value;searchMods(0)};
+let mCat='';const MOD_CATS=['optimization','decoration','technology','utility','magic','adventure','worldgen','equipment','library','storage','mobs','food','game-mechanics','transportation','management','social','economy','minigame','cursed'];
+const CAT_DE={optimization:'Optimierung',utility:'Nützliches',library:'Bibliothek',technology:'Technik',adventure:'Abenteuer',decoration:'Dekoration',equipment:'Ausrüstung',food:'Essen','game-mechanics':'Spielmechanik',magic:'Magie',management:'Verwaltung',minigame:'Minispiel',mobs:'Kreaturen',social:'Sozial',storage:'Lager',transportation:'Transport',worldgen:'Weltgenerierung',cursed:'Verflucht',economy:'Wirtschaft',combat:'Kampf',environment:'Umgebung',fonts:'Schriften',gui:'Oberfläche',items:'Items',locale:'Sprache',models:'Modelle',realistic:'Realistisch',simplistic:'Schlicht',themed:'Thematisch',tweaks:'Anpassungen','vanilla-like':'Vanilla-nah',audio:'Audio',blocks:'Blöcke',entities:'Wesen',fantasy:'Fantasy',cartoon:'Cartoon',potato:'Potato','semi-realistic':'Halb-realistisch',pbr:'PBR',modded:'Mod-Support'};
+const catName=c=>CAT_DE[c]||c.replace(/-/g,' ').replace(/^./,x=>x.toUpperCase());
+function catFromQuery(q,list){const l=q.toLowerCase();if(!l)return{q,cat:''};const hit=list.find(c=>c===l||catName(c).toLowerCase()===l||c.replace(/-/g,' ')===l);return hit?{q:'',cat:hit}:{q,cat:''}}
+function paintMCats(){$('#mCatBar').innerHTML=chips([['','Alle Kategorien'],...MOD_CATS.map(c=>[c,catName(c)])],mCat);$$('#mCatBar [data-c]').forEach(b=>b.onclick=()=>{mCat=b.dataset.c;paintMCats();searchMods(0)})}
+paintMCats();
+window.pager=(host,page,hasNext,go)=>{let el=host.nextElementSibling;if(!el||!el.classList.contains('pager')){el=document.createElement('div');el.className='pager';host.after(el)}
+  if(page===0&&!hasNext){el.innerHTML='';return}
+  const nums=[];for(let i=Math.max(0,page-2);i<=page+(hasNext?1:0);i++)nums.push(i);
+  el.innerHTML=`<button class="pg" data-g="${page-1}" ${page?'':'disabled'}>‹</button>${nums[0]>0?'<button class="pg" data-g="0">1</button><span>…</span>':''}${nums.map(i=>`<button class="pg ${i===page?'on':''}" data-g="${i}">${i+1}</button>`).join('')}<button class="pg" data-g="${page+1}" ${hasNext?'':'disabled'}>›</button><small class="muted">Seite ${page+1}</small>`;
+  el.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{if(!b.disabled){go(+b.dataset.g);try{host.scrollIntoView({block:'start',behavior:'smooth'})}catch{}}})};
+let mPage=0;
+async function searchMods(pg){
+  if(!modVer)return;mPage=typeof pg==='number'?pg:0;
+  $('#mres').innerHTML='<p class="muted">Suche …</p>';
+  try{
+    const qq=catFromQuery($('#mq').value.trim(),MOD_CATS);const r=await window.cloudy.modsSearch({q:qq.q,version:modVer,cat:mCat||qq.cat,offset:mPage*20});
+    $('#mres').innerHTML=r.map(m=>`<div class="glass srv clk" data-o="${esc(m.id)}">${m.icon?`<img class="mi" src="${esc(m.icon)}" alt="">`:`<span class="ph">${esc((m.title[0]||'?').toUpperCase())}</span>`}<div class="tx"><b>${esc(m.title)}</b> <small>von ${esc(m.author)} · ${fmt(m.downloads)} Downloads</small><small>${esc(m.desc)}</small></div><button class="btn" data-i="${m.id}">Installieren</button></div>`).join('')||'<p class="muted">Keine Mods für diese Version gefunden.</p>';
+    $$('#mres > .srv').forEach((el,i)=>{const c=r[i]&&r[i].cats;if(c&&c.length&&el.querySelector('.tx'))el.querySelector('.tx').insertAdjacentHTML('beforeend','<small class="cats">'+c.map(x=>esc(catName(x))).join(' · ')+'</small>')});
+    $$('#mres [data-o]').forEach(r=>r.onclick=()=>openMod(r.dataset.o));window.pager($('#mres'),mPage,r.length>=20,searchMods);
+    $$('[data-i]').forEach(b=>b.onclick=async e=>{e.stopPropagation();b.disabled=true;b.textContent='Lädt …';const ok=await window.cloudy.modsInstall(b.dataset.i,modVer);b.textContent=ok?'Installiert ✓':'Nicht verfügbar'});
+  }catch{$('#mres').innerHTML='<p class="muted">Modrinth ist nicht erreichbar.</p>'}
+}
+$('#msearch').onclick=()=>searchMods(0);$('#mq').onkeydown=e=>{if(e.key==='Enter')searchMods(0)};
+
+// ---- Mod-Übersicht (wie Modrinth) ----
+function inl(t){return t.replace(/!\[[^\]]*\]\([^)]*\)/g,'').replace(/\[\s*\]\([^)]*\)/g,'').replace(/\[([^\]]+)\]\((https:\/\/[^)\s]+)\)/g,'<a href="#" data-ext="$2">$1</a>').replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>')}
+function md(t){
+  const L=esc(String(t||'').replace(/<[^>]*>/g,'').slice(0,3500)).split('\n');let o='',ul=false,m;
+  for(const l of L){
+    if((m=l.match(/^\s*[-*]\s+(.*)/))){if(!ul){o+='<ul>';ul=true}o+='<li>'+inl(m[1])+'</li>';continue}
+    if(ul){o+='</ul>';ul=false}
+    if((m=l.match(/^#{1,6}\s+(.*)/)))o+='<h4>'+inl(m[1])+'</h4>';else if(l.trim())o+='<p>'+inl(l)+'</p>';
+  }
+  return o+(ul?'</ul>':'');
+}
+const side={required:'Benötigt',optional:'Optional',unsupported:'Nicht nötig'};
+async function openMod(id,ctx){
+  const M=$('#mmodal'),B=$('#mbox');M.style.display='grid';B.innerHTML='<p class="muted">Lade …</p>';
+  let m;try{m=await window.cloudy.modInfo(id)}catch{}
+  if(!m){B.innerHTML='<p class="muted">Infos nicht verfügbar.</p><button class="btn ghost" id="mClose">Schließen</button>';$('#mClose').onclick=closeMod;return}
+  const ver=(ctx&&ctx.ver)||modVer||version,link=`https://modrinth.com/${ctx?ctx.type:'mod'}/${m.slug}`;
+  B.innerHTML=`<div class="mh">${m.icon?`<img class="mi" src="${esc(m.icon)}" alt="">`:`<span class="ph">${esc(m.title[0]||'?')}</span>`}
+    <div style="flex:1;min-width:0"><h2 style="margin:0;font-size:26px">${esc(m.title)}</h2><p class="muted" style="margin:4px 0">${esc(m.desc)}</p><small class="muted">von ${esc(m.team.join(', ')||'unbekannt')}</small></div></div>
+  <div class="stats"><span class="pill">${fmt(m.downloads)} Downloads</span><span class="pill">${fmt(m.followers)} Follower</span>${m.updated?`<span class="pill">Aktualisiert ${new Date(m.updated).toLocaleDateString('de-DE')}</span>`:''}${m.license?`<span class="pill">${esc(m.license)}</span>`:''}${m.categories.map(c=>`<span class="pill">${esc(c)}</span>`).join('')}</div>
+  <div class="tools" style="margin:0 0 6px"><button class="btn" id="mInst">Für ${esc(ver||'…')} installieren</button><button class="btn ghost" data-ext="${link}">Auf Modrinth ansehen</button>${/^https:\/\/github\.com\//.test(m.source||'')?`<button class="btn ghost" data-ext="${esc(m.source)}">Quellcode</button>`:''}<button class="btn ghost" id="mClose">Schließen</button></div>
+  ${m.gallery.length?`<div class="gal">${m.gallery.map(g=>`<img src="${esc(g.url)}" alt="${esc(g.title||'')}" loading="lazy">`).join('')}</div>`:''}
+  ${md(m.body)}
+  <h4>Details</h4><p class="muted">Loader: ${esc(m.loaders.join(', ')||'–')} · Client: ${side[m.client]||'–'} · Server: ${side[m.server]||'–'}<br>Neueste Versionen: ${esc(m.versions.join(', ')||'–')}</p>`;
+  $('#mClose').onclick=closeMod;
+  $('#mInst').onclick=async e=>{const b=e.target;if(!ver)return;b.disabled=true;b.textContent='Lädt …';const ok=ctx&&ctx.plugin?(await window.cloudy.pluginInstall({id:m.id,version:ver})).ok:ctx?await window.cloudy.packInstall(m.id,ver,ctx.type):await window.cloudy.modsInstall(m.id,ver);b.textContent=ok?'Installiert ✓':'Nicht für diese Version verfügbar';if(ok&&ctx&&typeof refreshPacks==='function')refreshPacks()};
+}
+function closeMod(){$('#mmodal').style.display='none'}
+$('#mmodal').onclick=e=>{if(e.target.id==='mmodal')closeMod();const x=e.target.closest('[data-ext]');if(x){e.preventDefault();window.cloudy.openExternal(x.dataset.ext)}};
+addEventListener('keydown',e=>{if(e.key==='Escape')closeMod()});
+
+// ---- Client: Umhang, Client-Mods, Code ----
+const CW=64,CH=32,cv=document.createElement('canvas');cv.width=CW;cv.height=CH;
+const cx=cv.getContext('2d',{willReadFrequently:true}),ed=$('#capeEd'),ex=ed.getContext('2d'),pv=$('#capePrev'),px=pv.getContext('2d');
+let tool='pen',drawing=false;const REG=[[1,1,10,16,'Außen'],[12,1,10,16,'Innen'],[1,0,10,1],[11,0,10,1],[0,1,1,16],[11,1,1,16]];
+function paintCape(){
+  ex.imageSmoothingEnabled=false;ex.clearRect(0,0,640,320);ex.drawImage(cv,0,0,640,320);
+  ex.lineWidth=2;ex.strokeStyle='rgba(30,90,200,.75)';ex.fillStyle='rgba(30,90,200,.9)';ex.font='bold 12px sans-serif';
+  REG.forEach(([x,y,w,h,t])=>{ex.strokeRect(x*10+1,y*10+1,w*10-2,h*10-2);if(t)ex.fillText(t,x*10+5,y*10+h*10+14)});
+  px.imageSmoothingEnabled=false;px.clearRect(0,0,80,128);px.drawImage(cv,1,1,10,16,0,0,80,128);
+}
+function tpl(){
+  cx.clearRect(0,0,CW,CH);
+  const col=(y,d)=>{const t=y/16;return `rgb(${Math.round(154-80*t-d)},${Math.round(212-49*t-d)},${Math.round(255-d)})`};
+  for(let y=0;y<16;y++){cx.fillStyle=col(y,0);cx.fillRect(1,1+y,10,1);cx.fillRect(0,1+y,1,1);cx.fillStyle=col(y,40);cx.fillRect(12,1+y,10,1);cx.fillRect(11,1+y,1,1)}
+  cx.fillStyle=col(0,0);cx.fillRect(1,0,10,1);cx.fillStyle=col(15,0);cx.fillRect(11,0,10,1);
+  cx.fillStyle='#fff';[[4,6,4],[3,7,6],[3,8,6],[4,9,4]].forEach(([x,y,w])=>cx.fillRect(x+1,y,w,1));
+  paintCape();
+}
+function loadCapeImg(url){return new Promise(r=>{const i=new Image();i.onload=()=>{cx.clearRect(0,0,CW,CH);cx.imageSmoothingEnabled=false;cx.drawImage(i,0,0,CW,CH);paintCape();r()};i.src=url})}
+function cell(e){const r=ed.getBoundingClientRect();return[Math.floor((e.clientX-r.left)/r.width*CW),Math.floor((e.clientY-r.top)/r.height*CH)]}
+function hex2rgb(h){return[1,3,5].map(i=>parseInt(h.slice(i,i+2),16))}
+function flood(x,y,rgba){
+  const d=cx.getImageData(0,0,CW,CH),a=d.data,i0=(y*CW+x)*4,t=[a[i0],a[i0+1],a[i0+2],a[i0+3]];
+  if(t.every((v,k)=>v===rgba[k]))return;const st2=[[x,y]];
+  while(st2.length){const[X,Y]=st2.pop();if(X<0||Y<0||X>=CW||Y>=CH)continue;const i=(Y*CW+X)*4;
+    if(a[i]!==t[0]||a[i+1]!==t[1]||a[i+2]!==t[2]||a[i+3]!==t[3])continue;
+    a[i]=rgba[0];a[i+1]=rgba[1];a[i+2]=rgba[2];a[i+3]=rgba[3];st2.push([X+1,Y],[X-1,Y],[X,Y+1],[X,Y-1])}
+  cx.putImageData(d,0,0);
+}
+function act(e){
+  const[x,y]=cell(e);if(x<0||y<0||x>=CW||y>=CH)return;
+  if(tool==='pen'){cx.fillStyle=$('#capeCol').value;cx.fillRect(x,y,1,1)}
+  else if(tool==='erase')cx.clearRect(x,y,1,1);
+  else if(tool==='fill'){if(!drawing)return;flood(x,y,[...hex2rgb($('#capeCol').value),255])}
+  else if(tool==='pick'){const d=cx.getImageData(x,y,1,1).data;if(d[3])$('#capeCol').value='#'+[...d].slice(0,3).map(v=>v.toString(16).padStart(2,'0')).join('')}
+  paintCape();
+}
+ed.onpointerdown=e=>{drawing=true;ed.setPointerCapture(e.pointerId);act(e);if(tool==='fill'||tool==='pick')drawing=false};
+ed.onpointermove=e=>{if(drawing&&(tool==='pen'||tool==='erase'))act(e)};
+ed.onpointerup=ed.onpointercancel=()=>drawing=false;
+$$('[data-tool]').forEach(c=>c.onclick=()=>{tool=c.dataset.tool;$$('[data-tool]').forEach(x=>x.classList.toggle('on',x===c))});
+$('#capeTpl').onclick=tpl;
+$('#capeSave').onclick=async()=>{const r=await window.cloudy.capeSave(cv.toDataURL('image/png'));$('#capeMsg').textContent=r.ok?'Umhang gespeichert ✓ – gilt beim nächsten Spielstart.':r.error;if(r.ok){st.set('cmCapeSeen',1)}};
+$('#capeLoad').onclick=async()=>{const r=await window.cloudy.capePick();if(r.ok){await loadCapeImg(r.data);$('#capeMsg').textContent='Umhang geladen und gespeichert ✓'}else if(!r.cancel)$('#capeMsg').textContent=r.error};
+$('#capeClr').onclick=async()=>{await window.cloudy.capeClear();tpl();$('#capeMsg').textContent='Umhang entfernt.'};
+const cm=()=>({cape:true,hud:false,...st.get('cm',{})});
+function clientList(){const c=cm();return [c.cape&&'cape',c.hud&&'hud'].filter(Boolean)}
+$('#cmCape').onchange=e=>st.set('cm',{...cm(),cape:e.target.checked});
+$('#cmHud').onchange=e=>st.set('cm',{...cm(),hud:e.target.checked});
+$('#cmCheat').onchange=e=>st.set('cheats',e.target.checked);
+let capeInit=false;
+async function loadClient(){
+  const s=await window.cloudy.clientStatus(version);
+  $('#cmCape').checked=cm().cape;$('#cmHud').checked=cm().hud;$('#cmCheat').checked=st.get('cheats',false);
+  $('#cCheat').style.display=s.unlocked?'grid':'none';$('#codeIn').parentElement.parentElement.style.display=s.unlocked?'none':'grid';
+  const ok=s.jar&&s.supported.includes(version);
+  $('#clMsg').textContent=!s.jar?'Die Client-Mod fehlt noch (client/cloudy-client.jar). Siehe README.':ok?`Aktiv für Minecraft ${version}.`:`Die Client-Mod gibt es ab Minecraft 1.21.4. Gewählt: ${version||'–'}.`;
+  if(!capeInit){capeInit=true;const d=await window.cloudy.capeGet();if(d)await loadCapeImg(d);else tpl()}
+}
+async function redeem(){
+  const r=await window.cloudy.clientUnlock($('#codeIn').value);$('#codeIn').value='';
+  if(r.ok){$('#codeMsg').textContent='';loadClient()}else $('#codeMsg').textContent='Dieser Code ist ungültig.';
+}
+$('#codeBtn').onclick=redeem;$('#codeIn').onkeydown=e=>{if(e.key==='Enter')redeem()};
+
+// ---- Bibliothek ----
+let libSel=null;
+const cfg=v=>({ram:st.get('ram',4),fabric:st.get('fabric',true),perf:st.get('perf',true),...st.get('inst:'+v,{})});
+const setCfg=(v,k,val)=>st.set('inst:'+v,{...st.get('inst:'+v,{}),[k]:val});
+async function loadLib(){
+  libSel=null;$('#libDetail').style.display='none';$('#libList').style.display='block';
+  const l=await window.cloudy.libList();
+  $('#libGrid').innerHTML=l.map(x=>`<div class="glass tile" data-lv="${esc(x.id)}"><b>${esc(iname(x.id))}</b>${iname(x.id)!==x.id?`<small class="muted" style="display:block">Minecraft ${esc(bvr(x.id))}</small>`:'<br>'}<span class="pill">${x.fabric?'Fabric':'Vanilla'}</span>${x.inst?' <span class="pill">Kopie</span>':''}${x.pending?' <span class="pill">Noch nicht geladen</span>':''} <span class="pill">${x.mods} Mods</span><div class="muted" style="margin-top:8px;font-size:12px">${x.played?'Zuletzt: '+new Date(x.played).toLocaleDateString('de-DE'):''}</div></div>`).join('')||'<p class="muted" style="margin-top:14px">Noch nichts heruntergeladen. Starte eine Version, dann erscheint sie hier.</p>';
+  $$('[data-lv]').forEach(t=>t.onclick=()=>openLib(t.dataset.lv));
+}
+function openLib(id){
+  libSel=id;const c=cfg(id);
+  $('#libList').style.display='none';const d=$('#libDetail');d.style.display='block';
+  d.innerHTML=`<div class="tools" style="margin-top:0"><button class="chip" id="libBack">‹ Zurück</button></div>
+  <h2>${esc(iname(id))} <small class="muted" style="font-size:14px">Minecraft ${esc(bvr(id))}</small></h2>
+  <div class="tools"><button class="btn" id="dPlay">Spielen</button><button class="btn ghost" id="dFolder">Ordner öffnen</button><button class="btn ghost" id="dDup">Duplizieren</button><button class="btn ghost" id="dDel">${id.includes('~')?'Kopie löschen':'Version löschen'}</button></div>
+  <div class="tools"><input id="dName" class="field" maxlength="40" placeholder="Eigener Name, z. B. PvP-Profil" value="${esc((st.get('instNames',{})||{})[id]||'')}" style="flex:1;min-width:180px"><button class="btn" id="dNameSave">Namen speichern</button></div>
+  <div class="glass set" style="max-width:none"><h3>Einstellungen für diese Version</h3>
+    <label>Arbeitsspeicher<div class="ram"><input id="dRam" type="range" min="2" max="16" value="${c.ram}"><b id="dRamv">${c.ram} GB</b></div></label>
+    <label class="cb"><input type="checkbox" id="dFab" ${c.fabric?'checked':''}> Fabric aktivieren</label>
+    <label class="cb"><input type="checkbox" id="dPerf" ${c.perf?'checked':''}> Leistungs-Mods automatisch installieren</label></div>
+  <div class="sec"><h2>Mods</h2><div style="display:flex;gap:10px"><button class="btn" id="dAdd">Mods hinzufügen</button><button class="btn ghost" id="dUpd">Aktualisieren</button></div></div>
+  <p class="muted" id="dFabric"></p>
+  <div class="tools"><input id="dQ" class="field" style="flex:1;min-width:160px" placeholder="Mods durchsuchen …" autocomplete="off"></div>
+  <div class="tools" id="dCats"></div>
+  <div id="dMods"></div>`;
+  libQ='';libCat='all';$('#dQ').oninput=e=>{libQ=e.target.value;paintLibMods(libMods)};
+  $('#libBack').onclick=loadLib;
+  $('#dPlay').onclick=()=>{version=id;st.set('version',id);paintVersion();play()};
+  $('#dFolder').onclick=()=>window.cloudy.openInstance(id);
+  $('#dNameSave').onclick=()=>{const m={...(st.get('instNames',{})||{})};const v=$('#dName').value.trim();if(v)m[id]=v;else delete m[id];st.set('instNames',m);paintVersion();loadLib().then(()=>openLib(id))};
+  $('#dDup').onclick=async()=>{const w=confirm('Welten mitkopieren?\nOK = ja (kann groß sein), Abbrechen = nur Einstellungen und Mods.');const r=await window.cloudy.instCreate({from:id,worlds:w});if(r&&r.ok){const m={...(st.get('instNames',{})||{})};m[r.key]=iname(id)+' 2';st.set('instNames',m);await loadLib();openLib(r.key)}else alert(r&&r.error||'Duplizieren fehlgeschlagen.')};
+  $('#dDel').onclick=async()=>{if(id.includes('~')){if(confirm('Diese Kopie samt Mods und Einstellungen löschen?')){await window.cloudy.instDelete(id);if(version===id){version=bvr(id);st.set('version',version);paintVersion()}loadLib()}return}if(confirm(`Programmdateien von Minecraft ${id} löschen? Welten und Mods bleiben erhalten, die Version wird beim nächsten Start neu geladen.`)){await window.cloudy.libDelete(id);loadLib()}};
+  $('#dRam').oninput=e=>{$('#dRamv').textContent=e.target.value+' GB';setCfg(id,'ram',+e.target.value)};
+  $('#dFab').onchange=e=>setCfg(id,'fabric',e.target.checked);
+  $('#dPerf').onchange=e=>setCfg(id,'perf',e.target.checked);
+  $('#dAdd').onclick=()=>{modVer=id;$('#mres').innerHTML='';go('mods')};
+  $('#dUpd').onclick=async()=>{const b=$('#dUpd');b.disabled=true;b.textContent='Prüfe …';try{const n=await window.cloudy.modsUpdate(id);b.textContent=n?`${n} aktualisiert`:'Alles aktuell'}catch{b.textContent='Fehler'}renderLibMods();setTimeout(()=>{b.disabled=false;b.textContent='Aktualisieren'},2500)};
+  renderLibMods();fabricRow(id);
+}
+let libMods=[],libQ='',libCat='all';
+function chips(items,cur){return items.map(([k,l])=>`<button class="chip ${cur===k?'on':''}" data-c="${esc(k)}">${esc(l)}</button>`).join('')}
+function modRow(x){
+  const ic=x.icon?`<img class="mi" src="${esc(x.icon)}" alt="">`:`<span class="ph">${esc((x.name[0]||'?').toUpperCase())}</span>`;
+  return `<div class="glass srv">${ic}<div class="tx"><b ${x.project?`class="clk" data-o="${esc(x.project)}"`:''}>${esc(x.name)}</b>${x.version?` <small style="display:inline">${esc(x.version)}</small>`:''}${x.desc?`<small class="d">${esc(x.desc)}</small>`:''}<small>${esc(x.file.replace(/\.disabled$/,''))}${x.enabled?'':' · ausgeschaltet'}</small></div><label class="sw" title="An/Aus"><input type="checkbox" data-t="${esc(x.file)}" ${x.enabled?'checked':''}><i></i></label><button class="btn ghost" data-rm="${esc(x.file)}">Löschen</button></div>`;
+}
+function paintLibMods(m){
+  libMods=m;if(!$('#dMods'))return;
+  const cats=[...new Set(m.flatMap(x=>x.cats||[]))].sort();
+  if(!['all','on','off',...cats].includes(libCat))libCat='all';
+  $('#dCats').innerHTML=chips([['all','Alle ('+m.length+')'],['on','Aktiv'],['off','Ausgeschaltet'],...cats.map(c=>[c,catName(c)])],libCat);
+  $$('#dCats [data-c]').forEach(b=>b.onclick=()=>{libCat=b.dataset.c;paintLibMods(libMods)});
+  const q=libQ.trim().toLowerCase();
+  const list=m.filter(x=>(libCat==='all'||(libCat==='on'?x.enabled:libCat==='off'?!x.enabled:(x.cats||[]).includes(libCat)))&&(!q||(x.name+' '+x.file+' '+(x.desc||'')+' '+(x.cats||[]).map(c=>c+' '+catName(c)).join(' ')).toLowerCase().includes(q)));
+  $('#dMods').innerHTML=list.map(modRow).join('')||`<p class="muted" style="margin-top:12px">${m.length?'Nichts gefunden.':'Keine Mods. Klicke „Mods hinzufügen“.'}</p>`;
+  $$('#dMods [data-t]').forEach(c=>c.onchange=async()=>{await window.cloudy.modsToggle(libSel,c.dataset.t);renderLibMods()});
+  $$('#dMods [data-rm]').forEach(b=>b.onclick=async()=>{if(!confirm('Diesen Mod löschen?'))return;await window.cloudy.modsRemove(libSel,b.dataset.rm);renderLibMods()});
+  $$('#dMods [data-o]').forEach(n=>n.onclick=()=>openMod(n.dataset.o));
+}
+async function fabricRow(id){
+  const ok=await window.cloudy.fabricStatus(id),el=$('#dFabric');if(!el||libSel!==id)return;
+  el.innerHTML=ok?'Fabric ist installiert.':'Fabric ist hier noch nicht installiert. Cloudy richtet es beim Start oder bei der ersten Mod-Installation automatisch ein. <button class="chip" id="dFabBtn">Jetzt installieren</button>';
+  const b=$('#dFabBtn');if(b)b.onclick=async()=>{b.disabled=true;b.textContent='Installiere …';const r=await window.cloudy.fabricInstall(id);b.textContent=r?'Fertig ✓':'Nicht verfügbar';fabricRow(id);renderLibMods()};
+}
+async function renderLibMods(){
+  const id=libSel;paintLibMods(await window.cloudy.modsList(id));
+  // danach Titel und Bilder von Modrinth nachladen (erkennt Mods am Datei-Hash)
+  window.cloudy.modsEnrich(id).then(m=>{if(libSel===id)paintLibMods(m)}).catch(()=>{});
+}
+
+paintUser();paintVersion();renderServers();
+window.cloudy.versions(true).then(l=>{all=l;if(!version||!all.find(v=>v.id===bvr(version))){version=(all.find(v=>v.type==='release')||all[0]).id}paintVersion();renderVersions()}).catch(()=>$('#status').textContent='Versionen konnten nicht geladen werden. Prüfe dein Internet.');
+</script>
+<script src="assets/js/features.js"></script>
+<script src="assets/js/shop.js"></script>
+<script src="assets/js/tour.js"></script>
+<script src="assets/js/gate.js"></script>
+<script src="assets/js/music.js"></script>
+<script src="assets/js/social.js"></script>
+<script src="assets/js/cream.js"></script>
+<script src="assets/js/home.js"></script>
+<script src="assets/js/extras.js"></script>
+<script src="assets/js/news.js"></script>
+<script src="assets/js/i18n-more.js"></script>
+<script src="assets/js/i18n.js"></script>
+</body></html>

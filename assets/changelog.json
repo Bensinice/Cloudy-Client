@@ -1,0 +1,173 @@
+[
+ {
+  "v": "0.9.20",
+  "date": "2026-10-31",
+  "added": [
+   "Chat: Vor jeder Nachricht steht der Skin-Kopf des Absenders (dein gewählter Skin wird mit deinem Konto geteilt)",
+   "Chat: Steht in einer Nachricht ein Code (z. B. MQZU-VU2J-AP2Y), erscheint darunter ein Knopf „Einlösen“"
+  ],
+  "fixed": [
+   "Lyrics-Test: prüft jetzt jede Quelle einzeln mit dem laufenden Song (sonst mit einem Beispiel) und zeigt Zeilen und Zeit; ohne Spiel erkannte er vorher keinen Song"
+  ],
+  "removed": []
+ },
+ {
+  "v": "0.9.19",
+  "date": "2026-10-31",
+  "added": [
+   "Code einlösen zeigt jetzt eine Belohnungs-Animation: Lichtstrahlen, die Karte des Items dreht sich auf (3D) und die Coins zählen hoch"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
+  "v": "0.9.18",
+  "date": "2026-10-31",
+  "added": [
+   "Einstellungen: „Update erzwingen“ lädt das neueste GitHub-Release und installiert es immer – auch wenn es nicht neuer oder sogar älter ist"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
+  "v": "0.9.17",
+  "date": "2026-10-31",
+  "added": [
+   "Das Menü oben passt jetzt immer in die Leiste (bei wenig Platz nur Symbole), nichts wird mehr abgeschnitten",
+   "Ein Klick auf die Wolke oben lädt Konto, Shop und Admin-Ansicht neu",
+   "Neuer Mini-Player ohne X: größeres Cover, große Steuerung; schließt per Spotify-Knopf, Esc oder Klick daneben",
+   "Das Start-Intro hat „Überspringen“ und „Nicht mehr zeigen“; in den Einstellungen gibt es den Schalter „Intro überspringen“",
+   "Codes: Knopf „Zufall“ erzeugt einen 12-stelligen Code (auch für Zugangscodes); Codes können ein Ablaufdatum bekommen",
+   "Admin: Bei Zugangscodes gibt es „Zugang entziehen“ – wer sich mit diesem Code freigeschaltet hat, muss danach wieder einen gültigen Code eingeben (braucht den neuen Server)",
+   "Freunde & Chat laufen jetzt direkt über dein Cloudy-Konto: Freund per Benutzername hinzufügen („+“) und chatten, ohne extra Freundesserver (braucht die neue app.js)",
+   "Start-Banner: Dein Skin mit Cosmetics steht rechts hinter den Knöpfen und schaut dem Mauszeiger nach (in den Einstellungen abschaltbar)",
+   "Shop: Filter „Alle · Nicht gekauft · Gekauft“; die 3D-Vorschau sitzt weiter mittig",
+   "Codes sehen jetzt so aus: MQZU-VU2J-AP2Y (Eingabe mit oder ohne Bindestriche, Groß-/Kleinschreibung egal)",
+   "Admin: „Zugangscode entziehen“ pro Nutzer; Meldung nach Item entfernen/hinzufügen",
+   "Update-Knopf hat 10 Sekunden Wartezeit gegen Spammen; Updates kommen immer von Bensinice/Cloudy-Client"
+  ],
+  "fixed": [
+   "Flügel und Umhänge bewegen sich im Shop jetzt auch, wenn Windows „Animationen“ abgeschaltet hat",
+   "Flügel und Umhänge bewegen sich im Shop jetzt immer, auch auf langsameren PCs (z. B. bei Freunden); wer Leistung braucht, nutzt den Performance-Knopf im Shop",
+   "Mini-Player: Ein Dreieck und ein verschobenes Layout (Namenskonflikt mit dem Spielen-Knopf) sind behoben",
+   "Mini-Player: Steuerknöpfe (Pause, Weiter, Zurück, Lautstärke) lösen jetzt zuverlässig aus – der Windows-Befehl wurde vorher von der Kommandozeile zerlegt",
+   "Die Wolke oben dreht sich jetzt auch, wenn Windows Animationen abgeschaltet hat",
+   "Entfernte Items kommen nicht mehr sofort von einem veralteten Launcher zurück"
+  ],
+  "removed": []
+ },
+ {
+  "v": "0.9.15",
+  "date": "2026-10-31",
+  "added": [
+   "Codes: Admins erstellen in Einstellungen → Admin Codes für Coins und/oder Items (mit Begrenzung, wie oft sie eingelöst werden dürfen); alle anderen lösen sie unter Einstellungen → „Code einlösen“ ein",
+   "Zugangscodes für den Launcher: Admins erstellen sie im Admin-Tab (Anzahl Einlösungen, Gültigkeit in Tagen). Sobald der erste existiert, funktioniert der alte feste Zugangscode nicht mehr",
+   "Admin: „Item hinzufügen …“ gibt einem Konto ein Item direkt",
+   "Admin: Beim Hinzufügen und Entfernen von Items gibt es eine 3D-Vorschau jedes Items",
+   "Lyrics: Die Karte im Spiel zeigt jetzt den Grund an („searching …“, „not found yet“ mit Fehlercode, „no lyrics found“) und es gibt eine zusätzliche Textquelle als Reserve",
+   "Der Konto-Server erkennt hinter nginx/Cloudflare die echte Besucher-Adresse, sodass das Versuchslimit nicht mehr alle gemeinsam trifft"
+  ],
+  "fixed": [
+   "Lyrics werden bei Netzwerkfehlern mehrfach erneut gesucht"
+  ],
+  "removed": []
+ },
+ {
+  "v": "0.9.14",
+  "date": "2026-10-31",
+  "added": [
+   "Grafik-Schnittstelle wählbar: OpenGL (Standard) oder Vulkan (experimentell, über VulkanMod) in den Einstellungen unter „Spiel“",
+   "Mouse effects: „Click animation“ und „Cursor trail“ lassen sich einzeln ein- und ausschalten",
+   "Im Spiel: Im Vanilla-Titelbildschirm gibt es oben links den Knopf „Cloudy menu“, der zurück zum Cloudy-Menü führt",
+   "Mehr FPS: zusätzliche Leistungs-Mods (ImmediatelyFast, Dynamic FPS) und bessere Speicherbereinigung (weniger Ruckler)",
+   "Nach einem Update öffnet sich die Update-Übersicht sofort"
+  ],
+  "fixed": [
+   "Mod-Auswahl zeigte fälschlich „client OUTDATED“, obwohl die Mod aktuell war",
+   "Neuigkeiten-Fenster erscheint auch bei Updates von älteren Versionen zuverlässig"
+  ],
+  "removed": []
+ },
+ {
+  "v": "0.9.13",
+  "date": "2026-10-31",
+  "added": [
+   "Konto-Daten (Coins, Items, Shop-Namen, Sperren) aktualisieren sich jetzt alle 15 Sekunden und beim Zurückkehren ins Fenster – kein Neustart mehr nötig",
+   "Die Admin-Liste aktualisiert sich alle 20 Sekunden selbst",
+   "Gesperrte oder pausierte Konten werden sofort abgemeldet",
+   "Neuer Knopf „Lyrics testen“ bei Spotify zeigt, ob lrclib.net erreichbar ist",
+   "Neues Skript „Client-Jar einbauen.bat“ legt die gebaute Client-Mod in den Update-Ordner"
+  ],
+  "fixed": [
+   "Minecraft-Start dauerte bei anderen PCs ewig: Die Client-Mod wird nur noch auf Admin-Konten automatisch gebaut, alle anderen nutzen die mitgelieferte Mod",
+   "Ist Modrinth nicht erreichbar, werden Mod-Downloads sofort übersprungen (kein minutenlanges Warten mehr)"
+  ],
+  "removed": []
+ },
+ {
+  "v": "0.9.12",
+  "date": "2026-10-31",
+  "added": [
+   "Geschenke: Items aus dem Shop an andere Konten verschenken (Knopf „Verschenken“ bei deinen Items)",
+   "Shop-Aktionen holen vorher den neuesten Stand vom Server, damit Geschenke und Admin-Änderungen nicht überschrieben werden"
+  ],
+  "fixed": [
+   "Lyrics im Spiel: Songtexte werden jetzt mehrmals und über einen zweiten Weg gesucht, statt nach einem Fehlversuch aufzugeben"
+  ],
+  "removed": []
+ },
+ {
+  "v": "0.9.11",
+  "date": "2026-10-31",
+  "added": [
+   "Neuigkeiten: nach jedem Update erscheint eine kurze Übersicht, alte Updates findest du über den Knopf „Neuigkeiten“",
+   "Admin: pro Konto lässt sich „∞ CC“ ein- und ausschalten",
+   "Spotify: Der Link zum Entwickler-Dashboard öffnet sich jetzt per Klick"
+  ],
+  "fixed": [
+   "Scrollbalken sind im ganzen Launcher ausgeblendet (Scrollen geht weiter)"
+  ],
+  "removed": [
+   "Das Tester-Konto hat keine unendlichen Coins mehr (100 CC am Anfang)"
+  ]
+ },
+ {
+  "v": "0.9.10",
+  "date": "2026-10-31",
+  "added": [
+   "Admin: Konten pausieren, zeitlich oder dauerhaft sperren, Items entfernen, Aktualisieren-Knopf",
+   "Neuer Reiter „Admin“ in den Einstellungen",
+   "Shop-Namen vom Admin sehen alle Spieler",
+   "Performance-Knopf im Shop",
+   "Slider für die Fenster-Transparenz im Glas-Theme",
+   "Sprachen: Spanisch und Französisch (Grundbegriffe)",
+   "Gewählte Version erscheint sofort in der Bibliothek"
+  ],
+  "fixed": [
+   "Intro läuft auch bei „Animationen reduzieren“ in Windows",
+   "Englisch: Heller/Dunkler Modus und weitere Texte übersetzt",
+   "Modrinth-Fehler zeigt Details und „Erneut versuchen“"
+  ],
+  "removed": [
+   "„Update von einer Adresse“ entfernt",
+   "Konto löschen verlangt jetzt eine Bestätigung"
+  ]
+ },
+ {
+  "v": "0.9.0 – 0.9.9",
+  "date": "",
+  "added": [
+   "Konto-Server (Konten zentral, Admin sieht alle Tester)",
+   "Dark- und Glas-Theme, neue Layouts und Knopfformen",
+   "Neuer Play-Knopf und neue Leiste unten",
+   "GitHub-Updates (ZIP-Releases) und automatische Prüfung alle 10 Minuten",
+   "Coins und Shop werden mit dem Server abgeglichen"
+  ],
+  "fixed": [
+   "Installer-Fehler „Access is denied“",
+   "Schrift im Spiel (Quadrate statt Text)",
+   "Intro und Tour überlagern sich nicht mehr mit der Anmeldung"
+  ],
+  "removed": []
+ }
+]

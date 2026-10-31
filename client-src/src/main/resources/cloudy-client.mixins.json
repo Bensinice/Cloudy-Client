@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "package": "app.cloudy.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": ["CapeMixin", "KeyboardMixin", "MouseMixin", "ScreenBgMixin", "PressableMixin", "SkyColorMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

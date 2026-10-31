@@ -1,0 +1,4 @@
+ZZv4, ZZv4 15 Million, ZZv3, ZZv3 1 Million Special, ZZv5 2 Million, 500K Cosmetics by BastiGHG - CC BY 4.0 - https://creativecommons.org/licenses/by/4.0/
+Converted to Minecraft meshes (decimated, textures downscaled).
+Yin Yang Black/White Cosmetics by nqrman (see the original model page for its license).
+Lyrics are fetched from LRCLIB (lrclib.net).

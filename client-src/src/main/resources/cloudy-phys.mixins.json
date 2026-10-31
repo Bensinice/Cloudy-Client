@@ -1,0 +1,7 @@
+{
+  "required": false,
+  "package": "app.cloudy.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": ["ItemPhysicsMixin"],
+  "injectors": { "defaultRequire": 0 }
+}

@@ -1,0 +1,9 @@
+{
+ "key.cloudy.menu": "Open Cloudy menu",
+ "key.cloudy.cosmetics": "Open cosmetics menu",
+ "key.cloudy.reload": "Reload resource packs and shaders",
+ "category.cloudy": "Cloudy Client",
+ "key.cloudy.freelook": "Freelook (hold)",
+ "key.cloudy.freecam": "Freecam (toggle)",
+ "key.cloudy.freelook_toggle": "Freelook (toggle)"
+}

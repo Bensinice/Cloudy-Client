@@ -1,0 +1,12 @@
+{
+ "id": "wooden",
+ "name": "Wooden",
+ "kind": "mouse",
+ "author": "Mechvibes",
+ "files": {
+  "MouseLeft": "down.wav",
+  "MouseRight": "down.wav",
+  "MouseMiddle": "down.wav"
+ },
+ "default": "down.wav"
+}
