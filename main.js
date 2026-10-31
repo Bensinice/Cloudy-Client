@@ -629,7 +629,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.23'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.24'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); if (!j) return false; try { const z = openZip(j); try { return z.has('app/cloudy/client/CosmeticsScreen.class') && z.has('cloudy-cos/build-' + CLIENT_BUILD + '.txt'); } finally { z.close(); } } catch { return false; } };
 
 // Eigener Classpath fuer neue Minecraft-Versionen (26.x): die Bibliotheksliste von minecraft-launcher-core bleibt dort leer (Fehler: KnotClient nicht gefunden)
@@ -1763,11 +1763,21 @@ function lySources(artist0, title0) { // alle Quellen nacheinander: jede liefert
     ['lrclib (Suche)', async () => best((await lyJSON(`https://lrclib.net/api/search?q=${e(artist + ' ' + title)}`)) || (await lyJSON(`https://lrclib.net/api/search?track_name=${e(title)}&artist_name=${e(artist)}`)))],
     ['NetEase', async () => {
       const sr = await lyJSON(`https://music.163.com/api/search/get?s=${e(artist + ' ' + title)}&type=1&limit=5`, NH), songs = sr && sr.result && sr.result.songs || [];
-      const nz = x => String(x || '').toLowerCase().replace(/\(.*?\)|\[.*?\]|- .*$/g, '').replace(/[^a-z0-9\u00c0-\uffff]/g, ''), cjk = /[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/, latin = !cjk.test(title + artist), nt = nz(title), na = nz(artist.split(/[,&]/)[0]);
-      for (const sg of songs.filter(sg => { const n = nz(sg.name), ar = (sg.artists || []).map(a => nz(a.name)).join('|'); return nt && n && (n === nt || n.includes(nt) || nt.includes(n)) && (!na || ar.includes(na) || na.includes(ar.split('|')[0] || '\0')); }).slice(0, 3)) { const ly = await lyJSON(`https://music.163.com/api/song/lyric?id=${sg.id}&lv=1&kv=1&tv=-1`, NH), r = ly && ly.lrc && ly.lrc.lyric ? lrcParse(ly.lrc.lyric) : null; const rr = r && latin ? r.filter(x => !cjk.test(x[1])) : r; if (rr && rr.length > 3 && (!latin || rr.length >= r.length * 0.8)) return rr; }
+      const nz = x => String(x || '').toLowerCase().replace(/\(.*?\)|\[.*?\]|- .*$/g, '').replace(/[^a-z0-9\u00c0-\uffff]/g, ''), cjk = /[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/, latin = !cjk.test(title + artist), nt = nz(title), na = nz(artist.split(/[,&]/)[0]), allA = String(artist0).split(/[,&]|\bfeat\.?\b/i).map(nz).filter(Boolean);
+      for (const sg of songs.filter(sg => { const n = nz(sg.name), ar = (sg.artists || []).map(a => nz(a.name)).join('|'); const dok = !lyr.dur || !sg.duration || Math.abs(sg.duration - lyr.dur) < 8000; return dok && nt && n && (n === nt || n.includes(nt) || nt.includes(n)) && (!na || allA.some(q => ar.includes(q) || q.includes(ar.split('|')[0] || '\0'))); }).slice(0, 3)) { const ly = await lyJSON(`https://music.163.com/api/song/lyric?id=${sg.id}&lv=1&kv=1&tv=-1`, NH), r = ly && ly.lrc && ly.lrc.lyric ? lrcParse(ly.lrc.lyric) : null; const rr = r && latin ? r.filter(x => !cjk.test(x[1])) : r; if (rr && rr.length > 3 && (!latin || rr.length >= r.length * 0.8)) return rr; }
       return null;
     }],
-    ['lyrics.ovh', async () => { const o = await lyJSON(`https://api.lyrics.ovh/v1/${e(artist)}/${e(title)}`); const ls = o && o.lyrics ? String(o.lyrics).split(/\r?\n/).map(x => x.trim()).filter(Boolean) : []; if (ls.length <= 3) return null; const dur = lyr.dur || ls.length * 4000; lyOvh = true; return ls.map((x, i) => [Math.round(i * dur / ls.length), x]); }]
+    ['Kugou', async () => {
+      const KH = { Referer: 'https://www.kugou.com/' }, sr = await lyJSON(`https://mobileservice.kugou.com/api/v3/search/song?format=json&keyword=${e(artist + ' ' + title)}&page=1&pagesize=6`, KH), list = sr && sr.data && sr.data.info || [];
+      const nz = x => String(x || '').toLowerCase().replace(/\(.*?\)|\[.*?\]|- .*$/g, '').replace(/[^a-z0-9\u00c0-\uffff]/g, ''), nt = nz(title);
+      for (const it of list.filter(it => { const n = nz(it.songname || it.filename); return nt && (n.includes(nt) || nt.includes(n.split('-').pop() || '\0')) && (!lyr.dur || !it.duration || Math.abs(it.duration * 1000 - lyr.dur) < 8000); }).slice(0, 3)) {
+        const ls = await lyJSON(`https://lyrics.kugou.com/search?ver=1&man=yes&client=pc&keyword=${e(artist + ' - ' + title)}&duration=${(it.duration || 0) * 1000}&hash=${it.hash}`, KH), c0 = ls && ls.candidates && ls.candidates[0]; if (!c0) continue;
+        const dl = await lyJSON(`https://lyrics.kugou.com/download?ver=1&client=pc&id=${c0.id}&accesskey=${c0.accesskey}&fmt=lrc&charset=utf8`, KH); if (!dl || !dl.content) continue;
+        const r = lrcParse(Buffer.from(dl.content, 'base64').toString('utf8').replace(/^\ufeff/, '')); if (r.length > 3) return r;
+      }
+      return null;
+    }],
+    ['lyrics.ovh', async () => { const o = await lyJSON(`https://api.lyrics.ovh/v1/${e(artist)}/${e(title)}`); const ls = o && o.lyrics ? String(o.lyrics).split(/\r?\n/).map(x => x.trim()).filter(Boolean) : []; if (ls.length <= 3) return null; const dur = lyr.dur || ls.length * 4000, a0 = Math.min(14000, dur * 0.06), a1 = dur - Math.min(10000, dur * 0.04), W = ls.map(x => Math.max(6, x.length)), tot = W.reduce((p, q) => p + q, 0); let c = 0; lyOvh = true; return ls.map((x, i) => { const t = Math.round(a0 + (a1 - a0) * c / tot); c += W[i]; return [t, x]; }); }]
   ];
 }
 ipcMain.handle('lyricsTest', async () => { // testet alle Quellen mit dem Song, der gerade läuft (sonst mit einem Beispiel) und zeigt je Quelle Zeilen und Zeit

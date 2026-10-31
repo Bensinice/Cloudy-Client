@@ -1,5 +1,17 @@
 [
  {
+  "v": "0.9.24",
+  "date": "2026-10-31",
+  "added": [
+   "Lyrics: neue synchronisierte Quelle (Kugou) zusätzlich zu lrclib und NetEase; Treffer werden zusätzlich anhand der Songlänge geprüft"
+  ],
+  "fixed": [
+   "Lyrics im Spiel: Wörter kleben nicht mehr aneinander (feste Wortabstände)",
+   "Lyrics ohne Zeitstempel (nur Text): werden nach Zeilenlänge über den gesungenen Teil verteilt statt gleichmäßig über das ganze Lied"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.23",
   "date": "2026-10-31",
   "added": [

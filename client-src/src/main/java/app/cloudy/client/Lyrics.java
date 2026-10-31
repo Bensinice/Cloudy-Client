@@ -126,13 +126,21 @@ public final class Lyrics {
 		alpha = A(alpha);
 		if (s.isEmpty() || alpha < 4) return;
 		var ms = c.getMatrices();
-		float w = Ui.w(s) * sc;
+		var tr = MinecraftClient.getInstance().textRenderer;
+		String[] ws = s.trim().split("\\s+");
+		int sp = Math.max(3, Ui.w("a") / 2 + 2); // feste Wortluecke: die Schrift rundet Leerzeichen sonst auf 0
+		float tw = 0; for (String w : ws) tw += Ui.w(w); tw += sp * (ws.length - 1);
+		float w = tw * sc;
 		int al = Math.max(0, Math.min(255, alpha)), a = al << 24, sh = (al / 2) << 24;
 		ms.push();
 		ms.translate(cx - w / 2f, y, 0);
 		ms.scale(sc, sc, 1f);
-		c.drawText(MinecraftClient.getInstance().textRenderer, Ui.t(s), 1, 1, sh, false); // weicher Schatten
-		c.drawText(MinecraftClient.getInstance().textRenderer, Ui.t(s), 0, 0, a | (rgb & 0xFFFFFF), false);
+		float x = 0;
+		for (String wd : ws) {
+			c.drawText(tr, Ui.t(wd), Math.round(x) + 1, 1, sh, false); // weicher Schatten
+			c.drawText(tr, Ui.t(wd), Math.round(x), 0, a | (rgb & 0xFFFFFF), false);
+			x += Ui.w(wd) + sp;
+		}
 		ms.pop();
 	}
 
@@ -474,7 +482,7 @@ public final class Lyrics {
 		int cx = 1, ly = 44;
 		for (int i = 0; i < ws.length; i++) {
 			boolean sung = i < sungN;
-			int wpx = Ui.w(ws[i]) + Ui.w(" ");
+			int wpx = Ui.w(ws[i]) + Math.max(3, Ui.w("a") / 2 + 2);
 			if (cx + wpx > cw + 2 && cx > 1) { cx = 1; ly += 11; }
 			c.drawText(tr, sung ? Ui.t(ws[i]).copy().formatted(net.minecraft.util.Formatting.BOLD) : Ui.t(ws[i]), cx, ly, fa(sung ? (0xFF000000 | ModConfig.lcol(ModConfig.lyricsCur, 0)) : 0xFF7F8CA3), true);
 			cx += wpx;
