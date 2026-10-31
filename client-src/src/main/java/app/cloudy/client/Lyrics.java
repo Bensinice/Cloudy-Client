@@ -170,7 +170,7 @@ public final class Lyrics {
 	}
 
 	// ---- Woerter, die einzeln in der Welt erscheinen (wie im Video) ----
-	private static final class W { String t; float yaw, pitch, sz; long t0; boolean cur; }
+	private static final class W { String t; float yaw, pitch, sz; long t0; boolean cur; float k = 1f; long kt; }
 	private static final List<W> words = new ArrayList<>();
 	private static int wLine = -9, wSpawned;
 	private static long wRng = 12345;
@@ -186,16 +186,29 @@ public final class Lyrics {
 			default -> net.minecraft.text.Text.literal(s);
 		};
 	}
-	private static int fw(String s) { return MinecraftClient.getInstance().textRenderer.getWidth(ft(s)); }
+	private static final java.util.HashMap<Integer, Integer> FW = new java.util.HashMap<>();
+	private static final java.util.HashMap<Integer, net.minecraft.text.Text> FT = new java.util.HashMap<>();
+	private static int fw(String s) {
+		if (s.length() != 1) return MinecraftClient.getInstance().textRenderer.getWidth(ft(s));
+		int k = ModConfig.lyricsFont * 65536 + s.charAt(0);
+		Integer v = FW.get(k);
+		if (v == null) { v = MinecraftClient.getInstance().textRenderer.getWidth(ft(s)); FW.put(k, v); }
+		return v;
+	}
+	private static net.minecraft.text.Text ftc(char ch, boolean bold) {
+		int k = (ModConfig.lyricsFont * 2 + (bold ? 1 : 0)) * 65536 + ch;
+		var t = FT.get(k);
+		if (t == null) { String cs = String.valueOf(ch); t = bold && ModConfig.lyricsFont != 0 ? ft(cs).copy().formatted(net.minecraft.util.Formatting.BOLD) : ft(cs); FT.put(k, t); }
+		return t;
+	}
 
 	private static void glyphs(DrawContext c, String s, float x0, int y, int argb, boolean bold) {
 		var tr = MinecraftClient.getInstance().textRenderer;
 		float gap = ModConfig.lyricsFont == 0 ? 1.0f : 1.6f, x = x0;
 		for (int i = 0; i < s.length(); i++) {
-			String ch = String.valueOf(s.charAt(i));
-			var t = bold && ModConfig.lyricsFont != 0 ? ft(ch).copy().formatted(net.minecraft.util.Formatting.BOLD) : ft(ch);
-			c.drawText(tr, t, Math.round(x), y, argb, false);
-			x += fw(ch) + gap;
+			char chr = s.charAt(i);
+			c.drawText(tr, ftc(chr, bold), Math.round(x), y, argb, false);
+			x += fw(String.valueOf(chr)) + gap;
 		}
 	}
 
@@ -223,8 +236,8 @@ public final class Lyrics {
 		float u = 1f / Math.max(0.5f, sc); // Versatz in Bildschirmpixeln, nicht in Textpixeln: so bleibt der Schein bei grosser Schrift sauber
 		switch (ModConfig.lyricsFx) {
 			case 0 -> { // Schein: weicher Hof in der Textfarbe, feine Schritte
-				int ga = (cur ? al / 5 : al / 8) << 24 | (rgb & 0xFFFFFF);
-				for (int k = 1; k <= 2; k++) for (int[] d : new int[][] {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {1, 1}, {-1, 1}, {1, -1}}) gl(c, s, x, d[0] * k * 1.1f * u, d[1] * k * 1.1f * u, ga);
+				int ga = (cur ? al * 2 / 7 : al / 6) << 24 | (rgb & 0xFFFFFF);
+				for (int k = 1; k <= 1; k++) for (int[] d : new int[][] {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {1, 1}, {-1, 1}, {1, -1}}) gl(c, s, x, d[0] * k * 1.1f * u, d[1] * k * 1.1f * u, ga);
 			}
 			case 1 -> { gl(c, s, x, 1.5f * u, 1.5f * u, (al * 6 / 10) << 24); gl(c, s, x, 0.8f * u, 0.8f * u, (al * 6 / 10) << 24); }
 			case 2 -> { int oa = al * 8 / 10 << 24 | 0x0A1020; for (int[] d : new int[][] {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {1, 1}, {-1, 1}, {1, -1}}) gl(c, s, x, d[0] * 1.1f * u, d[1] * 1.1f * u, oa); }
@@ -348,9 +361,12 @@ public final class Lyrics {
 				int life = ModConfig.lyricsLife;
 				float in = Math.min(1f, age / 200f); in = 1f - (1f - in) * (1f - in);
 				float fadeStart = life * 0.55f, out = age < fadeStart ? 1f : Math.max(0f, 1f - (age - fadeStart) / (life * 0.45f + 300f));
-				float a = in * out * (w.cur ? 1f : 0.8f);
-				float sc = base * w.sz * (w.cur ? 1.25f : 0.9f) * (1.3f - 0.3f * in) * ex;
-				tracked(c, w.t, sx, sy, sc, w.cur ? ModConfig.lcol(ModConfig.lyricsCur, 0) : ModConfig.lcol(ModConfig.lyricsOld, 1), (int) (255 * a), w.cur);
+				if (w.kt == 0) w.kt = now;
+				w.k += ((w.cur ? 1f : 0f) - w.k) * Math.min(1f, (now - w.kt) / 140f); w.kt = now; // weicher Wechsel aktuell -> alt (kein Springen von Groesse und Farbe)
+				float a = in * out * (0.8f + 0.2f * w.k);
+				float sc = base * w.sz * (0.9f + 0.35f * w.k) * (1.3f - 0.3f * in) * Math.min(ex, 1.8f);
+				int colr = Ui.mix(0xFF000000 | ModConfig.lcol(ModConfig.lyricsOld, 1), 0xFF000000 | ModConfig.lcol(ModConfig.lyricsCur, 0), w.k) & 0xFFFFFF;
+				tracked(c, w.t, sx, sy, sc, colr, (int) (255 * a), w.k > 0.5f && out > 0.5f);
 			}
 		} else if (ModConfig.lyricsMode == 1) {
 			String cur = line(idx);

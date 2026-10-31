@@ -656,3 +656,26 @@ window.rewardAnim = function (o) {
   }
   d.onclick = next; document.addEventListener('keydown', key); if (window.setLang) window.setLang(document.documentElement.lang || 'de'); next();
 };
+
+// Schimpfwoerter zensieren: Schalter in den Einstellungen (Standard: an), gilt fuer Chat und Lyrics im Spiel
+(function () { const cb = document.getElementById('censorOn'); if (!cb) return; window.cloudy.censorGet().then(v => { cb.checked = v !== false; }).catch(() => { cb.checked = true; }); cb.onchange = () => { window.cloudy.censorSet(cb.checked).catch(() => {}); try { if (window.frRepaint) window.frRepaint(); } catch {} }; })();
+
+// Admin: Server-Statistik und Ankündigung an alle; Spieler sehen die Ankündigung einmal als Leiste oben
+(function () {
+  const $ = s => document.querySelector(s), esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  async function stats() { const el = $('#admStats'); if (!el) return; let r = null; try { r = await window.cloudy.admStats(); } catch {} if (!r) { el.textContent = ''; return; } el.innerHTML = `<b>${r.users}</b> Konten · <b>${r.online}</b> online · <b>${r.new7}</b> neu (7 Tage) · <b>${r.banned}</b> gesperrt · <b>${r.paused}</b> pausiert · <b>${r.coins}</b> Coins im Umlauf · <b>${r.codes}</b> Codes · <b>${r.gate}</b> Zugangscodes` + (r.announce && r.announce.text ? `<br>Aktive Ankündigung: „${esc(r.announce.text)}“` : ''); }
+  const rf = $('#admRef'); if (rf) rf.addEventListener('click', stats); setInterval(() => { try { if (!document.hidden && $('#p-settings').classList.contains('on') && $('#p-settings').dataset.tab === 'adm') stats(); } catch {} }, 20000);
+  const tab = $('#admTab'); if (tab) tab.addEventListener('click', () => setTimeout(stats, 200));
+  const sendA = async clear => { const t = clear ? '' : ($('#annText').value || '').trim(); if (!clear && !t) return; const ok = await window.cloudy.admAnnounce(t).catch(() => false); const n = $('#admStat'); if (n) n.textContent = ok ? (clear ? 'Ankündigung zurückgenommen.' : 'Ankündigung gesendet – Spieler sehen sie beim nächsten Abruf (bis 5 Min).') : 'Senden fehlgeschlagen (Server erreichbar?).'; if (ok && !clear) $('#annText').value = ''; stats(); };
+  if ($('#annSend')) { $('#annSend').onclick = () => sendA(false); $('#annClear').onclick = () => sendA(true); }
+  async function poll() {
+    try {
+      const a = await window.cloudy.announceGet(); if (!a || !a.text) return;
+      let seen = 0; try { seen = +localStorage.getItem('cloudy.annSeen') || 0; } catch {}
+      if (a.t <= seen || document.getElementById('annBar')) return;
+      const d = document.createElement('div'); d.id = 'annBar'; d.innerHTML = `<span>📢 ${esc(a.text)}</span><button type="button" aria-label="Schließen">✕</button>`;
+      d.querySelector('button').onclick = () => { try { localStorage.setItem('cloudy.annSeen', String(a.t)); } catch {} d.remove(); }; document.body.appendChild(d);
+    } catch {}
+  }
+  setTimeout(poll, 6000); setInterval(poll, 300000);
+})();

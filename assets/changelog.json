@@ -1,5 +1,18 @@
 [
  {
+  "v": "0.9.27",
+  "date": "2026-11-01",
+  "added": [
+   "Einstellung „Schimpfwörter zensieren“ (Chat und Lyrics im Spiel), standardmäßig an, jederzeit abschaltbar",
+   "Admin: Server-Statistik (Konten, online, neu, gesperrt, Coins, Codes) und „Ankündigung an alle“ – Spieler sehen sie einmal als Leiste oben (benötigt aktualisierten Server)"
+  ],
+  "fixed": [
+   "Modrinth: wenn Windows/Provider die Verbindung blockiert, nutzt Cloudy jetzt als dritten Weg DNS-über-HTTPS; Mod-Downloads laufen über denselben robusten Weg",
+   "Lyrics im Spiel: deutlich weniger Zeichenaufwand pro Bild (zwischengespeicherte Buchstaben, ein Leucht-Ring), Wörter blenden weich von „aktuell“ zu „alt“ über statt zu springen"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.26",
   "date": "2026-10-31",
   "added": [],

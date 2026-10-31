@@ -14,7 +14,7 @@ const js = v => typeof v === 'string' ? v : JSON.stringify(v);
 const parse = (v, d) => { try { const j = JSON.parse(v); return j == null ? d : j; } catch { return d; } };
 async function put(u) { const key = u.name.toLowerCase(); await db.query(`REPLACE INTO cloudy_users (name_key,${COLS.join(',')}) VALUES (?${',?'.repeat(COLS.length)})`, [key, ...COLS.map(c => (c === 'owned' || c === 'equip') ? js(u[c] == null ? (c === 'owned' ? [] : {}) : u[c]) : (c === 'daily' ? (u[c] || '') : (c === 'ban_until' || c === 'paused') ? (u[c] || 0) : u[c]))]); }
 async function get(key) { const [r] = await db.query('SELECT * FROM cloudy_users WHERE name_key=?', [key]); return r[0] || null; }
-let NAMES = {}, CODES = {}, GATE = {}, GRANTS = {}, FR = { f: {}, msgs: {}, seq: 1 };
+let ANN = { text: '', t: 0 }, NAMES = {}, CODES = {}, GATE = {}, GRANTS = {}, FR = { f: {}, msgs: {}, seq: 1 };
 const gcode = v => typeof v === 'string' ? v : (v && v.c) || '';
 const saveGate = async () => { await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['gate', JSON.stringify(GATE)]); await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['gategrants', JSON.stringify(GRANTS)]); };
 let frT = null; const saveFr = async () => { clearTimeout(frT); frT = setTimeout(() => { db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['friends', JSON.stringify(FR)]).catch(() => {}); }, 400); };
@@ -33,6 +33,7 @@ async function init() {
   await db.query('CREATE TABLE IF NOT EXISTS cloudy_kv (k VARCHAR(40) PRIMARY KEY, v MEDIUMTEXT)');
   try { await db.query('ALTER TABLE cloudy_kv MODIFY v MEDIUMTEXT'); } catch {}
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='names'"); NAMES = r.length ? parse(r[0].v, {}) : {}; }
+  { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='announce'"); ANN = r.length ? parse(r[0].v, ANN) : ANN; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='gate'"); GATE = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='friends'"); FR = r.length ? parse(r[0].v, FR) : FR; if (!FR.f) FR = { f: {}, msgs: {}, seq: 1 }; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='gategrants'"); GRANTS = r.length ? parse(r[0].v, {}) : {}; }
@@ -163,6 +164,9 @@ app.post('/state', auth(async (req, res, me) => { // Shop-Stand des Kontos speic
 const admin = f => auth(async (req, res, me) => { if (!me.admin) return res.status(403).json({ error: 'Nur für Admins.' }); await f(req, res, me); });
 app.all('/admin/users', admin(async (_q, res) => { const [r] = await db.query('SELECT * FROM cloudy_users WHERE admin=0 ORDER BY created'); res.json({ users: r.map(u => ({ name: u.name, coins: u.inf_coins ? '∞' : (u.coins == null ? 100 : u.coins), owned: parse(u.owned, []).length, inf: !!u.inf_coins, banned: !!u.banned && (!Number(u.ban_until) || Number(u.ban_until) > Date.now()), until: Number(u.ban_until) || 0, paused: !!u.paused, items: parse(u.owned, []), reason: u.ban_reason || '', created: Number(u.created), gate: (Object.values(GRANTS).find(v => v && v.u === u.name.toLowerCase()) || {}).c || '' })) }); }));
 const target = f => admin(async (req, res) => { const t = await get(String(req.body.name || '').toLowerCase()); if (!t || t.admin) return res.status(404).json({ error: 'Konto nicht gefunden.' }); await f(req, res, t); });
+app.all('/announce', auth(async (_q, res) => res.json(ANN)));
+app.post('/admin/announce', admin(async (req, res) => { ANN = { text: String(req.body.text || '').trim().slice(0, 300), t: req.body.text ? Date.now() : 0 }; await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['announce', JSON.stringify(ANN)]); res.json({ ok: true, ...ANN }); }));
+app.all('/admin/stats', admin(async (_q, res) => { const [[a]] = await db.query('SELECT COUNT(*) n, SUM(banned=1) b, SUM(paused=1) p, SUM(CASE WHEN inf_coins=0 AND coins IS NOT NULL THEN coins ELSE 0 END) c, SUM(created > ?) n7 FROM cloudy_users WHERE admin=0', [Date.now() - 7 * 864e5]); const now = Date.now(); res.json({ users: +a.n || 0, online: [...SEEN.values()].filter(t => now - t < 120000).length, banned: +a.b || 0, paused: +a.p || 0, coins: +a.c || 0, items: 0, codes: Object.keys(CODES).length, gate: Object.keys(GATE).length, new7: +a.n7 || 0, announce: ANN }); }));
 app.all('/admin/codes', admin(async (_q, res) => res.json({ codes: Object.entries(CODES).map(([code, c]) => ({ code, coins: c.coins || 0, items: c.items || [], uses: c.uses || 0, used: (c.used || []).length, exp: c.exp || 0 })) })));
 app.post('/admin/codecreate', admin(async (req, res) => {
   let code = String(req.body.code || '').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 24); if (!code) code = (()=>{const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(const b of crypto.randomBytes(12))s+=A[b%A.length];return s.replace(/(.{4})(?=.)/g,'$1-')})();

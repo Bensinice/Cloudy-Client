@@ -31,11 +31,31 @@ async function mfetch(u, o) {
     }
     await new Promise(r => setTimeout(r, 600));
   }
+  try { return await dohFetch(u, o); } catch (e) { last = last || e; }
   throw last;
+}
+// Dritter Weg, wenn DNS/Provider eine Seite sperrt: Adresse per DNS-ueber-HTTPS (Cloudflare/Google, direkt per IP) holen und mit richtigem Hostnamen verbinden
+const dohCache = new Map();
+async function dohIp(host) {
+  const c = dohCache.get(host); if (c && Date.now() - c.t < 3600e3) return c.ip;
+  const https = require('https');
+  const q = base => new Promise((res, rej) => { const rq = https.get(base + '?name=' + encodeURIComponent(host) + '&type=A', { headers: { accept: 'application/dns-json' }, timeout: 6000 }, r => { let b = ''; r.on('data', d => b += d); r.on('end', () => { try { const a = (JSON.parse(b).Answer || []).find(x => x.type === 1); a ? res(a.data) : rej(new Error('no A')); } catch (e) { rej(e); } }); }); rq.on('error', rej); rq.on('timeout', () => rq.destroy(new Error('doh timeout'))); });
+  let ip; for (const b of ['https://1.1.1.1/dns-query', 'https://8.8.8.8/resolve', 'https://9.9.9.9:5053/dns-query']) { try { ip = await q(b); if (ip) break; } catch {} }
+  if (!ip) throw new Error('DNS-over-HTTPS nicht erreichbar');
+  dohCache.set(host, { ip, t: Date.now() }); return ip;
+}
+async function dohFetch(u, o) {
+  const https = require('https'), url = new URL(u), ip = await dohIp(url.hostname), body = o && o.body ? o.body : null;
+  return new Promise((res, rej) => {
+    const rq = https.request({ host: ip, servername: url.hostname, port: url.port || 443, path: url.pathname + url.search, method: (o && o.method) || 'GET', headers: { ...((o && o.headers) || {}), Host: url.hostname }, timeout: 20000 }, r => {
+      const ch = []; r.on('data', d => ch.push(d)); r.on('end', () => { const h = new Headers(); for (const [k, v] of Object.entries(r.headers)) if (typeof v === 'string') h.set(k, v); const st = r.statusCode || 0; res(new Response([204, 304].includes(st) ? null : Buffer.concat(ch), { status: st, headers: h })); });
+    });
+    rq.on('error', rej); rq.on('timeout', () => rq.destroy(new Error('timeout'))); if (body) rq.write(body); rq.end();
+  });
 }
 const getJSON = async u => { const r = await mfetch(u, HDR); if (!r.ok) throw new Error(r.status + ' ' + u); return r.json(); };
 async function download(url, dest) {
-  const r = await fetch(url, HDR);
+  const r = await mfetch(url, HDR);
   if (!r.ok) throw new Error('Download fehlgeschlagen: ' + url);
   fs.mkdirSync(path.dirname(dest), { recursive: true });
   fs.writeFileSync(dest, Buffer.from(await r.arrayBuffer()));
@@ -125,6 +145,9 @@ ipcMain.handle('gate', async (_e, code) => { // Zugangscode: neue Codes kommen v
 const gateNeedsSrv = { ok: false, error: 'Zugangscodes brauchen den Konto-Server.' };
 ipcMain.handle('gateList', async () => (srvCfg() && adminOnly()) ? ((await srvCall('/admin/gatecodes', {}, srvTok).catch(() => ({}))).codes || []) : []);
 ipcMain.handle('gateCreate', async (_e, o) => { if (!adminOnly()) return { ok: false, error: 'Nur für Admins.' }; if (!srvCfg()) return gateNeedsSrv; const r = await srvCall('/admin/gatecreate', o || {}, srvTok).catch(() => null); return r ? { ok: !!r.ok, code: r.code, error: r.error } : { ...SRV_DOWN, ok: false }; });
+ipcMain.handle('admStats', async () => (srvCfg() && adminOnly()) ? await srvCall('/admin/stats', {}, srvTok).catch(() => null) : null);
+ipcMain.handle('admAnnounce', async (_e, text) => (srvCfg() && adminOnly()) ? !!(await srvCall('/admin/announce', { text: String(text || '') }, srvTok).catch(() => ({}))).ok : false);
+ipcMain.handle('announceGet', async () => srvCfg() && srvTok ? await srvCall('/announce', {}, srvTok).catch(() => null) : null);
 ipcMain.handle('gateRevokeUser', async (_e, name) => (srvCfg() && adminOnly()) ? ((await srvCall('/admin/gaterevokeuser', { name }, srvTok).catch(() => ({}))).revoked || 0) : -1);
 ipcMain.handle('gateDelete', async (_e, code, revoke) => (srvCfg() && adminOnly()) ? !!(await srvCall('/admin/gatedelete', { code, revoke: !!revoke }, srvTok).catch(() => ({}))).ok : false);
 // Entzogener Zugang: Der Launcher fragt beim Start und danach alle 5 Minuten, ob sein Zugang noch gilt (nur bei erreichbarem Server; alte Installationen ohne Zugangs-Kennung bleiben freigeschaltet)
@@ -630,7 +653,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.25'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.27'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); if (!j) return false; try { const z = openZip(j); try { return z.has('app/cloudy/client/CosmeticsScreen.class') && z.has('cloudy-cos/build-' + CLIENT_BUILD + '.txt'); } finally { z.close(); } } catch { return false; } };
 
 // Eigener Classpath fuer neue Minecraft-Versionen (26.x): die Bibliotheksliste von minecraft-launcher-core bleibt dort leer (Fehler: KnotClient nicht gefunden)
@@ -1739,6 +1762,7 @@ async function modrinthUp() { // kurzer Vorab-Test: ist Modrinth erreichbar? (so
   if (Date.now() - mrCache.t < 60000) return mrCache.ok;
   let ok = false;
   for (const f of [net && app.isReady() ? (x, y) => net.fetch(x, y) : null, (x, y) => fetch(x, y)]) { if (!f || ok) continue; const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 6000); try { const r = await f('https://api.modrinth.com/v2/', { ...HDR, signal: ctl.signal }); ok = r.status < 500; } catch {} finally { clearTimeout(t); } }
+  if (!ok) { try { const r = await dohFetch('https://api.modrinth.com/v2/', HDR); ok = r.status < 500; } catch {} }
   mrCache = { t: Date.now(), ok }; return ok;
 }
 async function lyJSON(u, extra) { // erst Chromium (Systemproxy), dann Node – egal was bei einem PC klemmt
@@ -1793,7 +1817,14 @@ async function lyricsFetch(artist, title) {
   return [];
 }
 let lyOvh = false, lyErr = '';
-function lyricsWrite(o) { try { fs.writeFileSync(lyricsFile, JSON.stringify({ ts: Date.now(), ...o })); } catch {} }
+const { censor: censorTxt } = require('./lib/censor');
+const censorFile = path.join(app.getPath('userData'), 'censor.json');
+let censorOn = (() => { try { return JSON.parse(fs.readFileSync(censorFile, 'utf8')).on !== false; } catch { return true; } })();
+ipcMain.handle('censorSet', (_e, on) => { censorOn = !!on; try { fs.writeFileSync(censorFile, JSON.stringify({ on: censorOn })); } catch {} lyricsLast = null; return censorOn; });
+ipcMain.handle('censorGet', () => censorOn);
+ipcMain.on('censorText', (e, t) => { e.returnValue = censorOn ? censorTxt(t) : String(t == null ? '' : t); });
+let lyricsLast = null;
+function lyricsWrite(o) { try { if (censorOn && o.lines && o.lines.length) o = { ...o, lines: o.lines.map(l => [l[0], censorTxt(l[1])]) }; fs.writeFileSync(lyricsFile, JSON.stringify({ ts: Date.now(), ...o })); } catch {} }
 const lyricsCoverFile = path.join(app.getPath('userData'), 'cloudy-cover.png');
 async function lyricsCover(url, key) { // Albumcover als kleines PNG fuer die Karte im Spiel
   try {

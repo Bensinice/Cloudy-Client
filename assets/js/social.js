@@ -13,6 +13,7 @@
     const ips = (host.ips || []).map(i => i + ':' + (host.port || $('#hp').value)).join('  ·  ');
     $('#hInfo').textContent = host.running ? (host.ready ? `${L('Bereit')} (${host.version}${host.type === 'paper' ? ' Paper' : ''}) – ${L('Freunde sehen den Server im Freunde-Tab und treten mit einem Klick bei.')}` : L('Server startet … (beim ersten Mal kann das 1–2 Minuten dauern, danach wird „Selbst beitreten“ frei)')) : (host.status || L('Server ist aus.'));
   }
+  const cens = t => { try { return window.cloudy.censorText(t); } catch { return t; } };
   const log = l => { const p = $('#hLog'); p.textContent += l + '\n'; if (p.textContent.length > 20000) p.textContent = p.textContent.slice(-15000); p.scrollTop = p.scrollHeight; };
   async function refreshHost() { host = { ...(await window.cloudy.serverStatus()) }; paintHost(); }
   window.cloudy.on('serverLog', log);
@@ -89,7 +90,7 @@
     const avs = {}; ((fr.state && fr.state.friends) || []).forEach(f => { if (f.av) avs[f.name] = f.av; });
     const head = n => { const src = n === me ? (window.cloudyHeadMine && window.cloudyHeadMine()) : avs[n]; return `<span class="mav" data-i="${esc((n || '?')[0].toUpperCase())}">${src ? `<img src="${src}" alt="">` : ''}</span>`; };
     const isCode = t => /^[A-Za-z0-9]{4}(-[A-Za-z0-9]{4}){2}$/.test(String(t).trim());
-    box.innerHTML = fr.msgs.map(m => `<div class="mrow ${m.from === me ? 'me' : ''}">${head(m.from)}<div class="msg ${m.from === me ? 'me' : ''}"><span>${esc(m.text)}</span>${isCode(m.text) && m.from !== me ? `<button class="btn rdm" data-rc="${esc(m.text.trim())}">${L('Einlösen')}</button><em class="rdr"></em>` : ''}<small>${new Date(m.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small></div></div>`).join('');
+    box.innerHTML = fr.msgs.map(m => `<div class="mrow ${m.from === me ? 'me' : ''}">${head(m.from)}<div class="msg ${m.from === me ? 'me' : ''}"><span>${esc(cens(m.text))}</span>${isCode(m.text) && m.from !== me ? `<button class="btn rdm" data-rc="${esc(m.text.trim())}">${L('Einlösen')}</button><em class="rdr"></em>` : ''}<small>${new Date(m.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small></div></div>`).join('');
     box.querySelectorAll('[data-rc]').forEach(b => b.onclick = async () => {
       b.disabled = true; const out = b.parentNode.querySelector('.rdr'); out.textContent = '…';
       const r = await window.cloudy.codeRedeem(b.dataset.rc).catch(() => ({ ok: false, error: 'Der Konto-Server ist nicht erreichbar.' }));

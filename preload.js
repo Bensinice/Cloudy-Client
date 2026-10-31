@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 const inv = (c, ...a) => ipcRenderer.invoke(c, ...a);
 contextBridge.exposeInMainWorld('cloudy', {
+  admStats: () => inv('admStats'), admAnnounce: t => inv('admAnnounce', t), announceGet: () => inv('announceGet'), censorSet: on => inv('censorSet', on), censorGet: () => inv('censorGet'), censorText: t => ipcRenderer.sendSync('censorText', t),
   versions: s => inv('versions', s),
   toolTex: v => inv('toolTex', v), texCfg: v => inv('texCfg', v), gate: v => inv('gate', v), gateList: () => inv('gateList'), gateCreate: o => inv('gateCreate', o), gateDelete: (c, r) => inv('gateDelete', c, r), gateRevokeUser: n => inv('gateRevokeUser', n),
   launch: o => inv('launch', o),
