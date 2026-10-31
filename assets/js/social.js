@@ -41,7 +41,7 @@
     $('#frConnect').style.display = tab === 'conn' ? '' : 'none'; $('#frMain').style.display = tab === 'chat' ? '' : 'none'; $('#frOffline').style.display = tab === 'chat' && !c.connected ? '' : 'none';
     $('#frMain').style.display = tab === 'chat' && c.connected ? '' : 'none';
     if (!$('#frName').value) $('#frName').value = c.me || ''; const h = await window.cloudy.frHostStatus(); FS.host = h.running; paintFrHost(h);
-    if (c.connected) { $('#frMe').textContent = c.account ? c.name + ' · ' + L('Cloudy-Konto') : c.name + ' @ ' + c.url; $('#frOut').style.display = c.account ? 'none' : ''; poll(); }
+    if (c.connected) { $('#frMe').textContent = c.account ? c.name + ' · ' + L('Cloudy-Konto') : c.name + ' @ ' + c.url; { const t = fr.state && fr.state.tags; if (t && t.length && window.cloudyTags) $('#frMe').insertAdjacentHTML('beforeend', ' ' + window.cloudyTags(t)); } $('#frOut').style.display = c.account ? 'none' : ''; poll(); }
     tr();
   }
   function paintFrHost(h) {
@@ -71,7 +71,7 @@
   function paintFriends() {
     const s = fr.state; if (!s) return;
     $('#frReq').innerHTML = s.incoming.map(n => `<div class="frrow"><b>${esc(n)}</b><span class="muted" style="flex:1">${L('möchte dein Freund sein')}</span><button class="btn" data-ac="${esc(n)}">✓</button><button class="btn ghost" data-dc="${esc(n)}">✕</button></div>`).join('');
-    $('#frList').innerHTML = s.friends.length ? s.friends.map(f => `<div class="frrow clk ${fr.chat === f.name ? 'sel' : ''}" data-f="${esc(f.name)}"><i class="dot ${f.online ? 'on' : ''}"></i><b style="flex:1">${esc(f.name)}${f.server ? `<br><small class="muted">${L('Server online')} · ${esc(f.server.version || '')}</small>` : ''}</b>${f.server ? `<button class="btn" data-j="${esc(f.name)}">${L('Beitreten')}</button>` : ''}${f.unread ? `<span class="badge">${f.unread}</span>` : ''}</div>`).join('') : `<p class="muted">${L('Noch keine Freunde. Füge oben jemanden hinzu.')}</p>`;
+    $('#frList').innerHTML = s.friends.length ? s.friends.map(f => `<div class="frrow clk ${fr.chat === f.name ? 'sel' : ''}" data-f="${esc(f.name)}"><i class="dot ${f.online ? 'on' : ''}"></i><b style="flex:1">${esc(f.name)}${(window.cloudyTags || (() => ''))(f.tags)}${f.server ? `<br><small class="muted">${L('Server online')} · ${esc(f.server.version || '')}</small>` : ''}</b>${f.server ? `<button class="btn" data-j="${esc(f.name)}">${L('Beitreten')}</button>` : ''}${f.unread ? `<span class="badge">${f.unread}</span>` : ''}</div>`).join('') : `<p class="muted">${L('Noch keine Freunde. Füge oben jemanden hinzu.')}</p>`;
     $$('#frReq [data-ac]').forEach(b => b.onclick = async () => { await api('POST', '/friend/accept', { name: b.dataset.ac }); poll(); });
     $$('#frReq [data-dc]').forEach(b => b.onclick = async () => { await api('POST', '/friend/decline', { name: b.dataset.dc }); poll(); });
     $$('#frList [data-j]').forEach(b => b.onclick = async e => { e.stopPropagation(); const f = s.friends.find(x => x.name === b.dataset.j); if (!f || !f.server) return; b.disabled = true; $('#frOff').textContent = L('Verbinde …'); const r = await window.cloudy.frJoin({ hosts: f.server.hosts, port: f.server.port }); b.disabled = false; $('#frOff').textContent = ''; if (!r.ok) { $('#frOff').textContent = L(r.error); return; } if (f.server.version) { version = f.server.version; st.set('version', version); paintVersion(); } play({ name: f.name, host: r.host, port: r.port }); });
@@ -84,7 +84,7 @@
     if (r.data.msgs.length) { fr.msgs.push(...r.data.msgs); fr.last = fr.msgs[fr.msgs.length - 1].id; paintChat(true); }
   }
   function paintChat(scroll) {
-    $('#frChatHead').textContent = fr.chat || L('Wähle einen Freund');
+    { const ff = fr.state && fr.state.friends.find(x => x.name === fr.chat); $('#frChatHead').innerHTML = fr.chat ? esc(fr.chat) + (window.cloudyTags ? window.cloudyTags(ff && ff.tags) : '') : esc(L('Wähle einen Freund')); }
     $('#frChatBox').style.display = fr.chat ? '' : 'none';
     const me = fr.state ? fr.state.me : '', box = $('#frMsgs');
     const avs = {}; ((fr.state && fr.state.friends) || []).forEach(f => { if (f.av) avs[f.name] = f.av; });

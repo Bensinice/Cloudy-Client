@@ -443,13 +443,14 @@ async function paintAdmin(on) {
       <button class="btn ghost" data-ab="${n}" data-bn="${u.banned ? 0 : 1}">${u.banned ? L('Entsperren') : L('Sperren …')}</button>
       <button class="btn ghost" data-ap="${n}" data-pv="${u.paused ? 0 : 1}">${u.paused ? L('Aktivieren') : L('Pausieren')}</button>
       <button class="btn ghost" data-aa="${n}">${L('Item hinzufügen …')}</button><button class="btn ghost" data-ai="${n}" ${u.owned ? '' : 'disabled'}>${L('Items entfernen …')}</button>
-      <button class="btn ghost" data-an="${n}" data-on="${u.inf ? 0 : 1}">${u.inf ? L('∞ CC: an') : L('∞ CC: aus')}</button><button class="btn ghost" data-ac="${n}">${L('CC setzen')}</button><button class="btn ghost" data-ag="${n}">+500 CC</button><button class="btn ghost" data-ar="${n}">${L('Passwort → 12345')}</button><button class="btn ghost" data-ad="${n}">${L('Konto löschen')}</button>${u.gate ? `<button class="btn ghost" data-ax="${n}" title="${esc(u.gate)}">${L('Zugangscode entziehen')}</button>` : ''}</div>`;
+      <button class="btn ghost" data-an="${n}" data-on="${u.inf ? 0 : 1}">${u.inf ? L('∞ CC: an') : L('∞ CC: aus')}</button><button class="btn ghost" data-ac="${n}">${L('CC setzen')}</button><button class="btn ghost" data-ag="${n}">+500 CC</button><button class="btn ghost" data-ar="${n}">${L('Passwort → 12345')}</button><button class="btn ghost" data-ad="${n}">${L('Konto löschen')}</button>${[['tester', 'Tester'], ['plus', 'Cloudy+'], ['mod', 'Moderator']].map(([k, l]) => `<button class="btn ghost ${(u.tags || []).includes(k) ? 'tagon' : ''}" data-tg="${n}|${k}|${(u.tags || []).includes(k) ? 0 : 1}" title="Tag ${l} ${(u.tags || []).includes(k) ? 'entfernen' : 'vergeben'}">${(u.tags || []).includes(k) ? '✓ ' : ''}${l}</button>`).join('')}${u.gate ? `<button class="btn ghost" data-ax="${n}" title="${esc(u.gate)}">${L('Zugangscode entziehen')}</button>` : ''}</div>`;
   }).join('') : L('Keine weiteren Konten.');
   const A = window.cloudy, rp = () => paintAdmin(true), admNote = t => { const e = $('#admStat'); if (e) { e.textContent = L(t); clearTimeout(admNote.t); admNote.t = setTimeout(() => { e.textContent = ''; }, 6000); } };
   $$('#admList [data-ab]').forEach(b => b.onclick = async () => {
     const ban = b.dataset.bn === '1'; let reason = '', until = 0;
     if (ban) { const d = await askChoice('Wie lange sperren?', BAN_OPTS); if (d === null) return; until = d ? Date.now() + d : 0; reason = (await askText(L('Grund für die Sperre (optional)'))) || ''; }
     await A.authAdminBan({ name: b.dataset.ab, banned: ban, reason, until }); rp(); });
+  $$('#admList [data-tg]').forEach(b => b.onclick = async () => { const [name, tag, on] = b.dataset.tg.split('|'); const ok = await A.admTag({ name, tag, on: on === '1' }); admNote(ok ? 'Tag gespeichert.' : 'Tag konnte nicht gespeichert werden (nur mit Konto-Server).'); rp(); });
   $$('#admList [data-ap]').forEach(b => b.onclick = async () => { await A.authAdminPause({ name: b.dataset.ap, paused: b.dataset.pv === '1' }); rp(); });
   $$('#admList [data-ai]').forEach(b => b.onclick = async () => {
     const row = us.find(x => x.name === b.dataset.ai), items = (row && row.items) || [];
@@ -679,3 +680,6 @@ window.rewardAnim = function (o) {
   }
   setTimeout(poll, 6000); setInterval(poll, 300000);
 })();
+
+// Tags (Tester, Cloudy+, Moderator, Admin) als kleine Abzeichen
+window.cloudyTags = tags => (tags || []).map(k => ({ admin: ['Admin', 'admin'], mod: ['Moderator', 'mod'], plus: ['Cloudy+', 'plus'], tester: ['Tester', 'tester'] }[k])).filter(Boolean).map(([l, c]) => `<span class="ctag ${c}">${l}</span>`).join('');

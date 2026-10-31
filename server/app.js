@@ -14,13 +14,15 @@ const js = v => typeof v === 'string' ? v : JSON.stringify(v);
 const parse = (v, d) => { try { const j = JSON.parse(v); return j == null ? d : j; } catch { return d; } };
 async function put(u) { const key = u.name.toLowerCase(); await db.query(`REPLACE INTO cloudy_users (name_key,${COLS.join(',')}) VALUES (?${',?'.repeat(COLS.length)})`, [key, ...COLS.map(c => (c === 'owned' || c === 'equip') ? js(u[c] == null ? (c === 'owned' ? [] : {}) : u[c]) : (c === 'daily' ? (u[c] || '') : (c === 'ban_until' || c === 'paused') ? (u[c] || 0) : u[c]))]); }
 async function get(key) { const [r] = await db.query('SELECT * FROM cloudy_users WHERE name_key=?', [key]); return r[0] || null; }
-let ANN = { text: '', t: 0 }, NAMES = {}, CODES = {}, GATE = {}, GRANTS = {}, FR = { f: {}, msgs: {}, seq: 1 };
+let TAGS = {}, ANN = { text: '', t: 0 }, NAMES = {}, CODES = {}, GATE = {}, GRANTS = {}, FR = { f: {}, msgs: {}, seq: 1 };
 const gcode = v => typeof v === 'string' ? v : (v && v.c) || '';
 const saveGate = async () => { await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['gate', JSON.stringify(GATE)]); await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['gategrants', JSON.stringify(GRANTS)]); };
 let frT = null; const saveFr = async () => { clearTimeout(frT); frT = setTimeout(() => { db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['friends', JSON.stringify(FR)]).catch(() => {}); }, 400); };
 const saveCodes = () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['codes', JSON.stringify(CODES)]);
 const lockMsg = u => { if (!u || u.admin) return ''; if (u.paused) return 'Konto vorübergehend deaktiviert.'; const un = Number(u.ban_until) || 0; if (u.banned && (!un || un > Date.now())) { const r = u.ban_reason ? ': ' + u.ban_reason : ''; if (!un) return 'Konto dauerhaft gesperrt' + r; const m = Math.ceil((un - Date.now()) / 60000); return 'Konto gesperrt für noch ' + (m >= 1440 ? Math.ceil(m / 1440) + ' Tag(e)' : m >= 60 ? Math.ceil(m / 60) + ' Std.' : m + ' Min.') + r; } return ''; };
-const pub = u => ({ names: NAMES, name: u.name, admin: !!u.admin, coins: u.admin || u.inf_coins ? null : u.coins, mustChange: !!u.must_change, state: { coins: u.admin || u.inf_coins ? null : (u.coins == null ? 100 : u.coins), owned: parse(u.owned, []), equip: parse(u.equip, {}), daily: u.daily || '' } });
+const TAGS_OK = ['tester', 'plus', 'mod'];
+const tagsOf = k => { const t = (TAGS[k] || []).filter(x => TAGS_OK.includes(x)); return k === 'admin' ? ['admin', ...t] : t; };
+const pub = u => ({ tags: tagsOf(String(u.name).toLowerCase()), names: NAMES, name: u.name, admin: !!u.admin, coins: u.admin || u.inf_coins ? null : u.coins, mustChange: !!u.must_change, state: { coins: u.admin || u.inf_coins ? null : (u.coins == null ? 100 : u.coins), owned: parse(u.owned, []), equip: parse(u.equip, {}), daily: u.daily || '' } });
 const okPw = (u, p) => { if (!u) return false; try { return crypto.timingSafeEqual(Buffer.from(u.hash, 'hex'), Buffer.from(hash(p, u.salt), 'hex')); } catch { return false; } };
 const fk = (o, s) => { const u = String(s || '').trim().toUpperCase(); if (Object.prototype.hasOwnProperty.call(o, u)) return u; const n = u.replace(/[^A-Z0-9]/g, ''); return n ? (Object.keys(o).find(k => k.replace(/[^A-Z0-9]/g, '') === n) || u) : u; }; // Codes mit oder ohne Bindestriche, Groß-/Kleinschreibung egal
 const sessions = new Map(), tries = new Map(), RM = new Map(); // RM: kürzlich entfernte Items je Konto – verhindert, dass ein veralteter Launcher sie sofort wieder hochlädt
@@ -33,6 +35,7 @@ async function init() {
   await db.query('CREATE TABLE IF NOT EXISTS cloudy_kv (k VARCHAR(40) PRIMARY KEY, v MEDIUMTEXT)');
   try { await db.query('ALTER TABLE cloudy_kv MODIFY v MEDIUMTEXT'); } catch {}
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='names'"); NAMES = r.length ? parse(r[0].v, {}) : {}; }
+  { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='tags'"); TAGS = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='announce'"); ANN = r.length ? parse(r[0].v, ANN) : ANN; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='gate'"); GATE = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='friends'"); FR = r.length ? parse(r[0].v, FR) : FR; if (!FR.f) FR = { f: {}, msgs: {}, seq: 1 }; }
@@ -86,8 +89,8 @@ async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
   const online = k => now - (SEEN.get(k) || 0) < 45000;
   const unread = k => (FR.msgs[frPair(me, k)] || []).filter(m => m.fk !== me && m.id > (u.read[k] || 0)).length;
   if (p === 'state') {
-    const out = { ok: true, me: myName, friends: [], incoming: [], outgoing: [] };
-    for (const k of u.friends) { const n = await nameOf(k); if (n) out.friends.push({ name: n, online: online(k), unread: unread(k), av: (FR.av && FR.av[k]) || '' }); }
+    const out = { ok: true, me: myName, tags: tagsOf(me), friends: [], incoming: [], outgoing: [] };
+    for (const k of u.friends) { const n = await nameOf(k); if (n) out.friends.push({ name: n, tags: tagsOf(k), online: online(k), unread: unread(k), av: (FR.av && FR.av[k]) || '' }); }
     for (const k of u.in) { const n = await nameOf(k); if (n) out.incoming.push(n); }
     for (const k of u.out) { const n = await nameOf(k); if (n) out.outgoing.push(n); }
     return [200, out];
@@ -162,7 +165,8 @@ app.post('/state', auth(async (req, res, me) => { // Shop-Stand des Kontos speic
   await put(u); res.json({ ok: true });
 }));
 const admin = f => auth(async (req, res, me) => { if (!me.admin) return res.status(403).json({ error: 'Nur für Admins.' }); await f(req, res, me); });
-app.all('/admin/users', admin(async (_q, res) => { const [r] = await db.query('SELECT * FROM cloudy_users WHERE admin=0 ORDER BY created'); res.json({ users: r.map(u => ({ name: u.name, coins: u.inf_coins ? '∞' : (u.coins == null ? 100 : u.coins), owned: parse(u.owned, []).length, inf: !!u.inf_coins, banned: !!u.banned && (!Number(u.ban_until) || Number(u.ban_until) > Date.now()), until: Number(u.ban_until) || 0, paused: !!u.paused, items: parse(u.owned, []), reason: u.ban_reason || '', created: Number(u.created), gate: (Object.values(GRANTS).find(v => v && v.u === u.name.toLowerCase()) || {}).c || '' })) }); }));
+app.post('/admin/tag', admin(async (req, res) => { const k = String(req.body.name || '').trim().toLowerCase(), tg = String(req.body.tag || ''); const t = await get(k); if (!t || t.admin) return res.status(404).json({ error: 'Konto nicht gefunden.' }); if (!TAGS_OK.includes(tg)) return res.status(400).json({ error: 'Unbekannter Tag.' }); const a = (TAGS[k] || []).filter(x => x !== tg); if (req.body.on) a.push(tg); if (a.length) TAGS[k] = a; else delete TAGS[k]; await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['tags', JSON.stringify(TAGS)]); res.json({ ok: true, tags: a }); }));
+app.all('/admin/users', admin(async (_q, res) => { const [r] = await db.query('SELECT * FROM cloudy_users WHERE admin=0 ORDER BY created'); res.json({ users: r.map(u => ({ name: u.name, tags: TAGS[String(u.name).toLowerCase()] || [], coins: u.inf_coins ? '∞' : (u.coins == null ? 100 : u.coins), owned: parse(u.owned, []).length, inf: !!u.inf_coins, banned: !!u.banned && (!Number(u.ban_until) || Number(u.ban_until) > Date.now()), until: Number(u.ban_until) || 0, paused: !!u.paused, items: parse(u.owned, []), reason: u.ban_reason || '', created: Number(u.created), gate: (Object.values(GRANTS).find(v => v && v.u === u.name.toLowerCase()) || {}).c || '' })) }); }));
 const target = f => admin(async (req, res) => { const t = await get(String(req.body.name || '').toLowerCase()); if (!t || t.admin) return res.status(404).json({ error: 'Konto nicht gefunden.' }); await f(req, res, t); });
 app.all('/announce', auth(async (_q, res) => res.json(ANN)));
 app.post('/admin/announce', admin(async (req, res) => { ANN = { text: String(req.body.text || '').trim().slice(0, 300), t: req.body.text ? Date.now() : 0 }; await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['announce', JSON.stringify(ANN)]); res.json({ ok: true, ...ANN }); }));

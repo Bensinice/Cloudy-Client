@@ -145,6 +145,7 @@ ipcMain.handle('gate', async (_e, code) => { // Zugangscode: neue Codes kommen v
 const gateNeedsSrv = { ok: false, error: 'Zugangscodes brauchen den Konto-Server.' };
 ipcMain.handle('gateList', async () => (srvCfg() && adminOnly()) ? ((await srvCall('/admin/gatecodes', {}, srvTok).catch(() => ({}))).codes || []) : []);
 ipcMain.handle('gateCreate', async (_e, o) => { if (!adminOnly()) return { ok: false, error: 'Nur für Admins.' }; if (!srvCfg()) return gateNeedsSrv; const r = await srvCall('/admin/gatecreate', o || {}, srvTok).catch(() => null); return r ? { ok: !!r.ok, code: r.code, error: r.error } : { ...SRV_DOWN, ok: false }; });
+ipcMain.handle('admTag', async (_e, { name, tag, on }) => (srvCfg() && adminOnly()) ? !!(await srvCall('/admin/tag', { name, tag, on: !!on }, srvTok).catch(() => ({}))).ok : false);
 ipcMain.handle('admStats', async () => (srvCfg() && adminOnly()) ? await srvCall('/admin/stats', {}, srvTok).catch(() => null) : null);
 ipcMain.handle('admAnnounce', async (_e, text) => (srvCfg() && adminOnly()) ? !!(await srvCall('/admin/announce', { text: String(text || '') }, srvTok).catch(() => ({}))).ok : false);
 ipcMain.handle('announceGet', async () => srvCfg() && srvTok ? await srvCall('/announce', {}, srvTok).catch(() => null) : null);
@@ -280,7 +281,7 @@ async function installMod(project, mc, seen = new Set()) {
 }
 
 const catFacet = c => (/^[\w-]{2,30}$/.test(String(c || '')) ? [[`categories:${c}`]] : []);
-ipcMain.handle('modsSearch', async (_e, { q, version, cat, offset }) => {
+ipcMain.handle('modsSearch', async (_e, { q, version, cat, offset, limit, index }) => {
   const facets = encodeURIComponent(JSON.stringify([['project_type:mod'], ['categories:fabric'], [`versions:${bv(version)}`], ...catFacet(cat)]));
   const d = await getJSON(`https://api.modrinth.com/v2/search?query=${encodeURIComponent(q || '')}&facets=${facets}&limit=${Math.max(1, Math.min(40, (+limit || 20) | 0))}&offset=${Math.max(0, Math.min(2000, (+offset || 0) | 0))}${['relevance', 'downloads', 'follows', 'newest', 'updated'].includes(index) ? '&index=' + index : ''}`);
   return d.hits.map(h => ({ id: h.project_id, title: h.title, desc: h.description, icon: h.icon_url, downloads: h.downloads, follows: h.follows, author: h.author, slug: h.slug, gallery: h.featured_gallery || (h.gallery && h.gallery[0]) || '', cats: h.display_categories || h.categories || [] }));
@@ -1005,7 +1006,7 @@ ipcMain.handle('authDelete', async (_e, { pass }) => {
 const lockMsgL = u => { if (!u || u.admin) return ''; if (u.paused) return 'Konto vorübergehend deaktiviert.'; if (u.banned && (!u.banUntil || u.banUntil > Date.now())) { const r = u.banReason ? ': ' + u.banReason : ''; if (!u.banUntil) return 'Konto dauerhaft gesperrt' + r; const m = Math.ceil((u.banUntil - Date.now()) / 60000); return 'Konto gesperrt für noch ' + (m >= 1440 ? Math.ceil(m / 1440) + ' Tag(e)' : m >= 60 ? Math.ceil(m / 60) + ' Std.' : m + ' Min.') + r; } return ''; };
 const adminOnly = () => { const u = curRec(); return u && u.admin; };
 ipcMain.handle('authList', async () => srvCfg() ? (adminOnly() ? (await srvCall('/admin/users', {}, srvTok).catch(() => ({}))).users?.map(u => u.name) || [] : []) : adminOnly() ? Object.values(readAuth().users).filter(u => !u.admin).map(u => u.name) : []);
-ipcMain.handle('authListFull', async () => srvCfg() ? (adminOnly() ? ((await srvCall('/admin/users', {}, srvTok).catch(() => ({}))).users || []).map(u => ({ name: u.name, inf: !!u.inf, banned: !!u.banned, until: u.until || 0, paused: !!u.paused, items: u.items || [], reason: u.reason || '', coins: u.coins, owned: u.owned || 0, gate: u.gate || '' })) : []) : adminOnly() ? Object.values(readAuth().users).filter(u => !u.admin).map(u => ({ name: u.name, inf: !!u.infCoins, banned: !!u.banned && (!u.banUntil || u.banUntil > Date.now()), until: u.banUntil || 0, paused: !!u.paused, items: u.owned || [], reason: u.banReason || '', coins: u.infCoins ? '∞' : (u.coins == null ? 100 : u.coins), owned: (u.owned || []).length })) : []);
+ipcMain.handle('authListFull', async () => srvCfg() ? (adminOnly() ? ((await srvCall('/admin/users', {}, srvTok).catch(() => ({}))).users || []).map(u => ({ name: u.name, inf: !!u.inf, banned: !!u.banned, until: u.until || 0, paused: !!u.paused, items: u.items || [], reason: u.reason || '', coins: u.coins, owned: u.owned || 0, gate: u.gate || '', tags: u.tags || [] })) : []) : adminOnly() ? Object.values(readAuth().users).filter(u => !u.admin).map(u => ({ name: u.name, inf: !!u.infCoins, banned: !!u.banned && (!u.banUntil || u.banUntil > Date.now()), until: u.banUntil || 0, paused: !!u.paused, items: u.owned || [], reason: u.banReason || '', coins: u.infCoins ? '∞' : (u.coins == null ? 100 : u.coins), owned: (u.owned || []).length })) : []);
 ipcMain.handle('authAdminBan', async (_e, { name, banned, reason, until }) => {
   until = +until > Date.now() ? Math.round(+until) : 0;
   if (srvCfg()) return adminOnly() && !!(await srvCall('/admin/ban', { name, banned, reason, until }, srvTok).catch(() => ({}))).ok;

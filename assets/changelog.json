@@ -1,5 +1,16 @@
 [
  {
+  "v": "0.9.29",
+  "date": "2026-11-01",
+  "added": [
+   "Tags für Konten: Tester, Cloudy+, Moderator (Admin vergibst du in der Admin-Liste per Klick; Admin-Konten tragen automatisch „Admin“). Die Abzeichen erscheinen in der Freundesliste, im Chat-Kopf und neben deinem Namen (benötigt aktualisierten Server)"
+  ],
+  "fixed": [
+   "Mods: „Modrinth can't be reached“ in der Mod-Suche – ein Programmfehler (fehlende Variablen), nicht deine Verbindung"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.28",
   "date": "2026-11-01",
   "added": [],
