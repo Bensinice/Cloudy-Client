@@ -512,7 +512,7 @@ public class CloudyModsScreen extends Screen {
 		Ui.txt(c, "Spotify lyrics options", x + 12, y + 12, 0xFFFFFFFF);
 		int rx = x + 10, rw = w - 20, ry = y + 30;
 		mrow(c, mx, my, rx, ry, rw, "Position", ModConfig.LPOS[ModConfig.lyricsMode], 0, () -> { ModConfig.lyricsMode = (ModConfig.lyricsMode + 1) % ModConfig.LPOS.length; ModConfig.save(); }); ry += 23;
-		mrow(c, mx, my, rx, ry, rw, "Timing (click to shift)", String.format("%+.2f s", ModConfig.lyricsOffset / 1000f), 0, () -> { ModConfig.lyricsOffset += 250; if (ModConfig.lyricsOffset > 2000) ModConfig.lyricsOffset = -2000; ModConfig.save(); }); ry += 23;
+		mrow(c, mx, my, rx, ry, rw, "Timing (click = later)", String.format("%+.2f s", ModConfig.lyricsOffset / 1000f), 0, () -> { ModConfig.lyricsOffset -= 250; if (ModConfig.lyricsOffset < -5000) ModConfig.lyricsOffset = 2000; ModConfig.save(); }); ry += 23;
 		mrow(c, mx, my, rx, ry, rw, "Word duration", String.format("%.1f s", ModConfig.lyricsLife / 1000f), 0, () -> { ModConfig.lyricsLife += 400; if (ModConfig.lyricsLife > 4000) ModConfig.lyricsLife = 800; ModConfig.save(); }); ry += 23;
 		mrow(c, mx, my, rx, ry, rw, "Color: current word", ModConfig.colName(ModConfig.lyricsCur, 0), ModConfig.lcol(ModConfig.lyricsCur, 0), () -> openPick(0)); ry += 23;
 		mrow(c, mx, my, rx, ry, rw, "Color: already sung", ModConfig.colName(ModConfig.lyricsOld, 1), ModConfig.lcol(ModConfig.lyricsOld, 1), () -> openPick(1)); ry += 23;

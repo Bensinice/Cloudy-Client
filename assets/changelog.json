@@ -1,5 +1,17 @@
 [
  {
+  "v": "0.9.23",
+  "date": "2026-10-31",
+  "added": [
+   "Lyrics-Einstellung „Timing“: ein Klick verschiebt die Lyrics jetzt in 0,25-s-Schritten nach SPÄTER (bis −5 s), damit zu frühe Texte passend werden"
+  ],
+  "fixed": [
+   "Miniplayer im Launcher: Pause/Weiter/Skip gehen zuerst direkt über Spotify (mit Anmeldung), sonst über die Medientasten",
+   "Lyrics: typografische Apostrophe und Sonderleerzeichen werden normalisiert (Wörter klebten aneinander)"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.22",
   "date": "2026-10-31",
   "added": [],

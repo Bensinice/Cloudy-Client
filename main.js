@@ -629,7 +629,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.16'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.23'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); if (!j) return false; try { const z = openZip(j); try { return z.has('app/cloudy/client/CosmeticsScreen.class') && z.has('cloudy-cos/build-' + CLIENT_BUILD + '.txt'); } finally { z.close(); } } catch { return false; } };
 
 // Eigener Classpath fuer neue Minecraft-Versionen (26.x): die Bibliotheksliste von minecraft-launcher-core bleibt dort leer (Fehler: KnotClient nicht gefunden)
@@ -1728,7 +1728,7 @@ const lrcParse = txt => {
   const out = [];
   for (const l of String(txt || '').split(/\r?\n/)) {
     const m = l.match(/^((?:\[\d+:\d+(?:[.:]\d+)?\])+)\s*(.*)$/); if (!m) continue;
-    for (const q of m[1].matchAll(/\[(\d+):(\d+)(?:[.:](\d+))?\]/g)) out.push([(+q[1] * 60 + +q[2]) * 1000 + (q[3] ? Math.round(+('0.' + q[3]) * 1000) : 0), m[2].trim()]);
+    for (const q of m[1].matchAll(/\[(\d+):(\d+)(?:[.:](\d+))?\]/g)) out.push([(+q[1] * 60 + +q[2]) * 1000 + (q[3] ? Math.round(+('0.' + q[3]) * 1000) : 0), m[2].replace(/[\u2018\u2019\u02bc`\u00b4]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/[\u00a0\u2000-\u200a\u202f\u3000]/g, ' ').replace(/[\u200b-\u200d\ufeff]/g, '').replace(/\s+/g, ' ').trim()]);
   }
   return out.sort((a, b) => a[0] - b[0]);
 };
@@ -1821,7 +1821,20 @@ const mediaKeyRun = k => new Promise(res => {
     else res(false);
   } catch { res(false); }
 });
-ipcMain.handle('mediaKey', (_e, k) => mediaKeyRun(k));
+ipcMain.handle('mediaKey', async (_e, k) => { // erst Spotify direkt (Premium + Anmeldung, sofort und zuverlässig), sonst Medientasten
+  try {
+    const a = { playpause: null, next: ['POST', 'next'], prev: ['POST', 'previous'] }[k];
+    if (a !== undefined) {
+      const tok = await spToken();
+      if (tok) {
+        const pl = !!(spCache.v && spCache.v.playing), x = a || ['PUT', pl ? 'pause' : 'play'];
+        const r = await fetch('https://api.spotify.com/v1/me/player/' + x[1], { method: x[0], headers: { Authorization: 'Bearer ' + tok, 'Content-Length': '0' } });
+        if (r.ok) { spCache = { t: 0, v: null }; return true; }
+      }
+    }
+  } catch {}
+  return mediaKeyRun(k);
+});
 
 // ---- Chat-Befehle im Spiel (/pause /resume /skip /prev): der Client schreibt sie in eine Datei, hier werden sie ausgeführt ----
 const cmdFile = path.join(app.getPath('userData'), 'cloudy-cmd.txt'); let cmdSeen = 0;
