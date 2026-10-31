@@ -622,7 +622,12 @@ const CODE_HASH = '7d0e0559ecaefa91981c9e43fa6516c896de60a21130a167dd51dac9a4a62
 const clientFile = path.join(app.getPath('userData'), 'client.json');
 const capeFile = path.join(app.getPath('userData'), 'cape.png');
 const userClientDir = path.join(app.getPath('userData'), 'client');
-const clientJar = mc => (mc ? [path.join(userClientDir, `cloudy-client-${mc}.jar`), ...(mc === '1.21.4' ? [path.join(userClientDir, 'cloudy-client.jar'), path.join(__dirname, 'client', 'cloudy-client.jar')] : [])] : [path.join(userClientDir, 'cloudy-client.jar'), path.join(__dirname, 'client', 'cloudy-client.jar')]).find(f => fs.existsSync(f));
+const jarMarks = new Map(); // Pfad+Änderungszeit -> hat das Jar den aktuellen Stand?
+const jarFresh = f => { try { const k = f + ':' + fs.statSync(f).mtimeMs; if (jarMarks.has(k)) return jarMarks.get(k); const z = openZip(f); let ok = false; try { ok = z.has('app/cloudy/client/CosmeticsScreen.class') && z.has('cloudy-cos/build-' + CLIENT_BUILD + '.txt'); } finally { z.close(); } jarMarks.set(k, ok); return ok; } catch { return false; } };
+const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das mitgelieferte aus dem Release), sonst das erste vorhandene – so wird nicht unnötig minutenlang neu gebaut
+  const c = (mc ? [path.join(userClientDir, `cloudy-client-${mc}.jar`), ...(mc === '1.21.4' ? [path.join(userClientDir, 'cloudy-client.jar'), path.join(__dirname, 'client', 'cloudy-client.jar')] : [])] : [path.join(userClientDir, 'cloudy-client.jar'), path.join(__dirname, 'client', 'cloudy-client.jar')]).filter(f => fs.existsSync(f));
+  return c.find(jarFresh) || c[0];
+};
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
 const CLIENT_BUILD = '0.9.16'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); if (!j) return false; try { const z = openZip(j); try { return z.has('app/cloudy/client/CosmeticsScreen.class') && z.has('cloudy-cos/build-' + CLIENT_BUILD + '.txt'); } finally { z.close(); } } catch { return false; } };

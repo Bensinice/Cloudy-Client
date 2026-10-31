@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.21",
+  "date": "2026-10-31",
+  "added": [],
+  "fixed": [
+   "Minecraft-Start: Ein veraltetes selbst gebautes Cloudy-Client-Jar verdrängt nicht mehr das neue mitgelieferte – dadurch startete der Launcher nach jedem Update minutenlang einen Neubau („Cloudy Client wird aktualisiert …“)"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.20",
   "date": "2026-10-31",
   "added": [
