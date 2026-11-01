@@ -54,6 +54,7 @@ jobs:
         run: |
           mkdir jre
           curl -L "https://api.adoptium.net/v3/binary/latest/21/ga/mac/${{ matrix.jre }}/jre/hotspot/normal/eclipse" | tar xz -C jre --strip-components=1
+          chmod -R u+w jre   # Java-Dateien sind schreibgeschützt: sonst lässt sich die Quarantäne-Markierung auf dem Mac nicht entfernen
           node -e "const f='package.json',p=require('./'+f);p.build.extraResources=[{from:'jre/Contents/Home',to:'java'}];require('fs').writeFileSync(f,JSON.stringify(p,null,2))"
       - run: npm install
       - run: npx electron-builder --mac dmg --${{ matrix.arch }} --publish never

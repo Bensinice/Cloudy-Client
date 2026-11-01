@@ -1,4 +1,7 @@
 {
+ "0.9.54": [
+  "Mac: the Java files inside the app were read-only, so “Cloudy is damaged” could not be fixed with the Terminal command – they are now writable"
+ ],
  "0.9.53": [
   "Easy uninstall: Settings → “Uninstall Cloudy” removes Cloudy with one click (Windows, Mac, Linux), optionally including all data"
  ],

@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.54",
+  "date": "2026-11-01",
+  "added": [],
+  "fixed": [
+   "Mac: Die Java-Dateien im Programm waren schreibgeschützt, dadurch ließ sich „Cloudy ist beschädigt“ nicht mit dem Terminal-Befehl beheben – jetzt sind sie beschreibbar"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.53",
   "date": "2026-11-01",
   "added": [
