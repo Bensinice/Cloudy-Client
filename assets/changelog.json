@@ -1,5 +1,18 @@
 [
  {
+  "v": "0.9.46",
+  "date": "2026-11-01",
+  "added": [
+   "Eigene Server-Bilder: bei „Meine Server“ auf das Bild oder „Bild“ klicken und ein Foto wählen",
+   "Chat: Server-Codes (CLD-…) und Server-Adressen in Nachrichten bekommen automatisch einen „Verbinden“-Knopf; dein Server-Code steht jetzt bei „Eigener Server“ zum Kopieren",
+   "Server und Freunde einfacher erklärt (3 Schritte)"
+  ],
+  "fixed": [
+   "Nachrichten-Bubble größer, durchsichtig im Theme-Farbton und im Liquid-Glas-Look"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.45",
   "date": "2026-11-01",
   "added": [

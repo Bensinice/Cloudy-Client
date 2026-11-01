@@ -724,7 +724,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.45'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.46'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1750,6 +1750,8 @@ async function frResolve(url) { // Adresse ODER Freundescode -> Basis-URL
   for (const h of [...code.hosts].reverse()) { try { const r = await frFetch(`http://${h}:${code.port}`, 'GET', '/ping'); if (r.data && r.data.cloudy) return `http://${h}:${code.port}`; } catch {} }
   return '';
 }
+ipcMain.handle('srvShareCode', async (_e, { port }) => { const p = Math.max(1, Math.min(65535, +port || 25565)); try { const pub = await NET.publicIp(), lan = lanIps(); return { ok: true, code: NET.encodeCode(pub, lan[0], p) }; } catch { return { ok: false }; } });
+ipcMain.handle('srvCodeJoin', async (_e, code) => { const c = NET.decodeCode(String(code || '').trim()); if (!c) return { ok: false, error: 'Der Server-Code ist ungültig.' }; for (const h of [...c.hosts].reverse()) if (await NET.tcpCheck(h, c.port)) return { ok: true, host: h, port: c.port }; return { ok: false, error: 'Der Server ist von hier nicht erreichbar. Der Besitzer muss seinen Server gestartet haben (und der Port muss frei sein).' }; });
 ipcMain.handle('frJoin', async (_e, { hosts = [], port }) => { for (const h of [...hosts].reverse()) if (/^[\d.]+$/.test(h) && await NET.tcpCheck(h, port)) return { ok: true, host: h, port }; return { ok: false, error: 'Der Server ist von hier nicht erreichbar (der Gastgeber braucht eine Port-Freigabe).' }; });
 ipcMain.handle('frConnect', async (_e, { url, name, pass, mode }) => {
   const base = await frResolve(url); if (!base) return { ok: false, error: String(url || '').trim() ? 'Der Freundesserver ist nicht erreichbar. Prüfe Code und Port.' : 'Trage den Freundescode oder die Adresse ein.' };

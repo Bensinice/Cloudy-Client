@@ -3,7 +3,7 @@
   const L = s => (window.t ? window.t(s) : s), tr = () => { if (window.setLang) window.setLang(document.documentElement.lang || 'de'); };
 
   // ---------- Eigener Server ----------
-  let host = { running: false };
+  let host = { running: false }, codePort = null;
   function hostVersions() {
     const rel = (typeof all !== 'undefined' && Array.isArray(all) ? all : []).filter(v => v.type === 'release').map(v => v.id);
     const cur = $('#hv').value || version || rel[0]; $('#hv').innerHTML = [...new Set([version, ...rel].filter(Boolean))].map(i => `<option ${i === cur ? 'selected' : ''}>${esc(i)}</option>`).join('');
@@ -11,6 +11,7 @@
   function paintHost() {
     $('#hStart').disabled = host.running || !!host.busy; $('#hStop').disabled = !host.running; $('#hJoin').disabled = !(host.running && host.ready);
     const ips = (host.ips || []).map(i => i + ':' + (host.port || $('#hp').value)).join('  ·  ');
+    { const row = $('#hCodeRow'); if (row) { const on = host.running && host.ready; row.style.display = on ? '' : 'none'; if (on && host.port !== codePort) { codePort = host.port; window.cloudy.srvShareCode({ port: host.port || 25565 }).then(r => { if (r && r.ok) $('#hCode').textContent = r.code; }); } } }
     $('#hInfo').textContent = host.running ? (host.ready ? `${L('Bereit')} (${host.version}${host.type === 'paper' ? ' Paper' : ''}) – ${L('Freunde sehen den Server im Freunde-Tab und treten mit einem Klick bei.')}` : L('Server startet … (beim ersten Mal kann das 1–2 Minuten dauern, danach wird „Selbst beitreten“ frei)')) : (host.status || L('Server ist aus.'));
   }
   const cens = t => { try { return window.cloudy.censorText(t); } catch { return t; } };
@@ -23,6 +24,7 @@
     const r = await window.cloudy.serverStart({ version: $('#hv').value, ram: $('#hr').value, port: $('#hp').value, online: $('#hOnline').checked, eula: $('#hEula').checked, motd: $('#hMotd').value, type: $('#hType').value });
     host.busy = false; if (!r.ok) { host.status = L(r.error); log(L(r.error)); } await refreshHost();
   };
+  { const cb = $('#hCodeCopy'); if (cb) cb.onclick = () => { try { navigator.clipboard.writeText($('#hCode').textContent); cb.textContent = L('Kopiert ✓'); setTimeout(() => cb.textContent = L('Code kopieren'), 1500); } catch {} }; }
   $('#hStop').onclick = () => { window.cloudy.serverStop(); log(L('Server wird gestoppt …')); };
   $('#hFolder').onclick = () => window.cloudy.serverFolder($('#hv').value, $('#hType').value);
   $('#hJoin').onclick = () => { version = $('#hv').value; st.set('version', version); paintVersion(); play({ name: 'Mein Server', host: 'localhost', port: host.port || 25565 }); };
@@ -74,11 +76,11 @@
   }
   function showBubble(name, txt) {
     let b = document.getElementById('frBubble');
-    if (!b) { b = document.createElement('div'); b.id = 'frBubble'; b.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:9999;max-width:260px;padding:9px 13px;border-radius:14px;background:rgba(14,22,44,.94);border:1px solid rgba(140,203,255,.45);box-shadow:0 6px 24px rgba(0,0,0,.45);color:#fff;font-size:12.5px;cursor:pointer;transition:opacity .25s,transform .25s;opacity:0;transform:translateY(8px)'; document.body.appendChild(b); }
-    b.innerHTML = `<b style="display:block;color:#8ccbff;margin-bottom:2px">💬 ${esc(name)}</b><span style="opacity:.9;word-break:break-word">${esc(cens(txt) || L('hat dir geschrieben'))}</span>`;
-    b.onclick = () => { b.style.opacity = 0; b.style.transform = 'translateY(8px)'; b.style.pointerEvents = 'none'; try { go('friends'); fr.chat = name; fr.last = 0; fr.msgs = []; paintChat(); loadMsgs(); paintFriends(); } catch {} };
+    if (!b) { b = document.createElement('div'); b.id = 'frBubble'; b.style.cssText = 'position:fixed;right:22px;bottom:22px;z-index:9999;width:340px;max-width:calc(100vw - 44px);padding:16px 20px 17px;border-radius:26px;background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 34%,transparent),color-mix(in srgb,var(--accent2) 16%,transparent) 55%,rgba(255,255,255,.07));backdrop-filter:blur(26px) saturate(1.7);-webkit-backdrop-filter:blur(26px) saturate(1.7);border:1px solid rgba(255,255,255,.34);box-shadow:0 16px 48px rgba(0,0,0,.38),inset 0 1.5px 0 rgba(255,255,255,.5),inset 0 -10px 24px rgba(255,255,255,.05);color:#fff;font-size:16px;line-height:1.35;cursor:pointer;transition:opacity .35s cubic-bezier(.2,.9,.3,1.2),transform .35s cubic-bezier(.2,.9,.3,1.2);opacity:0;transform:translateY(18px) scale(.94);text-shadow:0 1px 8px rgba(0,0,0,.35)'; document.body.appendChild(b); }
+    b.innerHTML = `<b style="display:block;font-size:17px;margin-bottom:3px">💬 ${esc(name)}</b><span style="opacity:.95;word-break:break-word">${esc(cens(txt) || L('hat dir geschrieben'))}</span>`;
+    b.onclick = () => { b.style.opacity = 0; b.style.transform = 'translateY(18px) scale(.94)'; b.style.pointerEvents = 'none'; try { go('friends'); fr.chat = name; fr.last = 0; fr.msgs = []; paintChat(); loadMsgs(); paintFriends(); } catch {} };
     b.style.pointerEvents = ''; requestAnimationFrame(() => { b.style.opacity = 1; b.style.transform = 'none'; });
-    clearTimeout(bubT); bubT = setTimeout(() => { b.style.opacity = 0; b.style.transform = 'translateY(8px)'; b.style.pointerEvents = 'none'; }, 6000);
+    clearTimeout(bubT); bubT = setTimeout(() => { b.style.opacity = 0; b.style.transform = 'translateY(18px) scale(.94)'; b.style.pointerEvents = 'none'; }, 6000);
   }
   async function poll() {
     clearTimeout(fr.timer); if (!fr.conn) return;
@@ -110,7 +112,26 @@
     const avs = {}; ((fr.state && fr.state.friends) || []).forEach(f => { if (f.av) avs[f.name] = f.av; });
     const head = n => { const src = n === me ? (window.cloudyHeadMine && window.cloudyHeadMine()) : avs[n]; return `<span class="mav" data-i="${esc((n || '?')[0].toUpperCase())}">${src ? `<img src="${src}" alt="">` : ''}</span>`; };
     const isCode = t => /^[A-Za-z0-9]{4}(-[A-Za-z0-9]{4}){2}$/.test(String(t).trim());
-    box.innerHTML = fr.msgs.map(m => `<div class="mrow ${m.from === me ? 'me' : ''}">${head(m.from)}<div class="msg ${m.from === me ? 'me' : ''}"><span>${esc(cens(m.text))}</span>${isCode(m.text) && m.from !== me ? `<button class="btn rdm" data-rc="${esc(m.text.trim())}">${L('Einlösen')}</button><em class="rdr"></em>` : ''}<small>${new Date(m.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small></div></div>`).join('');
+    // Server in einer Nachricht erkennen: Server-Code (CLD-XXXX-XXXX-XXXX-XXXX) oder Adresse (play.beispiel.de, 1.2.3.4:25565) -> Knopf „Verbinden“
+    const TLD = /\.(net|com|de|org|gg|io|eu|me|xyz|fun|cc|tv|pro|online|host|club|world|games|lol|co|uk|us|at|ch|nl|fr|pl|ru|cz|app)$/i;
+    const srvOf = t => {
+      const s = String(t || '').trim(), cm = /\bCLD(-[A-Za-z0-9]{4}){4}\b/i.exec(s); if (cm) return { code: cm[0].toUpperCase() };
+      const words = s.split(/\s+/);
+      for (const w0 of words) {
+        const w = w0.replace(/[.,!?;:)\]]+$/, ''); if (/^https?:/i.test(w) || w.length > 80) continue;
+        const m = /^((?:\d{1,3}(?:\.\d{1,3}){3})|(?:[a-z0-9-]+\.)+[a-z]{2,24})(?::(\d{2,5}))?$/i.exec(w); if (!m) continue;
+        if (m[2] || /^\d/.test(m[1]) || words.length === 1 || TLD.test(m[1])) return { host: m[1], port: m[2] ? +m[2] : 25565 };
+      }
+      return null;
+    };
+    box.innerHTML = fr.msgs.map(m => `<div class="mrow ${m.from === me ? 'me' : ''}">${head(m.from)}<div class="msg ${m.from === me ? 'me' : ''}"><span>${esc(cens(m.text))}</span>${isCode(m.text) && m.from !== me ? `<button class="btn rdm" data-rc="${esc(m.text.trim())}">${L('Einlösen')}</button><em class="rdr"></em>` : (() => { const sv = !isCode(m.text) && srvOf(m.text); return sv ? `<button class="btn rdm" data-sv="${esc(sv.code || (sv.host + ':' + sv.port))}">${L('Verbinden')}</button><em class="rdr">${esc(sv.code ? L('Server-Code') : sv.host + (sv.port !== 25565 ? ':' + sv.port : ''))}</em>` : ''; })()}<small>${new Date(m.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small></div></div>`).join('');
+    box.querySelectorAll('[data-sv]').forEach(b => b.onclick = async () => {
+      const out = b.parentNode.querySelector('.rdr'), v = b.dataset.sv; b.disabled = true;
+      try {
+        if (/^CLD-/i.test(v)) { out.textContent = L('Verbinde …'); const r = await window.cloudy.srvCodeJoin(v); if (!r.ok) { out.textContent = L(r.error); b.disabled = false; return; } out.textContent = ''; b.disabled = false; play({ name: 'Freundes-Server', host: r.host, port: r.port }); }
+        else { const i = v.lastIndexOf(':'); b.disabled = false; play({ name: v.slice(0, i), host: v.slice(0, i), port: +v.slice(i + 1) }); }
+      } catch { out.textContent = L('Das hat nicht geklappt.'); b.disabled = false; }
+    });
     box.querySelectorAll('[data-rc]').forEach(b => b.onclick = async () => {
       b.disabled = true; const out = b.parentNode.querySelector('.rdr'); out.textContent = '…';
       const r = await window.cloudy.codeRedeem(b.dataset.rc).catch(() => ({ ok: false, error: 'Der Konto-Server ist nicht erreichbar.' }));
