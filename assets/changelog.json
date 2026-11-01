@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.39",
+  "date": "2026-11-01",
+  "added": [
+   "Limited-Formular: 3D-Vorschau des gewählten Items sowie die Knöpfe „🎲 Zufälliges Item“ und „🎲 Code“ (zufälliger Code)"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.38",
   "date": "2026-11-01",
   "added": [

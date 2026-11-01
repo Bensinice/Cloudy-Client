@@ -664,7 +664,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.38'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.39'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); if (!j) return false; try { const z = openZip(j); try { return z.has('app/cloudy/client/CosmeticsScreen.class') && z.has('cloudy-cos/build-' + CLIENT_BUILD + '.txt'); } finally { z.close(); } } catch { return false; } };
 
 // Eigener Classpath fuer neue Minecraft-Versionen (26.x): die Bibliotheksliste von minecraft-launcher-core bleibt dort leer (Fehler: KnotClient nicht gefunden)

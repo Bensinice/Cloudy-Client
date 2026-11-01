@@ -363,9 +363,10 @@
     let h = `<h3 class="shc">⏳ Limited</h3>`;
     h += list.length ? `<div class="row shrow">${list.map(card).join('')}</div>` : `<p class="muted">${shop.admin ? 'Noch kein Limited-Item – lege unten eins fest.' : 'Gerade gibt es keine Limited-Items.'}</p>`;
     if (shop.admin) h += `<div class="glass set wide" id="limForm"><h3>Limited-Item festlegen</h3><p class="muted">Das Item verschwindet aus dem normalen Shop und gibt es nur noch hier – mit begrenzter Anzahl, für Coins oder mit einem Code.</p>
-      <div class="tools"><select id="limId" class="field">${shop.catalog.map(i => `<option value="${i.id}">${escL(i.name)} (${i.id})</option>`).join('')}</select><select id="limMode" class="field"><option value="coins">Für Coins</option><option value="code">Mit Code</option></select></div>
+      <div class="i3h" id="limPrev" style="height:170px;margin:6px 0"></div>
+      <div class="tools"><button class="btn ghost" id="limRndItem" title="Zufälliges Item wählen">🎲 Zufälliges Item</button><select id="limId" class="field">${shop.catalog.map(i => `<option value="${i.id}">${escL(i.name)} (${i.id})</option>`).join('')}</select><select id="limMode" class="field"><option value="coins">Für Coins</option><option value="code">Mit Code</option></select></div>
       <div class="tools"><input id="limPrice" class="field" type="number" min="0" placeholder="Preis in CC" value="500"><input id="limStock" class="field" type="number" min="1" placeholder="Wie viele gibt es?" value="10"><input id="limHours" class="field" type="number" min="0" placeholder="Dauer in Stunden (0 = unbegrenzt)" value="0"></div>
-      <div class="tools"><input id="limCode" class="field" placeholder="Code (leer = zufällig, nur bei „Mit Code“)" autocomplete="off"><input id="limNote" class="field" placeholder="Hinweis, z. B. Event-Belohnung (optional)"></div>
+      <div class="tools"><input id="limCode" class="field" placeholder="Code (leer = zufällig, nur bei „Mit Code“)" autocomplete="off"><button class="btn ghost" id="limRndCode" title="Zufälligen Code erzeugen">🎲 Code</button><input id="limNote" class="field" placeholder="Hinweis, z. B. Event-Belohnung (optional)"></div>
       <div class="tools"><label class="muted"><input id="limReset" type="checkbox"> Bestand zurücksetzen (alle dürfen es wieder holen)</label><button class="btn" id="limSave">Speichern</button></div></div>`;
     return h;
   }
@@ -375,6 +376,10 @@
     $$('[data-lim-code]').forEach(i => i.onkeydown = e => { if (e.key === 'Enter') { const b = document.querySelector(`[data-lim-get="${i.dataset.limCode}"]`); b && b.click(); } });
     $$('[data-lim-del]').forEach(b => b.onclick = async () => { const o = (shop.limited || []).find(x => x.id === b.dataset.limDel); if (o && confirm(o.name + ' – ' + L('Limited-Angebot beenden?'))) take(await window.cloudy.limAdmin({ id: o.id, del: true })); });
     $$('[data-lim-edit]').forEach(b => b.onclick = () => { const o = (shop.limited || []).find(x => x.id === b.dataset.limEdit); if (!o) return; $('#limId').value = o.id; $('#limMode').value = o.mode; $('#limPrice').value = o.price; $('#limStock').value = o.stock; $('#limCode').value = o.code || ''; $('#limNote').value = o.note || ''; $('#limHours').value = 0; $('#limForm').scrollIntoView({ block: 'center' }); });
+    const prev = () => { const h = $('#limPrev'), id = $('#limId') && $('#limId').value; if (!h || !id) return; h.innerHTML = ''; try { const w = item3d(id); h.appendChild(w); i3s.add(w.firstChild); } catch {} };
+    if ($('#limId')) { $('#limId').onchange = prev; prev(); }
+    const rc = $('#limRndCode'); if (rc) rc.onclick = () => { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c = ''; const r = crypto.getRandomValues(new Uint8Array(8)); for (const b of r) c += A[b % A.length]; $('#limMode').value = 'code'; $('#limCode').value = c; };
+    const ri = $('#limRndItem'); if (ri) ri.onclick = () => { const o = [...$('#limId').options], taken = new Set((shop.limited || []).map(x => x.id)), pool = o.filter(x => !taken.has(x.value) && !shop.owned.includes(x.value)); const l = pool.length ? pool : o; $('#limId').value = l[Math.floor(Math.random() * l.length)].value; prev(); };
     const sv = $('#limSave'); if (sv) sv.onclick = async () => { sv.disabled = true; take(await window.cloudy.limAdmin({ id: $('#limId').value, mode: $('#limMode').value, price: +$('#limPrice').value, stock: +$('#limStock').value, hours: +$('#limHours').value, code: $('#limCode').value, note: $('#limNote').value, reset: $('#limReset').checked })); };
   }
   function paintShop() {
