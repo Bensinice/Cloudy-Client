@@ -422,7 +422,7 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
     const el = $('#shopCl'); if (!el) return;
     const c = await window.cloudy.clientStatus(version), L2 = x => L(x); let msg, btn = '', cls = '';
     if (building || c.building) { msg = buildStatus || 'Die Client-Mod wird gebaut …'; }
-    else if (!c.jar || !c.cosmetics) { msg = !c.jar ? 'Die Client-Mod für diese Version fehlt noch – ohne sie zeigt Minecraft keine Cosmetics.' : 'Deine Client-Mod ist veraltet und kennt die Cosmetics noch nicht.'; btn = c.src ? '<button class="btn" id="clBuild">Client-Mod jetzt bauen</button>' : '<span class="muted">Quellen fehlen – installiere die komplette Cloudy-Version neu.</span>'; }
+    else if (!c.jar || !c.cosmetics) { msg = !c.jar ? 'Die Client-Mod für diese Version fehlt noch – ohne sie zeigt Minecraft keine Cosmetics.' : 'Deine Client-Mod ist veraltet und kennt die Cosmetics noch nicht.' + ` (Stand ${c.have || '?'}, nötig ${c.want || '?'})`; btn = c.src ? '<button class="btn" id="clBuild">Client-Mod jetzt bauen</button>' : '<span class="muted">Quellen fehlen – installiere die komplette Cloudy-Version neu.</span>'; }
     else if (!c.supported.includes(bvr(version))) { msg = `Cosmetics gibt es im Spiel ab Minecraft 1.21.4 (gewählt: ${version}).`; btn = `<button class="btn" id="clVer">Auf 1.21.4 wechseln</button>`; }
     else { msg = `✓ Bereit: Deine Cosmetics erscheinen in Minecraft ${version} (mit Fabric).`; cls = 'ok'; }
     el.innerHTML = `<div style="font-weight:700">${L2(msg)}</div>${buildLog ? `<small class="muted" style="white-space:pre-wrap;word-break:break-all">${esc(buildLog)}</small>` : ''}${btn}`;

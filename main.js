@@ -658,14 +658,18 @@ const clientFile = path.join(app.getPath('userData'), 'client.json');
 const capeFile = path.join(app.getPath('userData'), 'cape.png');
 const userClientDir = path.join(app.getPath('userData'), 'client');
 const jarMarks = new Map(); // Pfad+Änderungszeit -> hat das Jar den aktuellen Stand?
-const jarFresh = f => { try { const k = f + ':' + fs.statSync(f).mtimeMs; if (jarMarks.has(k)) return jarMarks.get(k); const z = openZip(f); let ok = false; try { ok = z.has('app/cloudy/client/CosmeticsScreen.class') && z.has('cloudy-cos/build-' + CLIENT_BUILD + '.txt'); } finally { z.close(); } jarMarks.set(k, ok); return ok; } catch { return false; } };
+const vNum = v => String(v || '').split('.').map(x => parseInt(x, 10) || 0);
+const buildGE = (a, b) => { const x = vNum(a), y = vNum(b); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return true; }; // gleicher oder neuerer Client-Stand zaehlt als aktuell
+const zipBuild = z => { let best = ''; for (const n of z.names()) { const q = /^cloudy-cos\/build-(\d+\.\d+\.\d+)\.txt$/.exec(n); if (q && (!best || buildGE(q[1], best))) best = q[1]; } return best; };
+const jarFresh = f => { try { const k = f + ':' + fs.statSync(f).mtimeMs; if (jarMarks.has(k)) return jarMarks.get(k); const z = openZip(f); let ok = false; try { ok = z.has('app/cloudy/client/CosmeticsScreen.class') && buildGE(zipBuild(z), CLIENT_BUILD); } finally { z.close(); } jarMarks.set(k, ok); return ok; } catch { return false; } };
 const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das mitgelieferte aus dem Release), sonst das erste vorhandene – so wird nicht unnötig minutenlang neu gebaut
   const c = (mc ? [path.join(userClientDir, `cloudy-client-${mc}.jar`), ...(mc === '1.21.4' ? [path.join(userClientDir, 'cloudy-client.jar'), path.join(__dirname, 'client', 'cloudy-client.jar')] : [])] : [path.join(userClientDir, 'cloudy-client.jar'), path.join(__dirname, 'client', 'cloudy-client.jar')]).filter(f => fs.existsSync(f));
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.42'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
-const clientHasCosmetics = mc => { const j = clientJar(mc); if (!j) return false; try { const z = openZip(j); try { return z.has('app/cloudy/client/CosmeticsScreen.class') && z.has('cloudy-cos/build-' + CLIENT_BUILD + '.txt'); } finally { z.close(); } } catch { return false; } };
+const CLIENT_BUILD = '0.9.43'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
+const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
 // Eigener Classpath fuer neue Minecraft-Versionen (26.x): die Bibliotheksliste von minecraft-launcher-core bleibt dort leer (Fehler: KnotClient nicht gefunden)
 async function buildClasspath(custom, mc) {
@@ -770,7 +774,7 @@ function saveCape(buf) {
   if (w < 64 || w % 64 || h * 2 !== w) throw new Error(`Umhang muss 64×32 sein (oder 128×64 …). Deine Datei: ${w}×${h}.`);
   fs.writeFileSync(capeFile, buf);
 }
-ipcMain.handle('clientStatus', (_e, mc) => ({ unlocked: unlocked(), jar: !!clientJar(mc ? bv(mc) : undefined), cosmetics: clientHasCosmetics(mc ? bv(mc) : undefined), building: clientBuilding, src: fs.existsSync(path.join(__dirname, 'client-src', 'build.gradle')), supported: !mc || mcOk(bv(mc)) ? [bv(mc || '1.21.4')] : CLIENT_MC, cape: hasCape() }));
+ipcMain.handle('clientStatus', (_e, mc) => ({ unlocked: unlocked(), jar: !!clientJar(mc ? bv(mc) : undefined), cosmetics: clientHasCosmetics(mc ? bv(mc) : undefined), have: clientBuildOf(mc ? bv(mc) : undefined), want: CLIENT_BUILD, building: clientBuilding, src: fs.existsSync(path.join(__dirname, 'client-src', 'build.gradle')), supported: !mc || mcOk(bv(mc)) ? [bv(mc || '1.21.4')] : CLIENT_MC, cape: hasCape() }));
 ipcMain.handle('clientUnlock', (_e, code) => {
   const a = crypto.createHash('sha256').update(String(code || '').trim()).digest(), b = Buffer.from(CODE_HASH, 'hex');
   if (!crypto.timingSafeEqual(a, b)) return { ok: false };

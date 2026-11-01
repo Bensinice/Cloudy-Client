@@ -82,6 +82,7 @@ public class CloudyClient implements ClientModInitializer {
 		ClientTickEvents.END_CLIENT_TICK.register(mc -> { try { CosmeticNet.tick(mc); } catch (Throwable ignored) {} });
 		CreamHeist.init();
 		HudRenderCallback.EVENT.register(Hud::render);
+		try { Extras.init(); } catch (Throwable ignored) {}
 		try {
 			KeyBinding lookKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.cloudy.freelook", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_ALT, "category.cloudy"));
 			KeyBinding freeKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.cloudy.freecam", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F6, "category.cloudy"));

@@ -1,5 +1,17 @@
 [
  {
+  "v": "0.9.43",
+  "date": "2026-11-01",
+  "added": [
+   "19 neue Cloudy-Mods (alle standardmäßig aus, in Cloudy Mods): Anzeigen für Biom, Lichtlevel, Nether-Koordinaten, Tag/Uhrzeit, Haltbarkeit, Pfeile, Tränke, Item-Zähler, Server, Spielzeit, Effekte, Todespunkt, Essen, Leben und Blickziel; dazu „No hurt cam“, bessere Tooltips, Todespunkt im Chat und Auto GG"
+  ],
+  "fixed": [
+   "Zickzack-Schlangen- und GHG-Umhang gespiegelt",
+   "„Client veraltet“: gleicher oder neuerer Client-Stand zählt jetzt als aktuell; die Meldung zeigt den gefundenen und den nötigen Stand"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.42",
   "date": "2026-11-01",
   "added": [

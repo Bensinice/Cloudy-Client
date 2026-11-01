@@ -2,6 +2,6 @@
   "required": false,
   "package": "app.cloudy.client.mixin",
   "compatibilityLevel": "JAVA_21",
-  "client": ["CameraMixin", "FogMixin", "FovMixin", "HotbarMixin", "OptionAccessor"],
+  "client": ["CameraMixin", "FogMixin", "FovMixin", "HotbarMixin", "OptionAccessor", "HurtCamMixin"],
   "injectors": { "defaultRequire": 0 }
 }

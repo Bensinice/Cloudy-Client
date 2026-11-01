@@ -35,13 +35,13 @@ public final class Hud {
 	}
 
 	/** Widget-IDs, die frei verschoben werden koennen (HUD-Eintraege aus Cloudy Mods). */
-	public static final String[] MOVABLE = {"fps", "ping", "coords", "dir", "cps", "speed", "clock", "memory", "totem", "keys", "armor", "lyricscard"};
+	public static final String[] MOVABLE = {"fps", "ping", "coords", "dir", "cps", "speed", "clock", "memory", "totem", "keys", "armor", "lyricscard", "biome", "light", "nether", "day", "durability", "arrows", "potions", "held", "server", "session", "effects", "death", "food", "health", "target"};
 
 	/** Beispieltext fuer den Editor (ohne Welt). */
 	public static String sample(String id) {
 		return switch (id) {
 			case "fps" -> "144 FPS"; case "ping" -> "Ping: 23 ms"; case "coords" -> "XYZ 128 / 64 / -32"; case "dir" -> "NE 212\u00b0";
-			case "cps" -> "4 | 2 CPS"; case "speed" -> "4.3 b/s"; case "clock" -> "21:30"; case "memory" -> "812 MB"; case "totem" -> "Totems: 3"; case "lyricscard" -> "Song"; default -> id;
+			case "cps" -> "4 | 2 CPS"; case "speed" -> "4.3 b/s"; case "clock" -> "21:30"; case "memory" -> "812 MB"; case "totem" -> "Totems: 3"; case "lyricscard" -> "Song"; default -> Extras.is(id) ? Extras.sample(id) : id;
 		};
 	}
 
@@ -126,7 +126,7 @@ public final class Hud {
 			case "clock": { java.time.LocalTime t = java.time.LocalTime.now(); return String.format("%02d:%02d", t.getHour(), t.getMinute()); }
 			case "totem": { int n = 0; var inv = mc.player.getInventory(); for (int i = 0; i < inv.size(); i++) { var st = inv.getStack(i); if (st.isOf(net.minecraft.item.Items.TOTEM_OF_UNDYING)) n += st.getCount(); } return "Totems: " + n; }
 			case "memory": { Runtime r = Runtime.getRuntime(); return ((r.totalMemory() - r.freeMemory()) >> 20) + " MB"; }
-			default: return null;
+			default: return Extras.is(id) ? Extras.text(id, mc) : null;
 		}
 	}
 
