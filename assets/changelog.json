@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.65",
+  "date": "2026-11-01",
+  "added": [
+   "Neuer Haupt-Server cloudyclient.com; der bisherige Server (framebound) ist jetzt eingebauter Backup-Server und springt bei Ausfall automatisch ein"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.64",
   "date": "2026-11-01",
   "added": [

@@ -1,4 +1,7 @@
 {
+ "0.9.65": [
+  "New main server cloudyclient.com; the previous server (framebound) is now the built-in backup server and takes over automatically if the main one is down"
+ ],
  "0.9.64": [
   "Backup server: set it in Settings below the account server; if the main server goes down Cloudy switches automatically (the address is fetched from the main server for all players)"
  ],

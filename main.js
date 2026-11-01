@@ -808,7 +808,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.64'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.65'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1024,11 +1024,14 @@ const info = u => ({ user: u.name, admin: !!u.admin });
 
 // ---- Konto-Server (optional): Konten liegen zentral auf deinem Server (cloudy-server), der Admin sieht alle Tester ----
 const accSrvFile = path.join(app.getPath('userData'), 'cloudy-server.json');
-const srvCfg = () => { let u = ''; try { u = String(JSON.parse(fs.readFileSync(accSrvFile, 'utf8')).url || ''); } catch {} if (!u) u = String(APP_CFG.accountServer || 'https://account1234444.framebound.win'); return /^https?:\/\//i.test(u) ? { url: u.replace(/\/+$/, '') } : null; }; // 1. in den Einstellungen gesetzt, 2. config/app.json -> accountServer
+const OLD_SRV = 'https://account1234444.framebound.win'; // frueherer Haupt-Server, jetzt Backup
+const normU = u => String(u || '').trim().replace(/\/+$/, '');
+const srvCfg = () => { let u = ''; try { u = normU(JSON.parse(fs.readFileSync(accSrvFile, 'utf8')).url); } catch {} if (u === OLD_SRV) u = ''; if (!u) u = normU(APP_CFG.accountServer || 'https://cloudyclient.com'); return /^https?:\/\//i.test(u) ? { url: u } : null; }; // 1. in den Einstellungen gesetzt (der alte Server zaehlt nicht mehr), 2. config/app.json -> accountServer
 let srvTok = null, srvPendTok = null;
 // Backup-Server: faellt der Haupt-Server aus (Verbindung, Timeout oder 5xx vom Proxy), wird derselbe Aufruf am Backup-Server versucht. Die Adresse kommt vom Haupt-Server (/health) und wird zwischengespeichert, damit auch Freunde ohne Einstellung profitieren.
 const backupFile = path.join(app.getPath('userData'), 'cloudy-backup.json');
-const backupUrl = () => { try { const u = String(JSON.parse(fs.readFileSync(backupFile, 'utf8')).url || '').replace(/\/+$/, ''); return /^https?:\/\//i.test(u) ? u : ''; } catch { return ''; } };
+const backupDefault = () => { const u = normU(APP_CFG.backupServer || OLD_SRV); return /^https?:\/\//i.test(u) ? u : ''; }; // eingebauter Backup-Server, falls der Haupt-Server keinen nennt
+const backupUrl = () => { try { const u = String(JSON.parse(fs.readFileSync(backupFile, 'utf8')).url || '').replace(/\/+$/, ''); return /^https?:\/\//i.test(u) ? u : backupDefault(); } catch { return backupDefault(); } };
 let srvBackUntil = 0; // bis dahin zuerst der Backup-Server (damit nicht jeder Aufruf erst 6 s auf den toten Haupt-Server wartet)
 async function srvTry(base, p, body, tok, ms) {
   const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), ms);
