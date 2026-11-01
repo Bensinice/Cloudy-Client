@@ -477,6 +477,63 @@ ipcMain.handle('instCreate', (_e, { from, worlds }) => {
   try { const src = gameDir(from); if (fs.existsSync(src)) fs.cpSync(src, dst, { recursive: true, filter: s => { const r = path.relative(src, s).split(path.sep)[0]; return !['logs', 'crash-reports', 'screenshots'].includes(r) && (worlds || r !== 'saves'); } }); } catch (e) { return { ok: false, error: e.message }; }
   return { ok: true, key };
 });
+// ---- Modrinth-Modpacks (.mrpack): als eigene Instanz („1.21.4~xyz“) installieren – deine anderen Mods bleiben unberührt ----
+const MP_HOSTS = ['cdn.modrinth.com', 'github.com', 'raw.githubusercontent.com', 'gitlab.com'];
+const safeRel = p => { const n = path.posix.normalize(String(p || '').replace(/\\/g, '/')); return n && !n.startsWith('/') && !n.startsWith('../') && n !== '..' && !/^[a-zA-Z]:/.test(n) && !n.includes('\0') ? n : null; };
+async function importMrpack(file, hint) {
+  const z = openZip(file);
+  try {
+    const raw = z.read('modrinth.index.json', 64 * 1048576); if (!raw) return { ok: false, error: 'Das ist kein Modrinth-Modpack (modrinth.index.json fehlt).' };
+    const idx = JSON.parse(raw.toString('utf8')), dep = idx.dependencies || {}, mc = String(dep.minecraft || '');
+    if (!/^[\w.\-]{3,20}$/.test(mc)) return { ok: false, error: 'Im Modpack steht keine Minecraft-Version.' };
+    if (!dep['fabric-loader']) { const o = ['forge', 'neoforge', 'quilt-loader'].find(k => dep[k]); return { ok: false, error: `Dieses Modpack braucht ${o ? o.replace('-loader', '') : 'einen anderen Loader'} – Cloudy startet nur Fabric-Modpacks.` }; }
+    const key = mc + '~' + Date.now().toString(36).slice(-5), dst = gameDir(key); fs.mkdirSync(dst, { recursive: true });
+    const files = (Array.isArray(idx.files) ? idx.files : []).filter(f => !(f.env && f.env.client === 'unsupported')); let done = 0, failed = [];
+    const one = async f => {
+      const rel = safeRel(f.path), url = (f.downloads || [])[0];
+      try {
+        if (!rel || !url) throw new Error('ungueltig'); const u = new URL(url); if (u.protocol !== 'https:' || !MP_HOSTS.includes(u.hostname)) throw new Error('Quelle nicht erlaubt');
+        const out = path.join(dst, rel); if (!out.startsWith(dst + path.sep)) throw new Error('Pfad');
+        await download(url, out);
+        const sha = f.hashes && f.hashes.sha1; if (sha && crypto.createHash('sha1').update(fs.readFileSync(out)).digest('hex') !== sha) { fs.rmSync(out, { force: true }); throw new Error('Pruefsumme'); }
+      } catch (e) { failed.push(String(f.path || '?')); }
+      send('mpProgress', `Lade Mods … ${++done} / ${files.length}`);
+    };
+    const queue = files.slice(); await Promise.all(Array.from({ length: 4 }, async () => { while (queue.length) await one(queue.shift()); }));
+    send('mpProgress', 'Kopiere Konfigurationen …');
+    for (const n of z.names()) {
+      const mm = /^(client-)?overrides\/(.+)$/.exec(n); if (!mm || n.endsWith('/')) continue;
+      const rel = safeRel(mm[2]); if (!rel) continue; const out = path.join(dst, rel); if (!out.startsWith(dst + path.sep)) continue;
+      const buf = z.read(n, 512 * 1048576); if (!buf) continue; fs.mkdirSync(path.dirname(out), { recursive: true }); fs.writeFileSync(out, buf);
+    }
+    try { await ensureFabric(mc); } catch {}
+    const base = fs.existsSync(path.join(root, 'versions', mc, mc + '.jar'));
+    return { ok: true, key, mc, name: String(idx.name || hint || 'Modpack').slice(0, 40), files: files.length, failed, needMc: !base };
+  } catch (e) { return { ok: false, error: 'Das Modpack konnte nicht gelesen werden: ' + (e && e.message || e) }; }
+  finally { z.close(); }
+}
+ipcMain.handle('mpSearch', async (_e, { q, version, offset, index }) => {
+  const f = [['project_type:modpack'], ['categories:fabric']]; if (version && /^[\w.\-]{3,20}$/.test(version)) f.push([`versions:${bv(version)}`]);
+  const d = await getJSON(`https://api.modrinth.com/v2/search?query=${encodeURIComponent(q || '')}&facets=${encodeURIComponent(JSON.stringify(f))}&limit=20&offset=${Math.max(0, Math.min(2000, (+offset || 0) | 0))}${['relevance', 'downloads', 'follows', 'newest', 'updated'].includes(index) ? '&index=' + index : ''}`);
+  return d.hits.map(h => ({ id: h.project_id, title: h.title, desc: h.description, icon: h.icon_url, downloads: h.downloads, author: h.author, versions: (h.versions || []).slice(-1)[0] || '' }));
+});
+ipcMain.handle('mpInstall', async (_e, { id }) => {
+  if (!/^[\w-]{2,40}$/.test(String(id || ''))) return { ok: false, error: 'Ungültiges Modpack.' };
+  const tmp = path.join(app.getPath('temp'), 'cloudy-mp-' + Date.now() + '.mrpack');
+  try {
+    send('mpProgress', 'Hole Modpack …');
+    const vs = await getJSON(`https://api.modrinth.com/v2/project/${id}/version?loaders=${encodeURIComponent('["fabric"]')}`);
+    const v = vs[0], fl = v && (v.files.find(x => x.primary) || v.files[0]); if (!fl || !/\.mrpack$/i.test(fl.filename)) return { ok: false, error: 'Für dieses Modpack gibt es keine Fabric-Version.' };
+    if (new URL(fl.url).hostname !== 'cdn.modrinth.com') return { ok: false, error: 'Unbekannte Download-Quelle.' };
+    await download(fl.url, tmp); return await importMrpack(tmp, v.name);
+  } catch (e) { return { ok: false, error: 'Modrinth ist nicht erreichbar oder der Download ging schief.' }; }
+  finally { try { fs.rmSync(tmp, { force: true }); } catch {} }
+});
+ipcMain.handle('mpImportFile', async () => {
+  const r = await dialog.showOpenDialog(win, { title: 'Modrinth-Modpack (.mrpack) wählen', filters: [{ name: 'Modrinth-Modpack', extensions: ['mrpack'] }], properties: ['openFile'] });
+  if (r.canceled || !r.filePaths[0]) return { ok: false, error: '' };
+  return importMrpack(r.filePaths[0], path.basename(r.filePaths[0], '.mrpack'));
+});
 ipcMain.handle('instDelete', (_e, key) => { if (!String(key).includes('~')) return false; try { fs.rmSync(gameDir(path.basename(String(key))), { recursive: true, force: true }); return true; } catch { return false; } });
 // löscht nur die Programmdateien der Version (Welten und Mods bleiben erhalten)
 ipcMain.handle('libDelete', (_e, id) => {
@@ -667,7 +724,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.44'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.45'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
