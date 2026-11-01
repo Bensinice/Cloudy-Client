@@ -34,6 +34,12 @@ jobs:
           export PATH=/opt/homebrew/bin:$PATH
           export JAVA_HOME_8=$JAVA_HOME
           git rev-parse HEAD > ../AMETHYST_COMMIT.txt
+          # neuer Xcode/Clang meldet fehlende Header als Fehler: mach/mach.h ergaenzen und Implicit-Declaration nur als Warnung behandeln
+          sed -i '' '1i\
+#include <mach/mach.h>
+' Natives/JavaLauncher.m
+          export CFLAGS="-Wno-error=implicit-function-declaration -Wno-implicit-function-declaration"
+          export OBJCFLAGS="$CFLAGS"
           /usr/libexec/java_home -V || true
           SLIMMED=1 gmake -j$(sysctl -n hw.ncpu) dsym package PLATFORM=2 BOOTJDK="$JAVA_HOME/bin"
           SLIMMED=1 gmake -j$(sysctl -n hw.ncpu) dsym package PLATFORM=2 BOOTJDK="$JAVA_HOME/bin" TROLLSTORE_JIT_ENT=1
