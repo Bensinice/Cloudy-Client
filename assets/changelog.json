@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.63",
+  "date": "2026-11-01",
+  "added": [
+   "Beim Start wird geprüft, ob Sodium, Lithium & Co. wirklich installiert sind; fehlt etwas oder ist die Version nicht unterstützt, steht das im Startstatus"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.62",
   "date": "2026-11-01",
   "added": [],

@@ -1,4 +1,7 @@
 {
+ "0.9.63": [
+  "On launch Cloudy checks that Sodium, Lithium & co. are really installed; if something is missing or the version is unsupported, the launch status says so"
+ ],
  "0.9.62": [
   "Windows update: Cloudy now quits itself after starting the installer, so locked files can't cause a half-finished update"
  ],

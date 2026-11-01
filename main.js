@@ -808,7 +808,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.62'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.63'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -2325,6 +2325,12 @@ ipcMain.handle('launch', async (_e, { username, version, type, ram, server, fabr
           if (vk) { try { for (const f of fs.readdirSync(modsDir(version))) if (f.endsWith('.jar') && /^(sodium|immediatelyfast|iris)/i.test(f)) fs.renameSync(path.join(modsDir(version), f), path.join(modsDir(version), f + '.disabled')); } catch {} send('status', 'Vulkan-Modus (VulkanMod, experimentell) …'); }
           else { try { for (const f of fs.readdirSync(modsDir(version))) if (f.endsWith('.jar.disabled') && /^(sodium|immediatelyfast)/i.test(f)) fs.renameSync(path.join(modsDir(version), f), path.join(modsDir(version), f.slice(0, -9))); } catch {} try { for (const f of fs.readdirSync(modsDir(version))) if (f.endsWith('.jar') && /^vulkanmod/i.test(f)) fs.renameSync(path.join(modsDir(version), f), path.join(modsDir(version), f + '.disabled')); } catch {} }
           for (const m of (perfOk ? (vk ? PERF_VK : PERF) : ['fabric-api'])) { send('status', `Installiere ${m} …`); await installMod(m, version).catch(() => {}); }
+          try { // Pruefen, ob die Leistungs-Mods wirklich da sind, und es sichtbar sagen (statt still ohne sie zu starten)
+            const have = fs.readdirSync(modsDir(version)).filter(f => f.endsWith('.jar')).map(f => f.toLowerCase());
+            const miss = (perfOk ? (vk ? PERF_VK : PERF) : []).filter(m => m !== 'fabric-api' && !have.some(f => f.includes(m.replace('-', '')) || f.includes(m)));
+            if (!perfOk) send('status', 'Hinweis: Für ' + bv(version) + ' werden Sodium & Co. nicht installiert (nur 1.17–1.21) – dadurch weniger FPS.');
+            else if (miss.length) send('status', 'Leistungs-Mods fehlen: ' + miss.join(', ') + ' (Modrinth-Download fehlgeschlagen?) – Minecraft startet trotzdem.');
+          } catch {}
         }
         const hudOn = !safe && hud && Object.values(hud).some(Boolean);
         const explicit = clientMods.length > 0 || (cheats && unlocked()) || Object.keys(cosEq).length > 0 || hudOn || sndOn;
