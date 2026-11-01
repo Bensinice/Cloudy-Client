@@ -656,6 +656,15 @@ ipcMain.handle('packInstall', async (_e, id, v, t) => {
 
 // ---- Cloudy-Updates (GitHub Releases, siehe update/updater.js) ----
 ipcMain.handle('accRefresh', async () => { await srvPull(); return !!currentUser; });
+ipcMain.handle('setAppIcon', (_e, dataUrl) => { // Programm-Symbol (Taskleiste/Dock) in der Theme-Farbe
+  try {
+    if (typeof dataUrl !== 'string' || !/^data:image\/png;base64,/.test(dataUrl) || dataUrl.length > 400000) return false;
+    const img = nativeImage.createFromDataURL(dataUrl); if (img.isEmpty()) return false;
+    for (const w of BrowserWindow.getAllWindows()) { try { if (!IS_MAC) w.setIcon(img); } catch {} }
+    if (IS_MAC && app.dock) app.dock.setIcon(img);
+    return true;
+  } catch { return false; }
+});
 ipcMain.handle('changelogEn', () => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'assets', 'changelog-en.json'), 'utf8')); } catch { return {}; } });
 ipcMain.handle('changelog', () => { try { const j = JSON.parse(fs.readFileSync(path.join(__dirname, 'assets', 'changelog.json'), 'utf8')); return Array.isArray(j) ? j : []; } catch { return []; } });
 ipcMain.handle('appVersion', () => ({ v: app.getVersion(), suffix: (() => { try { return require('./package.json').versionSuffix || ''; } catch { return ''; } })(), repo: DEFAULT_REPO, platform: process.platform, packaged: app.isPackaged }));
@@ -749,7 +758,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.51'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.52'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -980,6 +989,7 @@ function srvMirror(pu) { // lokale Kopie (für Shop, Cosmetics, Spielzeit) – A
   const a = readAuth(), key = pu.name.toLowerCase();
   const u = a.users[key] || (a.users[key] = mkUser(pu.name, crypto.randomBytes(12).toString('hex'), { coins: 100 }));
   if (pu.names && typeof pu.names === 'object') { try { fs.writeFileSync(namesFile, JSON.stringify(pu.names)); } catch {} }
+  if (pu.bundles && typeof pu.bundles === 'object') { try { fs.writeFileSync(bundlesFile, JSON.stringify(pu.bundles)); } catch {} }
   if (pu.prices && typeof pu.prices === 'object') { try { fs.writeFileSync(pricesFile, JSON.stringify(pu.prices)); } catch {} }
   if (Array.isArray(pu.hidden)) setHidden(pu.hidden); u.name = pu.name; u.admin = !!pu.admin; u.infCoins = !pu.admin && pu.coins === null; u.mustChange = false; u.banned = false;
   if (pu.state && !pu.admin) { const s = pu.state; if (!u.infCoins && Number.isFinite(+s.coins)) u.coins = +s.coins; u.owned = [...new Set([...(Array.isArray(s.owned) ? s.owned : []), ...limList.filter(l => l.mine).map(l => l.id)])]; u.equip = s.equip && typeof s.equip === 'object' ? s.equip : {}; u.daily = s.daily || ''; }
@@ -1232,6 +1242,7 @@ const CATALOG = [
   { id: 'wings-crystal', cat: 'wings', name: 'Kristallflügel', price: 1000 }, { id: 'wings-shadow', cat: 'wings', name: 'Schattenschwingen', price: 1000 },
   { id: 'shield-ice', cat: 'shield', name: 'Eisschild', price: 300 }, { id: 'hat-party', cat: 'hat', name: 'Partyhut', price: 250 }, { id: 'hat-frost', cat: 'hat', name: 'Frostmütze', price: 350 },
   { id: 'cape-nebula', cat: 'cape', name: 'Nebel-Umhang', price: 700 }, { id: 'cape-emerald', cat: 'cape', name: 'Smaragd-Umhang', price: 700 }, { id: 'cape-royal', cat: 'cape', name: 'Königs-Umhang', price: 900 },
+  { id: 'hat-zzv', cat: 'hat', name: 'Zickzack-Hut Violett (3D)', price: 600 }, { id: 'hat-zzb', cat: 'hat', name: 'Zickzack-Zylinder Blau (3D)', price: 600 }, { id: 'hat-zsh', cat: 'hat', name: 'Schattenhut (3D)', price: 650 }, { id: 'hat-zif', cat: 'hat', name: 'Eisfeder-Hut (3D)', price: 650 },
   { id: 'hat-crown', cat: 'hat', name: 'Krone', price: 700 }, { id: 'hat-halo', cat: 'hat', name: 'Heiligenschein', price: 600 },
   { id: 'wings-zv', cat: 'wings', name: 'Zickzack-Flügel Violett (3D)', price: 1800 }, { id: 'wings-zb', cat: 'wings', name: 'Zickzack-Flügel Blau (3D)', price: 1800 }, { id: 'wings-zs', cat: 'wings', name: 'Schattenflügel (3D)', price: 1800 }, { id: 'wings-zf', cat: 'wings', name: 'Eisfeder-Flügel (3D)', price: 1800 },
   { id: 'cape-zbs', cat: 'cape', name: 'Zickzack-Schlangen-Umhang', price: 1500 }, { id: 'cape-ghg', cat: 'cape', name: 'GHG-Umhang', price: 1000 },
@@ -1455,6 +1466,9 @@ const setHidden = a => { shopHidden = (Array.isArray(a) ? a : []).filter(x => ty
 const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
 const namesFile = path.join(app.getPath('userData'), 'shop-names.json'); // vom Admin geänderte Item-Namen – bleiben bei Updates erhalten
 const pricesFile = path.join(app.getPath('userData'), 'shop-prices.json'); // vom Admin geaenderte Preise
+const bundlesFile = path.join(app.getPath('userData'), 'shop-bundles.json');
+const shopBundles = () => { try { const j = JSON.parse(fs.readFileSync(bundlesFile, 'utf8')); return j && typeof j === 'object' && !Array.isArray(j) ? j : {}; } catch { return {}; } };
+const bundlesView = u => Object.entries(shopBundles()).map(([id, b]) => { const items = (b.items || []).filter(x => CATALOG.some(c => c.id === x)); return { id, name: String(b.name || id), price: Math.max(0, +b.price || 0), items, ownedAll: items.length > 0 && items.every(x => (u.owned || []).includes(x)) }; }).filter(b => b.items.length >= 2);
 const shopPrices = () => { try { const j = JSON.parse(fs.readFileSync(pricesFile, 'utf8')); return j && typeof j === 'object' ? j : {}; } catch { return {}; } };
 const priceOf = (c, pr) => Number.isFinite(+pr[c.id]) && pr[c.id] !== null ? Math.max(0, Math.round(+pr[c.id])) : c.price;
 const shopNames = () => { try { const j = JSON.parse(fs.readFileSync(namesFile, 'utf8')); return j && typeof j === 'object' ? j : {}; } catch { return {}; } };
@@ -1462,7 +1476,7 @@ function shopOf(u) {
   if (u.coins == null) u.coins = 100; if (!u.owned) u.owned = []; if (!u.equip) u.equip = {};
   for (const k of Object.keys(u.equip)) if (!CATALOG.some(c => c.id === u.equip[k])) delete u.equip[k]; // entfernte Items (alte Z4-/Galaxie-Sachen) nicht mehr ausrüsten
   const nm = shopNames(), pr = shopPrices();
-  return { limited: limList.map(l => { const c = CATALOG.find(x => x.id === l.id); return { ...l, name: nm[l.id] || (c && c.name) || l.id, cat: c ? c.cat : l.id.split('-')[0] }; }), catalog: CATALOG.filter(c => (u.admin || !shopHidden.includes(c.id) || (u.owned || []).includes(c.id)) && (u.admin || !limList.some(l => l.id === c.id) || (u.owned || []).includes(c.id))).map(c => { const o = nm[c.id] ? { ...c, name: nm[c.id] } : { ...c }; o.price = priceOf(c, pr); if (shopHidden.includes(c.id)) o.hidden = true; return o; }), admin: !!u.admin, coins: u.admin || u.infCoins ? null : u.coins, owned: u.admin ? CATALOG.map(c => c.id) : u.owned, equip: u.equip, dailyReady: !u.admin && !u.infCoins && u.daily !== todayStr() };
+  return { limited: limList.map(l => { const c = CATALOG.find(x => x.id === l.id); return { ...l, name: nm[l.id] || (c && c.name) || l.id, cat: c ? c.cat : l.id.split('-')[0] }; }), catalog: CATALOG.filter(c => (u.admin || !shopHidden.includes(c.id) || (u.owned || []).includes(c.id)) && (u.admin || !limList.some(l => l.id === c.id) || (u.owned || []).includes(c.id))).map(c => { const o = nm[c.id] ? { ...c, name: nm[c.id] } : { ...c }; o.price = priceOf(c, pr); if (shopHidden.includes(c.id)) o.hidden = true; return o; }), admin: !!u.admin, bundles: bundlesView(u), coins: u.admin || u.infCoins ? null : u.coins, owned: u.admin ? CATALOG.map(c => c.id) : u.owned, equip: u.equip, dailyReady: !u.admin && !u.infCoins && u.daily !== todayStr() };
 }
 function syncCosFromGame() { // im Spiel geänderte Auswahl (Cosmetics-Menü) in dein Konto übernehmen
   try {
@@ -1543,6 +1557,25 @@ ipcMain.handle('shopBuy', (_e, id) => shopWrite(u => {
   if (u.coins < price) return { ok: false, error: `Dir fehlen ${price - u.coins} CC.` };
   u.coins -= price; u.owned.push(id);
 }));
+ipcMain.handle('bundleBuy', (_e, id) => shopWrite(u => {
+  const b = shopBundles()[id]; if (!b) return { ok: false, error: 'Dieses Paket gibt es nicht mehr.' };
+  const items = (b.items || []).filter(x => CATALOG.some(c => c.id === x)); if (u.admin) return {};
+  const missing = items.filter(x => !u.owned.includes(x)); if (!missing.length) return { ok: false, error: 'Du besitzt schon alles aus diesem Paket.' };
+  if (missing.some(x => shopHidden.includes(x) || limList.some(l => l.id === x))) return { ok: false, error: 'Ein Item aus dem Paket ist nicht mehr erhältlich.' };
+  const price = Math.max(0, Math.round(+b.price || 0));
+  if (!u.infCoins) { if (u.coins < price) return { ok: false, error: `Dir fehlen ${price - u.coins} CC.` }; u.coins -= price; }
+  for (const x of missing) u.owned.push(x);
+}));
+ipcMain.handle('bundleAdmin', async (_e, o) => { // Admin: Paket anlegen / ändern / löschen
+  const a = readAuth(), cu = currentUser && a.users[currentUser.toLowerCase()]; if (!cu || !cu.admin) return { ok: false, error: 'Nur Admins können Pakete anlegen.' };
+  o = o || {}; const items = (Array.isArray(o.items) ? o.items : []).filter(x => CATALOG.some(c => c.id === x)).slice(0, 12), price = Math.max(0, Math.min(1e6, Math.round(+o.price || 0))), name = String(o.name || '').trim().slice(0, 40);
+  if (!o.del && (!name || items.length < 2)) return { ok: false, error: 'Gib einen Namen an und wähle mindestens 2 Items.' };
+  let all;
+  if (srvCfg()) { const r = await srvCall('/admin/bundle', { id: o.id || '', name, items, price, del: !!o.del }, srvTok).catch(() => ({})); if (!r.ok) return { ok: false, error: r.error || 'Der Server hat das nicht gespeichert (Server aktuell?).' }; all = r.bundles || {}; }
+  else { all = shopBundles(); const id = String(o.id || '') || 'b' + Date.now().toString(36).slice(-6); if (o.del) delete all[id]; else all[id] = { name, items, price }; }
+  try { fs.writeFileSync(bundlesFile, JSON.stringify(all)); } catch { return { ok: false, error: 'Paket konnte nicht gespeichert werden.' }; }
+  return shopWrite(() => ({}), true);
+});
 ipcMain.handle('shopEquip', (_e, { cat, id }) => shopWrite(u => {
   if (id) { const it = CATALOG.find(c => c.id === id && c.cat === cat); if (!it || !(u.admin || u.owned.includes(id))) return { ok: false, error: 'Item nicht verfügbar.' }; u.equip[cat] = id; } else delete u.equip[cat];
   try { const k = SKIES[u.equip.sky]; cfgPatch({ skyShop: k ? { sky: [k[0], k[1]], dark: !!k[2] } : null }); } catch {}
@@ -2067,19 +2100,30 @@ const mediaKeyRun = k => new Promise(res => {
     else res(false);
   } catch { res(false); }
 });
-ipcMain.handle('mediaKey', async (_e, k) => { // erst Spotify direkt (Premium + Anmeldung, sofort und zuverlässig), sonst Medientasten
-  try {
-    const a = { playpause: null, next: ['POST', 'next'], prev: ['POST', 'previous'] }[k];
-    if (a !== undefined) {
-      const tok = await spToken();
-      if (tok) {
-        const pl = !!(spCache.v && spCache.v.playing), x = a || ['PUT', pl ? 'pause' : 'play'];
-        const r = await fetch('https://api.spotify.com/v1/me/player/' + x[1], { method: x[0], headers: { Authorization: 'Bearer ' + tok, 'Content-Length': '0' } });
-        if (r.ok) { spCache = { t: 0, v: null }; return true; }
-      }
-    }
-  } catch {}
-  return mediaKeyRun(k);
+// Spotify-Steuerung über die Web-API (Premium + Anmeldung). Meldet den genauen Grund, wenn es nicht klappt.
+async function spApiControl(k) {
+  const a = { playpause: null, next: ['POST', 'next'], prev: ['POST', 'previous'] }[k]; if (a === undefined) return { ok: false, skip: true };
+  const tok = await spToken(); if (!tok) return { ok: false, why: 'Nicht bei Spotify angemeldet (Einstellungen → Spotify verbinden).' };
+  const H = { Authorization: 'Bearer ' + tok, 'Content-Length': '0' };
+  let x = a;
+  if (!x) { let pl = false; try { const r = await fetch('https://api.spotify.com/v1/me/player', { headers: { Authorization: 'Bearer ' + tok } }); if (r.status === 200) { const d = await r.json(); pl = !!d.is_playing; } } catch {} x = ['PUT', pl ? 'pause' : 'play']; }
+  const call = dev => fetch('https://api.spotify.com/v1/me/player/' + x[1] + (dev ? '?device_id=' + encodeURIComponent(dev) : ''), { method: x[0], headers: H });
+  let r = await call();
+  if (r.status === 404) { // kein aktives Gerät: erstes Gerät nehmen
+    try { const dv = await (await fetch('https://api.spotify.com/v1/me/player/devices', { headers: { Authorization: 'Bearer ' + tok } })).json(); const d = (dv.devices || []).find(q => q.is_active) || (dv.devices || [])[0]; if (d) r = await call(d.id); } catch {}
+  }
+  if (r.ok || r.status === 204) { spCache = { t: 0, v: null }; return { ok: true }; }
+  let reason = ''; try { const e = await r.json(); reason = (e.error && (e.error.reason || e.error.message)) || ''; } catch {}
+  const why = r.status === 403 ? (/PREMIUM/i.test(reason) ? 'Spotify Premium wird für die Steuerung gebraucht.' : 'Spotify lehnt die Steuerung ab (' + (reason || '403') + '). Einmal unter Einstellungen → Spotify neu verbinden.')
+    : r.status === 404 ? 'Kein aktives Spotify-Gerät – starte die Spotify-App und spiele kurz einen Song.' : r.status === 401 ? 'Spotify-Anmeldung abgelaufen – bitte neu verbinden.' : 'Spotify-Fehler ' + r.status + (reason ? ' (' + reason + ')' : '');
+  return { ok: false, why };
+}
+ipcMain.handle('mediaKey', async (_e, k) => { // erst Spotify direkt (Premium + Anmeldung), sonst (nur Mac) Befehle an die Spotify-App
+  let why = '';
+  try { const r = await spApiControl(k); if (r.ok) return true; why = r.why || ''; } catch (e) { why = 'Netzwerkfehler: ' + String((e && e.message) || e); }
+  const ok = await mediaKeyRun(k);
+  if (!ok && why) spLast = { ok: false, msg: why };
+  return ok;
 });
 
 // ---- Chat-Befehle im Spiel (/pause /resume /skip /prev): der Client schreibt sie in eine Datei, hier werden sie ausgeführt ----

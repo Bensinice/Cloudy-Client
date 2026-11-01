@@ -47,6 +47,7 @@
     'cape-zz5': { b: [0, 8, 16, 24], c: ['#ff4a4a','#ffd24a'], img: 'assets/cosmetics/zz-zz5-cape.png', ar: 336 / 200 }, 'wings-zz5': { b: [-9, 0, 34, 24], c: ['#ff4a4a','#ffd24a'], img: 'assets/cosmetics/zz-zz5-wings.png', ar: 340 / 520 }, 'shield-zz5': { b: [-7, 10, 12, 18], c: ['#ff4a4a','#ffd24a'], img: 'assets/cosmetics/zz-zz5-shield.png', ar: 1.0240 },
     'cape-zk5': { b: [0, 8, 16, 24], c: ['#ffffff','#9aa0b0'], img: 'assets/cosmetics/zz-zk5-cape.png', ar: 336 / 200 }, 'wings-zk5': { b: [-9, 0, 34, 24], c: ['#ffffff','#9aa0b0'], img: 'assets/cosmetics/zz-zk5-wings.png', ar: 340 / 520 },
     'cape-yy': { b: [0, 8, 16, 24], c: ['#f2f2f2', '#14141a'], img: 'assets/cosmetics/zz-yy-cape.png', ar: 336 / 200 }, 'shield-yy': { b: [-7, 10, 12, 18], c: ['#f2f2f2', '#14141a'], img: 'assets/cosmetics/zz-yy-shield.png', ar: 1 },
+    'hat-zzv': { b: [0, -12, 16, 14], c: ['#6d28d9', '#e9d5ff'] }, 'hat-zzb': { b: [1, -9, 14, 11], c: ['#1d4ed8', '#60a5fa'] }, 'hat-zsh': { b: [0, -12, 16, 14], c: ['#1b1030', '#b07cff'] }, 'hat-zif': { b: [0, -12, 16, 14], c: ['#bfeaff', '#ffffff'] },
     'hat-crown': { b: [3, -6, 10, 6], c: ['#ffd24a', '#e23b3b'] }, 'hat-halo': { b: [3, -9, 10, 5], c: ['#fff7b0', '#ffd24a'] }
   };
   const lt = (hex, k) => { const n = parseInt(hex.slice(1), 16), f = c => Math.round(c + (255 - c) * k); return '#' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(f).map(x => x.toString(16).padStart(2, '0')).join(''); };
@@ -76,7 +77,7 @@
       ctx.fillStyle = '#e23b3b'; [[5, -1.4], [8, -1.4], [11, -1.4]].forEach(([x, y]) => ctx.fillRect(x - .5, y, 1, 1));
     } else if (id === 'hat-halo') {
       ctx.strokeStyle = c[1]; ctx.lineWidth = 1.1; ctx.shadowColor = c[0]; ctx.shadowBlur = 4; ctx.beginPath(); ctx.ellipse(8, -5, 5, 1.4, 0, 0, 7); ctx.stroke(); ctx.shadowBlur = 0;
-    } else if (id === 'hat-top' || id === 'hat-gold') {
+    } else if (id === 'hat-top' || id === 'hat-gold' || id === 'hat-zzb') {
       ctx.fillStyle = c[0]; ctx.fillRect(4.5, -7, 7, 7); ctx.fillRect(2.5, -1, 11, 1.6); ctx.fillStyle = c[1]; ctx.fillRect(4.5, -2.6, 7, 1.6);
       ctx.strokeStyle = 'rgba(255,255,255,.2)'; ctx.lineWidth = .4; ctx.strokeRect(4.5, -7, 7, 7);
     } else {
@@ -183,8 +184,8 @@
   setTimeout(() => { const cb = $('#heroSkinOn'); if (cb) { cb.checked = heroOn; cb.onchange = () => { heroOn = cb.checked; try { localStorage.setItem('cloudy.heroSkin', heroOn ? '1' : '0'); } catch {} paintHero(); }; } }, 0);
   function hat3(H, add) {
     const hc = H && ITEMS[H] && ITEMS[H].c;
-    if (H === 'hat-top' || H === 'hat-gold') { add(box3(7, 7, 7, 0, -3.9, 0, solid(hc[0]))); add(box3(7.2, 1.6, 7.2, 0, -2.4, 0, solid(hc[1]))); add(box3(11, 1.2, 11, 0, -0.5, 0, solid(hc[0]))); }
-    else if (H === 'hat-wizard' || H === 'hat-santa' || H === 'hat-witch' || H === 'hat-party' || H === 'hat-frost') { const brim = ITEMS[H].brim || hc[0]; add(box3(14, 1, 14, 0, -0.5, 0, solid(brim))); let y = -1; [[9, 3, hc[0]], [7, 3, lt(hc[0], .15)], [5, 3, lt(hc[0], .3)], [3, 3, lt(hc[0], .45)], [1.6, 2, H === 'hat-santa' || H === 'hat-frost' ? '#ffffff' : hc[1]]].forEach(([w, h, col]) => { add(box3(w, h, w, 0, y - h / 2, 0, solid(col))); y -= h; }); if (H !== 'hat-santa' && H !== 'hat-frost') add(box3(9.2, 0.9, 9.2, 0, -1.9, 0, solid(hc[1]))); }
+    if (H === 'hat-top' || H === 'hat-gold' || H === 'hat-zzb') { add(box3(7, 7, 7, 0, -3.9, 0, solid(hc[0]))); add(box3(7.2, 1.6, 7.2, 0, -2.4, 0, solid(hc[1]))); add(box3(11, 1.2, 11, 0, -0.5, 0, solid(hc[0]))); }
+    else if (H === 'hat-wizard' || H === 'hat-santa' || H === 'hat-witch' || H === 'hat-party' || H === 'hat-frost' || H === 'hat-zzv' || H === 'hat-zsh' || H === 'hat-zif') { const brim = ITEMS[H].brim || hc[0]; add(box3(14, 1, 14, 0, -0.5, 0, solid(brim))); let y = -1; [[9, 3, hc[0]], [7, 3, lt(hc[0], .15)], [5, 3, lt(hc[0], .3)], [3, 3, lt(hc[0], .45)], [1.6, 2, H === 'hat-santa' || H === 'hat-frost' ? '#ffffff' : hc[1]]].forEach(([w, h, col]) => { add(box3(w, h, w, 0, y - h / 2, 0, solid(col))); y -= h; }); if (H !== 'hat-santa' && H !== 'hat-frost') add(box3(9.2, 0.9, 9.2, 0, -1.9, 0, solid(hc[1]))); }
     else if (H === 'hat-crown') { add(box3(8.6, 2, 8.6, 0, -1.2, 0, solid(hc[0]))); [[-3.3, -3.3], [3.3, -3.3], [-3.3, 3.3], [3.3, 3.3]].forEach(([x, z]) => add(box3(2, 3, 2, x, -3.7, z, solid(hc[0])))); add(box3(1.2, 1.2, 0.3, 0, -1.2, 4.4, solid(hc[1]))); }
     else if (H === 'hat-halo') { [[0, 3.6, 8, 0.8], [0, -3.6, 8, 0.8], [3.6, 0, 0.8, 8], [-3.6, 0, 0.8, 8]].forEach(([x, z, w, d]) => add(box3(w, 0.7, d, x, -6.5, z, solid(hc[1])))); }
   }
@@ -259,7 +260,7 @@
     } else if (cat === 'sky') {
       const d = document.createElement('div'); d.style.cssText = `width:100px;height:100px;border-radius:50%;transform:translateY(20px);background:linear-gradient(${ITEMS[id].c[0]},${ITEMS[id].c[1]});box-shadow:0 0 30px ${ITEMS[id].c[1]}`; add(d); rig.style.setProperty('--sc', '1');
     } else if (cat === 'hat') {
-      const dy = { 'hat-top': 20, 'hat-gold': 20, 'hat-crown': 19, 'hat-halo': 22.5 }[id] || 27, g = grp(`translate3d(0,${dy * S3}px,0)`);
+      const dy = { 'hat-top': 20, 'hat-gold': 20, 'hat-zzb': 20, 'hat-crown': 19, 'hat-halo': 22.5 }[id] || 27, g = grp(`translate3d(0,${dy * S3}px,0)`);
       hat3(id, e => g.appendChild(e)); add(g); rig.style.setProperty('--sc', '.6');
     } else if (cat === 'cape') { cape3(id, add); rig.style.setProperty('--sc', '.78'); }
     else if (cat === 'wings') { wings3(id, add, 14, true); rig.style.setProperty('--sc', ITEMS[id].img ? '.62' : '.52'); }
@@ -389,6 +390,26 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
     const ri = $('#limRndItem'); if (ri) ri.onclick = () => { const o = [...$('#limId').options], taken = new Set((shop.limited || []).map(x => x.id)), pool = o.filter(x => !taken.has(x.value) && !shop.owned.includes(x.value)); const l = pool.length ? pool : o; $('#limId').value = l[Math.floor(Math.random() * l.length)].value; prev(); };
     const sv = $('#limSave'); if (sv) sv.onclick = async () => { sv.disabled = true; take(await window.cloudy.limAdmin({ id: $('#limId').value, mode: $('#limMode').value, price: +$('#limPrice').value, stock: +$('#limStock').value, hours: +$('#limHours').value, code: $('#limCode').value, note: $('#limNote').value, reset: $('#limReset').checked })); };
   }
+  // ---- Pakete (Bundles): vom Admin zusammengestellt, ein Preis für mehrere Items ----
+  const bundleOpen = new Set();
+  function bundlesHtml() {
+    const B = (shop && shop.bundles) || [], nameOf = id => ((shop.catalog.find(c => c.id === id) || {}).name || id);
+    if (!B.length && !shop.admin) return '';
+    const cards = B.map(b => `<div class="glass shi bnd"><b>🎁 ${escL(b.name)}</b><small>${b.ownedAll ? L('Gehört dir') : (shop.admin ? L('gratis (Admin)') : cc(b.price))}</small><div class="muted" style="font-size:12.5px">${b.items.map(i => escL(nameOf(i))).join(' · ')}</div>
+      ${b.ownedAll ? '<button class="btn ghost" disabled>' + L('Gehört dir') + '</button>' : `<button class="btn" data-bnd-buy="${b.id}">${L('Paket kaufen')}</button>`}
+      ${shop.admin ? `<button class="btn ghost" data-bnd-del="${b.id}">${L('Löschen')}</button>` : ''}</div>`).join('');
+    const form = shop.admin ? `<div class="glass set wide" style="margin:10px 0"><h3 style="margin:0 0 6px">${L('Paket erstellen')}</h3><p class="muted">${L('Wähle mehrere Items (Strg/Cmd + Klick), gib einen Namen und den Preis fürs ganze Paket an.')}</p>
+      <div class="tools" style="margin:0 0 6px"><input id="bndName" class="field" maxlength="40" placeholder="${L('Name des Pakets')}" style="flex:1;min-width:160px"><input id="bndPrice" class="field" type="number" min="0" placeholder="${L('Preis (CC)')}" style="max-width:130px"></div>
+      <select id="bndItems" class="field" multiple size="9" style="width:100%">${shop.catalog.map(c => `<option value="${c.id}">${escL(c.cat)} · ${escL(c.name)} (${c.price} CC)</option>`).join('')}</select>
+      <div class="tools" style="margin:8px 0 0"><button class="btn" id="bndSave">${L('Paket speichern')}</button><small class="muted" id="bndMsg"></small></div></div>` : '';
+    return `<h3 class="shc">🎁 ${L('Pakete')}</h3>${cards ? `<div class="row shrow">${cards}</div>` : `<p class="muted">${L('Noch keine Pakete.')}</p>`}${form}`;
+  }
+  function wireBundles() {
+    const msg = t => { const m = $('#shopMsg'); if (m) m.textContent = t || ''; }, take = r => { if (r && r.state) { shop = r.state; window.shopCatalog = shop.catalog; } msg(r && !r.ok ? L(r.error || 'Fehler') : ''); paintShop(); };
+    $$('[data-bnd-buy]').forEach(b => b.onclick = async () => { b.disabled = true; take(await window.cloudy.bundleBuy(b.dataset.bndBuy)); try { buySound(); } catch {} });
+    $$('[data-bnd-del]').forEach(b => b.onclick = async () => { if (confirm(L('Paket löschen') + '?')) take(await window.cloudy.bundleAdmin({ id: b.dataset.bndDel, del: true })); });
+    const sv = $('#bndSave'); if (sv) sv.onclick = async () => { const items = [...$('#bndItems').selectedOptions].map(o => o.value); sv.disabled = true; take(await window.cloudy.bundleAdmin({ name: $('#bndName').value, price: +$('#bndPrice').value, items })); };
+  }
   function paintShop() {
     paintCoins(); paintCl(); const box = $('#shopItems'); if (!box || !shop) return; regCustom();
     const adm = $('#shopAdmin'); if (adm) adm.style.display = shop.admin ? '' : 'none';
@@ -401,8 +422,10 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
       return `<div class="glass shi ${on ? 'sel' : ''}"><div class="i3h" data-i3="${i.id}"></div><b ${shop.admin ? `contenteditable="plaintext-only" spellcheck="false" title="Admin: Namen anklicken und ändern" data-rn="${i.id}"` : ''}>${i.name}</b><small>${shop.admin ? `<span contenteditable="plaintext-only" spellcheck="false" title="Admin: Preis anklicken und ändern (leer = Standardpreis)" data-pr="${i.id}" style="border-bottom:1px dashed currentColor;padding:0 2px">${i.price}</span> CC · gratis (Admin)` : cc(i.price)}</small>
         ${shop.admin ? `<button class="btn ghost ${i.hidden ? 'tagon' : ''}" data-hide="${i.id}|${i.hidden ? 0 : 1}" title="Admin: ${i.hidden ? 'Wieder im Shop anzeigen' : 'Im Shop verstecken (niemand kann es mehr kaufen)'}">${i.hidden ? '🙈 Versteckt – zeigen' : '👁 Verstecken'}</button>` : ''}        ${shop.admin && i.custom ? `<button class="btn ghost" data-ci-del="${i.id}">Löschen</button>` : ''}${own ? `<button class="btn ${on ? 'ghost' : ''}" data-eq="${i.id}" data-cat="${cat}">${on ? 'Ablegen' : 'Anlegen'}</button>${!shop.admin && !i.custom ? `<button class="btn ghost" data-gift="${i.id}">🎁 Verschenken</button>` : ''}` : `<button class="btn" data-buy="${i.id}">Kaufen</button>`}</div>`;
     }).join('')}</div>`).join('');
+    if (shopFilt === 'all') box.insertAdjacentHTML('afterbegin', bundlesHtml());
     if (shopFilt === 'all' || shopFilt === 'lim') box.insertAdjacentHTML('beforeend', limHtml());
     wireLim();
+    wireBundles();
     $$('#shopItems [data-i3]').forEach(h => { const w = item3d(h.dataset.i3); h.appendChild(w); i3s.add(w.firstChild); });
     $$('[data-pr]').forEach(b => { b.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); b.blur(); } }; b.onblur = async () => { const t = b.textContent.replace(/[^0-9]/g, ''), it = shop.catalog.find(c => c.id === b.dataset.pr); if (!it) return; if (t !== '' && +t === it.price) { b.textContent = it.price; return; } const r = await window.cloudy.shopPrice({ id: it.id, price: t === '' ? null : +t }); if (r.state) { shop = r.state; window.shopCatalog = shop.catalog; } $('#shopMsg').textContent = r.ok ? '' : L(r.error); paintShop(); }; });
     $$('[data-rn]').forEach(b => { b.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); b.blur(); } }; b.onblur = async () => { const n = b.textContent.trim(), it = shop.catalog.find(c => c.id === b.dataset.rn); if (!it || n === it.name) return; const r = await window.cloudy.shopRename({ id: it.id, name: n }); if (r.state) { shop = r.state; window.shopCatalog = shop.catalog; } $('#shopMsg').textContent = r.ok ? '' : L(r.error); paintShop(); }; });

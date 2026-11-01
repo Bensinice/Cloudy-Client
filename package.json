@@ -1,7 +1,7 @@
 {
   "name": "cloudy",
   "productName": "Cloudy",
-  "version": "0.9.51",
+  "version": "0.9.52",
   "versionEpoch": 1,
   "description": "Cloudy – ein Minecraft-Launcher in Babyblau und Liquid Glass",
   "main": "main.js",
@@ -36,7 +36,8 @@
       ],
       "artifactName": "Cloudy-${arch}.${ext}",
       "extendInfo": {
-        "NSMicrophoneUsageDescription": "Cloudy braucht das Mikrofon für Gruppen-Anrufe."
+        "NSMicrophoneUsageDescription": "Cloudy braucht das Mikrofon für Gruppen-Anrufe.",
+        "NSAppleEventsUsageDescription": "Cloudy steuert damit Spotify (Pause, Weiter, Zurück)."
       }
     },
     "files": [

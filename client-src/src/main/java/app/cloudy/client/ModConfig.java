@@ -39,6 +39,7 @@ public final class ModConfig {
 		new Def("mousefx_trail", "  Cursor trail", "QoL", "Soft trail behind the cursor (needs Mouse effects)"),
 		new Def("totem", "Totem counter", "HUD", "Shows how many Totems of Undying you carry (turns red at zero)"),
 		new Def("hotbar", "Custom hotbar", "QoL", "Dark, theme or custom-color hotbar and hearts (set colors in Options)"),
+				new Def("playerhead", "Player head", "HUD", "Your face in the top-left corner (on by default)"),
 				new Def("biome", "Biome", "HUD", "Name of the biome you are in"),
 		new Def("light", "Light level", "HUD", "Light level at your feet (mobs spawn at 0)"),
 		new Def("nether", "Nether coordinates", "HUD", "Matching Nether / Overworld coordinates (x8 / ÷8)"),
@@ -102,7 +103,7 @@ public final class ModConfig {
 
 	private static Path file() { return FabricLoader.getInstance().getConfigDir().resolve("cloudy-mods.json"); }
 
-	public static boolean isOn(String id) { load(); Boolean b = on.get(id); return b == null ? (id.equals("lyrics") || id.equals("sky") || id.equals("freelook") || id.equals("freecam") || id.startsWith("mousefx") || id.equals("itemphysics") || id.equals("lyricscard")) : b; } // Lyrics sind standardmaessig an
+	public static boolean isOn(String id) { load(); Boolean b = on.get(id); return b == null ? (id.equals("lyrics") || id.equals("sky") || id.equals("freelook") || id.equals("freecam") || id.startsWith("mousefx") || id.equals("itemphysics") || id.equals("lyricscard") || id.equals("playerhead")) : b; } // Lyrics sind standardmaessig an
 	public static void set(String id, boolean v) { load(); on.put(id, v); save(); }
 	public static boolean anyHud() { for (Def d : DEFS) if (d.cat().equals("HUD") && isOn(d.id())) return true; return false; }
 

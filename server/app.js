@@ -22,6 +22,7 @@ const saveCodes = () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['
 const lockMsg = u => { if (!u || isAdm(u)) return ''; if (u.paused) return 'Konto vorübergehend deaktiviert.'; const un = Number(u.ban_until) || 0; if (u.banned && (!un || un > Date.now())) { const r = u.ban_reason ? ': ' + u.ban_reason : ''; if (!un) return 'Konto dauerhaft gesperrt' + r; const m = Math.ceil((un - Date.now()) / 60000); return 'Konto gesperrt für noch ' + (m >= 1440 ? Math.ceil(m / 1440) + ' Tag(e)' : m >= 60 ? Math.ceil(m / 60) + ' Std.' : m + ' Min.') + r; } return ''; };
 const isAdm = u => !!u && (!!u.admin || ((TAGS[String(u.name).toLowerCase()] || []).includes('owner'))); // Owner-Tag = Admin-Rechte
 let LIM = {}; // Limited-Items: { itemId: { mode, price, stock, sold, code, until, note, claimed[] } }
+let BUNDLES = {}; // vom Admin zusammengestellte Pakete { id: { name, items[], price } }
 let HIDE = []; // vom Admin im Shop versteckte Items (nicht mehr kaufbar)
 const limView = (key, adm) => Object.values(LIM).map(l => ({ id: l.id, mode: l.mode, price: l.price, stock: l.stock, left: Math.max(0, l.stock - l.sold), until: l.until || 0, note: l.note || '', mine: l.claimed.includes(key), over: !!(l.until && l.until < Date.now()) || l.sold >= l.stock, ...(adm ? { code: ((l.codes || []).find(x => !x.by) || {}).c || l.code || '', codes: (l.codes || []).map(x => ({ c: x.c, used: !!x.by })), sold: l.sold } : {}) }));
 const limSet = b => { const id = String(b.id || ''); if (!/^[a-z]+-[a-z0-9-]{1,30}$/.test(id)) return 'Ungueltiges Item.'; if (b.del) { delete LIM[id]; return ''; }
@@ -38,7 +39,7 @@ const limClaim = (key, b) => { const l = LIM[String(b.id || '')]; if (!l) return
 const TAGS_OK = ['owner', 'manager', 'tester', 'plus', 'mod'];
 const AUTO_TAGS = { thepa1: ['manager'] }; // feste Rollen
 const tagsOf = k => { const t = [...new Set([...(TAGS[k] || []), ...(AUTO_TAGS[k] || [])])].filter(x => TAGS_OK.includes(x)); return k === 'admin' ? ['owner', ...t.filter(x => x !== 'owner')] : t; }; // das Admin-Konto ist automatisch Owner (rot)
-const pub = u => ({ hidden: HIDE, tags: tagsOf(String(u.name).toLowerCase()), names: NAMES, prices: PRICES, name: u.name, admin: isAdm(u), coins: isAdm(u) || u.inf_coins ? null : u.coins, mustChange: !!u.must_change, state: { coins: u.admin || u.inf_coins ? null : (u.coins == null ? 100 : u.coins), owned: parse(u.owned, []), equip: parse(u.equip, {}), daily: u.daily || '' } });
+const pub = u => ({ bundles: BUNDLES, hidden: HIDE, tags: tagsOf(String(u.name).toLowerCase()), names: NAMES, prices: PRICES, name: u.name, admin: isAdm(u), coins: isAdm(u) || u.inf_coins ? null : u.coins, mustChange: !!u.must_change, state: { coins: u.admin || u.inf_coins ? null : (u.coins == null ? 100 : u.coins), owned: parse(u.owned, []), equip: parse(u.equip, {}), daily: u.daily || '' } });
 const okPw = (u, p) => { if (!u) return false; try { return crypto.timingSafeEqual(Buffer.from(u.hash, 'hex'), Buffer.from(hash(p, u.salt), 'hex')); } catch { return false; } };
 const fk = (o, s) => { const u = String(s || '').trim().toUpperCase(); if (Object.prototype.hasOwnProperty.call(o, u)) return u; const n = u.replace(/[^A-Z0-9]/g, ''); return n ? (Object.keys(o).find(k => k.replace(/[^A-Z0-9]/g, '') === n) || u) : u; }; // Codes mit oder ohne Bindestriche, Groß-/Kleinschreibung egal
 const sessions = new Map(), tries = new Map(), RM = new Map(); // RM: kürzlich entfernte Items je Konto – verhindert, dass ein veralteter Launcher sie sofort wieder hochlädt
@@ -54,6 +55,7 @@ async function init() {
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='prices'"); PRICES = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='tags'"); TAGS = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='cos'"); COS = r.length ? parse(r[0].v, {}) : {}; }
+  { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='bundles'"); BUNDLES = r.length ? parse(r[0].v, {}) : {}; if (!BUNDLES || typeof BUNDLES !== 'object' || Array.isArray(BUNDLES)) BUNDLES = {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='hide'"); HIDE = r.length ? parse(r[0].v, []) : []; if (!Array.isArray(HIDE)) HIDE = []; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='lim'"); LIM = r.length ? parse(r[0].v, {}) : {}; if (!LIM || typeof LIM !== 'object') LIM = {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='announce'"); ANN = r.length ? parse(r[0].v, ANN) : ANN; }
@@ -295,6 +297,12 @@ app.post('/admin/inf', target(async (req, res, t) => { await put({ ...t, inf_coi
 app.post('/admin/pause', target(async (req, res, t) => { await put({ ...t, paused: req.body.paused ? 1 : 0 }); res.json({ ok: true }); }));
 app.post('/admin/removeitem', target(async (req, res, t) => { let o = parse(t.owned, []), e = parse(t.equip, {}); { const m = RM.get(t.name_key) || {}; m[req.body.all ? '*' : String(req.body.id || '')] = Date.now(); RM.set(t.name_key, m); } if (req.body.all) { o = []; e = {}; } else { const id = String(req.body.id || ''); o = o.filter(x => x !== id); for (const k of Object.keys(e)) if (e[k] === id) delete e[k]; } await put({ ...t, owned: o, equip: e }); res.json({ ok: true }); }));
 app.post('/admin/shopprice', admin(async (req, res) => { const id = String(req.body.id || '').slice(0, 40); if (!id) return res.status(400).json({ error: 'id fehlt' }); if (req.body.price === null || req.body.price === '' || req.body.price === undefined) delete PRICES[id]; else PRICES[id] = Math.max(0, Math.min(1e6, Math.round(+req.body.price || 0))); await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['prices', JSON.stringify(PRICES)]); res.json({ ok: true, prices: PRICES }); }));
+app.post('/admin/bundle', admin(async (req, res) => { // Paket anlegen/ändern (id leer = neu) oder löschen (del)
+  const b = req.body || {}; let id = String(b.id || '').replace(/[^a-z0-9]/gi, '').slice(0, 12).toLowerCase();
+  if (b.del) { if (id) delete BUNDLES[id]; }
+  else { const items = (Array.isArray(b.items) ? b.items : []).filter(x => typeof x === 'string' && /^[a-z]+-[a-z0-9-]{1,30}$/.test(x)).slice(0, 12), name = String(b.name || '').trim().slice(0, 40), price = Math.max(0, Math.min(1e6, Math.round(+b.price || 0))); if (!name || items.length < 2) return res.status(400).json({ error: 'Name und mindestens 2 Items nötig.' }); if (!id) id = 'b' + Date.now().toString(36).slice(-6); BUNDLES[id] = { name, items, price }; }
+  await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['bundles', JSON.stringify(BUNDLES)]); res.json({ ok: true, bundles: BUNDLES });
+}));
 app.post('/admin/shopname', admin(async (req, res) => { const id = String(req.body.id || '').slice(0, 40), v = String(req.body.name || '').trim().slice(0, 40); if (!id) return res.status(400).json({ error: 'id fehlt' }); if (v) NAMES[id] = v; else delete NAMES[id]; await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['names', JSON.stringify(NAMES)]); res.json({ ok: true }); }));
 app.post('/admin/ban', target(async (req, res, t) => { await put({ ...t, ban_until: req.body.banned && +req.body.until > Date.now() ? Math.round(+req.body.until) : 0, banned: req.body.banned ? 1 : 0, ban_reason: String(req.body.reason || '').slice(0, 80) }); res.json({ ok: true }); }));
 app.post('/admin/coins', target(async (req, res, t) => { await put({ ...t, coins: Math.max(0, Math.min(1e9, Math.round(+req.body.amount || 0))) }); res.json({ ok: true }); }));

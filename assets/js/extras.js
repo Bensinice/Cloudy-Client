@@ -254,7 +254,15 @@
     $('#spOptBg').onclick = () => { S.set('reactOn', !S.get('reactOn', true)); lab(); paintNow(); };
     $('#spOptMu').onclick = () => { S.set('muteOn', !S.get('muteOn', true)); lab(); };
     lab(); window.__spLab = lab;
-    document.querySelectorAll('#spNow [data-mk]').forEach(b => b.onclick = async () => { const k = b.dataset.mk; if (k === 'playpause' && np.title) { np.playing = !np.playing; paintNow(); } try { const p = window.cloudy.mediaKey(k); setTimeout(pollNow, 250); setTimeout(pollNow, 700); await p; } catch {} setTimeout(pollNow, 200); setTimeout(pollNow, 900); });
+    document.querySelectorAll('#spNow [data-mk]').forEach(b => b.onclick = async () => { const k = b.dataset.mk; if (k === 'playpause' && np.title) { np.playing = !np.playing; paintNow(); } try {
+        const p = window.cloudy.mediaKey(k); setTimeout(pollNow, 250); setTimeout(pollNow, 700); const ok = await p;
+        const note = $('#spNote');
+        if (ok === false && note && k !== 'volup' && k !== 'voldown') { // Steuerung hat nicht geklappt: sagen, woran es liegt
+          try { const sp = await window.cloudy.spotifyState(); if (sp && sp.last && sp.last.ok === false && sp.last.msg) { note.textContent = sp.last.msg; return; } } catch {}
+          if (k === 'playpause' && np.title) { np.playing = !np.playing; paintNow(); }
+          note.textContent = en() ? 'Control failed. Connect Spotify in Settings → Spotify (Premium needed). On Mac also allow Cloudy to control Spotify (System Settings → Privacy → Automation).' : 'Steuern hat nicht geklappt. Verbinde Spotify unter Einstellungen → Spotify (Premium nötig). Auf dem Mac erlaube Cloudy zusätzlich die Steuerung von Spotify (Systemeinstellungen → Datenschutz → Automation).';
+        } else if (note && ok) note.textContent = '';
+      } catch {} setTimeout(pollNow, 200); setTimeout(pollNow, 900); });
   }
 
 
@@ -386,4 +394,20 @@
     $('#biReset').onclick = () => { S.set('brandIcon', ''); brandIcon(); };
   }
   brandIcon(); brandUi(); setTimeout(brandUi, 1500);
+
+  // ---- Programm-Symbol in der Theme-Farbe (Taskleiste / Dock) ----
+  let iconKey = '';
+  function themedIcon() {
+    try {
+      if (!window.cloudy.setAppIcon) return;
+      const cs = getComputedStyle(document.documentElement), c1 = (cs.getPropertyValue('--accent') || '').trim() || '#5aa2f5', c2 = (cs.getPropertyValue('--accent2') || '').trim() || c1;
+      if (c1 + c2 === iconKey) return; iconKey = c1 + c2;
+      const cv = document.createElement('canvas'); cv.width = cv.height = 256; const g = cv.getContext('2d');
+      const r = 56, x = 8, y = 8, w = 240; g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + w, r); g.arcTo(x + w, y + w, x, y + w, r); g.arcTo(x, y + w, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+      const gr = g.createLinearGradient(0, 0, 256, 256); gr.addColorStop(0, c1); gr.addColorStop(1, c2); g.fillStyle = gr; g.fill();
+      g.save(); g.translate(48, 56); g.scale(5, 5); g.fillStyle = '#fff'; g.fill(new Path2D('M9 24a6 6 0 0 1-.6-12A8 8 0 0 1 24 10a7 7 0 0 1-1 14z')); g.restore();
+      window.cloudy.setAppIcon(cv.toDataURL('image/png'));
+    } catch {}
+  }
+  setTimeout(themedIcon, 1500); setInterval(themedIcon, 4000);
 })();

@@ -105,7 +105,7 @@ public final class Cosmetics {
 
 
 	public static final String[] ALL = {"cape-cloud", "cape-aurora", "cape-sunset", "cape-galaxy", "cape-fire", "cape-ocean", "cape-sakura",
-		"hat-top", "hat-gold", "hat-wizard", "hat-santa", "hat-witch", "hat-crown", "hat-halo", "hat-party", "hat-frost",
+		"hat-top", "hat-gold", "hat-wizard", "hat-santa", "hat-witch", "hat-crown", "hat-halo", "hat-party", "hat-frost", "hat-zzv", "hat-zzb", "hat-zsh", "hat-zif",
 		"wings-angel", "wings-neon", "wings-fire", "wings-bat", "wings-crystal", "wings-shadow", "shield-cloud", "shield-sun", "shield-dragon", "shield-forest", "shield-ice",
 		"cape-nebula", "cape-emerald", "cape-royal",
 		"cape-zz4", "cape-zz4m", "cape-zz3", "cape-zz3s", "cape-zz5", "cape-zk5", "wings-zz4", "wings-zz4m", "wings-zz3", "wings-zz3s", "wings-zz5", "wings-zk5",
@@ -210,6 +210,10 @@ public final class Cosmetics {
 			case "shield-zz5" -> "ZZ5 2M Shield";
 			case "hat-party" -> "Party Hat";
 			case "hat-frost" -> "Frost Hat";
+			case "hat-zzv" -> "Zigzag Hat Violet";
+			case "hat-zzb" -> "Zigzag Top Hat Blue";
+			case "hat-zsh" -> "Shadow Hat";
+			case "hat-zif" -> "Ice Feather Hat";
 			default -> id;
 		};
 	}
@@ -225,7 +229,7 @@ public final class Cosmetics {
 
 	// Jedes Item bekommt eine Zelle (64x48) im 256x256-Atlas. Form (Hut/Flügel/Schild) und Farben stehen in der Tabelle.
 	private static final String[] IDS = {"hat-top", "hat-gold", "hat-wizard", "hat-santa", "hat-witch", "hat-crown", "hat-halo",
-		"wings-angel", "wings-neon", "wings-fire", "wings-bat", "wings-crystal", "wings-shadow", "shield-cloud", "shield-sun", "shield-dragon", "shield-forest", "shield-ice", "hat-party", "hat-frost"};
+		"wings-angel", "wings-neon", "wings-fire", "wings-bat", "wings-crystal", "wings-shadow", "shield-cloud", "shield-sun", "shield-dragon", "shield-forest", "shield-ice", "hat-party", "hat-frost", "hat-zzv", "hat-zzb", "hat-zsh", "hat-zif"};
 	private static final int[][] COL = {
 		{0xFF2A2A3C, 0xFF1C1C28, 0xFF6DB8FF, 0xFF2F7FE0}, {0xFFF4C430, 0xFFB8860B, 0xFFE23B3B, 0xFF9E1B1B},
 		{0xFF8B5CF6, 0xFF5B34C4, 0xFFA98BFF, 0xFF7C5CE0, 0xFFFFD24A}, {0xFFFFFFFF, 0xFFD8E4F0, 0xFFE0262E, 0xFFA3121A, 0xFFFFFFFF},
@@ -233,12 +237,13 @@ public final class Cosmetics {
 		{0xFFFFFFFF, 0xFFBCD9FF, 0xFFEAF3FF}, {0xFF00E5FF, 0xFFFF3DD0, 0xFFE8FFFF}, {0xFFFFD23A, 0xFFE23B1A, 0xFFFFF1B0}, {0xFF4A2A6A, 0xFF14081F, 0xFFB07CFF},
 		{0xFFB9F6FF, 0xFF6A7BFF, 0xFFFFFFFF}, {0xFF3B2A55, 0xFF07050D, 0xFFB07CFF},
 		{0xFF9BD2FF, 0xFF2F7FE0}, {0xFFFFD24A, 0xFFE8741A}, {0xFFE23B3B, 0xFF3A0A0A, 0xFFFFD24A}, {0xFF5BD98A, 0xFF1B6A45, 0xFFFFFFFF}, {0xFFD9F6FF, 0xFF4AA8D8, 0xFFFFFFFF},
-		{0xFFFF4FA3, 0xFFC02275, 0xFFFFE14A, 0xFFE0B800, 0xFFFFFFFF}, {0xFF8FE3FF, 0xFF3FA9D6, 0xFFFFFFFF, 0xFFD8F1FA, 0xFFFFFFFF}};
-	private static final int SZ = 256;
+		{0xFFFF4FA3, 0xFFC02275, 0xFFFFE14A, 0xFFE0B800, 0xFFFFFFFF}, {0xFF8FE3FF, 0xFF3FA9D6, 0xFFFFFFFF, 0xFFD8F1FA, 0xFFFFFFFF},
+		{0xFF6D28D9, 0xFF3B1A8A, 0xFFB26BFF, 0xFF7C3AED, 0xFFE9D5FF}, {0xFF1D4ED8, 0xFF0B2A78, 0xFF60A5FA, 0xFF2563EB}, {0xFF1B1030, 0xFF07050D, 0xFF3B2A55, 0xFF15101F, 0xFFB07CFF}, {0xFFBFEAFF, 0xFF8FD3F0, 0xFFEFFBFF, 0xFFA9E3F7, 0xFFFFFFFF}};
+	private static final int SZ = 512; // Atlas: 4 Spalten à 64 px, genug Zeilen für alle Items
 
 	private static int idx(String id) { for (int i = 0; i < IDS.length; i++) if (IDS[i].equals(id)) return i; return -1; }
-	private static boolean isTop(String id) { return id.equals("hat-top") || id.equals("hat-gold"); }
-	private static boolean isWiz(String id) { return id.equals("hat-wizard") || id.equals("hat-santa") || id.equals("hat-witch") || id.equals("hat-party") || id.equals("hat-frost"); }
+	private static boolean isTop(String id) { return id.equals("hat-top") || id.equals("hat-gold") || id.equals("hat-zzb"); }
+	private static boolean isWiz(String id) { return id.equals("hat-wizard") || id.equals("hat-santa") || id.equals("hat-witch") || id.equals("hat-party") || id.equals("hat-frost") || id.equals("hat-zzv") || id.equals("hat-zsh") || id.equals("hat-zif"); }
 
 	/** Baut Textur und Modell beim ersten Zeichnen. */
 	public static boolean ensure() {

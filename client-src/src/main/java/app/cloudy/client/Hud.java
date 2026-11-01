@@ -72,6 +72,7 @@ public final class Hud {
 		float s = ModConfig.scale;
 		var ms = c.getMatrices();
 		int ww = c.getScaledWindowWidth(), wh = c.getScaledWindowHeight();
+		if (ModConfig.isOn("playerhead")) { try { net.minecraft.client.gui.PlayerSkinDrawer.draw(c, mc.player.getSkinTextures(), 4, 4, 20); c.fill(4, 24, 24, 25, Theme.accent); } catch (Throwable ignored) {} } // dein Kopf oben links
 		List<String> chips = new ArrayList<>();
 		for (ModConfig.Def d : ModConfig.DEFS) {
 			if (!d.cat().equals("HUD") || !ModConfig.isOn(d.id())) continue;
@@ -167,7 +168,7 @@ public final class Hud {
 		for (List<String> row : rows) {
 			int total = -gap;
 			for (String t : row) total += Ui.w(t) + pad * 2 + gap;
-			int x = center ? (sw - total) / 2 : 6;
+			int x = center ? (sw - total) / 2 : (ModConfig.isOn("playerhead") ? 30 : 6); // Platz für den Kopf links
 			for (String t : row) { chip(c, mc, t, x, y); x += Ui.w(t) + pad * 2 + gap; }
 			y += h + gap;
 		}

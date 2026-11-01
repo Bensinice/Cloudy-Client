@@ -1,4 +1,13 @@
 {
+ "0.9.52": [
+  "Shop: 4 new 3D hats matching the wings and capes (zigzag hat purple, zigzag top hat blue, shadow hat, ice feather hat)",
+  "Bundles: admins combine several items into a bundle with its own price (e.g. cape + wings); players buy them with one click (re-upload the server file!)",
+  "Shop: mini tab “Cloudy+” (still empty); the big Skins tab in the menu is gone – skins are in the shop",
+  "In game: your head at the top left (can be turned off in Cloudy Mods → “Player head”)",
+  "The app icon (taskbar/dock) now takes the color of your theme",
+  "Mini player: pause/next/previous now also use the first Spotify device if none is active and show the exact reason on errors (e.g. Premium needed)",
+  "The tour now shows the whole launcher and explains why 1.21.4 is preselected"
+ ],
  "0.9.51": [
   "Shop: new mini tab “Skins” – your skins are now in the shop too; you can hide the Skins tab in the menu in Settings (Appearance)",
   "Cloudy Client is set up and kept up to date automatically – no manual building/downloading in the shop any more",

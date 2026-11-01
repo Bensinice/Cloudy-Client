@@ -1,5 +1,20 @@
 [
  {
+  "v": "0.9.52",
+  "date": "2026-11-01",
+  "added": [
+   "Shop: 4 neue 3D-Hüte passend zu den Flügeln und Umhängen (Zickzack-Hut Violett, Zickzack-Zylinder Blau, Schattenhut, Eisfeder-Hut)",
+   "Pakete (Bundles): Admins stellen mehrere Items zu einem Paket mit eigenem Preis zusammen (z. B. Umhang + Flügel); Spieler kaufen sie mit einem Klick (Server-Datei neu hochladen!)",
+   "Shop: Mini-Tab „Cloudy+“ (noch leer); der große Skins-Reiter im Menü ist weg – Skins gibt es im Shop",
+   "Im Spiel: dein Kopf oben links (abschaltbar bei Cloudy Mods → „Player head“)",
+   "Das Programm-Symbol (Taskleiste/Dock) übernimmt die Farbe deines Themes",
+   "Mini-Player: Pause/Weiter/Zurück nutzen jetzt auch das erste Spotify-Gerät, wenn kein aktives da ist, und zeigen bei Fehlern den genauen Grund (z. B. Premium nötig)",
+   "Tour zeigt jetzt den ganzen Launcher und erklärt, warum 1.21.4 vorausgewählt ist"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.51",
   "date": "2026-11-01",
   "added": [
