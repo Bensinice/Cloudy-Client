@@ -1,5 +1,15 @@
 [
  {
+  "v": "0.9.44",
+  "date": "2026-11-01",
+  "added": [
+   "Admin: Preise der Shop-Items direkt im Shop anklicken und ändern (leer lassen = Standardpreis; gilt für alle Spieler, Server-Datei neu hochladen)",
+   "Wenn ein Freund schreibt, erscheint unten rechts eine kleine Nachrichten-Bubble (Klick öffnet den Chat)"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.43",
   "date": "2026-11-01",
   "added": [

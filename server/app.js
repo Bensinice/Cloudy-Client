@@ -14,7 +14,7 @@ const js = v => typeof v === 'string' ? v : JSON.stringify(v);
 const parse = (v, d) => { try { const j = JSON.parse(v); return j == null ? d : j; } catch { return d; } };
 async function put(u) { const key = u.name.toLowerCase(); await db.query(`REPLACE INTO cloudy_users (name_key,${COLS.join(',')}) VALUES (?${',?'.repeat(COLS.length)})`, [key, ...COLS.map(c => (c === 'owned' || c === 'equip') ? js(u[c] == null ? (c === 'owned' ? [] : {}) : u[c]) : (c === 'daily' ? (u[c] || '') : (c === 'ban_until' || c === 'paused') ? (u[c] || 0) : u[c]))]); }
 async function get(key) { const [r] = await db.query('SELECT * FROM cloudy_users WHERE name_key=?', [key]); return r[0] || null; }
-let TAGS = {}, ANN = { text: '', t: 0 }, NAMES = {}, CODES = {}, GATE = {}, GRANTS = {}, FR = { f: {}, msgs: {}, seq: 1 };
+let TAGS = {}, ANN = { text: '', t: 0 }, NAMES = {}, PRICES = {}, CODES = {}, GATE = {}, GRANTS = {}, FR = { f: {}, msgs: {}, seq: 1 };
 const gcode = v => typeof v === 'string' ? v : (v && v.c) || '';
 const saveGate = async () => { await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['gate', JSON.stringify(GATE)]); await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['gategrants', JSON.stringify(GRANTS)]); };
 let frT = null; const saveFr = async () => { clearTimeout(frT); frT = setTimeout(() => { db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['friends', JSON.stringify(FR)]).catch(() => {}); }, 400); };
@@ -37,7 +37,7 @@ const limClaim = (key, b) => { const l = LIM[String(b.id || '')]; if (!l) return
   if (cd) cd.by = key; l.sold++; l.claimed.push(key); return { ok: true, price: l.mode === 'coins' ? l.price : 0 }; };
 const TAGS_OK = ['owner', 'tester', 'plus', 'mod'];
 const tagsOf = k => { const t = (TAGS[k] || []).filter(x => TAGS_OK.includes(x)); return k === 'admin' ? ['owner', ...t.filter(x => x !== 'owner')] : t; }; // das Admin-Konto ist automatisch Owner (rot)
-const pub = u => ({ hidden: HIDE, tags: tagsOf(String(u.name).toLowerCase()), names: NAMES, name: u.name, admin: isAdm(u), coins: isAdm(u) || u.inf_coins ? null : u.coins, mustChange: !!u.must_change, state: { coins: u.admin || u.inf_coins ? null : (u.coins == null ? 100 : u.coins), owned: parse(u.owned, []), equip: parse(u.equip, {}), daily: u.daily || '' } });
+const pub = u => ({ hidden: HIDE, tags: tagsOf(String(u.name).toLowerCase()), names: NAMES, prices: PRICES, name: u.name, admin: isAdm(u), coins: isAdm(u) || u.inf_coins ? null : u.coins, mustChange: !!u.must_change, state: { coins: u.admin || u.inf_coins ? null : (u.coins == null ? 100 : u.coins), owned: parse(u.owned, []), equip: parse(u.equip, {}), daily: u.daily || '' } });
 const okPw = (u, p) => { if (!u) return false; try { return crypto.timingSafeEqual(Buffer.from(u.hash, 'hex'), Buffer.from(hash(p, u.salt), 'hex')); } catch { return false; } };
 const fk = (o, s) => { const u = String(s || '').trim().toUpperCase(); if (Object.prototype.hasOwnProperty.call(o, u)) return u; const n = u.replace(/[^A-Z0-9]/g, ''); return n ? (Object.keys(o).find(k => k.replace(/[^A-Z0-9]/g, '') === n) || u) : u; }; // Codes mit oder ohne Bindestriche, Groß-/Kleinschreibung egal
 const sessions = new Map(), tries = new Map(), RM = new Map(); // RM: kürzlich entfernte Items je Konto – verhindert, dass ein veralteter Launcher sie sofort wieder hochlädt
@@ -50,6 +50,7 @@ async function init() {
   await db.query('CREATE TABLE IF NOT EXISTS cloudy_kv (k VARCHAR(40) PRIMARY KEY, v MEDIUMTEXT)');
   try { await db.query('ALTER TABLE cloudy_kv MODIFY v MEDIUMTEXT'); } catch {}
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='names'"); NAMES = r.length ? parse(r[0].v, {}) : {}; }
+  { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='prices'"); PRICES = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='tags'"); TAGS = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='cos'"); COS = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='hide'"); HIDE = r.length ? parse(r[0].v, []) : []; if (!Array.isArray(HIDE)) HIDE = []; }
@@ -229,6 +230,7 @@ app.post('/admin/additem', target(async (req, res, t) => { const id = String(req
 app.post('/admin/inf', target(async (req, res, t) => { await put({ ...t, inf_coins: req.body.on ? 1 : 0, coins: req.body.on ? null : 100 }); res.json({ ok: true }); }));
 app.post('/admin/pause', target(async (req, res, t) => { await put({ ...t, paused: req.body.paused ? 1 : 0 }); res.json({ ok: true }); }));
 app.post('/admin/removeitem', target(async (req, res, t) => { let o = parse(t.owned, []), e = parse(t.equip, {}); { const m = RM.get(t.name_key) || {}; m[req.body.all ? '*' : String(req.body.id || '')] = Date.now(); RM.set(t.name_key, m); } if (req.body.all) { o = []; e = {}; } else { const id = String(req.body.id || ''); o = o.filter(x => x !== id); for (const k of Object.keys(e)) if (e[k] === id) delete e[k]; } await put({ ...t, owned: o, equip: e }); res.json({ ok: true }); }));
+app.post('/admin/shopprice', admin(async (req, res) => { const id = String(req.body.id || '').slice(0, 40); if (!id) return res.status(400).json({ error: 'id fehlt' }); if (req.body.price === null || req.body.price === '' || req.body.price === undefined) delete PRICES[id]; else PRICES[id] = Math.max(0, Math.min(1e6, Math.round(+req.body.price || 0))); await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['prices', JSON.stringify(PRICES)]); res.json({ ok: true, prices: PRICES }); }));
 app.post('/admin/shopname', admin(async (req, res) => { const id = String(req.body.id || '').slice(0, 40), v = String(req.body.name || '').trim().slice(0, 40); if (!id) return res.status(400).json({ error: 'id fehlt' }); if (v) NAMES[id] = v; else delete NAMES[id]; await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['names', JSON.stringify(NAMES)]); res.json({ ok: true }); }));
 app.post('/admin/ban', target(async (req, res, t) => { await put({ ...t, ban_until: req.body.banned && +req.body.until > Date.now() ? Math.round(+req.body.until) : 0, banned: req.body.banned ? 1 : 0, ban_reason: String(req.body.reason || '').slice(0, 80) }); res.json({ ok: true }); }));
 app.post('/admin/coins', target(async (req, res, t) => { await put({ ...t, coins: Math.max(0, Math.min(1e9, Math.round(+req.body.amount || 0))) }); res.json({ ok: true }); }));

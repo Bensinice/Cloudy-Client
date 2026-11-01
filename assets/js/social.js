@@ -60,13 +60,33 @@
   $('#frLogin').onclick = connect('login'); $('#frReg').onclick = connect('register');
   $('#frOut').onclick = async () => { await window.cloudy.frDisconnect(); fr.chat = null; clearTimeout(fr.timer); frCheck(); };
   async function api(method, path, body) { const r = await window.cloudy.frApi({ method, path, body }); if (r.auth) { frCheck(); } return r; }
+  // Kleine Nachrichten-Bubble unten rechts, wenn ein Freund schreibt (nicht, solange du genau mit ihm im Chat bist)
+  let seenUn = null, bubT = null;
+  async function bubbleCheck(d) {
+    const cur = {}; for (const f of d.friends || []) cur[f.name] = f.unread || 0;
+    const prev = seenUn; seenUn = cur; if (!prev) return;
+    const onChat = $('#p-friends').classList.contains('on');
+    for (const f of d.friends || []) {
+      if ((f.unread || 0) <= (prev[f.name] || 0) || (onChat && fr.chat === f.name)) continue;
+      let txt = ''; try { const r = await api('GET', `/msgs?with=${encodeURIComponent(f.name)}&after=0`); const l = r.ok && r.data.msgs && r.data.msgs[r.data.msgs.length - 1]; if (l && l.from !== d.me) txt = String(l.text || '').slice(0, 80); } catch {}
+      showBubble(f.name, txt); break;
+    }
+  }
+  function showBubble(name, txt) {
+    let b = document.getElementById('frBubble');
+    if (!b) { b = document.createElement('div'); b.id = 'frBubble'; b.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:9999;max-width:260px;padding:9px 13px;border-radius:14px;background:rgba(14,22,44,.94);border:1px solid rgba(140,203,255,.45);box-shadow:0 6px 24px rgba(0,0,0,.45);color:#fff;font-size:12.5px;cursor:pointer;transition:opacity .25s,transform .25s;opacity:0;transform:translateY(8px)'; document.body.appendChild(b); }
+    b.innerHTML = `<b style="display:block;color:#8ccbff;margin-bottom:2px">💬 ${esc(name)}</b><span style="opacity:.9;word-break:break-word">${esc(cens(txt) || L('hat dir geschrieben'))}</span>`;
+    b.onclick = () => { b.style.opacity = 0; b.style.transform = 'translateY(8px)'; b.style.pointerEvents = 'none'; try { go('friends'); fr.chat = name; fr.last = 0; fr.msgs = []; paintChat(); loadMsgs(); paintFriends(); } catch {} };
+    b.style.pointerEvents = ''; requestAnimationFrame(() => { b.style.opacity = 1; b.style.transform = 'none'; });
+    clearTimeout(bubT); bubT = setTimeout(() => { b.style.opacity = 0; b.style.transform = 'translateY(8px)'; b.style.pointerEvents = 'none'; }, 6000);
+  }
   async function poll() {
     clearTimeout(fr.timer); if (!fr.conn) return;
     const r = await api('GET', '/state');
-    if (r.ok) { fr.state = r.data; paintFriends(); const n = r.data.friends.reduce((a, f) => a + f.unread, 0) + r.data.incoming.length; const b = $('#frBadge'); b.textContent = n ? n : ''; b.style.display = n ? '' : 'none'; $('#frOff').textContent = ''; }
+    if (r.ok) { try { bubbleCheck(r.data); } catch {} fr.state = r.data; paintFriends(); const n = r.data.friends.reduce((a, f) => a + f.unread, 0) + r.data.incoming.length; const b = $('#frBadge'); b.textContent = n ? n : ''; b.style.display = n ? '' : 'none'; $('#frOff').textContent = ''; }
     else if (r.offline) $('#frOff').textContent = L(r.error);
     if (fr.chat) await loadMsgs();
-    fr.timer = setTimeout(poll, $('#p-friends').classList.contains('on') ? 3000 : 15000);
+    fr.timer = setTimeout(poll, $('#p-friends').classList.contains('on') ? 3000 : 6000);
   }
   function paintFriends() {
     const s = fr.state; if (!s) return;

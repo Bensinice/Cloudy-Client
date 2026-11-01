@@ -667,7 +667,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.43'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.44'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -898,6 +898,7 @@ function srvMirror(pu) { // lokale Kopie (für Shop, Cosmetics, Spielzeit) – A
   const a = readAuth(), key = pu.name.toLowerCase();
   const u = a.users[key] || (a.users[key] = mkUser(pu.name, crypto.randomBytes(12).toString('hex'), { coins: 100 }));
   if (pu.names && typeof pu.names === 'object') { try { fs.writeFileSync(namesFile, JSON.stringify(pu.names)); } catch {} }
+  if (pu.prices && typeof pu.prices === 'object') { try { fs.writeFileSync(pricesFile, JSON.stringify(pu.prices)); } catch {} }
   if (Array.isArray(pu.hidden)) setHidden(pu.hidden); u.name = pu.name; u.admin = !!pu.admin; u.infCoins = !pu.admin && pu.coins === null; u.mustChange = false; u.banned = false;
   if (pu.state && !pu.admin) { const s = pu.state; if (!u.infCoins && Number.isFinite(+s.coins)) u.coins = +s.coins; u.owned = [...new Set([...(Array.isArray(s.owned) ? s.owned : []), ...limList.filter(l => l.mine).map(l => l.id)])]; u.equip = s.equip && typeof s.equip === 'object' ? s.equip : {}; u.daily = s.daily || ''; }
   saveAuth(a); return key;
@@ -1371,12 +1372,15 @@ let shopHidden = []; try { const j = JSON.parse(fs.readFileSync(hiddenFile, 'utf
 const setHidden = a => { shopHidden = (Array.isArray(a) ? a : []).filter(x => typeof x === 'string').slice(0, 500); try { fs.writeFileSync(hiddenFile, JSON.stringify(shopHidden)); } catch {} };
 const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
 const namesFile = path.join(app.getPath('userData'), 'shop-names.json'); // vom Admin geänderte Item-Namen – bleiben bei Updates erhalten
+const pricesFile = path.join(app.getPath('userData'), 'shop-prices.json'); // vom Admin geaenderte Preise
+const shopPrices = () => { try { const j = JSON.parse(fs.readFileSync(pricesFile, 'utf8')); return j && typeof j === 'object' ? j : {}; } catch { return {}; } };
+const priceOf = (c, pr) => Number.isFinite(+pr[c.id]) && pr[c.id] !== null ? Math.max(0, Math.round(+pr[c.id])) : c.price;
 const shopNames = () => { try { const j = JSON.parse(fs.readFileSync(namesFile, 'utf8')); return j && typeof j === 'object' ? j : {}; } catch { return {}; } };
 function shopOf(u) {
   if (u.coins == null) u.coins = 100; if (!u.owned) u.owned = []; if (!u.equip) u.equip = {};
   for (const k of Object.keys(u.equip)) if (!CATALOG.some(c => c.id === u.equip[k])) delete u.equip[k]; // entfernte Items (alte Z4-/Galaxie-Sachen) nicht mehr ausrüsten
-  const nm = shopNames();
-  return { limited: limList.map(l => { const c = CATALOG.find(x => x.id === l.id); return { ...l, name: nm[l.id] || (c && c.name) || l.id, cat: c ? c.cat : l.id.split('-')[0] }; }), catalog: CATALOG.filter(c => (u.admin || !shopHidden.includes(c.id) || (u.owned || []).includes(c.id)) && (u.admin || !limList.some(l => l.id === c.id) || (u.owned || []).includes(c.id))).map(c => { const o = nm[c.id] ? { ...c, name: nm[c.id] } : { ...c }; if (shopHidden.includes(c.id)) o.hidden = true; return o; }), admin: !!u.admin, coins: u.admin || u.infCoins ? null : u.coins, owned: u.admin ? CATALOG.map(c => c.id) : u.owned, equip: u.equip, dailyReady: !u.admin && !u.infCoins && u.daily !== todayStr() };
+  const nm = shopNames(), pr = shopPrices();
+  return { limited: limList.map(l => { const c = CATALOG.find(x => x.id === l.id); return { ...l, name: nm[l.id] || (c && c.name) || l.id, cat: c ? c.cat : l.id.split('-')[0] }; }), catalog: CATALOG.filter(c => (u.admin || !shopHidden.includes(c.id) || (u.owned || []).includes(c.id)) && (u.admin || !limList.some(l => l.id === c.id) || (u.owned || []).includes(c.id))).map(c => { const o = nm[c.id] ? { ...c, name: nm[c.id] } : { ...c }; o.price = priceOf(c, pr); if (shopHidden.includes(c.id)) o.hidden = true; return o; }), admin: !!u.admin, coins: u.admin || u.infCoins ? null : u.coins, owned: u.admin ? CATALOG.map(c => c.id) : u.owned, equip: u.equip, dailyReady: !u.admin && !u.infCoins && u.daily !== todayStr() };
 }
 function syncCosFromGame() { // im Spiel geänderte Auswahl (Cosmetics-Menü) in dein Konto übernehmen
   try {
@@ -1422,6 +1426,18 @@ ipcMain.handle('shopHide', async (_e, { id, on }) => {
   else setHidden(shopHidden.filter(x => x !== id).concat(on ? [id] : []));
   return shopWrite(() => ({}));
 });
+ipcMain.handle('shopPrice', async (_e, { id, price }) => {
+  const a = readAuth(), cu = currentUser && a.users[currentUser.toLowerCase()];
+  if (!cu || !cu.admin) return { ok: false, error: 'Nur Admins können Preise ändern.' };
+  if (!CATALOG.some(c => c.id === id)) return { ok: false, error: 'Unbekanntes Item.' };
+  const v = price === null || price === '' ? null : Math.max(0, Math.min(1e6, Math.round(+price)));
+  if (v !== null && !Number.isFinite(v)) return { ok: false, error: 'Bitte eine Zahl eingeben.' };
+  if (srvCfg()) { const r = await srvCall('/admin/shopprice', { id, price: v }, srvTok).catch(() => ({})); if (!r.ok) return { ok: false, error: 'Der Server hat den Preis nicht gespeichert (Server aktuell?).' }; }
+  return shopWrite(u => {
+    const pr = shopPrices(); if (v === null) delete pr[id]; else pr[id] = v;
+    try { fs.writeFileSync(pricesFile, JSON.stringify(pr, null, 1)); } catch { return { ok: false, error: 'Preis konnte nicht gespeichert werden.' }; }
+  });
+});
 ipcMain.handle('shopRename', async (_e, { id, name }) => {
   const a = readAuth(), cu = currentUser && a.users[currentUser.toLowerCase()];
   if (!cu || !cu.admin) return { ok: false, error: 'Nur Admins können Namen ändern.' };
@@ -1440,9 +1456,10 @@ ipcMain.handle('shopBuy', (_e, id) => shopWrite(u => {
   if (u.admin) return {}; if (u.owned.includes(id)) return { ok: false, error: 'Das besitzt du schon.' };
   if (shopHidden.includes(id)) return { ok: false, error: 'Dieses Item ist nicht mehr erhältlich.' };
   if (limList.some(l => l.id === id)) return { ok: false, error: 'Dieses Item gibt es nur als Limited-Item (ganz unten im Shop).' };
+  const price = priceOf(it, shopPrices());
   if (u.infCoins) { u.owned.push(id); return {}; } // Tester: unendlich Coins, nichts wird abgezogen
-  if (u.coins < it.price) return { ok: false, error: `Dir fehlen ${it.price - u.coins} CC.` };
-  u.coins -= it.price; u.owned.push(id);
+  if (u.coins < price) return { ok: false, error: `Dir fehlen ${price - u.coins} CC.` };
+  u.coins -= price; u.owned.push(id);
 }));
 ipcMain.handle('shopEquip', (_e, { cat, id }) => shopWrite(u => {
   if (id) { const it = CATALOG.find(c => c.id === id && c.cat === cat); if (!it || !(u.admin || u.owned.includes(id))) return { ok: false, error: 'Item nicht verfügbar.' }; u.equip[cat] = id; } else delete u.equip[cat];
