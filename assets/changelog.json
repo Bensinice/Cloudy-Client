@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.42",
+  "date": "2026-11-01",
+  "added": [
+   "Limited per Code: jeder Code gilt nur für einen Spieler – bei 5 Stück gibt es 5 Codes (Admin sieht alle, benutzte durchgestrichen). Server-Datei neu hochladen!"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.41",
   "date": "2026-11-01",
   "added": [],

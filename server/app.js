@@ -23,16 +23,18 @@ const lockMsg = u => { if (!u || isAdm(u)) return ''; if (u.paused) return 'Kont
 const isAdm = u => !!u && (!!u.admin || ((TAGS[String(u.name).toLowerCase()] || []).includes('owner'))); // Owner-Tag = Admin-Rechte
 let LIM = {}; // Limited-Items: { itemId: { mode, price, stock, sold, code, until, note, claimed[] } }
 let HIDE = []; // vom Admin im Shop versteckte Items (nicht mehr kaufbar)
-const limView = (key, adm) => Object.values(LIM).map(l => ({ id: l.id, mode: l.mode, price: l.price, stock: l.stock, left: Math.max(0, l.stock - l.sold), until: l.until || 0, note: l.note || '', mine: l.claimed.includes(key), over: !!(l.until && l.until < Date.now()) || l.sold >= l.stock, ...(adm ? { code: l.code || '', sold: l.sold } : {}) }));
+const limView = (key, adm) => Object.values(LIM).map(l => ({ id: l.id, mode: l.mode, price: l.price, stock: l.stock, left: Math.max(0, l.stock - l.sold), until: l.until || 0, note: l.note || '', mine: l.claimed.includes(key), over: !!(l.until && l.until < Date.now()) || l.sold >= l.stock, ...(adm ? { code: ((l.codes || []).find(x => !x.by) || {}).c || l.code || '', codes: (l.codes || []).map(x => ({ c: x.c, used: !!x.by })), sold: l.sold } : {}) }));
 const limSet = b => { const id = String(b.id || ''); if (!/^[a-z]+-[a-z0-9-]{1,30}$/.test(id)) return 'Ungueltiges Item.'; if (b.del) { delete LIM[id]; return ''; }
   const mode = b.mode === 'code' ? 'code' : 'coins', old = LIM[id] || { sold: 0, claimed: [] };
   const price = Math.max(0, Math.min(1e6, Math.round(+b.price || 0))), stock = Math.max(1, Math.min(1e5, Math.round(+b.stock || 1))), hrs = Math.max(0, Math.min(8760, +b.hours || 0));
-  let code = String(b.code || '').trim().slice(0, 30); if (mode === 'code' && !code) code = Math.random().toString(36).slice(2, 10).toUpperCase();
-  LIM[id] = { id, mode, price, stock, code: mode === 'code' ? code : '', until: hrs ? Date.now() + hrs * 3600e3 : 0, note: String(b.note || '').slice(0, 80), sold: b.reset ? 0 : old.sold, claimed: b.reset ? [] : old.claimed, t: old.t || Date.now() }; return ''; };
+  let codes = []; if (mode === 'code') { const oc = old.codes || (old.code ? [{ c: old.code, by: '' }] : []), want = String(b.code || '').split(/[\s,;]+/).map(x => x.trim().slice(0, 30)).filter(Boolean), seen = new Set(); // jeder Code gilt nur fuer einen Spieler: so viele Codes wie Menge
+      for (const c of want.length ? want : oc.map(x => x.c)) { const k = c.toLowerCase(); if (!seen.has(k) && codes.length < stock) { seen.add(k); const o = oc.find(x => x.c.toLowerCase() === k); codes.push({ c, by: b.reset ? '' : (o && o.by) || '' }); } }
+      const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; while (codes.length < stock) { let c = ''; for (const x of crypto.randomBytes(8)) c += A[x % A.length]; if (!seen.has(c.toLowerCase())) { seen.add(c.toLowerCase()); codes.push({ c, by: '' }); } } }
+  LIM[id] = { id, mode, price, stock, codes, until: hrs ? Date.now() + hrs * 3600e3 : 0, note: String(b.note || '').slice(0, 80), sold: b.reset ? 0 : old.sold, claimed: b.reset ? [] : old.claimed, t: old.t || Date.now() }; return ''; };
 const limClaim = (key, b) => { const l = LIM[String(b.id || '')]; if (!l) return { error: 'Dieses Limited-Item gibt es nicht.' }; if (l.claimed.includes(key)) return { ok: true, already: true, price: 0 };
   if (l.until && l.until < Date.now()) return { error: 'Die Aktion ist abgelaufen.' }; if (l.sold >= l.stock) return { error: 'Ausverkauft.' };
-  if (l.mode === 'code' && String(b.code || '').trim().toLowerCase() !== String(l.code).toLowerCase()) return { error: 'Falscher Code.' };
-  l.sold++; l.claimed.push(key); return { ok: true, price: l.mode === 'coins' ? l.price : 0 }; };
+  let cd = null; if (l.mode === 'code') { const want = String(b.code || '').trim().toLowerCase(); cd = (l.codes || []).find(x => x.c.toLowerCase() === want); if (!want || !cd) return { error: 'Falscher Code.' }; if (cd.by) return { error: 'Dieser Code wurde schon eingeloest.' }; }
+  if (cd) cd.by = key; l.sold++; l.claimed.push(key); return { ok: true, price: l.mode === 'coins' ? l.price : 0 }; };
 const TAGS_OK = ['owner', 'tester', 'plus', 'mod'];
 const tagsOf = k => { const t = (TAGS[k] || []).filter(x => TAGS_OK.includes(x)); return k === 'admin' ? ['owner', ...t.filter(x => x !== 'owner')] : t; }; // das Admin-Konto ist automatisch Owner (rot)
 const pub = u => ({ hidden: HIDE, tags: tagsOf(String(u.name).toLowerCase()), names: NAMES, name: u.name, admin: isAdm(u), coins: isAdm(u) || u.inf_coins ? null : u.coins, mustChange: !!u.must_change, state: { coins: u.admin || u.inf_coins ? null : (u.coins == null ? 100 : u.coins), owned: parse(u.owned, []), equip: parse(u.equip, {}), daily: u.daily || '' } });
