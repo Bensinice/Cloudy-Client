@@ -671,11 +671,11 @@ ipcMain.handle('uninstall', (_e, { removeData }) => { // Cloudy vom Rechner entf
     if (!app.isPackaged) return { ok: false, error: 'Im Entwicklungsmodus nicht möglich.' };
     const { spawn } = require('child_process'), data = app.getPath('userData'), det = { detached: true, stdio: 'ignore', windowsHide: true };
     if (IS_WIN) {
-      const port = process.env.PORTABLE_EXECUTABLE_FILE, bat = path.join(app.getPath('temp'), 'cloudy-uninstall.bat'), lines = ['@echo off', 'ping -n 4 127.0.0.1 >nul'];
-      if (port) lines.push(`del /f /q "${port}"`);
-      else { const un = path.join(path.dirname(process.execPath), 'Uninstall Cloudy.exe'); if (!fs.existsSync(un)) return { ok: false, error: 'Das Deinstallationsprogramm wurde nicht gefunden. Nutze Windows → Einstellungen → Apps → Cloudy.' }; lines.push(`start "" /wait "${un}" /S`); }
-      if (removeData) lines.push(`rmdir /s /q "${data}"`);
-      lines.push('del /f /q "%~f0"'); fs.writeFileSync(bat, lines.join('\r\n') + '\r\n'); spawn('cmd.exe', ['/c', bat], det).unref();
+      // Ohne Hilfsskript: Das Deinstallationsprogramm startet erst nach dem Beenden von Cloudy; Daten werden dabei mit entfernt
+      const port = process.env.PORTABLE_EXECUTABLE_FILE, un = path.join(path.dirname(process.execPath), 'Uninstall Cloudy.exe');
+      if (port) { try { shell.showItemInFolder(port); } catch {} }
+      else if (!fs.existsSync(un)) return { ok: false, error: 'Das Deinstallationsprogramm wurde nicht gefunden. Nutze Windows → Einstellungen → Apps → Cloudy.' };
+      app.once('will-quit', () => { if (removeData) { try { fs.rmSync(data, { recursive: true, force: true, maxRetries: 5 }); } catch {} } if (!port) { try { spawn(un, ['/S'], det).unref(); } catch {} } });
     } else if (IS_MAC) {
       const appPath = path.resolve(process.execPath, '..', '..', '..'); if (!appPath.endsWith('.app')) return { ok: false, error: 'Cloudy-App nicht gefunden.' };
       spawn('/bin/sh', ['-c', `sleep 2; rm -rf "$1"; if [ "$2" = 1 ]; then rm -rf "$3"; fi`, 'sh', appPath, removeData ? '1' : '0', data], det).unref();
@@ -779,7 +779,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.55'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.56'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -2331,6 +2331,14 @@ ipcMain.handle('launch', async (_e, { username, version, type, ram, server, fabr
   }
 });
 
-app.whenReady().then(() => { if (!localUpdate.applyOnStart()) createWindow(); });
+// Portable-Update: Die neu geladene Datei kopiert sich über die alte (sobald diese frei ist) und startet sie – ohne Batch-Skript
+async function replacePortable() {
+  const old = (process.argv.find(x => x.startsWith('--cloudy-replace=')) || '').slice(17), me = process.env.PORTABLE_EXECUTABLE_FILE;
+  if (!old || !me) return false;
+  for (let i = 0; i < 60; i++) { try { fs.copyFileSync(me, old); break; } catch { await new Promise(r => setTimeout(r, 1000)); } }
+  try { spawn(old, [], { detached: true, stdio: 'ignore', windowsHide: false }).unref(); } catch {}
+  app.exit(0); return true;
+}
+app.whenReady().then(async () => { if (await replacePortable()) return; if (!localUpdate.applyOnStart()) createWindow(); });
 app.on('window-all-closed', () => app.quit());
 app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) createWindow(); });

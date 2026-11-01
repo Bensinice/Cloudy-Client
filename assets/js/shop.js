@@ -436,7 +436,11 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
     if (shopFilt === 'all' || shopFilt === 'lim') box.insertAdjacentHTML('beforeend', limHtml());
     wireLim();
     wireBundles();
-    $$('#shopItems [data-i3]').forEach(h => { const w = item3d(h.dataset.i3); h.appendChild(w); i3s.add(w.firstChild); });
+    // 3D-Vorschauen erst bauen, wenn sie ins Bild scrollen (sonst hunderte 3D-Elemente auf einmal = Ruckeln)
+    if (window._i3io) window._i3io.disconnect();
+    const mk = h => { if (h._done) return; h._done = 1; try { const w = item3d(h.dataset.i3); h.appendChild(w); i3s.add(w.firstChild); } catch {} };
+    if ('IntersectionObserver' in window) { const io = window._i3io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { mk(e.target); io.unobserve(e.target); } }), { root: null, rootMargin: '300px 0px' }); $$('#shopItems [data-i3]').forEach(h => io.observe(h)); }
+    else $$('#shopItems [data-i3]').forEach(mk);
     $$('[data-pr]').forEach(b => { b.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); b.blur(); } }; b.onblur = async () => { const t = b.textContent.replace(/[^0-9]/g, ''), it = shop.catalog.find(c => c.id === b.dataset.pr); if (!it) return; if (t !== '' && +t === it.price) { b.textContent = it.price; return; } const r = await window.cloudy.shopPrice({ id: it.id, price: t === '' ? null : +t }); if (r.state) { shop = r.state; window.shopCatalog = shop.catalog; } $('#shopMsg').textContent = r.ok ? '' : L(r.error); paintShop(); }; });
     $$('[data-rn]').forEach(b => { b.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); b.blur(); } }; b.onblur = async () => { const n = b.textContent.trim(), it = shop.catalog.find(c => c.id === b.dataset.rn); if (!it || n === it.name) return; const r = await window.cloudy.shopRename({ id: it.id, name: n }); if (r.state) { shop = r.state; window.shopCatalog = shop.catalog; } $('#shopMsg').textContent = r.ok ? '' : L(r.error); paintShop(); }; });
     $$('[data-hide]').forEach(b => b.onclick = async () => { const [id, on] = b.dataset.hide.split('|'); const r = await window.cloudy.shopHide({ id, on: on === '1' }); if (r.state) { shop = r.state; window.shopCatalog = shop.catalog; } $('#shopMsg').textContent = r.ok ? '' : L(r.error); paintShop(); });

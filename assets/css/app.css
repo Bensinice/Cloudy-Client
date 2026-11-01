@@ -619,3 +619,8 @@ html[data-theme="glass"]{background:rgba(8,20,40,var(--win-a,0))!important}
 .bpick.sel .bchk{display:flex}
 .bsum{padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.07);font-size:13px}
 .bprev{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}.bpi{display:grid;justify-items:center;width:78px}.bpi .i3h{height:80px!important}.bpi small{font-size:11px;max-width:78px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Shop: flüssiges Scrollen */
+#shopItems .glass{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:inset 0 1px 1px var(--gh),0 6px 18px -8px var(--gs)}
+#shopItems .shi{contain:layout style}
+#shopItems .i3r{backface-visibility:hidden}

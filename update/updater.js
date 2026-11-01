@@ -91,10 +91,9 @@ exports.init = function init({ app, ipcMain, shell, send, defaultRepo, userAgent
       // Installer läuft still, behält den Installationsordner und startet Cloudy danach neu
       spawn(file, ['/S', '--updated', '--force-run'], detached).unref();
     } else if (IS_WIN) {
-      const old = process.env.PORTABLE_EXECUTABLE_FILE, bat = path.join(path.dirname(file), 'apply.bat');
-      fs.writeFileSync(bat, ['@echo off', 'set n=0', 'ping -n 3 127.0.0.1 >nul', ':retry', `move /y "${file}" "${old}" >nul 2>&1 && goto done`,
-        'set /a n+=1', 'if %n% gtr 40 exit /b 1', 'ping -n 2 127.0.0.1 >nul', 'goto retry', ':done', `start "" "${old}"`, ''].join('\r\n'));
-      spawn('cmd.exe', ['/c', bat], detached).unref();
+      // Die neue Datei ersetzt die alte selbst (siehe replacePortable in main.js) – ohne Hilfsskript
+      spawn(file, ['--cloudy-replace=' + process.env.PORTABLE_EXECUTABLE_FILE], detached).unref();
+      setTimeout(() => { try { app.quit(); } catch {} }, 600);
     } else if (IS_MAC) {
       const target = path.resolve(process.execPath, '..', '..', '..');
       if (!target.endsWith('.app')) return shell.openPath(file);

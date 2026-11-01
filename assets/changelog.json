@@ -1,5 +1,15 @@
 [
  {
+  "v": "0.9.56",
+  "date": "2026-11-01",
+  "added": [],
+  "fixed": [
+   "Shop: deutlich flüssigeres Scrollen (3D-Vorschauen laden erst beim Hinscrollen, weniger Unschärfe-Effekte)",
+   "Windows: Update der Portable-Version und Deinstallation kommen ohne Batch-Skripte aus – das sollte Fehlalarme von Virenscannern (VirusTotal) vermeiden"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.55",
   "date": "2026-11-01",
   "added": [

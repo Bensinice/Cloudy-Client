@@ -1,4 +1,8 @@
 {
+ "0.9.56": [
+  "Shop: much smoother scrolling (3D previews load only when scrolled into view, fewer blur effects)",
+  "Windows: portable update and uninstall no longer use batch scripts – should avoid antivirus false alarms (VirusTotal)"
+ ],
  "0.9.55": [
   "Creating bundles is cleaner: tap item cards with 3D previews, search and category filter, summary with total price",
   "Bundles in the shop show their items with 3D previews"
