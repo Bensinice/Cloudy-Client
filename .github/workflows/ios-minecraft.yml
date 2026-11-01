@@ -10,7 +10,7 @@ permissions:
   contents: write
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
@@ -36,8 +36,6 @@ jobs:
           git rev-parse HEAD > ../AMETHYST_COMMIT.txt
           # neuer Xcode/Clang meldet fehlende Header als Fehler: mach/mach.h ergaenzen und Implicit-Declaration nur als Warnung behandeln
           perl -0pi -e 's/\A/#include <mach\/mach.h>\n/' Natives/JavaLauncher.m
-          # Zeilen, die nur das iOS-26-SDK kennt, auskommentieren (Runner hat Xcode 16)
-          perl -pi -e 's/^(.*sharesBackground.*)$/\/\/ $1/' Natives/LauncherProfilesViewController.m
           export CFLAGS="-Wno-error=implicit-function-declaration -Wno-implicit-function-declaration"
           export OBJCFLAGS="$CFLAGS"
           /usr/libexec/java_home -V || true
