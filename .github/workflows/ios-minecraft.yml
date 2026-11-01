@@ -35,9 +35,7 @@ jobs:
           export JAVA_HOME_8=$JAVA_HOME
           git rev-parse HEAD > ../AMETHYST_COMMIT.txt
           # neuer Xcode/Clang meldet fehlende Header als Fehler: mach/mach.h ergaenzen und Implicit-Declaration nur als Warnung behandeln
-          sed -i '' '1i\
-#include <mach/mach.h>
-' Natives/JavaLauncher.m
+          perl -0pi -e 's/\A/#include <mach\/mach.h>\n/' Natives/JavaLauncher.m
           export CFLAGS="-Wno-error=implicit-function-declaration -Wno-implicit-function-declaration"
           export OBJCFLAGS="$CFLAGS"
           /usr/libexec/java_home -V || true
