@@ -262,7 +262,7 @@
     } else if (cat === 'hat') {
       const dy = { 'hat-top': 20, 'hat-gold': 20, 'hat-zzb': 20, 'hat-crown': 19, 'hat-halo': 22.5, 'hat-haloblack': 22.5 }[id] || 27, g = grp(`translate3d(0,${dy * S3}px,0)`);
       hat3(id, e => g.appendChild(e)); add(g); rig.style.setProperty('--sc', '.6');
-    } else if (cat === 'cape') { cape3(id, add); rig.style.setProperty('--sc', '.78'); }
+    } else if (cat === 'cape') { cape3(id, add); rig.style.setProperty('--sc', ITEMS[id].img ? '.52' : '.7'); }
     else if (cat === 'wings') { wings3(id, add, 14, true); rig.style.setProperty('--sc', ITEMS[id].img ? '.62' : '.52'); }
     else { shield3(id, add); rig.style.setProperty('--sc', '.85'); }
     if (ITEMS[id].img) rig.classList.add('i3flat');
@@ -391,20 +391,24 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
     const sv = $('#limSave'); if (sv) sv.onclick = async () => { sv.disabled = true; take(await window.cloudy.limAdmin({ id: $('#limId').value, mode: $('#limMode').value, price: +$('#limPrice').value, stock: +$('#limStock').value, hours: +$('#limHours').value, code: $('#limCode').value, note: $('#limNote').value, reset: $('#limReset').checked })); };
   }
   // ---- Pakete (Bundles): vom Admin zusammengestellt, ein Preis für mehrere Items ----
-  const bundleOpen = new Set(), bndSel = new Set(), bndDraft = { name: '', price: '', stock: '', hours: '', hidden: false };
+  const bundleOpen = new Set(), bndSel = new Set(), bndDraft = { name: '', price: '', stock: '', hours: '', hidden: false, codes: '' };
+  let tryOn = null; const eqView = () => ({ ...shop.equip, ...(tryOn || {}) }); // Anprobe: nur in der Vorschau, nichts wird gekauft oder angelegt
+  const canPay = p => !shop || shop.admin || shop.coins === null || shop.coins >= p;
+  const rndCode = () => { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c = ''; for (const b of crypto.getRandomValues(new Uint8Array(8))) c += A[b % A.length]; return c; };
   function bundlesHtml() {
     const nameOf = id => ((shop.catalog.find(c => c.id === id) || {}).name || id), isAll = shopFilt === 'all';
     // Pakete erscheinen bei jedem Filter (Alle / Nicht gekauft / Gekauft / Limited), nicht nur bei „Alle“
     const B = ((shop && shop.bundles) || []).filter(b => isAll || (shopFilt === 'new' ? !b.ownedAll : shopFilt === 'own' ? b.ownedAll : !!(b.stock || b.until)));
     if (!B.length && !(shop.admin && isAll)) return '';
     const lim = b => (b.stock || b.until) ? `<small class="muted">⏳ Limited${b.stock ? ' · ' + L('noch') + ' ' + b.left + '/' + b.stock : ''}${b.until ? ' · ' + (b.until < Date.now() ? L('abgelaufen') : L('bis') + ' ' + new Date(b.until).toLocaleString()) : ''}</small>` : '';
-    const cards = B.map(b => `<div class="glass shi bnd" ${b.hidden ? 'style="opacity:.6"' : ''}><b>🎁 ${escL(b.name)}</b>${b.hidden ? '<small class="muted">🙈 ' + L('Versteckt') + '</small>' : ''}${lim(b)}<small>${b.ownedAll ? L('Gehört dir') : (shop.admin ? L('gratis (Admin)') : cc(b.price))}</small><div class="bprev">${b.items.map(i => `<div class="bpi"><div class="i3h" data-i3="${i}"></div><small>${escL(nameOf(i))}</small></div>`).join('')}</div>
-      ${b.ownedAll ? '<button class="btn ghost" disabled>' + L('Gehört dir') + '</button>' : b.over && !shop.admin ? '<button class="btn ghost" disabled>' + L('Nicht mehr erhältlich') + '</button>' : `<button class="btn" data-bnd-buy="${b.id}">${L('Paket kaufen')}</button>`}
+    const cards = B.map(b => `<div class="glass shi bnd" ${b.hidden ? 'style="opacity:.6"' : ''}><b>🎁 ${escL(b.name)}</b>${b.hidden ? '<small class="muted">🙈 ' + L('Versteckt') + '</small>' : ''}${lim(b)}<small>${b.ownedAll ? L('Gehört dir') : (shop.admin ? L('gratis (Admin)') : cc(b.price))}</small>${b.worth > b.price && !b.ownedAll ? `<small class="bsave">${L('Einzeln')}: <s>${b.worth} CC</s> · ${L('du sparst')} ${b.worth - b.price} CC (${Math.round((b.worth - b.price) * 100 / b.worth)} %)</small>` : ''}${b.needCode && !b.ownedAll && !shop.admin ? `<input class="field bcode" data-bnd-code="${b.id}" placeholder="${L('Code eingeben')}" maxlength="24" autocomplete="off" spellcheck="false">` : ''}${shop.admin && b.codes && b.codes.length ? `<small class="muted bcodes" title="${L('Codes')}">🔑 ${b.codes.map(c => (c.u ? '<s>' + c.c + '</s>' : '<code>' + c.c + '</code>')).join(' ')}</small>` : ''}<div class="bprev">${b.items.map(i => `<div class="bpi"><div class="i3h" data-i3="${i}"></div><small>${escL(nameOf(i))}</small></div>`).join('')}</div>
+      ${b.ownedAll ? '<button class="btn ghost" disabled>' + L('Gehört dir') + '</button>' : b.over && !shop.admin ? '<button class="btn ghost" disabled>' + L('Nicht mehr erhältlich') + '</button>' : (!canPay(b.price) ? `<button class="btn ghost" disabled>${L('Dir fehlen')} ${b.price - shop.coins} CC</button>` : `<button class="btn" data-bnd-buy="${b.id}">${L('Paket kaufen')}</button>`) + (b.ownedAll ? '' : `<button class="btn ghost" data-bnd-try="${b.id}">👁 ${L('Anprobieren')}</button>`)}
       ${shop.admin ? `<button class="btn ghost" data-bnd-hide="${b.id}|${b.hidden ? 0 : 1}">${b.hidden ? '👁 ' + L('Zeigen') : '🙈 ' + L('Verstecken')}</button><button class="btn ghost" data-bnd-del="${b.id}">${L('Löschen')}</button>` : ''}</div>`).join('');
     const cats = [...new Set(shop.catalog.map(c => c.cat))];
     const form = shop.admin && isAll ? `<div class="glass set wide" style="margin:10px 0"><h3 style="margin:0 0 6px">${L('Paket erstellen')}</h3><p class="muted">${L('Tippe Items an, um sie ins Paket zu legen. Name und Preis gelten fürs ganze Paket.')}</p>
       <div class="tools" style="margin:0 0 8px"><input id="bndName" class="field" maxlength="40" placeholder="${L('Name des Pakets')}" value="${escL(bndDraft.name)}" style="flex:1;min-width:160px"><input id="bndPrice" class="field" type="number" min="0" placeholder="${L('Preis (CC)')}" value="${bndDraft.price}" style="max-width:130px"></div>
-      <div class="tools" style="margin:0 0 8px"><input id="bndStock" class="field" type="number" min="0" placeholder="${L('Limited: Menge (0 = unbegrenzt)')}" value="${bndDraft.stock}" style="flex:1;min-width:150px"><input id="bndHours" class="field" type="number" min="0" placeholder="${L('Limited: Stunden (0 = unbegrenzt)')}" value="${bndDraft.hours}" style="flex:1;min-width:150px"><label class="cb"><input type="checkbox" id="bndHid" ${bndDraft.hidden ? 'checked' : ''}> ${L('Versteckt')}</label></div>
+      <div class="tools" style="margin:0 0 8px"><input id="bndStock" class="field" type="number" min="0" placeholder="${L('Menge (0 = ∞)')}" value="${bndDraft.stock}" style="flex:1;min-width:150px"><input id="bndHours" class="field" type="number" min="0" placeholder="${L('Stunden (0 = ∞)')}" value="${bndDraft.hours}" style="flex:1;min-width:150px"><label class="cb"><input type="checkbox" id="bndHid" ${bndDraft.hidden ? 'checked' : ''}> ${L('Versteckt')}</label></div>
+      <div class="tools" style="margin:0 0 8px"><input id="bndCodes" class="field" placeholder="${L('Nur mit Code: Codes mit Komma (leer = alle)')}" value="${escL(bndDraft.codes)}" style="flex:1;min-width:220px"><button class="btn ghost" id="bndRnd" type="button">🎲 ${L('Zufallscode')}</button></div>
       <div class="bsum" id="bndSum"></div>
       <div class="tools" style="margin:6px 0"><input id="bndSearch" class="field" placeholder="${L('Suchen')}…" style="max-width:160px"><button class="chip on" data-bf="">${L('Alle')}</button>${cats.map(c => `<button class="chip" data-bf="${escL(c)}">${escL(c)}</button>`).join('')}</div>
       <div class="bgrid" id="bndItems">${shop.catalog.map(c => `<div class="glass shi bpick ${bndSel.has(c.id) ? 'sel' : ''}" data-bp="${c.id}" data-bcat="${escL(c.cat)}" data-bname="${escL(c.name).toLowerCase()}"><div class="i3h" data-i3="${c.id}"></div><b>${escL(c.name)}</b><small>${c.price} CC</small><span class="bchk">✓</span></div>`).join('')}</div>
@@ -413,7 +417,10 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
   }
   function wireBundles() {
     const msg = t => { const m = $('#shopMsg'); if (m) m.textContent = t || ''; }, take = r => { if (r && r.state) { shop = r.state; window.shopCatalog = shop.catalog; } msg(r && !r.ok ? L(r.error || 'Fehler') : ''); paintShop(); };
-    $$('[data-bnd-buy]').forEach(b => b.onclick = async () => { b.disabled = true; take(await window.cloudy.bundleBuy(b.dataset.bndBuy)); try { buySound(); } catch {} });
+    $$('[data-bnd-buy]').forEach(b => b.onclick = async () => { if (b.disabled) return; b.disabled = true; const ci = document.querySelector('[data-bnd-code="' + b.dataset.bndBuy + '"]'); const r = await window.cloudy.bundleBuy(b.dataset.bndBuy, ci ? ci.value : ''); take(r); if (r && r.ok) { try { buySound(); } catch {} } });
+    $$('[data-bnd-try]').forEach(b => b.onclick = () => { const bb = (shop.bundles || []).find(x => x.id === b.dataset.bndTry); if (bb) startTry(bb.items); });
+    const rb = $('#bndRnd'); if (rb) rb.onclick = () => { const i = $('#bndCodes'); i.value = (i.value.trim() ? i.value.trim().replace(/[,\s]+$/, '') + ', ' : '') + rndCode(); bndDraft.codes = i.value; };
+    const bc = $('#bndCodes'); if (bc) bc.oninput = () => bndDraft.codes = bc.value;
     $$('[data-bnd-del]').forEach(b => b.onclick = async () => { if (confirm(L('Paket löschen') + '?')) take(await window.cloudy.bundleAdmin({ id: b.dataset.bndDel, del: true })); });
     const sum = () => { const el = $('#bndSum'); if (!el) return; const its = [...bndSel].map(id => shop.catalog.find(c => c.id === id)).filter(Boolean), tot = its.reduce((a, c) => a + c.price, 0); el.innerHTML = its.length ? `<b>${its.length}</b> ${L('Items')}: ${its.map(c => escL(c.name)).join(' · ')}<br><small class="muted">${L('Einzeln zusammen')}: ${tot} CC</small>` : `<small class="muted">${L('Noch nichts ausgewählt.')}</small>`; };
     const nm = $('#bndName'), pr = $('#bndPrice'); if (nm) nm.oninput = () => bndDraft.name = nm.value; if (pr) pr.oninput = () => bndDraft.price = pr.value; const bs = $('#bndStock'), bh = $('#bndHours'), bx = $('#bndHid'); if (bs) bs.oninput = () => bndDraft.stock = bs.value; if (bh) bh.oninput = () => bndDraft.hours = bh.value; if (bx) bx.onchange = () => bndDraft.hidden = bx.checked;
@@ -423,19 +430,31 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
     const se = $('#bndSearch'); if (se) se.oninput = flt;
     $$('[data-bf]').forEach(b => b.onclick = () => { bcat = b.dataset.bf; $$('[data-bf]').forEach(x => x.classList.toggle('on', x === b)); flt(); });
     sum();
-    const sv = $('#bndSave'); if (sv) sv.onclick = async () => { const items = [...bndSel]; if (items.length < 2) { $('#bndMsg').textContent = L('Wähle mindestens 2 Items.'); return; } sv.disabled = true; const r = await window.cloudy.bundleAdmin({ name: bndDraft.name, price: +bndDraft.price, items, stock: +bndDraft.stock || 0, hours: +bndDraft.hours || 0, hidden: bndDraft.hidden }); if (r && r.ok) { bndSel.clear(); Object.assign(bndDraft, { name: '', price: '', stock: '', hours: '', hidden: false }); } take(r); };
+    const sv = $('#bndSave'); if (sv) sv.onclick = async () => { const items = [...bndSel]; if (items.length < 2) { $('#bndMsg').textContent = L('Wähle mindestens 2 Items.'); return; } sv.disabled = true; const r = await window.cloudy.bundleAdmin({ name: bndDraft.name, price: +bndDraft.price, items, stock: +bndDraft.stock || 0, hours: +bndDraft.hours || 0, hidden: bndDraft.hidden, codes: bndDraft.codes }); if (r && r.ok) { bndSel.clear(); Object.assign(bndDraft, { name: '', price: '', stock: '', hours: '', hidden: false, codes: '' }); } take(r); };
+  }
+  function startTry(ids) { // mehrere Items gleichzeitig anprobieren (Paket) oder eins
+    const t = {}; for (const id of ids) { const c = shop.catalog.find(x => x.id === id); if (c) t[c.cat] = id; }
+    tryOn = Object.keys(t).length ? t : null; paint3d(eqView()); tryBar();
+    try { $('#shop3d').scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch {}
+  }
+  function tryBar() {
+    let bar = $('#tryBar'); if (!tryOn) { if (bar) bar.remove(); return; }
+    if (!bar) { bar = document.createElement('div'); bar.id = 'tryBar'; bar.className = 'tools trybar'; const box = $('#shopItems'); box.parentNode.insertBefore(bar, box); }
+    const nm = id => ((shop.catalog.find(c => c.id === id) || {}).name || id);
+    bar.innerHTML = `<span>👁 ${L('Anprobe')}: <b>${Object.values(tryOn).map(i => escL(nm(i))).join(' · ')}</b></span><button class="btn ghost" id="tryOff">${L('Zurücksetzen')}</button>`;
+    $('#tryOff').onclick = () => { tryOn = null; paint3d(eqView()); tryBar(); };
   }
   function paintShop() {
     paintCoins(); paintCl(); const box = $('#shopItems'); if (!box || !shop) return; regCustom();
     const adm = $('#shopAdmin'); if (adm) adm.style.display = shop.admin ? '' : 'none';
-    paint3d(shop.equip); loop3(); paintHero();
+    paint3d(eqView()); loop3(); paintHero(); tryBar();
     let fb = $('#shopFilt'); if (!fb) { fb = document.createElement('div'); fb.id = 'shopFilt'; fb.className = 'tools'; fb.style.margin = '4px 0 6px'; fb.innerHTML = '<button class="chip" data-sf="all">Alle</button><button class="chip" data-sf="new">Nicht gekauft</button><button class="chip" data-sf="own">Gekauft</button><button class="chip" data-sf="lim">⏳ Limited</button>'; box.parentNode.insertBefore(fb, box); fb.querySelectorAll('[data-sf]').forEach(b => b.onclick = () => { shopFilt = b.dataset.sf; try { localStorage.setItem('cloudy.shopFilt', shopFilt); } catch {} paintShop(); }); if (window.setLang) window.setLang(document.documentElement.lang || 'de'); }
     fb.querySelectorAll('[data-sf]').forEach(b => b.classList.toggle('on', b.dataset.sf === shopFilt));
     const fl = cat => shopFilt === 'lim' ? [] : shop.catalog.filter(i => i.cat === cat && (shopFilt === 'all' || (shopFilt === 'own') === shop.owned.includes(i.id)));
     box.innerHTML = CATS.filter(([cat]) => shopFilt === 'all' || fl(cat).length).map(([cat, name]) => `<h3 class="shc">${name}</h3><div class="row shrow">${fl(cat).map(i => {
       const own = shop.owned.includes(i.id), on = shop.equip[cat] === i.id;
       return `<div class="glass shi ${on ? 'sel' : ''}"><div class="i3h" data-i3="${i.id}"></div><b ${shop.admin ? `contenteditable="plaintext-only" spellcheck="false" title="Admin: Namen anklicken und ändern" data-rn="${i.id}"` : ''}>${i.name}</b><small>${shop.admin ? `<span contenteditable="plaintext-only" spellcheck="false" title="Admin: Preis anklicken und ändern (leer = Standardpreis)" data-pr="${i.id}" style="border-bottom:1px dashed currentColor;padding:0 2px">${i.price}</span> CC · gratis (Admin)` : cc(i.price)}</small>
-        ${shop.admin ? `<button class="btn ghost ${i.hidden ? 'tagon' : ''}" data-hide="${i.id}|${i.hidden ? 0 : 1}" title="Admin: ${i.hidden ? 'Wieder im Shop anzeigen' : 'Im Shop verstecken (niemand kann es mehr kaufen)'}">${i.hidden ? '🙈 Versteckt – zeigen' : '👁 Verstecken'}</button>` : ''}        ${shop.admin && i.custom ? `<button class="btn ghost" data-ci-del="${i.id}">Löschen</button>` : ''}${own ? `<button class="btn ${on ? 'ghost' : ''}" data-eq="${i.id}" data-cat="${cat}">${on ? 'Ablegen' : 'Anlegen'}</button>${!shop.admin && !i.custom ? `<button class="btn ghost" data-gift="${i.id}">🎁 Verschenken</button>` : ''}` : `<button class="btn" data-buy="${i.id}">Kaufen</button>`}</div>`;
+        ${shop.admin ? `<button class="btn ghost ${i.hidden ? 'tagon' : ''}" data-hide="${i.id}|${i.hidden ? 0 : 1}" title="Admin: ${i.hidden ? 'Wieder im Shop anzeigen' : 'Im Shop verstecken (niemand kann es mehr kaufen)'}">${i.hidden ? '🙈 Versteckt – zeigen' : '👁 Verstecken'}</button>` : ''}        ${shop.admin && i.custom ? `<button class="btn ghost" data-ci-del="${i.id}">Löschen</button>` : ''}${own ? `<button class="btn ${on ? 'ghost' : ''}" data-eq="${i.id}" data-cat="${cat}">${on ? 'Ablegen' : 'Anlegen'}</button>${!shop.admin && !i.custom ? `<button class="btn ghost" data-gift="${i.id}">🎁 Verschenken</button>` : ''}` : (canPay(i.price) ? `<button class="btn" data-buy="${i.id}">Kaufen</button>` : `<button class="btn ghost" disabled>${L('Dir fehlen')} ${i.price - shop.coins} CC</button>`) + `<button class="btn ghost" data-try="${i.id}">👁 ${L('Anprobieren')}</button>`}</div>`;
     }).join('')}</div>`).join('');
     box.insertAdjacentHTML('afterbegin', bundlesHtml());
     if (shopFilt === 'all' || shopFilt === 'lim') box.insertAdjacentHTML('beforeend', limHtml());
@@ -457,7 +476,8 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
       const r = await window.cloudy.shopGift({ to: to.trim(), id: it.id }); if (r.state) { shop = r.state; window.shopCatalog = shop.catalog; }
       $('#shopMsg').textContent = r.ok ? L('Geschenk gesendet an') + ' ' + r.to + ' 🎁' : L(r.error); paintShop();
     });
-    $$('[data-buy]').forEach(b => b.onclick = async () => { const r = await act(window.cloudy.shopBuy(b.dataset.buy)); if (r && r.ok) buySound(); });
+    $$('[data-buy]').forEach(b => b.onclick = async () => { if (b.disabled) return; b.disabled = true; const r = await act(window.cloudy.shopBuy(b.dataset.buy)); if (r && r.ok) buySound(); });
+    $$('[data-try]').forEach(b => b.onclick = () => startTry([b.dataset.try]));
     $$('[data-eq]').forEach(b => b.onclick = () => equip(b.dataset.cat, shop.equip[b.dataset.cat] === b.dataset.eq ? null : b.dataset.eq));
     if (window.setLang) window.setLang(document.documentElement.lang || 'de');
   }
@@ -512,10 +532,27 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
   };
   let headSent = '';
   window.pushHead = () => { const h = window.cloudyHeadMine && window.cloudyHeadMine(); if (!h || h === headSent) return; headSent = h; try { window.cloudy.frApi({ method: 'POST', path: '/avatar', body: { img: h } }); } catch {} };
-  window.paintAll = () => { setTimeout(() => { try { window.pushHead(); } catch {} }, 400); if (disc) paintDisc(); if (shop) { paint3d(shop.equip); paintHero(); } $$('#skGrid .sk').forEach(el => { const s = skins.find(x => x.id === el.dataset.id); if (s) paintHead(el.querySelector('canvas'), s); }); };
+  window.paintAll = () => { setTimeout(() => { try { window.pushHead(); } catch {} }, 400); if (disc) paintDisc(); if (shop) { paint3d(eqView()); paintHero(); } $$('#skGrid .sk').forEach(el => { const s = skins.find(x => x.id === el.dataset.id); if (s) paintHead(el.querySelector('canvas'), s); }); };
   window.onLoggedIn = refresh;
   let lastShop = '';
-  const pollShop = async () => { if (document.hidden) return; try { const n = await window.cloudy.shopState(); if (!n) return; const sig = JSON.stringify([n.coins, n.owned, n.equip, n.catalog.map(c => c.name)]); shop = n; window.shopCatalog = n.catalog; if (sig !== lastShop) { lastShop = sig; if ($('#p-shop').classList.contains('on')) paintShop(); else paintCoins(); } else paintCoins(); } catch {} }; // alle 15 s: Coins, Items, Namen vom Server (Admin-Änderungen, Geschenke) ohne Neustart
+  // Neues Limited (Item oder Paket) → Hinweis im Launcher (und Desktop-Benachrichtigung, wenn Cloudy nicht im Vordergrund ist)
+  function limNews(n) {
+    try {
+      if (!n || n.admin) return;
+      const cur = [...(n.limited || []).filter(l => l.over !== true && l.left !== 0).map(l => ({ k: 'i:' + l.id + ':' + (l.until || l.t || ''), name: l.name || l.id })),
+        ...(n.bundles || []).filter(b => (b.stock || b.until) && !b.hidden && !b.over).map(b => ({ k: 'b:' + b.id + ':' + (b.until || ''), name: '🎁 ' + b.name }))];
+      let seen = null; try { seen = JSON.parse(localStorage.getItem('cloudy.limSeen') || 'null'); } catch {}
+      try { localStorage.setItem('cloudy.limSeen', JSON.stringify(cur.map(x => x.k))); } catch {}
+      if (!Array.isArray(seen)) return;
+      const fresh = cur.filter(x => !seen.includes(x.k)); if (!fresh.length || document.getElementById('limToast')) return;
+      const names = fresh.map(x => x.name).join(', '), t = document.createElement('div'); t.id = 'limToast'; t.className = 'updt';
+      t.innerHTML = `<span>⏳ ${L('Neues Limited im Shop')}: <b>${escL(names)}</b></span> <button class="btn" style="height:30px;padding:0 12px;margin-left:10px">${L('Zum Shop')}</button> <button class="btn ghost" style="height:30px;padding:0 10px">✕</button>`;
+      document.body.appendChild(t); const bs = t.querySelectorAll('button');
+      bs[0].onclick = () => { t.remove(); try { window.go('shop'); } catch {} }; bs[1].onclick = () => t.remove(); setTimeout(() => t.remove(), 20000);
+      if (!document.hasFocus() && window.cloudy.notify) window.cloudy.notify({ title: 'Cloudy', body: '⏳ ' + L('Neues Limited im Shop') + ': ' + names, kind: 'limited' });
+    } catch {}
+  }
+  const pollShop = async () => { if (document.hidden) return; try { const n = await window.cloudy.shopState(); if (!n) return; limNews(n); const sig = JSON.stringify([n.coins, n.owned, n.equip, n.catalog.map(c => c.name)]); shop = n; window.shopCatalog = n.catalog; if (sig !== lastShop) { lastShop = sig; if ($('#p-shop').classList.contains('on')) paintShop(); else paintCoins(); } else paintCoins(); } catch {} }; // alle 15 s: Coins, Items, Namen vom Server (Admin-Änderungen, Geschenke) ohne Neustart
   window.pollShop = pollShop;
   setInterval(pollShop, 15000); window.addEventListener('focus', pollShop);
   window.cloudy.on('coins', d => { shop = d.state; paintShop(); const m = $('#shopMsg'); if (m) m.textContent = `+${d.gain} CC ${L('fürs Spielen')} ✓`; });

@@ -14,12 +14,14 @@ const THEMES = [
   { id: 'lunar', name: 'Lunar (Slate)', bg: ['#0d1422', '#070b14'], c: '#38bdf8' },
   { id: 'ember', name: 'Ember', bg: ['#42200f', '#150a07'], c: '#ff7a3c' },
   { id: 'forest', name: 'Forest', bg: ['#143823', '#07140d'], c: '#3fd08a' },
+  { id: 'forest-light', name: 'Forest Hell', bg: ['#f1fff6', '#9fe6bd'], c: '#1fae65' },
+  { id: 'ember-light', name: 'Ember Hell', bg: ['#fff6ee', '#ffc59e'], c: '#f2650f' },
   { id: 'paper', name: 'Paper', bg: ['#fafaf7', '#e2e0d6'], c: '#2b2b2b' },
   { id: 'mono', name: 'Dark', bg: ['#232325', '#0b0b0c'], c: '#f2f2f2' },
   { id: 'glass', name: 'Glas (durchsichtig)', bg: ['#6fa8dc', '#1b3350'], c: '#8ccbff' },
   { id: 'system', name: 'System', bg: ['#eaf5ff', '#11244a'], c: '#4aa3ff' }
 ];
-const PAIR = { light: 'dark', dark: 'light', 'pink-light': 'pink-dark', 'pink-dark': 'pink-light', 'purple-light': 'purple-dark', 'purple-dark': 'purple-light', lavender: 'midnight', midnight: 'lavender', lunar: 'paper', paper: 'mono', mono: 'paper', glass: 'light', ember: 'light', forest: 'light' };
+const PAIR = { light: 'dark', dark: 'light', 'pink-light': 'pink-dark', 'pink-dark': 'pink-light', 'purple-light': 'purple-dark', 'purple-dark': 'purple-light', lavender: 'midnight', midnight: 'lavender', lunar: 'paper', paper: 'mono', mono: 'paper', glass: 'light', ember: 'ember-light', 'ember-light': 'ember', forest: 'forest-light', 'forest-light': 'forest' };
 const sysDark = matchMedia('(prefers-color-scheme: dark)');
 function themeId() {
   const t = st.get('theme', 'light');
@@ -117,7 +119,7 @@ window.cloudy.appVersion().then(i => {
   if (i.repo) $('#repoRow').style.display = 'none';
   $('#heroVer').textContent = 'Cloudy ' + i.v + (i.suffix ? ' ' + i.suffix : '');
   $('#updMsg').textContent = 'Cloudy ' + i.v + (i.suffix ? ' ' + i.suffix : '');
-  try { const dc = window.cloudy.discordGet; if (dc && $('#dcId')) { dc().then(c => { $('#dcOn').checked = c.on; $('#dcId').value = c.id; });
+  try { const dc = window.cloudy.discordGet; if (dc && $('#dcId')) { dc().then(c => { $('#dcOn').checked = c.on; $('#dcId').value = c.id; if (c.builtin) { const row = $('#dcId').closest('div,p') || $('#dcId'); $('#dcId').style.display = 'none'; const help = $('#dcLink') && $('#dcLink').closest('p'); if (help) help.style.display = 'none'; } });
     const sv = async () => { const c = await window.cloudy.discordSet({ on: $('#dcOn').checked, id: $('#dcId').value }); $('#dcId').value = c.id; $('#dcMsg').textContent = !c.on ? 'Aus.' : c.id ? 'Gespeichert – ist Discord offen, steht gleich „Spielt mit Cloudy“ da.' : 'Noch keine ID eingetragen.'; };
     $('#dcOn').onchange = sv; $('#dcId').onchange = sv; $('#dcLink').onclick = e => { e.preventDefault(); window.cloudy.openExternal('https://discord.com/developers/applications'); }; } } catch {}
   window.cloudy.autoUpdGet().then(on => { // Beim Start prüfen; mit Auto-Accept gleich installieren, sonst nach 10 s nachfragen
@@ -662,9 +664,9 @@ window.rewardAnim = function (o) {
     try {
       const a = await window.cloudy.announceGet(); if (!a || !a.text) return;
       let seen = 0; try { seen = +localStorage.getItem('cloudy.annSeen') || 0; } catch {}
-      if (a.t <= seen || document.getElementById('annBar')) return;
+      const aid = a.t || [...String(a.text)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7); if ((a.t ? aid <= seen : aid === seen) || document.getElementById('annBar')) return;
       const d = document.createElement('div'); d.id = 'annBar'; d.innerHTML = `<span>📢 ${esc(a.text)}</span><button type="button" aria-label="Schließen">✕</button>`;
-      d.querySelector('button').onclick = () => { try { localStorage.setItem('cloudy.annSeen', String(a.t)); } catch {} d.remove(); }; document.body.appendChild(d);
+      d.querySelector('button').onclick = () => { try { localStorage.setItem('cloudy.annSeen', String(aid)); } catch {} d.remove(); }; document.body.appendChild(d);
     } catch {}
   }
   setTimeout(poll, 6000); setInterval(poll, 300000);

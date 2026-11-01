@@ -66,7 +66,7 @@
   }
 
   // ---- Spielzeit: kommt live aus dem Hauptprozess (playStats) ----
-  setInterval(refreshPS, 20000); window.cloudy.on('gameStart', () => setTimeout(refreshPS, 1500)); window.cloudy.on('closed', () => setTimeout(refreshPS, 500));
+  setInterval(refreshPS, 20000); window.cloudy.on('gameStart', () => { document.documentElement.classList.add('gaming'); setTimeout(refreshPS, 1500); }); window.cloudy.on('closed', () => document.documentElement.classList.remove('gaming')); window.cloudy.on('closed', () => setTimeout(refreshPS, 500));
 
   // ---- Sound-Leiste: Login-Bildschirm und Dock ----
   function placeBar() {
@@ -400,7 +400,7 @@
   function themedIcon() {
     try {
       if (!window.cloudy.setAppIcon) return;
-      const cs = getComputedStyle(document.documentElement), c1 = (cs.getPropertyValue('--accent') || '').trim() || '#5aa2f5', c2 = (cs.getPropertyValue('--accent2') || '').trim() || c1;
+      const cs = getComputedStyle(document.documentElement), rgb = v => { const t = document.createElement('i'); t.style.color = v; document.body.appendChild(t); const o = getComputedStyle(t).color; t.remove(); return o; }, c1 = rgb((cs.getPropertyValue('--accent') || '').trim() || '#5aa2f5'), c2 = rgb((cs.getPropertyValue('--accent2') || '').trim() || c1);
       if (c1 + c2 === iconKey) return; iconKey = c1 + c2;
       const cv = document.createElement('canvas'); cv.width = cv.height = 256; const g = cv.getContext('2d');
       const r = 56, x = 8, y = 8, w = 240; g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + w, r); g.arcTo(x + w, y + w, x, y + w, r); g.arcTo(x, y + w, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();

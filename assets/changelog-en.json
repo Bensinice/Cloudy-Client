@@ -1,4 +1,20 @@
 {
+ "0.9.60": [
+  "Bundles can be code-only (random code button for admins); savings and separate price are shown",
+  "Try-on button for cosmetics and bundles",
+  "Launcher notice when a new limited drops",
+  "Admins: “Clear chat” in groups and DMs",
+  "New themes: Forest Light and Ember Light (the light/dark button now switches properly)",
+  "Discord “Playing Cloudy” starts automatically once the Discord ID is built in",
+  "All accounts are in Bugs/Ideas and friends with the owner even before they connect",
+  "After a server restart you stay signed in or go straight to login (no Cloudy restart needed)",
+  "Buy button is locked when you can't afford it and can't be spammed",
+  "Tags are always readable (Tester was invisible on light backgrounds) and smaller",
+  "Announcement is bigger and can be closed",
+  "Cape in bundle preview was too big",
+  "App icon in theme color also on Windows (taskbar and shortcuts)",
+  "While Minecraft runs, the launcher pauses its animations (less load, no freezing)"
+ ],
  "0.9.59": [
   "Bundles can now be limited (amount and/or time) and hidden by admins",
   "Bundles were not shown when a shop filter other than “All” was active"

@@ -669,7 +669,17 @@ ipcMain.handle('setAppIcon', (_e, dataUrl) => { // Programm-Symbol (Taskleiste/D
   try {
     if (typeof dataUrl !== 'string' || !/^data:image\/png;base64,/.test(dataUrl) || dataUrl.length > 400000) return false;
     const img = nativeImage.createFromDataURL(dataUrl); if (img.isEmpty()) return false;
-    for (const w of BrowserWindow.getAllWindows()) { try { if (!IS_MAC) w.setIcon(img); } catch {} }
+    let ico = null;
+    if (IS_WIN) { // Windows braucht eine .ico (PNG eingebettet): für Fenster/Taskleiste und für die Verknüpfungen auf Desktop und im Startmenü
+      try {
+        const png = img.resize({ width: 256, height: 256, quality: 'best' }).toPNG(), hd = Buffer.alloc(22);
+        hd.writeUInt16LE(1, 2); hd.writeUInt16LE(1, 4); hd.writeUInt8(0, 6); hd.writeUInt8(0, 7); hd.writeUInt16LE(1, 10); hd.writeUInt16LE(32, 12); hd.writeUInt32LE(png.length, 14); hd.writeUInt32LE(22, 18);
+        ico = path.join(app.getPath('userData'), 'cloudy-theme.ico'); fs.writeFileSync(ico, Buffer.concat([hd, png]));
+        const lnks = [path.join(app.getPath('desktop'), 'Cloudy.lnk'), path.join(app.getPath('appData'), 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Cloudy.lnk')];
+        for (const l of lnks) { try { if (fs.existsSync(l)) shell.writeShortcutLink(l, 'update', { icon: ico, iconIndex: 0 }); } catch {} }
+      } catch { ico = null; }
+    }
+    for (const w of BrowserWindow.getAllWindows()) { try { if (!IS_MAC) w.setIcon(ico || img); } catch { try { w.setIcon(img); } catch {} } }
     if (IS_MAC && app.dock) app.dock.setIcon(img);
     return true;
   } catch { return false; }
@@ -716,7 +726,9 @@ const autoFile = path.join(app.getPath('userData'), 'autoupdate.json');
 const autoUpdOn = () => { try { return JSON.parse(fs.readFileSync(autoFile, 'utf8')).on === true; } catch { return false; } }; // Auto-Accept: nur wenn ausdrücklich eingeschaltet
 // ---- Discord Rich Presence: „Spielt mit Cloudy“ (braucht die Anwendungs-ID aus dem Discord Developer Portal) ----
 const discord = require('./lib/discord').create(); let dcGame = null, dcStart = Date.now();
-const dcCfg = () => { const c = cfgPatch({}); return { on: c.discordOn !== false, id: String(c.discordId || '') }; };
+// Eingebaute Discord-Application-ID (assets/discord.json): dann läuft „Spielt mit Cloudy“ bei allen automatisch, ohne eigene Einrichtung
+const DC_ID = (() => { try { const c = String(JSON.parse(fs.readFileSync(path.join(__dirname, 'assets', 'discord.json'), 'utf8')).appId || '').replace(/\D/g, ''); return c.length >= 17 ? c : ''; } catch { return ''; } })();
+const dcCfg = () => { const c = cfgPatch({}); return { on: c.discordOn !== false, id: String(c.discordId || DC_ID || ''), builtin: !!DC_ID }; };
 function dcUpdate() {
   try {
     const c = dcCfg(); if (!c.on || !c.id) { discord.stop(); return; }
@@ -788,7 +800,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.59'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.60'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1011,9 +1023,12 @@ async function srvCall(p, body, tok) {
   const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 10000);
   try {
     const r = await fetch(c.url + p, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}) }, body: JSON.stringify(body || {}), signal: ctl.signal });
-    const j = await r.json().catch(() => ({})); return { status: r.status, ...j };
+    const j = await r.json().catch(() => ({}));
+    if (r.status === 401 && tok && tok === srvTok && Date.now() - srvExpAt > 8000) { srvExpAt = Date.now(); try { send('acctLocked', 'Sitzung abgelaufen (Server wurde neu gestartet) – bitte neu anmelden.'); } catch {} } // statt „Cloudy neu starten“: direkt zum Login
+    return { status: r.status, ...j };
   } finally { clearTimeout(to); }
 }
+let srvExpAt = 0;
 const SRV_DOWN = { ok: false, error: 'Der Konto-Server ist nicht erreichbar. Prüfe deine Internetverbindung oder die Server-Adresse in den Einstellungen.' };
 function srvMirror(pu) { // lokale Kopie (für Shop, Cosmetics, Spielzeit) – Anmeldung und Rechte kommen vom Server
   const a = readAuth(), key = pu.name.toLowerCase();
@@ -1498,7 +1513,7 @@ const namesFile = path.join(app.getPath('userData'), 'shop-names.json'); // vom 
 const pricesFile = path.join(app.getPath('userData'), 'shop-prices.json'); // vom Admin geaenderte Preise
 const bundlesFile = path.join(app.getPath('userData'), 'shop-bundles.json');
 const shopBundles = () => { try { const j = JSON.parse(fs.readFileSync(bundlesFile, 'utf8')); return j && typeof j === 'object' && !Array.isArray(j) ? j : {}; } catch { return {}; } };
-const bundlesView = u => Object.entries(shopBundles()).map(([id, b]) => { const items = (b.items || []).filter(x => CATALOG.some(c => c.id === x)), stock = Math.max(0, +b.stock || 0), until = +b.until || 0, left = stock ? Math.max(0, stock - (+b.sold || 0)) : 0, over = !!((until && until < Date.now()) || (stock && left <= 0)), ownedAll = items.length > 0 && items.every(x => (u.owned || []).includes(x)); return { id, name: String(b.name || id), price: Math.max(0, +b.price || 0), items, ownedAll, hidden: !!b.hidden, stock, left, until, over }; }).filter(b => b.items.length >= 2 && (u.admin || (!b.hidden && (!b.over || b.ownedAll))));
+const bundlesView = u => Object.entries(shopBundles()).map(([id, b]) => { const items = (b.items || []).filter(x => CATALOG.some(c => c.id === x)), stock = Math.max(0, +b.stock || 0), until = +b.until || 0, left = stock ? Math.max(0, stock - (+b.sold || 0)) : 0, over = !!((until && until < Date.now()) || (stock && left <= 0)), pr0 = shopPrices(), worth = items.reduce((a, x) => { const c = CATALOG.find(q => q.id === x); return a + (c ? priceOf(c, pr0) : 0); }, 0), ownedAll = items.length > 0 && items.every(x => (u.owned || []).includes(x)); return { id, name: String(b.name || id), price: Math.max(0, +b.price || 0), items, ownedAll, hidden: !!b.hidden, stock, left, until, over, worth, needCode: !!(b.needCode || (b.codes && b.codes.length)), codes: u.admin ? (b.codes || []) : undefined }; }).filter(b => b.items.length >= 2 && (u.admin || (!b.hidden && (!b.over || b.ownedAll))));
 const shopPrices = () => { try { const j = JSON.parse(fs.readFileSync(pricesFile, 'utf8')); return j && typeof j === 'object' ? j : {}; } catch { return {}; } };
 const priceOf = (c, pr) => Number.isFinite(+pr[c.id]) && pr[c.id] !== null ? Math.max(0, Math.round(+pr[c.id])) : c.price;
 const shopNames = () => { try { const j = JSON.parse(fs.readFileSync(namesFile, 'utf8')); return j && typeof j === 'object' ? j : {}; } catch { return {}; } };
@@ -1587,12 +1602,15 @@ ipcMain.handle('shopBuy', (_e, id) => shopWrite(u => {
   if (u.coins < price) return { ok: false, error: `Dir fehlen ${price - u.coins} CC.` };
   u.coins -= price; u.owned.push(id);
 }));
-ipcMain.handle('bundleBuy', async (_e, id) => { // Limited-Pakete: Der Server zählt den Bestand (erst reservieren, bei Fehlschlag wieder freigeben)
+ipcMain.handle('bundleBuy', async (_e, id, code) => { // Limited-Pakete: Der Server zählt den Bestand (erst reservieren, bei Fehlschlag wieder freigeben)
   const bb = shopBundles()[id]; let claimed = false;
   const cu0 = currentUser && readAuth().users[currentUser.toLowerCase()];
-  if (bb && (bb.stock || bb.until) && srvCfg() && srvTok && !(cu0 && cu0.admin)) {
-    const c = await srvCall('/bundle/claim', { id }, srvTok).catch(() => null);
-    if (!c) return { ok: false, error: 'Der Konto-Server ist nicht erreichbar.' }; if (!c.ok) return { ok: false, error: c.error || 'Das hat nicht geklappt.' }; claimed = !c.already;
+  if (bb && cu0 && !cu0.admin && !cu0.infCoins && (cu0.coins || 0) < Math.max(0, Math.round(+bb.price || 0))) return { ok: false, error: `Dir fehlen ${Math.max(0, Math.round(+bb.price || 0)) - (cu0.coins || 0)} CC.` }; // erst Geld prüfen, dann erst Code/Bestand reservieren
+  if (bb && ((bb.stock || bb.until || bb.needCode) && srvCfg() && srvTok || (!srvCfg() && bb.codes && bb.codes.length)) && !(cu0 && cu0.admin)) {
+    if (!srvCfg()) { const e = (bb.codes || []).find(x => x.c === String(code || '').toUpperCase().replace(/[^A-Z0-9-]/g, '')); if (!e || e.u) return { ok: false, error: e ? 'Dieser Code wurde schon benutzt.' : 'Dieses Paket gibt es nur mit einem gültigen Code.' }; const all = shopBundles(); all[id].codes.find(x => x.c === e.c).u = currentUser || '?'; try { fs.writeFileSync(bundlesFile, JSON.stringify(all)); } catch {} }
+    else {
+    const c = await srvCall('/bundle/claim', { id, code: String(code || '') }, srvTok).catch(() => null);
+    if (!c) return { ok: false, error: 'Der Konto-Server ist nicht erreichbar.' }; if (!c.ok) return { ok: false, error: c.error || 'Das hat nicht geklappt.' }; claimed = !c.already; }
   }
   const res = shopWrite(u => {
   const b = shopBundles()[id]; if (!b) return { ok: false, error: 'Dieses Paket gibt es nicht mehr.' };
@@ -1611,8 +1629,8 @@ ipcMain.handle('bundleAdmin', async (_e, o) => { // Admin: Paket anlegen / ände
   o = o || {}; const items = (Array.isArray(o.items) ? o.items : []).filter(x => CATALOG.some(c => c.id === x)).slice(0, 12), price = Math.max(0, Math.min(1e6, Math.round(+o.price || 0))), name = String(o.name || '').trim().slice(0, 40);
   if (!o.del && o.hide === undefined && (!name || items.length < 2)) return { ok: false, error: 'Gib einen Namen an und wähle mindestens 2 Items.' };
   let all;
-  if (srvCfg()) { const r = await srvCall('/admin/bundle', { id: o.id || '', name, items, price, del: !!o.del, hide: o.hide, hidden: !!o.hidden, stock: o.stock, hours: o.hours }, srvTok).catch(() => ({})); if (!r.ok) return { ok: false, error: r.error || 'Der Server hat das nicht gespeichert (Server aktuell?).' }; all = r.bundles || {}; }
-  else { all = shopBundles(); const id = String(o.id || '') || 'b' + Date.now().toString(36).slice(-6); if (o.del) delete all[id]; else if (o.hide !== undefined && all[id]) all[id].hidden = !!o.hide; else all[id] = { name, items, price, hidden: !!o.hidden, stock: Math.max(0, Math.round(+o.stock || 0)), until: +o.hours ? Date.now() + (+o.hours) * 3600e3 : 0, sold: 0 }; }
+  if (srvCfg()) { const r = await srvCall('/admin/bundle', { id: o.id || '', name, items, price, del: !!o.del, hide: o.hide, hidden: !!o.hidden, stock: o.stock, hours: o.hours, codes: o.codes }, srvTok).catch(() => ({})); if (!r.ok) return { ok: false, error: r.error || 'Der Server hat das nicht gespeichert (Server aktuell?).' }; all = r.bundles || {}; }
+  else { all = shopBundles(); const id = String(o.id || '') || 'b' + Date.now().toString(36).slice(-6); if (o.del) delete all[id]; else if (o.hide !== undefined && all[id]) all[id].hidden = !!o.hide; else all[id] = { name, items, price, hidden: !!o.hidden, codes: String(o.codes || '').split(/[\s,;]+/).map(c => c.toUpperCase().replace(/[^A-Z0-9-]/g, '')).filter(c => c.length >= 4).map(c => ({ c, u: '' })), stock: Math.max(0, Math.round(+o.stock || 0)), until: +o.hours ? Date.now() + (+o.hours) * 3600e3 : 0, sold: 0 }; }
   try { fs.writeFileSync(bundlesFile, JSON.stringify(all)); } catch { return { ok: false, error: 'Paket konnte nicht gespeichert werden.' }; }
   return shopWrite(() => ({}), true);
 });
@@ -2268,6 +2286,7 @@ ipcMain.handle('launch', async (_e, { username, version, type, ram, server, fabr
     } catch {}
     if (!safe) syncCosFromGame();
     lastTail = tail.slice(-60);
+    try { if (win && !win.isDestroyed()) win.webContents.setFrameRate(60); } catch {}
     send('closed', { code, hs, safe, log: head + tail.slice(-30).join('\n') });
   });
   try {
@@ -2345,7 +2364,7 @@ ipcMain.handle('launch', async (_e, { username, version, type, ram, server, fabr
     });
     if (!proc) throw new Error('Start fehlgeschlagen.');
     if (launchCancelled) { try { proc.kill(); } catch {} throw new Error('Start abgebrochen.'); }
-    mcProc = proc; playSess = { who: currentUser, t: Date.now(), coinMs: 0, earned: 0 }; try { send('gameStart', {}); } catch {} try { dcGame = { version: bv(version), server: server && server.host ? String(server.name || server.host).slice(0, 30) : '' }; dcStart = Date.now(); dcUpdate(); } catch {} try { cosNetStart(auth && auth.name); } catch {} proc.on('close', () => { playTick(true); if (mcProc === proc) { mcProc = null; cosNetStop(); dcGame = null; dcStart = Date.now(); dcUpdate(); } });
+    mcProc = proc; playSess = { who: currentUser, t: Date.now(), coinMs: 0, earned: 0 }; try { send('gameStart', {}); } catch {} try { if (win && !win.isDestroyed()) win.webContents.setFrameRate(15); } catch {} try { dcGame = { version: bv(version), server: server && server.host ? String(server.name || server.host).slice(0, 30) : '' }; dcStart = Date.now(); dcUpdate(); } catch {} try { cosNetStart(auth && auth.name); } catch {} proc.on('close', () => { playTick(true); if (mcProc === proc) { mcProc = null; cosNetStop(); dcGame = null; dcStart = Date.now(); dcUpdate(); } });
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err.message };

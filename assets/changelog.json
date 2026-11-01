@@ -1,5 +1,28 @@
 [
  {
+  "v": "0.9.60",
+  "date": "2026-11-01",
+  "added": [
+   "Pakete: nur mit Code möglich (Zufallscode-Knopf für Admins), Ersparnis und Einzelpreis werden angezeigt",
+   "Anprobieren-Knopf für Cosmetics und Pakete (Vorschau am eigenen Skin)",
+   "Hinweis im Launcher, wenn ein neues Limited erscheint",
+   "Admins: „Chat leeren“ in Gruppen und Direktchats",
+   "Neue Themes: Forest Hell und Ember Hell (Hell/Dunkel-Knopf wechselt jetzt passend)",
+   "Discord „Spielt mit Cloudy“ startet automatisch, sobald die Discord-ID eingebaut ist"
+  ],
+  "fixed": [
+   "Alle Konten sind in Bugs/Ideen und mit dem Owner befreundet, auch wenn sie sich noch nicht gemeldet haben",
+   "Nach einem Server-Neustart bleibt man angemeldet bzw. kommt direkt zum Login (kein Neustart von Cloudy mehr nötig)",
+   "Kaufen-Knopf ist gesperrt, wenn das Geld nicht reicht, und lässt sich nicht mehr spammen",
+   "Tags sind immer lesbar (Tester war auf hellem Hintergrund unsichtbar) und kleiner",
+   "Ankündigung ist größer und lässt sich schließen",
+   "Umhang in Pakete-Vorschau war zu groß",
+   "Programm-Symbol in Theme-Farbe auch unter Windows (Taskleiste und Verknüpfungen)",
+   "Während Minecraft läuft, pausiert der Launcher seine Animationen (weniger Last, kein Einfrieren)"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.59",
   "date": "2026-11-01",
   "added": [

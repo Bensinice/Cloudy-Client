@@ -77,11 +77,13 @@
     const g = grp(); if (!g) return;
     const mine = call && call.gid === g.id, running = g.call && g.call.length;
     $('#frChatHead').innerHTML = `${avHtml(g)} <span>${esc(g.name)} ${tagHtml(g.tag, g.color)}</span> ` +
+      (D.adm ? `<button class="btn ghost" id="gClear" title="${esc(L('Chat leeren'))}" style="width:auto;border-radius:999px;padding:0 12px;margin-left:8px">🧹 ${L('Chat leeren')}</button>` : '') +
       (mine || g.sys ? '' : `<button class="btn frplay" id="gCall" style="width:auto;border-radius:999px;padding:0 14px;margin-left:8px">📞 ${running ? L('Anruf beitreten') + ' (' + g.call.length + ')' : L('Anruf starten')}</button>`) +
       ` <button class="btn ghost" id="gTools" style="margin-left:6px">⚙ ${L('Verwalten')}</button>` +
       (note ? `<div class="muted" style="font-size:12.5px;margin-top:4px">${esc(note)}</div>` : '') +
       (tools ? toolsHtml(g) : '');
     const c = $('#gCall'); if (c) c.onclick = () => startCall(g.id, g.name);
+    { const cl = $('#gClear'); if (cl) cl.onclick = async () => { if (!confirm(L('Alle Nachrichten in diesem Chat löschen?'))) return; const r = await api('/group/clear', { id: g.id }); if (r.ok) { msgs = []; paintMsgs(); } }; }
     $('#gTools').onclick = () => { tools = !tools; paintHead(); };
     if (tools) wireTools(g);
   }

@@ -40,17 +40,20 @@ const TAGS_OK = ['owner', 'manager', 'tester', 'plus', 'mod'];
 const AUTO_TAGS = { thepa1: ['manager'] }; // feste Rollen
 const tagsOf = k => { const t = [...new Set([...(TAGS[k] || []), ...(AUTO_TAGS[k] || []), 'tester'])].filter(x => TAGS_OK.includes(x)); return k === 'admin' ? ['owner', ...t.filter(x => x !== 'owner')] : t; }; // das Admin-Konto ist automatisch Owner (rot)
 // Pakete: sichtbare Daten (ohne Käuferliste), Verstecken, Limited (Menge/Zeit) – wie bei Limited-Items zählt der Server
-const bunPub = (B, adm) => { const o = {}; for (const [id, b] of Object.entries(B || {})) { if (b.hidden && !adm) continue; o[id] = { name: b.name, items: b.items, price: b.price, hidden: !!b.hidden, stock: b.stock || 0, until: b.until || 0, sold: b.sold || 0 }; } return o; };
+const bunPub = (B, adm) => { const o = {}; for (const [id, b] of Object.entries(B || {})) { if (b.hidden && !adm) continue; o[id] = { name: b.name, items: b.items, price: b.price, hidden: !!b.hidden, stock: b.stock || 0, until: b.until || 0, sold: b.sold || 0, needCode: !!(b.codes && b.codes.length), codes: adm ? (b.codes || []) : undefined }; } return o; };
 const bunSave = (B, id, b, adm) => { if (b.del) { if (id) delete B[id]; return ''; }
   if (b.hide !== undefined && id && B[id] && !b.name) { B[id].hidden = !!b.hide; return ''; }
   const items = (Array.isArray(b.items) ? b.items : []).filter(x => typeof x === 'string' && /^[a-z]+-[a-z0-9-]{1,30}$/.test(x)).slice(0, 12), name = String(b.name || '').trim().slice(0, 40), price = Math.max(0, Math.min(1e6, Math.round(+b.price || 0)));
   if (!name || items.length < 2) return 'Name und mindestens 2 Items nötig.';
   const old = B[id] || {}, stock = Math.max(0, Math.min(1e5, Math.round(+b.stock || 0))), hrs = Math.max(0, Math.min(8760, +b.hours || 0));
-  B[id] = { name, items, price, hidden: !!b.hidden, stock, until: hrs ? Date.now() + hrs * 3600e3 : 0, sold: old.sold || 0, claimed: old.claimed || [] }; return ''; };
-const bunClaim = (B, key, id, undo) => { const b = (B || {})[String(id || '')]; if (!b) return { error: 'Dieses Paket gibt es nicht mehr.' }; b.claimed = b.claimed || [];
-  if (undo) { const i = b.claimed.indexOf(key); if (i >= 0) { b.claimed.splice(i, 1); b.sold = Math.max(0, (b.sold || 0) - 1); } return { ok: true }; }
+  const raw = Array.isArray(b.codes) ? b.codes : String(b.codes || '').split(/[\s,;]+/), had = new Map((old.codes || []).map(c => [c.c, c])), codes = [];
+  for (const x of raw) { const c = String(x && x.c || x || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 24); if (c.length >= 4 && !codes.some(y => y.c === c)) codes.push(had.get(c) || { c, u: '' }); }
+  B[id] = { name, items, price, hidden: !!b.hidden, stock, until: hrs ? Date.now() + hrs * 3600e3 : 0, sold: old.sold || 0, claimed: old.claimed || [], codes }; return ''; };
+const bunClaim = (B, key, id, undo, code) => { const b = (B || {})[String(id || '')]; if (!b) return { error: 'Dieses Paket gibt es nicht mehr.' }; b.claimed = b.claimed || [];
+  if (undo) { const i = b.claimed.indexOf(key); if (i >= 0) { b.claimed.splice(i, 1); b.sold = Math.max(0, (b.sold || 0) - 1); } for (const c of b.codes || []) if (c.u === key) c.u = ''; return { ok: true }; }
   if (b.hidden) return { error: 'Dieses Paket ist gerade nicht verfügbar.' }; if (b.claimed.includes(key)) return { ok: true, already: true };
   if (b.until && b.until < Date.now()) return { error: 'Die Aktion ist abgelaufen.' }; if (b.stock && (b.sold || 0) >= b.stock) return { error: 'Ausverkauft.' };
+  if (b.codes && b.codes.length) { const cc = String(code || '').toUpperCase().replace(/[^A-Z0-9-]/g, ''), e = b.codes.find(x => x.c === cc); if (!cc || !e) return { error: 'Dieses Paket gibt es nur mit einem gültigen Code.' }; if (e.u) return { error: 'Dieser Code wurde schon benutzt.' }; e.u = key; }
   b.sold = (b.sold || 0) + 1; b.claimed.push(key); return { ok: true }; };
 const pub = u => ({ bundles: bunPub(BUNDLES, isAdm(u)), hidden: HIDE, tags: tagsOf(String(u.name).toLowerCase()), names: NAMES, prices: PRICES, name: u.name, admin: isAdm(u), coins: isAdm(u) || u.inf_coins ? null : u.coins, mustChange: !!u.must_change, state: { coins: u.admin || u.inf_coins ? null : (u.coins == null ? 100 : u.coins), owned: parse(u.owned, []), equip: parse(u.equip, {}), daily: u.daily || '' } });
 const okPw = (u, p) => { if (!u) return false; try { return crypto.timingSafeEqual(Buffer.from(u.hash, 'hex'), Buffer.from(hash(p, u.salt), 'hex')); } catch { return false; } };
@@ -58,7 +61,10 @@ const fk = (o, s) => { const u = String(s || '').trim().toUpperCase(); if (Objec
 const sessions = new Map(), tries = new Map(), RM = new Map(); // RM: kürzlich entfernte Items je Konto – verhindert, dass ein veralteter Launcher sie sofort wieder hochlädt
 const rmBlock = (key, ids) => { const m = RM.get(key); if (!m) return ids; const now = Date.now(); return ids.filter(x => !(m['*'] > now - 120000 || m[x] > now - 120000)); };
 const limited = ip => { const t = tries.get(ip) || { n: 0, t: Date.now() }; if (Date.now() - t.t > 60000) { t.n = 0; t.t = Date.now(); } t.n++; tries.set(ip, t); return t.n > 10; };
-const newTok = key => { const t = crypto.randomBytes(24).toString('hex'); sessions.set(t, key); return t; };
+// Anmelde-Tokens sind signiert und überleben einen Server-Neustart (Passwortänderung macht sie ungültig)
+let SECRET = ''; const tokSig = (key, u) => crypto.createHmac('sha256', SECRET).update(key + '|' + String(u.hash || '').slice(0, 16)).digest('hex').slice(0, 40);
+const newTok = (key, u) => { const t = 's1.' + Buffer.from(key).toString('base64url') + '.' + tokSig(key, u); sessions.set(t, key); return t; };
+const tokKey = async t => { const m = /^s1\.([A-Za-z0-9_-]{1,40})\.([a-f0-9]{40})$/.exec(String(t || '')); if (!m) return null; const key = Buffer.from(m[1], 'base64url').toString(), u = await get(key); return u && crypto.timingSafeEqual(Buffer.from(m[2]), Buffer.from(tokSig(key, u))) ? key : null; };
 async function init() {
   await db.query(`CREATE TABLE IF NOT EXISTS cloudy_users (name_key VARCHAR(16) PRIMARY KEY, name VARCHAR(16), salt VARCHAR(64), hash VARCHAR(200), created BIGINT, coins INT NULL, inf_coins TINYINT DEFAULT 0, admin TINYINT DEFAULT 0, must_change TINYINT DEFAULT 0, banned TINYINT DEFAULT 0, ban_reason VARCHAR(80) DEFAULT '')`);
   for (const [c, def] of [['ban_until', 'BIGINT'], ['paused', 'TINYINT']]) { const [r] = await db.query('SHOW COLUMNS FROM cloudy_users LIKE ?', [c]); if (!r.length) await db.query(`ALTER TABLE cloudy_users ADD COLUMN ${c} ${def} NULL`); }
@@ -71,6 +77,7 @@ async function init() {
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='bundles'"); BUNDLES = r.length ? parse(r[0].v, {}) : {}; if (!BUNDLES || typeof BUNDLES !== 'object' || Array.isArray(BUNDLES)) BUNDLES = {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='hide'"); HIDE = r.length ? parse(r[0].v, []) : []; if (!Array.isArray(HIDE)) HIDE = []; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='lim'"); LIM = r.length ? parse(r[0].v, {}) : {}; if (!LIM || typeof LIM !== 'object') LIM = {}; }
+  { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='secret'"); SECRET = r.length ? String(r[0].v) : ''; if (SECRET.length < 32) { SECRET = crypto.randomBytes(32).toString('hex'); await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['secret', SECRET]); } }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='announce'"); ANN = r.length ? parse(r[0].v, ANN) : ANN; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='gate'"); GATE = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='friends'"); FR = r.length ? parse(r[0].v, FR) : FR; if (!FR.f) FR = { f: {}, msgs: {}, seq: 1 }; }
@@ -92,7 +99,7 @@ app.post('/register', wrap(async (req, res) => {
   if (!/^[A-Za-z0-9_]{3,16}$/.test(user)) return res.status(400).json({ error: 'Benutzername: 3–16 Zeichen, nur Buchstaben, Zahlen und _.' });
   if (pass.length < 6) return res.status(400).json({ error: 'Das Passwort braucht mindestens 6 Zeichen.' });
   if (await get(key)) return res.status(409).json({ error: 'Diesen Benutzernamen gibt es schon.' });
-  const u = mk(user, pass); await put(u); await bindGrant(req.body.grant, user); res.json({ token: newTok(key), user: pub(u) });
+  const u = mk(user, pass); await put(u); await bindGrant(req.body.grant, user); res.json({ token: newTok(key, u), user: pub(u) });
 }));
 app.post('/gate', wrap(async (req, res) => { // Zugangscode des Launchers prüfen (vor der Anmeldung)
   if (limited(req.ip)) return res.status(429).json({ error: 'Zu viele Versuche, warte kurz.' });
@@ -107,10 +114,10 @@ app.post('/login', wrap(async (req, res) => {
   const key = String(req.body.user || '').trim().toLowerCase(), u = await get(key);
   if (!okPw(u, req.body.pass)) return res.status(401).json({ error: 'Benutzername oder Passwort stimmt nicht.' });
   { const lm = lockMsg(u); if (lm) return res.status(403).json({ error: lm }); }
-  await bindGrant(req.body.grant, u.name); res.json({ token: newTok(key), user: pub(u) });
+  await bindGrant(req.body.grant, u.name); res.json({ token: newTok(key, u), user: pub(u) });
 }));
 const auth = wrap2 => wrap(async (req, res) => {
-  const m = /^Bearer (.+)$/.exec(req.headers.authorization || ''), key = m && sessions.get(m[1]), me = key && await get(key);
+  const m = /^Bearer (.+)$/.exec(req.headers.authorization || ''), key = m && (sessions.get(m[1]) || await tokKey(m[1])), me = key && await get(key);
   if (!me) return res.status(401).json({ error: 'Nicht angemeldet.' });
   { const lm = lockMsg(me); if (lm) return res.status(403).json({ error: lm }); }
   await wrap2(req, res, me);
@@ -121,6 +128,7 @@ const PRES = new Map(); // Konto -> { srv, t } (wo jemand gerade spielt/hostet)
 const CALLS = new Map(); // Gruppen-ID -> { m: Konto -> letzter Kontakt, q: Konto -> wartende Verbindungsdaten }
 const SEEN = new Map(); // Konto -> letzter Kontakt (für „online“)
 const frPair = (a, b) => [a, b].sort().join('|');
+let SYSSYNC = 0; const allKeys = async () => { const [r] = await db.query('SELECT name_key FROM cloudy_users'); return r.map(x => x.name_key); };
 const admKey = async k => isAdm(await get(k)); // Admin-Rechte für ein Konto (Schlüssel)
 const ownerKeys = () => [...new Set(['admin', ...Object.keys(TAGS).filter(k => (TAGS[k] || []).includes('owner'))])];
 async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
@@ -131,8 +139,13 @@ async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
   // Alle landen einmalig automatisch in der Gruppe „Bugs“ (Fehler & Wünsche melden); verlassen ist danach erlaubt
   FR.bugsIn = FR.bugsIn || {}; FR.sysIn = FR.sysIn || {};
   const SYS = { bugs: 'Bugs', ideen: 'Ideen' }; // Systemgruppen: alle sind drin, keine Anrufe
-  if (!FR.sysIn[me]) { FR.sysIn[me] = 1; for (const [gid, gn] of Object.entries(SYS)) { if (gid === 'bugs' && FR.bugsIn[me] && GR.bugs && !GR.bugs.members.includes(me)) continue; const sg = GR[gid] = GR[gid] || { id: gid, name: gn, tag: '', color: '', av: '', owner: 'admin', members: [], msgs: [], read: {}, t: now }; sg.sys = true; if (!sg.members.includes(me)) sg.members.push(me); } FR.bugsIn[me] = 1; await save(); }
-  { let ch = false; for (const o of ownerKeys()) { if (o === me) continue; const ou = uf(o); if (!u.friends.includes(o)) { u.friends.push(o); ch = true; } if (!ou.friends.includes(me)) { ou.friends.push(me); ch = true; } for (const [x, y] of [[u, o], [ou, me]]) { for (const l of ['in', 'out']) { const i = (x[l] || []).indexOf(y); if (i >= 0) { x[l].splice(i, 1); ch = true; } } } } if (ch) await save(); } // alle sind automatisch mit dem Owner befreundet
+  // Alle Konten (auch die, die noch nie geöffnet haben) kommen in die Systemgruppen und sind mit dem Owner befreundet; höchstens einmal pro Minute
+  if (!FR.sysIn[me] || now - SYSSYNC > 60000) {
+    SYSSYNC = now; const ks = await allKeys(); if (!ks.includes(me)) ks.push(me); let ch = false;
+    for (const k of ks) { if (FR.sysIn[k]) continue; FR.sysIn[k] = 1; ch = true; for (const [gid, gn] of Object.entries(SYS)) { if (gid === 'bugs' && FR.bugsIn[k] && GR.bugs && !GR.bugs.members.includes(k)) continue; const sg = GR[gid] = GR[gid] || { id: gid, name: gn, tag: '', color: '', av: '', owner: 'admin', members: [], msgs: [], read: {}, t: now }; sg.sys = true; if (!sg.members.includes(k)) sg.members.push(k); } FR.bugsIn[k] = 1; }
+    for (const o of ownerKeys()) for (const k of ks) { if (k === o) continue; const ux = uf(k), ou = uf(o); if (!ux.friends.includes(o)) { ux.friends.push(o); ch = true; } if (!ou.friends.includes(k)) { ou.friends.push(k); ch = true; } for (const [x, y] of [[ux, o], [ou, k]]) for (const l of ['in', 'out']) { const i = (x[l] || []).indexOf(y); if (i >= 0) { x[l].splice(i, 1); ch = true; } } }
+    if (ch) await save();
+  }
   const clanOf = k => { const g = GR[FR.clan[k]]; return g && g.tag && g.members.includes(k) ? ['clan:' + g.tag + (g.color ? ':' + g.color.slice(1) : '')] : []; };
   TAGLIVE = clanOf;
   const hexOk = c => /^#[0-9a-fA-F]{6}$/.test(String(c || '')) ? String(c).toLowerCase() : '';
@@ -204,6 +217,7 @@ async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
       const after = +b.after || 0, l = g.msgs.filter(m => m.id > after).slice(-100).map(({ id, from, text, t }) => ({ id, from, text, t })), last = g.msgs[g.msgs.length - 1];
       g.read = g.read || {}; if (last && g.read[me] !== last.id) { g.read[me] = last.id; await save(); } return [200, { ok: true, msgs: l }];
     }
+    if (p === 'group/clear') { if (!(await admKey(me))) return [403, { error: 'Nur für Admins.' }]; g.msgs = []; await save(); return [200, { ok: true }]; }
     if (p === 'group/delmsg') { if (!(await admKey(me))) return [403, { error: 'Nur für Admins.' }]; const n = g.msgs.length; g.msgs = g.msgs.filter(m => m.id !== +b.mid); if (g.msgs.length !== n) await save(); return [200, { ok: true }]; }
     if (p.startsWith('call/') && g.sys) return [400, { error: 'In dieser Gruppe gibt es keine Anrufe.' }];
     // Sprachanruf: der Server vermittelt nur die Verbindungsdaten (WebRTC), die Sprache läuft direkt zwischen den Spielern
@@ -223,6 +237,7 @@ async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
     const k = frPair(me, ok), l = FR.msgs[k] = FR.msgs[k] || [], m = { id: FR.seq++, from: myName, fk: me, text, t: now };
     l.push(m); if (l.length > 300) l.splice(0, l.length - 300); await save(); return [200, { ok: true, id: m.id }];
   }
+  if (p === 'msg/clear') { if (!(await admKey(me))) return [403, { error: 'Nur für Admins.' }]; FR.msgs[frPair(me, key(b.with))] = []; await save(); return [200, { ok: true }]; }
   if (p === 'msg/del') { // Admins können Nachrichten in Direktchats löschen
     if (!(await admKey(me))) return [403, { error: 'Nur für Admins.' }]; const ok = key(b.with), pk = frPair(me, ok), all = FR.msgs[pk] || [], n = all.length;
     FR.msgs[pk] = all.filter(m => m.id !== +b.mid); if (FR.msgs[pk].length !== n) await save(); return [200, { ok: true }];
@@ -290,7 +305,7 @@ app.post('/state', auth(async (req, res, me) => { // Shop-Stand des Kontos speic
 const admin = f => auth(async (req, res, me) => { if (!isAdm(me)) return res.status(403).json({ error: 'Nur für Admins.' }); await f(req, res, me); });
 const saveLim = () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['lim', JSON.stringify(LIM)]);
 app.post('/limited', auth(async (req, res, me) => res.json({ ok: true, items: limView(me.name_key, isAdm(me)) })));
-app.post('/bundle/claim', auth(async (req, res, me) => { const r = bunClaim(BUNDLES, me.name_key, (req.body || {}).id, !!(req.body || {}).undo); if (r.ok && !r.already) await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['bundles', JSON.stringify(BUNDLES)]); res.status(r.error ? 400 : 200).json(r); }));
+app.post('/bundle/claim', auth(async (req, res, me) => { const r = bunClaim(BUNDLES, me.name_key, (req.body || {}).id, !!(req.body || {}).undo, (req.body || {}).code); if (r.ok && !r.already) await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['bundles', JSON.stringify(BUNDLES)]); res.status(r.error ? 400 : 200).json(r); }));
 app.post('/limited/claim', auth(async (req, res, me) => { const r = limClaim(me.name_key, req.body || {}); if (r.ok && !r.already) await saveLim(); res.status(r.error ? 400 : 200).json(r); }));
 app.post('/admin/limited', admin(async (req, res, me) => { const e = limSet(req.body || {}); if (e) return res.status(400).json({ error: e }); await saveLim(); res.json({ ok: true, items: limView(me.name_key, true) }); }));
 app.post('/admin/hide', admin(async (req, res) => { const id = String(req.body.id || ''); if (!/^[a-z]+-[a-z0-9-]{1,30}$/.test(id)) return res.status(400).json({ error: 'Ungueltiges Item.' }); HIDE = HIDE.filter(x => x !== id); if (req.body.on) HIDE.push(id); await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['hide', JSON.stringify(HIDE)]); res.json({ ok: true, hidden: HIDE }); }));
