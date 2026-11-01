@@ -1,5 +1,16 @@
 [
  {
+  "v": "0.9.33",
+  "date": "2026-11-01",
+  "added": [
+   "Diagnose für geteilte Cosmetics: der Launcher schreibt ein kleines Protokoll (cloudy-cos.log im Cloudy-Datenordner), das zeigt, ob Name und Auswahl beim Server ankommen"
+  ],
+  "fixed": [
+   "Geteilte Cosmetics: alle Z4-Items werden akzeptiert"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.32",
   "date": "2026-11-01",
   "added": [

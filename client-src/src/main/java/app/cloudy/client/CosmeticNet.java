@@ -42,7 +42,7 @@ public final class CosmeticNet {
 
 	public static String[] get(String name) { return name == null ? null : others.get(name.toLowerCase()); }
 
-	private static boolean okId(String v, String cat) { return v != null && v.startsWith(cat + "-") && java.util.Arrays.asList(Cosmetics.ALL).contains(v); }
+	private static boolean okId(String v, String cat) { return v != null && v.startsWith(cat + "-") && (java.util.Arrays.asList(Cosmetics.ALL).contains(v) || ZZ4.handles(v)); }
 
 	public static void tick(MinecraftClient mc) {
 		String want = System.getProperty("cloudy.coswant", ""), oth = System.getProperty("cloudy.cosoth", "");
@@ -76,6 +76,7 @@ public final class CosmeticNet {
 						String c = e.has("cape") ? e.get("cape").getAsString() : null, h = e.has("hat") ? e.get("hat").getAsString() : null, w = e.has("wings") ? e.get("wings").getAsString() : null;
 						nm.put(en.getKey().toLowerCase(), new String[] { okId(c, "cape") ? c : null, okId(h, "hat") ? h : null, okId(w, "wings") ? w : null });
 					}
+					if (nm.size() != others.size()) CloudyClient.LOG.info("Cloudy: Cosmetics von {} Mitspielern geladen", nm.size());
 					others = nm;
 				}
 			}

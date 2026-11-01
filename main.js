@@ -654,7 +654,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.32'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.33'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); if (!j) return false; try { const z = openZip(j); try { return z.has('app/cloudy/client/CosmeticsScreen.class') && z.has('cloudy-cos/build-' + CLIENT_BUILD + '.txt'); } finally { z.close(); } } catch { return false; } };
 
 // Eigener Classpath fuer neue Minecraft-Versionen (26.x): die Bibliotheksliste von minecraft-launcher-core bleibt dort leer (Fehler: KnotClient nicht gefunden)
@@ -899,20 +899,23 @@ async function srvPull() { // Stand vom Server holen (Admin kann Coins vergeben 
 // ---- Cosmetics fuer andere Cloudy-Spieler sichtbar machen: Minecraft-Name + Auswahl zum Server, Auswahl der Mitspieler zurueck ins Spiel ----
 const cosWant = path.join(app.getPath('userData'), 'cloudy-cos-want.json'), cosOth = path.join(app.getPath('userData'), 'cloudy-cos-others.json');
 let cosMc = '', cosTimer = null, cosLast = '';
-function cosReg(u) { try { if (!cosMc || !srvCfg() || !srvTok || !u) return; const eq = {}; for (const c of ['cape', 'hat', 'wings']) if (u.equip && u.equip[c]) eq[c] = u.equip[c]; const k = cosMc + JSON.stringify(eq); if (k === cosLast) return; cosLast = k; srvCall('/cos/reg', { mc: cosMc, equip: eq }, srvTok).then(r => { if (!r || r.ok !== true) cosLast = ''; }).catch(() => { cosLast = ''; }); } catch {} }
+const cosLogFile = path.join(app.getPath('userData'), 'cloudy-cos.log');
+function cosLog(m) { try { let t = ''; try { t = fs.readFileSync(cosLogFile, 'utf8'); } catch {} t = (t + new Date().toISOString().slice(11, 19) + ' ' + m + '\n').split('\n').slice(-80).join('\n'); fs.writeFileSync(cosLogFile, t); } catch {} }
+function cosReg(u) { try { if (!cosMc || !srvCfg() || !srvTok || !u) return; const eq = {}; for (const c of ['cape', 'hat', 'wings']) if (u.equip && u.equip[c]) eq[c] = u.equip[c]; const k = cosMc + JSON.stringify(eq); if (k === cosLast) return; cosLast = k; srvCall('/cos/reg', { mc: cosMc, equip: eq }, srvTok).then(r => { cosLog('reg ' + cosMc + ' ' + JSON.stringify(eq) + ' -> ' + (r && (r.status || '') + ' ' + (r.ok === true ? 'ok' : (r.error || 'fehlgeschlagen')))); if (!r || r.ok !== true) cosLast = ''; }).catch(e => { cosLog('reg Fehler: ' + (e && e.message)); cosLast = ''; }); } catch {} }
 function cosNetStart(mcName) {
   try {
-    cosNetStop(); cosMc = /^\w{3,16}$/.test(String(mcName || '')) ? String(mcName) : ''; if (!cosMc || !srvCfg() || !srvTok) return;
+    cosNetStop(); cosMc = /^\w{3,16}$/.test(String(mcName || '')) ? String(mcName) : ''; if (!cosMc || !srvCfg() || !srvTok) { cosLog('nicht aktiv: ' + (!cosMc ? 'Spielername ungueltig' : !srvCfg() ? 'kein Konto-Server' : 'nicht beim Konto-Server angemeldet')); return; }
     try { fs.rmSync(cosWant, { force: true }); fs.rmSync(cosOth, { force: true }); } catch {}
+    cosLog('Spiel gestartet als ' + cosMc + ' (Konto ' + currentUser + ')');
     const a = readAuth(), u = currentUser && a.users[currentUser.toLowerCase()]; cosReg(u);
-    let busy = false;
+    let busy = false, cosPrev = -1;
     cosTimer = setInterval(async () => {
       if (busy) return; busy = true;
       try {
         const w = JSON.parse(fs.readFileSync(cosWant, 'utf8')), names = (w.names || []).filter(n => typeof n === 'string' && /^\w{3,16}$/.test(n)).slice(0, 80);
         const r = names.length ? await srvCall('/cos/get', { names }, srvTok) : { ok: true, players: {} };
-        if (r && r.ok === true) { const tmp = cosOth + '.tmp'; fs.writeFileSync(tmp, JSON.stringify({ ts: Date.now(), players: r.players || {} })); fs.renameSync(tmp, cosOth); }
-      } catch {} finally { busy = false; }
+        if (r && r.ok === true) { const nn = Object.keys(r.players || {}).length; if (nn !== cosPrev) { cosPrev = nn; cosLog('get ' + names.length + ' Namen -> ' + nn + ' mit Cosmetics'); } const tmp = cosOth + '.tmp'; fs.writeFileSync(tmp, JSON.stringify({ ts: Date.now(), players: r.players || {} })); fs.renameSync(tmp, cosOth); }
+      } catch (e) { if (!/ENOENT/.test(String(e && e.message))) cosLog('get Fehler: ' + (e && e.message)); } finally { busy = false; }
     }, 6000);
   } catch {}
 }
