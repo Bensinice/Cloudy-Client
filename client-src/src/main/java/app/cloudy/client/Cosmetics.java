@@ -109,7 +109,24 @@ public final class Cosmetics {
 		"wings-angel", "wings-neon", "wings-fire", "wings-bat", "wings-crystal", "wings-shadow", "shield-cloud", "shield-sun", "shield-dragon", "shield-forest", "shield-ice",
 		"cape-nebula", "cape-emerald", "cape-royal",
 		"cape-zz4", "cape-zz4m", "cape-zz3", "cape-zz3s", "cape-zz5", "cape-zk5", "wings-zz4", "wings-zz4m", "wings-zz3", "wings-zz3s", "wings-zz5", "wings-zk5",
-		"shield-zz4", "shield-zz4m", "shield-zz3", "shield-zz3s", "shield-zz5", "cape-yy", "shield-yy"};
+		"shield-zz4", "shield-zz4m", "shield-zz3", "shield-zz3s", "shield-zz5", "cape-yy", "shield-yy",
+		"wings-zv", "wings-zs", "wings-zf", "wings-zb", "cape-zbs", "cape-ghg"};
+
+	/** Umhaenge aus normalen 64x32-Texturen (in den Mod gepackt): fuer dich und fuer andere Cloudy-Spieler. */
+	public static boolean isTexCape(String id) { return "cape-zbs".equals(id) || "cape-ghg".equals(id); }
+	private static final java.util.Map<String, Identifier> CAPETEX = new java.util.HashMap<>();
+	public static Identifier capeTex(String id) {
+		if (!isTexCape(id)) return null;
+		Identifier have = CAPETEX.get(id);
+		if (have != null) return have;
+		try (java.io.InputStream in = Cosmetics.class.getResourceAsStream("/cloudy-cos/cape_" + id.substring(5) + ".png")) {
+			if (in == null) return null;
+			Identifier i = Identifier.of("cloudy-client", "texcape_" + id.substring(5));
+			MinecraftClient.getInstance().getTextureManager().registerTexture(i, new NativeImageBackedTexture(NativeImage.read(in)));
+			CAPETEX.put(id, i);
+			return i;
+		} catch (Exception e) { CloudyClient.LOG.warn("Umhang-Textur fehlt: " + id, e); return null; }
+	}
 
 	/** Hauptfarben (0 = hell, 1 = dunkel/Akzent) fuer Icons und Vorschau. */
 	public static int color(String id, int n) {

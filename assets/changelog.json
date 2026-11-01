@@ -1,5 +1,15 @@
 [
  {
+  "v": "0.9.34",
+  "date": "2026-11-01",
+  "added": [
+   "Neue 3D-Items im Shop: Zickzack-Flügel (Violett und Blau), Schattenflügel, Eisfeder-Flügel sowie der Zickzack-Schlangen-Umhang und der GHG-Umhang – auch für andere Cloudy-Spieler sichtbar",
+   "Admins können Items im Shop verstecken (👁 Verstecken): versteckte Items kann niemand mehr kaufen, wer sie schon hat, behält sie (benötigt aktualisierten Server)"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.33",
   "date": "2026-11-01",
   "added": [

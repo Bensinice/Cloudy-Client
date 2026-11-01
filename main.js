@@ -654,7 +654,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.33'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.34'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); if (!j) return false; try { const z = openZip(j); try { return z.has('app/cloudy/client/CosmeticsScreen.class') && z.has('cloudy-cos/build-' + CLIENT_BUILD + '.txt'); } finally { z.close(); } } catch { return false; } };
 
 // Eigener Classpath fuer neue Minecraft-Versionen (26.x): die Bibliotheksliste von minecraft-launcher-core bleibt dort leer (Fehler: KnotClient nicht gefunden)
@@ -884,7 +884,7 @@ function srvMirror(pu) { // lokale Kopie (für Shop, Cosmetics, Spielzeit) – A
   const a = readAuth(), key = pu.name.toLowerCase();
   const u = a.users[key] || (a.users[key] = mkUser(pu.name, crypto.randomBytes(12).toString('hex'), { coins: 100 }));
   if (pu.names && typeof pu.names === 'object') { try { fs.writeFileSync(namesFile, JSON.stringify(pu.names)); } catch {} }
-  u.name = pu.name; u.admin = !!pu.admin; u.infCoins = !pu.admin && pu.coins === null; u.mustChange = false; u.banned = false;
+  if (Array.isArray(pu.hidden)) setHidden(pu.hidden); u.name = pu.name; u.admin = !!pu.admin; u.infCoins = !pu.admin && pu.coins === null; u.mustChange = false; u.banned = false;
   if (pu.state && !pu.admin) { const s = pu.state; if (!u.infCoins && Number.isFinite(+s.coins)) u.coins = +s.coins; u.owned = Array.isArray(s.owned) ? s.owned : []; u.equip = s.equip && typeof s.equip === 'object' ? s.equip : {}; u.daily = s.daily || ''; }
   saveAuth(a); return key;
 }
@@ -1136,6 +1136,8 @@ const CATALOG = [
   { id: 'shield-ice', cat: 'shield', name: 'Eisschild', price: 300 }, { id: 'hat-party', cat: 'hat', name: 'Partyhut', price: 250 }, { id: 'hat-frost', cat: 'hat', name: 'Frostmütze', price: 350 },
   { id: 'cape-nebula', cat: 'cape', name: 'Nebel-Umhang', price: 700 }, { id: 'cape-emerald', cat: 'cape', name: 'Smaragd-Umhang', price: 700 }, { id: 'cape-royal', cat: 'cape', name: 'Königs-Umhang', price: 900 },
   { id: 'hat-crown', cat: 'hat', name: 'Krone', price: 700 }, { id: 'hat-halo', cat: 'hat', name: 'Heiligenschein', price: 600 },
+  { id: 'wings-zv', cat: 'wings', name: 'Zickzack-Flügel Violett (3D)', price: 1800 }, { id: 'wings-zb', cat: 'wings', name: 'Zickzack-Flügel Blau (3D)', price: 1800 }, { id: 'wings-zs', cat: 'wings', name: 'Schattenflügel (3D)', price: 1800 }, { id: 'wings-zf', cat: 'wings', name: 'Eisfeder-Flügel (3D)', price: 1800 },
+  { id: 'cape-zbs', cat: 'cape', name: 'Zickzack-Schlangen-Umhang', price: 1500 }, { id: 'cape-ghg', cat: 'cape', name: 'GHG-Umhang', price: 1000 },
   { id: 'cape-zz4', cat: 'cape', name: 'ZZ4-Umhang (3D)', price: 1500 }, { id: 'wings-zz4', cat: 'wings', name: 'ZZ4-Flügel (3D)', price: 1800 }, { id: 'shield-zz4', cat: 'shield', name: 'ZZ4-Schild (3D)', price: 1200 },
   { id: 'cape-zz4m', cat: 'cape', name: 'ZZ4 15 Mio.-Umhang (3D)', price: 1500 }, { id: 'wings-zz4m', cat: 'wings', name: 'ZZ4 15 Mio.-Flügel (3D)', price: 1800 }, { id: 'shield-zz4m', cat: 'shield', name: 'ZZ4 15 Mio.-Schild (3D)', price: 1200 },
   { id: 'cape-zz3', cat: 'cape', name: 'ZZ3-Umhang (3D)', price: 1500 }, { id: 'wings-zz3', cat: 'wings', name: 'ZZ3-Flügel (3D)', price: 1800 }, { id: 'shield-zz3', cat: 'shield', name: 'ZZ3-Schild (3D)', price: 1200 },
@@ -1350,6 +1352,9 @@ function syncShopPacks(dir, equip) { // gewählte Totem-/Hotbar-Resourcepacks in
   try { const k = SKIES[equip.sky]; cfgPatch({ skyShop: k ? { sky: [k[0], k[1]], dark: !!k[2] } : null }); } catch {}
 }
 const cosFile = path.join(app.getPath('userData'), 'cosmetics.json');
+const hiddenFile = path.join(app.getPath('userData'), 'shop-hidden.json'); // vom Admin versteckte Items (nicht mehr kaufbar)
+let shopHidden = []; try { const j = JSON.parse(fs.readFileSync(hiddenFile, 'utf8')); if (Array.isArray(j)) shopHidden = j.filter(x => typeof x === 'string'); } catch {}
+const setHidden = a => { shopHidden = (Array.isArray(a) ? a : []).filter(x => typeof x === 'string').slice(0, 500); try { fs.writeFileSync(hiddenFile, JSON.stringify(shopHidden)); } catch {} };
 const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
 const namesFile = path.join(app.getPath('userData'), 'shop-names.json'); // vom Admin geänderte Item-Namen – bleiben bei Updates erhalten
 const shopNames = () => { try { const j = JSON.parse(fs.readFileSync(namesFile, 'utf8')); return j && typeof j === 'object' ? j : {}; } catch { return {}; } };
@@ -1357,7 +1362,7 @@ function shopOf(u) {
   if (u.coins == null) u.coins = 100; if (!u.owned) u.owned = []; if (!u.equip) u.equip = {};
   for (const k of Object.keys(u.equip)) if (!CATALOG.some(c => c.id === u.equip[k])) delete u.equip[k]; // entfernte Items (alte Z4-/Galaxie-Sachen) nicht mehr ausrüsten
   const nm = shopNames();
-  return { catalog: CATALOG.map(c => nm[c.id] ? { ...c, name: nm[c.id] } : c), admin: !!u.admin, coins: u.admin || u.infCoins ? null : u.coins, owned: u.admin ? CATALOG.map(c => c.id) : u.owned, equip: u.equip, dailyReady: !u.admin && !u.infCoins && u.daily !== todayStr() };
+  return { catalog: CATALOG.filter(c => u.admin || !shopHidden.includes(c.id) || (u.owned || []).includes(c.id)).map(c => { const o = nm[c.id] ? { ...c, name: nm[c.id] } : { ...c }; if (shopHidden.includes(c.id)) o.hidden = true; return o; }), admin: !!u.admin, coins: u.admin || u.infCoins ? null : u.coins, owned: u.admin ? CATALOG.map(c => c.id) : u.owned, equip: u.equip, dailyReady: !u.admin && !u.infCoins && u.daily !== todayStr() };
 }
 function syncCosFromGame() { // im Spiel geänderte Auswahl (Cosmetics-Menü) in dein Konto übernehmen
   try {
@@ -1374,6 +1379,14 @@ function shopWrite(fn, quiet) { // Änderung am Konto des angemeldeten Nutzers s
   try { fs.writeFileSync(cosFile, JSON.stringify({ user: u.name, equip: u.equip || {}, owned: u.admin ? CATALOG.map(c => c.id) : (u.owned || []) })); } catch {}
   return { ...r, ok: r.ok !== false, state: shopOf(u) };
 }
+ipcMain.handle('shopHide', async (_e, { id, on }) => {
+  const a = readAuth(), cu = currentUser && a.users[currentUser.toLowerCase()];
+  if (!cu || !cu.admin) return { ok: false, error: 'Nur Admins können Items verstecken.' };
+  if (!CATALOG.some(c => c.id === id)) return { ok: false, error: 'Unbekanntes Item.' };
+  if (srvCfg()) { const r = await srvCall('/admin/hide', { id, on: !!on }, srvTok).catch(() => ({})); if (!r.ok) return { ok: false, error: 'Der Server hat das nicht gespeichert (Server aktuell?).' }; setHidden(r.hidden); }
+  else setHidden(shopHidden.filter(x => x !== id).concat(on ? [id] : []));
+  return shopWrite(() => ({}));
+});
 ipcMain.handle('shopRename', async (_e, { id, name }) => {
   const a = readAuth(), cu = currentUser && a.users[currentUser.toLowerCase()];
   if (!cu || !cu.admin) return { ok: false, error: 'Nur Admins können Namen ändern.' };
@@ -1390,6 +1403,7 @@ ipcMain.handle('shopState', async () => { await srvPull(); const r = shopWrite((
 ipcMain.handle('shopBuy', (_e, id) => shopWrite(u => {
   const it = CATALOG.find(c => c.id === id); if (!it) return { ok: false, error: 'Unbekanntes Item.' };
   if (u.admin) return {}; if (u.owned.includes(id)) return { ok: false, error: 'Das besitzt du schon.' };
+  if (shopHidden.includes(id)) return { ok: false, error: 'Dieses Item ist nicht mehr erhältlich.' };
   if (u.infCoins) { u.owned.push(id); return {}; } // Tester: unendlich Coins, nichts wird abgezogen
   if (u.coins < it.price) return { ok: false, error: `Dir fehlen ${it.price - u.coins} CC.` };
   u.coins -= it.price; u.owned.push(id);
