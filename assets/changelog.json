@@ -1,5 +1,16 @@
 [
  {
+  "v": "0.9.66",
+  "date": "2026-11-01",
+  "added": [
+   "„Passwort vergessen?“ schickt dem Owner eine Nachricht im Chat (Freunde); er setzt das Konto zurück"
+  ],
+  "fixed": [
+   "Anmeldefenster behauptete, das Konto gelte nur auf diesem Computer, obwohl es ein Online-Konto ist"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.65",
   "date": "2026-11-01",
   "added": [

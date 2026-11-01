@@ -206,6 +206,17 @@ http.createServer(async (req, res) => {
   const ip = String(req.headers['cf-connecting-ip'] || String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress), url = req.url.split('?')[0], b = req.method === 'POST' ? await body(req) : {};
   try {
     if (url === '/health') return send(res, 200, { ok: true, backup: db.backup || '' });
+    if (url === '/forgot' && req.method === 'POST') { // Passwort vergessen: Nachricht an den Owner im Chat; der Owner setzt das Konto zurueck
+      if (limited(ip)) return send(res, 429, { error: 'Zu viele Versuche, warte kurz.' });
+      const key = String(b.user || '').trim().toLowerCase(), u = key ? db.users[key] : null, owner = ownerKeys().find(k => k !== key), FR = db.fr;
+      if (u && !u.admin && owner) {
+        const uf = k => FR.f[k] = FR.f[k] || { friends: [], in: [], out: [], read: {} }, a = uf(key), o = uf(owner);
+        if (!a.friends.includes(owner)) a.friends.push(owner); if (!o.friends.includes(key)) o.friends.push(key);
+        const pk = frPair(key, owner), l = FR.msgs[pk] = FR.msgs[pk] || [], last = [...l].reverse().find(m => m.fk === key && String(m.text).startsWith('🔑'));
+        if (!last || Date.now() - last.t > 600000) { l.push({ id: FR.seq++, from: u.name, fk: key, text: '🔑 Passwort vergessen – bitte zurücksetzen.', t: Date.now() }); save(); }
+      }
+      return send(res, 200, { ok: true });
+    }
     if (url === '/register' && req.method === 'POST') {
       if (limited(ip)) return send(res, 429, { error: 'Zu viele Versuche, warte kurz.' });
       const user = String(b.user || '').trim(), pass = String(b.pass || ''), key = user.toLowerCase();

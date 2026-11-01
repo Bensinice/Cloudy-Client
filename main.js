@@ -808,7 +808,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.65'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.66'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1124,6 +1124,11 @@ async function accSrvState() {
     const key = srvMirror(r.user); currentUser = r.user.name; srvTok = s.srv; return { fresh: false, user: r.user.name, admin: !!r.user.admin };
   } catch { currentUser = null; return { fresh: false, user: null }; }
 }
+ipcMain.handle('authForgot', async (_e, user) => { // Passwort vergessen: Nachricht an den Owner im Chat (Freunde), der Owner setzt das Konto zurueck
+  user = String(user || '').trim(); if (!/^[A-Za-z0-9_]{3,16}$/.test(user)) return { ok: false, error: 'Gib oben deinen Benutzernamen ein.' };
+  const r = await srvCall('/forgot', { user }).catch(() => null); if (!r) return { ...SRV_DOWN, ok: false };
+  return r.status === 429 ? { ok: false, error: r.error || 'Zu viele Versuche, warte kurz.' } : { ok: true };
+});
 ipcMain.handle('srvGet', () => { const c = srvCfg(); return c ? c.url : ''; });
 ipcMain.handle('srvBackupGet', () => backupUrl());
 ipcMain.handle('srvBackupSet', async (_e, url) => {

@@ -537,8 +537,14 @@ $('#lgForm').onsubmit = async e => {
   if (r.mustChange) { $('#lgPass').value = ''; lgSet('chg', 'Du nutzt ein vorläufiges Passwort. Lege jetzt ein neues fest.'); return; }
   lgFresh = false; lgDone(r.user, !!r.first, r.admin);
 };
+window.cloudy.srvGet().then(u => { if (u) $('#lgNote').textContent = L('Dein Cloudy-Konto ist ein Online-Konto. Passwort vergessen? Schreib dem Owner im Chat.'); }).catch(() => {});
 $('#lgForgot').onclick = async e => {
   e.preventDefault();
+  if (await window.cloudy.srvGet().catch(() => '')) { // Online-Konto: der Owner setzt das Passwort zurueck, die Bitte landet bei ihm im Chat (Freunde)
+    const r = await window.cloudy.authForgot($('#lgUser').value).catch(() => ({ ok: false, error: 'Fehler.' }));
+    $('#lgMsg').textContent = r.ok ? L('Anfrage gesendet: Der Owner sieht sie in seinem Chat (Freunde) und setzt dein Passwort zurück. Danach meldest du dich mit 12345 an und legst ein neues Passwort fest. Sag ihm Bescheid, falls es dauert.') : L(r.error);
+    return;
+  }
   if (confirm(L('Das Tester-Konto auf Tester / 12345 zurücksetzen? Andere Konten (auch Admin) bleiben erhalten. Das Passwort muss danach sofort neu gesetzt werden.'))) { await window.cloudy.authReset(); lgFresh = true; lgSet('in', FRESH_HINT); }
 };
 $('#authOut').onclick = async () => { await window.cloudy.authLogout(); const s = await window.cloudy.authState(); lgFresh = s.fresh; $('#login').classList.remove('off'); lgSet('in', s.fresh ? FRESH_HINT : ''); $('#lgPass').value = ''; paintAdmin(false); };

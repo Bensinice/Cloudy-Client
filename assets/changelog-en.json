@@ -1,4 +1,8 @@
 {
+ "0.9.66": [
+  "“Forgot password?” sends the owner a message in the chat (Friends); the owner resets the account",
+  "Login window wrongly said the account only exists on this computer although it is an online account"
+ ],
  "0.9.65": [
   "New main server cloudyclient.com; the previous server (framebound) is now the built-in backup server and takes over automatically if the main one is down"
  ],

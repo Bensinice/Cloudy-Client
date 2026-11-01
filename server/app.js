@@ -94,6 +94,18 @@ app.use(cors()); app.use(express.json({ limit: '100kb' }));
 const wrap = f => (req, res) => f(req, res).catch(e => { console.error(e.message); res.status(500).json({ error: 'Serverfehler.' }); });
 app.get('/', (_q, r) => r.send('Cloudy-Server läuft.'));
 app.get('/health', (_q, r) => r.json({ ok: true, backup: BACKUP }));
+// Passwort vergessen: legt eine Nachricht im Chat (Freunde) beim Owner ab; der Owner setzt das Konto im Admin-Bereich zurück. Verraet nicht, ob es das Konto gibt.
+app.post('/forgot', wrap(async (req, res) => {
+  if (limited(req.ip)) return res.status(429).json({ error: 'Zu viele Versuche, warte kurz.' });
+  const key = String(req.body.user || '').trim().toLowerCase(), u = key ? await get(key) : null, owner = ownerKeys().find(k => k !== key);
+  if (u && !u.admin && owner) {
+    const uf = k => FR.f[k] = FR.f[k] || { friends: [], in: [], out: [], read: {} }, a = uf(key), o = uf(owner);
+    if (!a.friends.includes(owner)) a.friends.push(owner); if (!o.friends.includes(key)) o.friends.push(key);
+    const pk = frPair(key, owner), l = FR.msgs[pk] = FR.msgs[pk] || [], last = [...l].reverse().find(m => m.fk === key && String(m.text).startsWith('🔑'));
+    if (!last || Date.now() - last.t > 600000) { l.push({ id: FR.seq++, from: u.name, fk: key, text: '🔑 Passwort vergessen – bitte zurücksetzen.', t: Date.now() }); await saveFr(); }
+  }
+  res.json({ ok: true });
+}));
 app.post('/register', wrap(async (req, res) => {
   if (limited(req.ip)) return res.status(429).json({ error: 'Zu viele Versuche, warte kurz.' });
   const user = String(req.body.user || '').trim(), pass = String(req.body.pass || ''), key = user.toLowerCase();
