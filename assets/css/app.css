@@ -612,3 +612,10 @@ html[data-theme="glass"]{background:rgba(8,20,40,var(--win-a,0))!important}
 #callDock.on{display:block}
 #callDock b{display:block;font-size:14px}#callDock small{display:block;opacity:.85;margin:2px 0 8px}
 #callDock .tools{margin:0}
+
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;max-height:420px;overflow:auto;padding:4px}
+.bpick{position:relative;cursor:pointer!important;padding:8px;gap:4px}.bpick .i3h{height:96px}.bpick b{font-size:12.5px}.bpick:hover{transform:translateY(-2px)}
+.bpick .bchk{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;display:none;align-items:center;justify-content:center;background:var(--accent);color:#fff;font-weight:900;font-size:13px}
+.bpick.sel .bchk{display:flex}
+.bsum{padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.07);font-size:13px}
+.bprev{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}.bpi{display:grid;justify-items:center;width:78px}.bpi .i3h{height:80px!important}.bpi small{font-size:11px;max-width:78px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

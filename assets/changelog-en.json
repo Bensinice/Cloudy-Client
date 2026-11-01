@@ -1,4 +1,8 @@
 {
+ "0.9.55": [
+  "Creating bundles is cleaner: tap item cards with 3D previews, search and category filter, summary with total price",
+  "Bundles in the shop show their items with 3D previews"
+ ],
  "0.9.54": [
   "Mac: the Java files inside the app were read-only, so “Cloudy is damaged” could not be fixed with the Terminal command – they are now writable"
  ],

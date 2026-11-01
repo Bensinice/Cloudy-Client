@@ -1,5 +1,15 @@
 [
  {
+  "v": "0.9.55",
+  "date": "2026-11-01",
+  "added": [
+   "Pakete erstellen ist jetzt übersichtlich: Items als Karten mit 3D-Vorschau antippen, Suche und Kategorie-Filter, Zusammenfassung mit Gesamtpreis",
+   "Pakete im Shop zeigen die enthaltenen Items mit 3D-Vorschau"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.54",
   "date": "2026-11-01",
   "added": [],
