@@ -1,4 +1,13 @@
 {
+ "0.9.58": [
+  "Admins can delete messages in groups and chats (🗑)",
+  "All accounts are automatically friends with the owner",
+  "New “Ideas” group for everyone (like “Bugs”); no calls in these two groups",
+  "Mod search: already installed mods show “Installed ✓” instead of “Install”",
+  "Themes: a custom accent color no longer overrides the new theme's color when switching (e.g. Forest stayed blue)",
+  "Banner color: picking a color now also replaces a set image/animation",
+  "Switching themes no longer crashes when color values are missing"
+ ],
  "0.9.57": [
   "New tour through the whole launcher (replaces the old welcome intro)",
   "Everyone automatically gets the Tester tag and joins the “Bugs” group (report bugs & wishes)",

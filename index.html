@@ -412,6 +412,7 @@ async function searchMods(pg){
     $$('#mres > .srv').forEach((el,i)=>{const c=r[i]&&r[i].cats;if(c&&c.length&&el.querySelector('.tx'))el.querySelector('.tx').insertAdjacentHTML('beforeend','<small class="cats">'+c.map(x=>esc(catName(x))).join(' · ')+'</small>')});
     $$('#mres [data-o]').forEach(r=>r.onclick=()=>openMod(r.dataset.o));window.pager($('#mres'),mPage,r.length>=20,searchMods);
     $$('[data-i]').forEach(b=>b.onclick=async e=>{e.stopPropagation();b.disabled=true;b.textContent='Lädt …';const ok=await window.cloudy.modsInstall(b.dataset.i,modVer);b.textContent=ok?'Installiert ✓':'Nicht verfügbar'});
+    try{const have=new Set(await window.cloudy.modsInstalledIds(modVer));$$('#mres [data-i]').forEach(b=>{if(have.has(b.dataset.i)){b.disabled=true;b.textContent='Installiert ✓'}})}catch{}
   }catch{$('#mres').innerHTML='<p class="muted">Modrinth ist nicht erreichbar.</p>'}
 }
 $('#msearch').onclick=()=>searchMods(0);$('#mq').onkeydown=e=>{if(e.key==='Enter')searchMods(0)};

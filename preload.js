@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('cloudy', {
   mpSearch: o => inv('mpSearch', o), mpInstall: o => inv('mpInstall', o), mpImportFile: () => inv('mpImportFile'), onMpProgress: f => ipcRenderer.on('mpProgress', (_e, t) => f(t)),
   modsInstall: (id, v) => inv('modsInstall', id, v),
   modsList: v => inv('modsList', v),
+  modsInstalledIds: v => inv('modsInstalledIds', v),
   modsRemove: (v, f) => inv('modsRemove', v, f),
   modsUpdate: v => inv('modsUpdate', v),
   appVersion: () => inv('appVersion'),

@@ -58,7 +58,7 @@
     document.body.appendChild(dlg); $('#hdZ').value = h.size;
     const save = p => { const c = get(); st.set('home', { ...c, ...p, b: { ...c.b, ...(p.b || {}) }, s: { ...c.s, ...(p.s || {}) } }); window.paintHome(); };
     $('#hdT').oninput = e => save({ title: e.target.value }); $('#hdS').oninput = e => { save({ sub: e.target.value }); if (!e.target.value && window.paintVersion) paintVersion(); }; $('#hdE').oninput = e => save({ eyebrow: e.target.value });
-    $$('#hdTint [data-k]').forEach(b => b.onclick = () => { $$('#hdTint [data-k]').forEach(x => x.classList.toggle('on', x === b)); save({ tint: b.dataset.k, img: b.dataset.k === 'default' ? '' : get().img }); });
+    $$('#hdTint [data-k]').forEach(b => b.onclick = () => { $$('#hdTint [data-k]').forEach(x => x.classList.toggle('on', x === b)); save({ tint: b.dataset.k, img: '', anim: null }); });
     $('#hdC').oninput = e => { $$('#hdTint [data-k]').forEach(x => x.classList.toggle('on', x.dataset.k === 'custom')); save({ tint: 'custom', color: e.target.value, img: '' }); };
     $('#hdZ').onchange = e => save({ size: e.target.value }); $('#hdCl').onchange = e => save({ cloud: e.target.checked });
     $('#hdB1').onchange = e => save({ b: { ver: e.target.checked } }); $('#hdB2').onchange = e => save({ b: { mods: e.target.checked } }); $('#hdB3').onchange = e => save({ b: { upd: e.target.checked } });

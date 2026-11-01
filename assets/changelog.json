@@ -1,5 +1,21 @@
 [
  {
+  "v": "0.9.58",
+  "date": "2026-11-01",
+  "added": [
+   "Admins können Nachrichten in Gruppen und Chats löschen (🗑)",
+   "Alle Konten sind automatisch mit dem Owner befreundet",
+   "Neue Gruppe „Ideen“ für alle (wie „Bugs“); in diesen beiden Gruppen gibt es keine Anrufe"
+  ],
+  "fixed": [
+   "Mods-Suche: bereits installierte Mods zeigen „Installiert ✓“ statt „Installieren“",
+   "Themes: Eine selbst gewählte Akzentfarbe überschreibt beim Themewechsel nicht mehr die Farbe des neuen Themes (z. B. Forest blieb blau)",
+   "Banner-Farbe: Auswahl einer Farbe ersetzt jetzt auch ein gesetztes Bild/Animation",
+   "Theme-Wechsel stürzt bei fehlenden Farbwerten nicht mehr ab"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.57",
   "date": "2026-11-01",
   "added": [

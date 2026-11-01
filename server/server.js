@@ -53,24 +53,28 @@ const PRES = new Map(); // Konto -> { srv, t } (wo jemand gerade spielt/hostet)
 const CALLS = new Map(); // Gruppen-ID -> { m: Konto -> letzter Kontakt, q: Konto -> wartende Verbindungsdaten }
 const SEEN = new Map(); // Konto -> letzter Kontakt (für „online“)
 const frPair = (a, b) => [a, b].sort().join('|');
+const admKey = async k => isAdm(db.users[k]); // Admin-Rechte für ein Konto (Schlüssel)
+const ownerKeys = () => Object.keys(db.users).filter(k => isAdm(db.users[k]));
 async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
   const key = n => String(n || '').trim().toLowerCase(), now = Date.now(); SEEN.set(me, now);
   const u = FR.f[me] = FR.f[me] || { friends: [], in: [], out: [], read: {} }, uf = k => FR.f[k] = FR.f[k] || { friends: [], in: [], out: [], read: {} };
   const online = k => now - (SEEN.get(k) || 0) < 45000;
   FR.groups = FR.groups || {}; FR.clan = FR.clan || {}; const GR = FR.groups;
   // Alle landen einmalig automatisch in der Gruppe „Bugs“ (Fehler & Wünsche melden); verlassen ist danach erlaubt
-  FR.bugsIn = FR.bugsIn || {};
-  if (!FR.bugsIn[me]) { FR.bugsIn[me] = 1; const bg = GR.bugs = GR.bugs || { id: 'bugs', name: 'Bugs', tag: '', color: '', av: '', owner: 'admin', members: [], msgs: [], read: {}, t: now }; if (!bg.members.includes(me)) bg.members.push(me); await save(); }
+  FR.bugsIn = FR.bugsIn || {}; FR.sysIn = FR.sysIn || {};
+  const SYS = { bugs: 'Bugs', ideen: 'Ideen' }; // Systemgruppen: alle sind drin, keine Anrufe
+  if (!FR.sysIn[me]) { FR.sysIn[me] = 1; for (const [gid, gn] of Object.entries(SYS)) { if (gid === 'bugs' && FR.bugsIn[me] && GR.bugs && !GR.bugs.members.includes(me)) continue; const sg = GR[gid] = GR[gid] || { id: gid, name: gn, tag: '', color: '', av: '', owner: 'admin', members: [], msgs: [], read: {}, t: now }; sg.sys = true; if (!sg.members.includes(me)) sg.members.push(me); } FR.bugsIn[me] = 1; await save(); }
+  { let ch = false; for (const o of ownerKeys()) { if (o === me) continue; const ou = uf(o); if (!u.friends.includes(o)) { u.friends.push(o); ch = true; } if (!ou.friends.includes(me)) { ou.friends.push(me); ch = true; } for (const [x, y] of [[u, o], [ou, me]]) { for (const l of ['in', 'out']) { const i = (x[l] || []).indexOf(y); if (i >= 0) { x[l].splice(i, 1); ch = true; } } } } if (ch) await save(); } // alle sind automatisch mit dem Owner befreundet
   const clanOf = k => { const g = GR[FR.clan[k]]; return g && g.tag && g.members.includes(k) ? ['clan:' + g.tag + (g.color ? ':' + g.color.slice(1) : '')] : []; };
   TAGLIVE = clanOf;
   const hexOk = c => /^#[0-9a-fA-F]{6}$/.test(String(c || '')) ? String(c).toLowerCase() : '';
   const imgOk = i => /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]{20,12000}$/.test(String(i || ''));
   const gOf = id => { id = String(id || ''); if (id.startsWith('dm:')) { const k = key(id.slice(3)); return u.friends.includes(k) ? { id: 'dm:' + frPair(me, k), members: [me, k], owner: me, msgs: [], dm: true } : null; } const g = GR[id]; return g && g.members.includes(me) ? g : null; };
   const callNames = async gid => { const c = CALLS.get(gid), r = []; if (c) for (const [k, t] of c.m) if (now - t < 15000) { const n = await nameOf(k); if (n) r.push(n); } return r; };
-  const groupsOut = async () => { const out = []; for (const g of Object.values(GR)) { if (!g.members.includes(me)) continue; const ms = []; for (const k of g.members) { const n = await nameOf(k); if (n) ms.push(n); } out.push({ id: g.id, name: g.name, tag: g.tag, color: g.color || '', av: g.av || '', last: (() => { const m = g.msgs[g.msgs.length - 1]; return m ? { from: m.from, text: String(m.text).slice(0, 80) } : null; })(), mine: g.owner === me, members: ms, unread: g.msgs.filter(m => m.fk !== me && m.id > ((g.read || {})[me] || 0)).length, call: await callNames(g.id), clan: FR.clan[me] === g.id }); } return out; };
+  const groupsOut = async () => { const out = []; for (const g of Object.values(GR)) { if (!g.members.includes(me)) continue; const ms = []; for (const k of g.members) { const n = await nameOf(k); if (n) ms.push(n); } out.push({ id: g.id, name: g.name, tag: g.tag, color: g.color || '', av: g.av || '', last: (() => { const m = g.msgs[g.msgs.length - 1]; return m ? { from: m.from, text: String(m.text).slice(0, 80) } : null; })(), mine: g.owner === me, members: ms, unread: g.msgs.filter(m => m.fk !== me && m.id > ((g.read || {})[me] || 0)).length, call: await callNames(g.id), clan: FR.clan[me] === g.id, sys: !!g.sys }); } return out; };
   const unread = k => (FR.msgs[frPair(me, k)] || []).filter(m => m.fk !== me && m.id > (u.read[k] || 0)).length;
   if (p === 'state') {
-    const out = { ok: true, me: myName, tags: tagsOf(me).concat(clanOf(me)), groups: await groupsOut(), friends: [], incoming: [], outgoing: [] };
+    const out = { ok: true, me: myName, adm: await admKey(me), tags: tagsOf(me).concat(clanOf(me)), groups: await groupsOut(), friends: [], incoming: [], outgoing: [] };
     for (const k of u.friends) { const n = await nameOf(k); const pr = PRES.get(k); if (n) out.friends.push({ name: n, tags: tagsOf(k).concat(clanOf(k)), calling: (() => { const c = CALLS.get('dm:' + frPair(me, k)); return !!(c && c.m.has(k) && now - c.m.get(k) < 15000 && !(c.m.has(me) && now - c.m.get(me) < 15000)); })(), online: online(k), unread: unread(k), av: (FR.av && FR.av[k]) || '', ...(pr && online(k) && now - pr.t < 90000 ? { server: pr.srv } : {}) }); }
     for (const k of u.in) { const n = await nameOf(k); if (n) out.incoming.push(n); }
     for (const k of u.out) { const n = await nameOf(k); if (n) out.outgoing.push(n); }
@@ -132,6 +136,8 @@ async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
       const after = +b.after || 0, l = g.msgs.filter(m => m.id > after).slice(-100).map(({ id, from, text, t }) => ({ id, from, text, t })), last = g.msgs[g.msgs.length - 1];
       g.read = g.read || {}; if (last && g.read[me] !== last.id) { g.read[me] = last.id; await save(); } return [200, { ok: true, msgs: l }];
     }
+    if (p === 'group/delmsg') { if (!(await admKey(me))) return [403, { error: 'Nur für Admins.' }]; const n = g.msgs.length; g.msgs = g.msgs.filter(m => m.id !== +b.mid); if (g.msgs.length !== n) await save(); return [200, { ok: true }]; }
+    if (p.startsWith('call/') && g.sys) return [400, { error: 'In dieser Gruppe gibt es keine Anrufe.' }];
     // Sprachanruf: der Server vermittelt nur die Verbindungsdaten (WebRTC), die Sprache läuft direkt zwischen den Spielern
     let c = CALLS.get(g.id); if (!c) { c = { m: new Map(), q: new Map() }; CALLS.set(g.id, c); }
     for (const [k, t] of c.m) if (now - t > 15000) { c.m.delete(k); c.q.delete(k); }
@@ -148,6 +154,10 @@ async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
     if (!u.friends.includes(ok)) return [403, { error: 'Ihr seid keine Freunde.' }]; if (!text) return [400, { error: 'Leere Nachricht.' }];
     const k = frPair(me, ok), l = FR.msgs[k] = FR.msgs[k] || [], m = { id: FR.seq++, from: myName, fk: me, text, t: now };
     l.push(m); if (l.length > 300) l.splice(0, l.length - 300); await save(); return [200, { ok: true, id: m.id }];
+  }
+  if (p === 'msg/del') { // Admins können Nachrichten in Direktchats löschen
+    if (!(await admKey(me))) return [403, { error: 'Nur für Admins.' }]; const ok = key(b.with), pk = frPair(me, ok), all = FR.msgs[pk] || [], n = all.length;
+    FR.msgs[pk] = all.filter(m => m.id !== +b.mid); if (FR.msgs[pk].length !== n) await save(); return [200, { ok: true }];
   }
   if (p === 'msgs') {
     const ok = key(b.with); if (!u.friends.includes(ok)) return [403, { error: 'Ihr seid keine Freunde.' }];

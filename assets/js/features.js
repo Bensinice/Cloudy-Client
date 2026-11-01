@@ -26,18 +26,21 @@ function themeId() {
   if (t === 'system') return sysDark.matches ? 'dark' : 'light';
   return THEMES.some(x => x.id === t && x.id !== 'system') ? t : 'light';
 }
-function applyTheme() {
+function applyTheme() { try { applyTheme0(); } catch (e) { try { document.documentElement.dataset.theme = 'light'; } catch {} console.warn('Theme-Fehler', e); } }
+function applyTheme0() {
   const id = themeId(), root = document.documentElement;
   root.dataset.theme = id;
-  const cs = getComputedStyle(root), dark = cs.getPropertyValue('--mode').trim() === 'dark';
+  const cs = getComputedStyle(root), dark = (cs.getPropertyValue('--mode').trim() || (id === 'dark' ? 'dark' : 'light')) === 'dark';
   $('#themeBtn span').textContent = dark ? 'Heller Modus' : 'Dunkler Modus';
   $$('.th').forEach(b => b.classList.toggle('on', b.dataset.id === st.get('theme', 'light')));
   const th = THEMES.find(x => x.id === id) || THEMES[0];
-  window.cloudy.themeColor({ bg: cs.getPropertyValue('--title-bg').trim(), fg: cs.getPropertyValue('--ink').trim(), id, sky: [th.bg[1], th.bg[0]], accent: th.c, dark }).catch(() => {});
+  window.cloudy.themeColor({ bg: cs.getPropertyValue('--title-bg').trim() || (dark ? '#11244a' : '#cfe8ff'), fg: cs.getPropertyValue('--ink').trim() || (dark ? '#e8f1ff' : '#1d3b66'), id, sky: [th.bg[1], th.bg[0]], accent: th.c, dark }).catch(() => {});
 }
 $('#themeGrid').innerHTML = THEMES.map(t => `<button class="th" data-id="${t.id}"><i style="background:linear-gradient(135deg,${t.bg[0]},${t.bg[1]});--sw:${t.c}"></i>${t.name}</button>`).join('');
-$$('.th').forEach(b => b.onclick = () => { st.set('theme', b.dataset.id); applyTheme(); });
-$('#themeBtn').onclick = () => { st.set('theme', PAIR[themeId()] || 'light'); applyTheme(); };
+// Eine selbst gewählte Akzentfarbe gilt nur für das Theme, bei dem sie gesetzt wurde – beim Wechsel zählt wieder die Farbe des neuen Themes (sonst bleibt z. B. Forest blau)
+const dropAccent = () => { if (st.get('accent', '')) { st.set('accent', ''); try { applyAccent(); } catch {} const ac = $('#accCol'); if (ac) ac.value = (THEMES.find(x => x.id === themeId()) || THEMES[0]).c; } };
+$$('.th').forEach(b => b.onclick = () => { st.set('theme', b.dataset.id); dropAccent(); applyTheme(); });
+$('#themeBtn').onclick = () => { st.set('theme', PAIR[themeId()] || 'light'); dropAccent(); applyTheme(); };
 sysDark.onchange = () => { if (st.get('theme', 'light') === 'system') applyTheme(); };
 applyTheme();
 

@@ -411,6 +411,15 @@ function listMods(v) {
   return out.sort((a, b) => a.name.localeCompare(b.name));
 }
 ipcMain.handle('modsList', (_e, v) => listMods(v));
+ipcMain.handle('modsInstalledIds', (_e, v) => { // Modrinth-Projekte, die für diese Version schon im Mods-Ordner liegen (Suche zeigt dann „Installiert“)
+  const ids = new Set();
+  try {
+    const have = new Set(fs.readdirSync(modsDir(v)).filter(f => /\.jar$/.test(f)));
+    const c = loadCache(); for (const f of have) { const e = c[modKey(v, f)]; if (e && e.mr && e.mr.id) ids.add(e.mr.id); }
+    const pre = 'md:' + v + ':', fd = fastLoad(); for (const k of Object.keys(fd)) if (k.startsWith(pre) && have.has(fd[k].v)) ids.add(k.slice(pre.length));
+  } catch {}
+  return [...ids];
+});
 // holt Titel und Bild von Modrinth (erkennt Mods am Datei-Hash, auch wenn sie mods123.jar heißen)
 ipcMain.handle('modsEnrich', async (_e, v) => {
   try {
@@ -779,7 +788,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.57'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.58'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 

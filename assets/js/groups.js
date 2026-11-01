@@ -53,7 +53,7 @@
     first = false;
   }
   if (window.cloudy.on) window.cloudy.on('notifyClick', o => { if (o && o.kind === 'group' && o.id) { const b = document.querySelector('[data-tab="friends"]'); if (b) b.click(); open(o.id); } });
-  window.grpUpdate = d => { D = { friends: d.friends || [], groups: d.groups || [], me: d.me || '' }; news(D.groups); if (cur && !grp()) { cur = null; window.__frSetChat && window.__frSetChat(null); } paintList(); if (cur && !tools) paintHead(); };
+  window.grpUpdate = d => { D = { friends: d.friends || [], groups: d.groups || [], me: d.me || '', adm: !!d.adm }; news(D.groups); if (cur && !grp()) { cur = null; window.__frSetChat && window.__frSetChat(null); } paintList(); if (cur && !tools) paintHead(); };
   list.addEventListener('click', () => { if (cur) { cur = null; clearInterval(timer); paintList(); } }, true);
 
   // ---------- Neue Gruppe ----------
@@ -77,7 +77,7 @@
     const g = grp(); if (!g) return;
     const mine = call && call.gid === g.id, running = g.call && g.call.length;
     $('#frChatHead').innerHTML = `${avHtml(g)} <span>${esc(g.name)} ${tagHtml(g.tag, g.color)}</span> ` +
-      (mine ? '' : `<button class="btn frplay" id="gCall" style="width:auto;border-radius:999px;padding:0 14px;margin-left:8px">📞 ${running ? L('Anruf beitreten') + ' (' + g.call.length + ')' : L('Anruf starten')}</button>`) +
+      (mine || g.sys ? '' : `<button class="btn frplay" id="gCall" style="width:auto;border-radius:999px;padding:0 14px;margin-left:8px">📞 ${running ? L('Anruf beitreten') + ' (' + g.call.length + ')' : L('Anruf starten')}</button>`) +
       ` <button class="btn ghost" id="gTools" style="margin-left:6px">⚙ ${L('Verwalten')}</button>` +
       (note ? `<div class="muted" style="font-size:12.5px;margin-top:4px">${esc(note)}</div>` : '') +
       (tools ? toolsHtml(g) : '');
@@ -114,7 +114,8 @@
   }
   function paintMsgs() {
     const b = $('#frMsgs'), me = D.me;
-    b.innerHTML = msgs.map(m => `<div class="mrow ${m.from === me ? 'me' : ''}"><span class="mav" data-i="${esc((m.from || '?')[0].toUpperCase())}"></span><div class="msg ${m.from === me ? 'me' : ''}"><small style="display:block;opacity:.75;font-weight:700">${esc(m.from)}</small><span>${esc(cens(m.text))}</span></div></div>`).join('');
+    b.innerHTML = msgs.map(m => `<div class="mrow ${m.from === me ? 'me' : ''}"><span class="mav" data-i="${esc((m.from || '?')[0].toUpperCase())}"></span><div class="msg ${m.from === me ? 'me' : ''}"><small style="display:block;opacity:.75;font-weight:700">${esc(m.from)}${D.adm ? ` <button class="mdel" data-del="${m.id}" title="${esc(L('Nachricht löschen'))}">🗑</button>` : ''}</small><span>${esc(cens(m.text))}</span></div></div>`).join('');
+    b.querySelectorAll('[data-del]').forEach(x => x.onclick = async () => { if (!confirm(L('Nachricht löschen') + '?')) return; const r = await api('/group/delmsg', { id: cur, mid: +x.dataset.del }); if (r.ok) { msgs = msgs.filter(m => m.id !== +x.dataset.del); paintMsgs(); } });
     b.scrollTop = b.scrollHeight;
   }
   async function send() { const v = $('#frText').value.trim(); if (!v || !cur) return; $('#frText').value = ''; const r = await api('/group/msg', { id: cur, text: v }); if (r.ok) load(); }
