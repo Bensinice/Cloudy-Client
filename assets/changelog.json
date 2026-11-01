@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.32",
+  "date": "2026-11-01",
+  "added": [
+   "Wer den Owner-Tag hat, bekommt Admin-Rechte (Admin-Bereich, keine Sperren/Pausen; benötigt aktualisierten Server)"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.31",
   "date": "2026-11-01",
   "added": [

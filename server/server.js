@@ -17,15 +17,16 @@ save();
 const sessions = new Map(); // token -> key
 const tries = new Map();    // ip -> {n,t}
 const ok = (u, p) => !!u && crypto.timingSafeEqual(Buffer.from(u.hash, 'hex'), Buffer.from(hash(p, u.salt), 'hex'));
-const lockMsg = u => { if (!u || u.admin) return ''; if (u.paused) return 'Konto vorübergehend deaktiviert.'; if (u.banned && (!u.banUntil || u.banUntil > Date.now())) { const r = u.banReason ? ': ' + u.banReason : ''; if (!u.banUntil) return 'Konto dauerhaft gesperrt' + r; const m = Math.ceil((u.banUntil - Date.now()) / 60000); return 'Konto gesperrt für noch ' + (m >= 1440 ? Math.ceil(m / 1440) + ' Tag(e)' : m >= 60 ? Math.ceil(m / 60) + ' Std.' : m + ' Min.') + r; } if (u.banned && u.banUntil) { u.banned = false; u.banUntil = 0; save(); } return ''; };
+const lockMsg = u => { if (!u || isAdm(u)) return ''; if (u.paused) return 'Konto vorübergehend deaktiviert.'; if (u.banned && (!u.banUntil || u.banUntil > Date.now())) { const r = u.banReason ? ': ' + u.banReason : ''; if (!u.banUntil) return 'Konto dauerhaft gesperrt' + r; const m = Math.ceil((u.banUntil - Date.now()) / 60000); return 'Konto gesperrt für noch ' + (m >= 1440 ? Math.ceil(m / 1440) + ' Tag(e)' : m >= 60 ? Math.ceil(m / 60) + ' Std.' : m + ' Min.') + r; } if (u.banned && u.banUntil) { u.banned = false; u.banUntil = 0; save(); } return ''; };
 if (!db.names) db.names = {};
 if (!db.codes) db.codes = {};
 if (!db.gate) db.gate = {};
 if (!db.grants) db.grants = {};
 if (!db.fr) db.fr = { f: {}, msgs: {}, seq: 1 };
+const isAdm = u => !!u && (!!u.admin || (((db.tags || {})[String(u.name).toLowerCase()] || []).includes('owner'))); // Owner-Tag = Admin-Rechte
 const TAGS_OK = ['owner', 'tester', 'plus', 'mod'];
 const tagsOf = k => { const t = ((db.tags || {})[k] || []).filter(x => TAGS_OK.includes(x)), u = db.users[k]; return u && u.admin ? ['owner', ...t.filter(x => x !== 'owner')] : t; }; // Admin-Konten sind automatisch Owner (rot)
-const pub = u => ({ tags: tagsOf(String(u.name).toLowerCase()), names: db.names, name: u.name, admin: !!u.admin, coins: u.admin || u.infCoins ? null : u.coins, mustChange: !!u.mustChange, state: { coins: u.admin || u.infCoins ? null : (u.coins == null ? 100 : u.coins), owned: u.owned || [], equip: u.equip || {}, daily: u.daily || '' } });
+const pub = u => ({ tags: tagsOf(String(u.name).toLowerCase()), names: db.names, name: u.name, admin: isAdm(u), coins: isAdm(u) || u.infCoins ? null : u.coins, mustChange: !!u.mustChange, state: { coins: u.admin || u.infCoins ? null : (u.coins == null ? 100 : u.coins), owned: u.owned || [], equip: u.equip || {}, daily: u.daily || '' } });
 function body(req) { return new Promise(r => { let s = ''; req.on('data', d => { s += d; if (s.length > 1e5) req.destroy(); }); req.on('end', () => { try { r(JSON.parse(s || '{}')); } catch { r({}); } }); }); }
 const send = (res, c, o) => { res.writeHead(c, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' }); res.end(JSON.stringify(o)); };
 function limited(ip) { const t = tries.get(ip) || { n: 0, t: Date.now() }; if (Date.now() - t.t > 60000) { t.n = 0; t.t = Date.now(); } t.n++; tries.set(ip, t); return t.n > 10; }
@@ -126,7 +127,7 @@ http.createServer(async (req, res) => {
     }
     if (url === '/cos/reg' && req.method === 'POST') { // Minecraft-Name <-> Konto + ausgewaehlte Cosmetics (damit andere Cloudy-Spieler sie sehen)
       const mc = String(b.mc || '').toLowerCase(); if (!/^\w{3,16}$/.test(mc)) return send(res, 400, { error: 'Ungueltiger Spielername.' });
-      const own = me.admin ? null : (me.owned || []), eq = {};
+      const own = isAdm(me) ? null : (me.owned || []), eq = {};
       for (const c of ['cape', 'hat', 'wings']) { const v = b.equip && b.equip[c]; if (typeof v === 'string' && /^[a-z0-9-]{3,30}$/.test(v) && v.startsWith(c + '-') && (!own || own.includes(v))) eq[c] = v; }
       db.cos = db.cos || {}; for (const k of Object.keys(db.cos)) if (db.cos[k].u === me.name.toLowerCase() && k !== mc) delete db.cos[k];
       db.cos[mc] = { u: me.name.toLowerCase(), equip: eq, t: Date.now() }; save(); return send(res, 200, { ok: true });
@@ -159,7 +160,7 @@ http.createServer(async (req, res) => {
       c.used.push(me.name.toLowerCase()); save(); return send(res, 200, { ok: true, coins, items: newItems, skipped: (c.items || []).length - newItems.length });
     }
     if (url === '/announce') return send(res, 200, db.announce || { text: '', t: 0 });
-    if (!me.admin) return send(res, 403, { error: 'Nur für Admins.' });
+    if (!isAdm(me)) return send(res, 403, { error: 'Nur für Admins.' });
     if (url === '/admin/announce') { db.announce = { text: String(b.text || '').trim().slice(0, 300), t: b.text ? Date.now() : 0 }; save(); return send(res, 200, { ok: true, ...db.announce }); }
     if (url === '/admin/stats') { const us = Object.values(db.users).filter(u => !u.admin), now = Date.now(); return send(res, 200, { users: us.length, online: us.filter(u => now - (SEEN.get(u.name.toLowerCase()) || 0) < 120000).length, banned: us.filter(u => u.banned && (!u.banUntil || u.banUntil > now)).length, paused: us.filter(u => u.paused).length, coins: us.reduce((a, u) => a + (u.infCoins || u.coins == null ? 0 : u.coins), 0), items: us.reduce((a, u) => a + (u.owned || []).length, 0), codes: Object.keys(db.codes).length, gate: Object.keys(db.gate).length, new7: us.filter(u => now - (u.created || 0) < 7 * 864e5).length, announce: db.announce || { text: '', t: 0 } }); }
     if (url === '/admin/tag') { const k = String(b.name || '').trim().toLowerCase(), tg = String(b.tag || ''); if (!db.users[k] || db.users[k].admin) return send(res, 404, { error: 'Konto nicht gefunden.' }); if (!TAGS_OK.includes(tg)) return send(res, 400, { error: 'Unbekannter Tag.' }); db.tags = db.tags || {}; const a = (db.tags[k] || []).filter(x => x !== tg); if (b.on) a.push(tg); if (a.length) db.tags[k] = a; else delete db.tags[k]; save(); return send(res, 200, { ok: true, tags: a }); }
