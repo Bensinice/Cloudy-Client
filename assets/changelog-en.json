@@ -1,4 +1,7 @@
 {
+ "0.9.53": [
+  "Easy uninstall: Settings → “Uninstall Cloudy” removes Cloudy with one click (Windows, Mac, Linux), optionally including all data"
+ ],
  "0.9.52": [
   "Shop: 4 new 3D hats matching the wings and capes (zigzag hat purple, zigzag top hat blue, shadow hat, ice feather hat)",
   "Bundles: admins combine several items into a bundle with its own price (e.g. cape + wings); players buy them with one click (re-upload the server file!)",

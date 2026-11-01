@@ -1,5 +1,6 @@
 // Cloudy – zusätzliche englische Texte (werden von i18n.js zu EN dazugemischt). Format: "Deutsch": "English"
 window.CLOUDY_EN_EXTRA = {
+"Cloudy deinstallieren": "Uninstall Cloudy", "Das Deinstallationsprogramm wurde nicht gefunden. Nutze Windows → Einstellungen → Apps → Cloudy.": "The uninstaller was not found. Use Windows → Settings → Apps → Cloudy.",
 "Pakete": "Bundles", "Paket kaufen": "Buy bundle", "Paket erstellen": "Create bundle", "Paket speichern": "Save bundle", "Paket löschen": "Delete bundle", "Name des Pakets": "Bundle name", "Preis (CC)": "Price (CC)", "Noch keine Pakete.": "No bundles yet.", "gratis (Admin)": "free (admin)",
 "Wähle mehrere Items (Strg/Cmd + Klick), gib einen Namen und den Preis fürs ganze Paket an.": "Choose several items (Ctrl/Cmd + click), enter a name and the price for the whole bundle.",
 "Du besitzt schon alles aus diesem Paket.": "You already own everything in this bundle.", "Dieses Paket gibt es nicht mehr.": "This bundle no longer exists.", "Ein Item aus dem Paket ist nicht mehr erhältlich.": "An item in the bundle is no longer available.",

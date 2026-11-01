@@ -665,6 +665,27 @@ ipcMain.handle('setAppIcon', (_e, dataUrl) => { // Programm-Symbol (Taskleiste/D
     return true;
   } catch { return false; }
 });
+ipcMain.handle('uninstallInfo', () => ({ packaged: app.isPackaged, how: IS_WIN ? (process.env.PORTABLE_EXECUTABLE_FILE ? 'portable' : 'installer') : IS_MAC ? 'mac' : (process.env.APPIMAGE ? 'appimage' : 'other'), data: app.getPath('userData') }));
+ipcMain.handle('uninstall', (_e, { removeData }) => { // Cloudy vom Rechner entfernen (nach Bestätigung im Fenster)
+  try {
+    if (!app.isPackaged) return { ok: false, error: 'Im Entwicklungsmodus nicht möglich.' };
+    const { spawn } = require('child_process'), data = app.getPath('userData'), det = { detached: true, stdio: 'ignore', windowsHide: true };
+    if (IS_WIN) {
+      const port = process.env.PORTABLE_EXECUTABLE_FILE, bat = path.join(app.getPath('temp'), 'cloudy-uninstall.bat'), lines = ['@echo off', 'ping -n 4 127.0.0.1 >nul'];
+      if (port) lines.push(`del /f /q "${port}"`);
+      else { const un = path.join(path.dirname(process.execPath), 'Uninstall Cloudy.exe'); if (!fs.existsSync(un)) return { ok: false, error: 'Das Deinstallationsprogramm wurde nicht gefunden. Nutze Windows → Einstellungen → Apps → Cloudy.' }; lines.push(`start "" /wait "${un}" /S`); }
+      if (removeData) lines.push(`rmdir /s /q "${data}"`);
+      lines.push('del /f /q "%~f0"'); fs.writeFileSync(bat, lines.join('\r\n') + '\r\n'); spawn('cmd.exe', ['/c', bat], det).unref();
+    } else if (IS_MAC) {
+      const appPath = path.resolve(process.execPath, '..', '..', '..'); if (!appPath.endsWith('.app')) return { ok: false, error: 'Cloudy-App nicht gefunden.' };
+      spawn('/bin/sh', ['-c', `sleep 2; rm -rf "$1"; if [ "$2" = 1 ]; then rm -rf "$3"; fi`, 'sh', appPath, removeData ? '1' : '0', data], det).unref();
+    } else {
+      const f = process.env.APPIMAGE; if (!f) return { ok: false, error: 'Lösche Cloudy über deinen Paketmanager oder entferne die Datei selbst.' };
+      spawn('/bin/sh', ['-c', `sleep 2; rm -f "$1"; if [ "$2" = 1 ]; then rm -rf "$3"; fi`, 'sh', f, removeData ? '1' : '0', data], det).unref();
+    }
+    setTimeout(() => app.quit(), 500); return { ok: true };
+  } catch (e) { return { ok: false, error: String((e && e.message) || e) }; }
+});
 ipcMain.handle('changelogEn', () => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'assets', 'changelog-en.json'), 'utf8')); } catch { return {}; } });
 ipcMain.handle('changelog', () => { try { const j = JSON.parse(fs.readFileSync(path.join(__dirname, 'assets', 'changelog.json'), 'utf8')); return Array.isArray(j) ? j : []; } catch { return []; } });
 ipcMain.handle('appVersion', () => ({ v: app.getVersion(), suffix: (() => { try { return require('./package.json').versionSuffix || ''; } catch { return ''; } })(), repo: DEFAULT_REPO, platform: process.platform, packaged: app.isPackaged }));
@@ -758,7 +779,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.52'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.53'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 

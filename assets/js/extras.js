@@ -410,4 +410,19 @@
     } catch {}
   }
   setTimeout(themedIcon, 1500); setInterval(themedIcon, 4000);
+
+  // ---- Cloudy deinstallieren (Einstellungen → Spielordner-Reihe) ----
+  function uninstallUi() {
+    const rj = $('#resetJava'); if (!rj || $('#uninst')) return;
+    const b = document.createElement('button'); b.className = 'btn ghost'; b.id = 'uninst'; b.textContent = en() ? 'Uninstall Cloudy' : 'Cloudy deinstallieren'; rj.after(b);
+    b.onclick = async () => {
+      const info = await window.cloudy.uninstallInfo().catch(() => null);
+      if (!info || !info.packaged) { alert(en() ? 'Not possible in development mode.' : 'Im Entwicklungsmodus nicht möglich.'); return; }
+      if (!confirm(en() ? 'Really uninstall Cloudy? The program will be removed.' : 'Cloudy wirklich deinstallieren? Das Programm wird entfernt.')) return;
+      const rd = confirm(en() ? 'Also delete all your data (accounts, skins, settings, game files)?\nOK = delete everything, Cancel = keep the data.' : 'Auch alle deine Daten löschen (Konten, Skins, Einstellungen, Spieldateien)?\nOK = alles löschen, Abbrechen = Daten behalten.');
+      const r = await window.cloudy.uninstall({ removeData: rd }).catch(() => ({ ok: false, error: '?' }));
+      if (!r.ok) alert(r.error || (en() ? 'Failed.' : 'Das hat nicht geklappt.'));
+    };
+  }
+  uninstallUi(); setTimeout(uninstallUi, 1500);
 })();

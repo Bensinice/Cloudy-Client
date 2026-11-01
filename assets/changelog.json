@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.53",
+  "date": "2026-11-01",
+  "added": [
+   "Einfach deinstallieren: Einstellungen → „Cloudy deinstallieren“ entfernt Cloudy mit einem Klick (Windows, Mac, Linux), auf Wunsch samt allen Daten"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.52",
   "date": "2026-11-01",
   "added": [
