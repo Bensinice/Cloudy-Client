@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.35",
+  "date": "2026-11-01",
+  "added": [
+   "Zugangscode-Bildschirm: Knopf „Admin?“ – damit melden sich nur Admin-Konten (und Owner) direkt an, ohne Zugangscode"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.34",
   "date": "2026-11-01",
   "added": [

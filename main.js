@@ -142,6 +142,16 @@ ipcMain.handle('gate', async (_e, code) => { // Zugangscode: neue Codes kommen v
   }
   return { ok: cfgPatch({}).gateOk === true };
 });
+ipcMain.handle('gateAdmin', async (_e, { user, pass } = {}) => { // Admin-Anmeldung am Zugangscode-Bildschirm: nur Admin-Konten kommen so hinein
+  if (!srvCfg()) return { ok: false, error: 'No account server configured.' };
+  let r; try { r = await srvCall('/login', { user: String(user || '').trim(), pass: String(pass || ''), grant: '' }); } catch { return { ok: false, error: 'The account server is not reachable.' }; }
+  if (!r.token || !r.user) return { ok: false, error: r.error || 'Wrong name or password.' };
+  if (!r.user.admin) return { ok: false, error: 'This is not an admin account.' };
+  cfgPatch({ gateOk: true, gateTok: '' });
+  if (r.user.mustChange) { currentUser = null; pendingKey = r.user.name.toLowerCase(); srvPendTok = r.token; pendingRemember = true; return { ok: true, user: r.user.name, mustChange: true }; }
+  const key = srvMirror(r.user); srvOpen(key, r.token, true);
+  return { ok: true, user: r.user.name, admin: true };
+});
 const gateNeedsSrv = { ok: false, error: 'Zugangscodes brauchen den Konto-Server.' };
 ipcMain.handle('gateList', async () => (srvCfg() && adminOnly()) ? ((await srvCall('/admin/gatecodes', {}, srvTok).catch(() => ({}))).codes || []) : []);
 ipcMain.handle('gateCreate', async (_e, o) => { if (!adminOnly()) return { ok: false, error: 'Nur für Admins.' }; if (!srvCfg()) return gateNeedsSrv; const r = await srvCall('/admin/gatecreate', o || {}, srvTok).catch(() => null); return r ? { ok: !!r.ok, code: r.code, error: r.error } : { ...SRV_DOWN, ok: false }; });
@@ -654,7 +664,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.34'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.35'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); if (!j) return false; try { const z = openZip(j); try { return z.has('app/cloudy/client/CosmeticsScreen.class') && z.has('cloudy-cos/build-' + CLIENT_BUILD + '.txt'); } finally { z.close(); } } catch { return false; } };
 
 // Eigener Classpath fuer neue Minecraft-Versionen (26.x): die Bibliotheksliste von minecraft-launcher-core bleibt dort leer (Fehler: KnotClient nicht gefunden)

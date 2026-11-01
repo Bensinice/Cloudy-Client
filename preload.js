@@ -3,7 +3,7 @@ const inv = (c, ...a) => ipcRenderer.invoke(c, ...a);
 contextBridge.exposeInMainWorld('cloudy', {
   admTag: o => inv('admTag', o), admStats: () => inv('admStats'), admAnnounce: t => inv('admAnnounce', t), announceGet: () => inv('announceGet'), censorSet: on => inv('censorSet', on), censorGet: () => inv('censorGet'), censorText: t => ipcRenderer.sendSync('censorText', t),
   versions: s => inv('versions', s),
-  toolTex: v => inv('toolTex', v), texCfg: v => inv('texCfg', v), gate: v => inv('gate', v), gateList: () => inv('gateList'), gateCreate: o => inv('gateCreate', o), gateDelete: (c, r) => inv('gateDelete', c, r), gateRevokeUser: n => inv('gateRevokeUser', n),
+  toolTex: v => inv('toolTex', v), texCfg: v => inv('texCfg', v), gate: v => inv('gate', v), gateAdmin: o => inv('gateAdmin', o), gateList: () => inv('gateList'), gateCreate: o => inv('gateCreate', o), gateDelete: (c, r) => inv('gateDelete', c, r), gateRevokeUser: n => inv('gateRevokeUser', n),
   launch: o => inv('launch', o),
   openFolder: () => inv('openFolder'),
   modsSearch: o => inv('modsSearch', o),
