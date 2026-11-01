@@ -348,6 +348,35 @@
   }
   async function rawCape(id) { const im = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = ITEMS[id].raw; }); const cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height; cv.getContext('2d').drawImage(im, 0, 0); return cv.toDataURL('image/png'); }
   let shopFilt = 'all'; try { shopFilt = localStorage.getItem('cloudy.shopFilt') || 'all'; } catch {}
+
+  // ---------- Limited-Items (Admin legt fest: Coins oder Code, Anzahl, Preis, Dauer) ----------
+  const escL = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function limHtml() {
+    const list = shop.limited || [], fmt = t => new Date(t).toLocaleString();
+    const card = o => {
+      const own = shop.owned.includes(o.id), done = o.over && !own;
+      return `<div class="glass shi ${own ? 'sel' : ''}"><div class="i3h" data-i3="${o.id}"></div><b>${escL(o.name)}</b>
+        <small>${o.mode === 'coins' ? cc(o.price) : 'Nur mit Code'} · ${o.left}/${o.stock} übrig${o.until ? ' · bis ' + fmt(o.until) : ''}</small>${o.note ? `<small>${escL(o.note)}</small>` : ''}
+        ${own ? '<button class="btn ghost" disabled>Gehört dir</button>' : done ? '<button class="btn ghost" disabled>Vorbei / ausverkauft</button>' : o.mode === 'code' ? `<input class="field" data-lim-code="${o.id}" placeholder="Code" autocomplete="off" spellcheck="false"><button class="btn" data-lim-get="${o.id}">Einlösen</button>` : `<button class="btn" data-lim-get="${o.id}">${shop.admin ? 'Holen (gratis)' : 'Kaufen'}</button>`}
+        ${shop.admin ? `<small>Verkauft: ${o.sold || 0}${o.code ? ' · Code: <b>' + escL(o.code) + '</b>' : ''}</small><button class="btn ghost" data-lim-edit="${o.id}">Bearbeiten</button><button class="btn ghost" data-lim-del="${o.id}">Beenden</button>` : ''}</div>`;
+    };
+    let h = `<h3 class="shc">⏳ Limited</h3>`;
+    h += list.length ? `<div class="row shrow">${list.map(card).join('')}</div>` : `<p class="muted">${shop.admin ? 'Noch kein Limited-Item – lege unten eins fest.' : 'Gerade gibt es keine Limited-Items.'}</p>`;
+    if (shop.admin) h += `<div class="glass set wide" id="limForm"><h3>Limited-Item festlegen</h3><p class="muted">Das Item verschwindet aus dem normalen Shop und gibt es nur noch hier – mit begrenzter Anzahl, für Coins oder mit einem Code.</p>
+      <div class="tools"><select id="limId" class="field">${shop.catalog.map(i => `<option value="${i.id}">${escL(i.name)} (${i.id})</option>`).join('')}</select><select id="limMode" class="field"><option value="coins">Für Coins</option><option value="code">Mit Code</option></select></div>
+      <div class="tools"><input id="limPrice" class="field" type="number" min="0" placeholder="Preis in CC" value="500"><input id="limStock" class="field" type="number" min="1" placeholder="Wie viele gibt es?" value="10"><input id="limHours" class="field" type="number" min="0" placeholder="Dauer in Stunden (0 = unbegrenzt)" value="0"></div>
+      <div class="tools"><input id="limCode" class="field" placeholder="Code (leer = zufällig, nur bei „Mit Code“)" autocomplete="off"><input id="limNote" class="field" placeholder="Hinweis, z. B. Event-Belohnung (optional)"></div>
+      <div class="tools"><label class="muted"><input id="limReset" type="checkbox"> Bestand zurücksetzen (alle dürfen es wieder holen)</label><button class="btn" id="limSave">Speichern</button></div></div>`;
+    return h;
+  }
+  function wireLim() {
+    const msg = t => { const m = $('#shopMsg'); if (m) m.textContent = t || ''; }, take = r => { if (r && r.state) { shop = r.state; window.shopCatalog = shop.catalog; } msg(r && !r.ok ? L(r.error || 'Fehler') : ''); paintShop(); };
+    $$('[data-lim-get]').forEach(b => b.onclick = async () => { const id = b.dataset.limGet, inp = document.querySelector(`[data-lim-code="${id}"]`); b.disabled = true; take(await window.cloudy.limClaim({ id, code: inp ? inp.value : '' })); });
+    $$('[data-lim-code]').forEach(i => i.onkeydown = e => { if (e.key === 'Enter') { const b = document.querySelector(`[data-lim-get="${i.dataset.limCode}"]`); b && b.click(); } });
+    $$('[data-lim-del]').forEach(b => b.onclick = async () => { const o = (shop.limited || []).find(x => x.id === b.dataset.limDel); if (o && confirm(o.name + ' – ' + L('Limited-Angebot beenden?'))) take(await window.cloudy.limAdmin({ id: o.id, del: true })); });
+    $$('[data-lim-edit]').forEach(b => b.onclick = () => { const o = (shop.limited || []).find(x => x.id === b.dataset.limEdit); if (!o) return; $('#limId').value = o.id; $('#limMode').value = o.mode; $('#limPrice').value = o.price; $('#limStock').value = o.stock; $('#limCode').value = o.code || ''; $('#limNote').value = o.note || ''; $('#limHours').value = 0; $('#limForm').scrollIntoView({ block: 'center' }); });
+    const sv = $('#limSave'); if (sv) sv.onclick = async () => { sv.disabled = true; take(await window.cloudy.limAdmin({ id: $('#limId').value, mode: $('#limMode').value, price: +$('#limPrice').value, stock: +$('#limStock').value, hours: +$('#limHours').value, code: $('#limCode').value, note: $('#limNote').value, reset: $('#limReset').checked })); };
+  }
   function paintShop() {
     paintCoins(); paintCl(); const box = $('#shopItems'); if (!box || !shop) return; regCustom();
     const adm = $('#shopAdmin'); if (adm) adm.style.display = shop.admin ? '' : 'none';
@@ -360,6 +389,8 @@
       return `<div class="glass shi ${on ? 'sel' : ''}"><div class="i3h" data-i3="${i.id}"></div><b ${shop.admin ? `contenteditable="plaintext-only" spellcheck="false" title="Admin: Namen anklicken und ändern" data-rn="${i.id}"` : ''}>${i.name}</b><small>${cc(i.price)}${shop.admin ? ' · gratis (Admin)' : ''}</small>
         ${shop.admin ? `<button class="btn ghost ${i.hidden ? 'tagon' : ''}" data-hide="${i.id}|${i.hidden ? 0 : 1}" title="Admin: ${i.hidden ? 'Wieder im Shop anzeigen' : 'Im Shop verstecken (niemand kann es mehr kaufen)'}">${i.hidden ? '🙈 Versteckt – zeigen' : '👁 Verstecken'}</button>` : ''}        ${shop.admin && i.custom ? `<button class="btn ghost" data-ci-del="${i.id}">Löschen</button>` : ''}${own ? `<button class="btn ${on ? 'ghost' : ''}" data-eq="${i.id}" data-cat="${cat}">${on ? 'Ablegen' : 'Anlegen'}</button>${!shop.admin && !i.custom ? `<button class="btn ghost" data-gift="${i.id}">🎁 Verschenken</button>` : ''}` : `<button class="btn" data-buy="${i.id}">Kaufen</button>`}</div>`;
     }).join('')}</div>`).join('');
+    box.insertAdjacentHTML('beforeend', limHtml());
+    wireLim();
     $$('#shopItems [data-i3]').forEach(h => { const w = item3d(h.dataset.i3); h.appendChild(w); i3s.add(w.firstChild); });
     $$('[data-rn]').forEach(b => { b.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); b.blur(); } }; b.onblur = async () => { const n = b.textContent.trim(), it = shop.catalog.find(c => c.id === b.dataset.rn); if (!it || n === it.name) return; const r = await window.cloudy.shopRename({ id: it.id, name: n }); if (r.state) { shop = r.state; window.shopCatalog = shop.catalog; } $('#shopMsg').textContent = r.ok ? '' : L(r.error); paintShop(); }; });
     $$('[data-hide]').forEach(b => b.onclick = async () => { const [id, on] = b.dataset.hide.split('|'); const r = await window.cloudy.shopHide({ id, on: on === '1' }); if (r.state) { shop = r.state; window.shopCatalog = shop.catalog; } $('#shopMsg').textContent = r.ok ? '' : L(r.error); paintShop(); });

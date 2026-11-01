@@ -1,5 +1,16 @@
 [
  {
+  "v": "0.9.38",
+  "date": "2026-11-01",
+  "added": [
+   "Limited-Items: ganz unten im Shop gibt es jetzt einen Bereich „Limited“. Der Admin legt fest, welches Item, ob man es mit Coins oder mit einem Code bekommt, wie viele es gibt, den Preis, die Dauer und einen Hinweis (benötigt aktualisierten Server)"
+  ],
+  "fixed": [
+   "Zickzack-Schlangen-Umhang und GHG-Umhang nutzen jetzt das 3D-Umhangmodell mit der Textur darauf"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.37",
   "date": "2026-11-01",
   "added": [],

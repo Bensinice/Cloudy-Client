@@ -664,7 +664,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.37'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.38'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); if (!j) return false; try { const z = openZip(j); try { return z.has('app/cloudy/client/CosmeticsScreen.class') && z.has('cloudy-cos/build-' + CLIENT_BUILD + '.txt'); } finally { z.close(); } } catch { return false; } };
 
 // Eigener Classpath fuer neue Minecraft-Versionen (26.x): die Bibliotheksliste von minecraft-launcher-core bleibt dort leer (Fehler: KnotClient nicht gefunden)
@@ -1362,6 +1362,8 @@ function syncShopPacks(dir, equip) { // gewählte Totem-/Hotbar-Resourcepacks in
   try { const k = SKIES[equip.sky]; cfgPatch({ skyShop: k ? { sky: [k[0], k[1]], dark: !!k[2] } : null }); } catch {}
 }
 const cosFile = path.join(app.getPath('userData'), 'cosmetics.json');
+let limList = []; // Limited-Items vom Server (Admin sieht zusaetzlich Code und Verkaeufe)
+async function limPull() { try { if (!srvCfg() || !srvTok) { limList = []; return; } const r = await srvCall('/limited', {}, srvTok); if (r && r.ok) limList = Array.isArray(r.items) ? r.items : []; } catch {} }
 const hiddenFile = path.join(app.getPath('userData'), 'shop-hidden.json'); // vom Admin versteckte Items (nicht mehr kaufbar)
 let shopHidden = []; try { const j = JSON.parse(fs.readFileSync(hiddenFile, 'utf8')); if (Array.isArray(j)) shopHidden = j.filter(x => typeof x === 'string'); } catch {}
 const setHidden = a => { shopHidden = (Array.isArray(a) ? a : []).filter(x => typeof x === 'string').slice(0, 500); try { fs.writeFileSync(hiddenFile, JSON.stringify(shopHidden)); } catch {} };
@@ -1372,7 +1374,7 @@ function shopOf(u) {
   if (u.coins == null) u.coins = 100; if (!u.owned) u.owned = []; if (!u.equip) u.equip = {};
   for (const k of Object.keys(u.equip)) if (!CATALOG.some(c => c.id === u.equip[k])) delete u.equip[k]; // entfernte Items (alte Z4-/Galaxie-Sachen) nicht mehr ausrüsten
   const nm = shopNames();
-  return { catalog: CATALOG.filter(c => u.admin || !shopHidden.includes(c.id) || (u.owned || []).includes(c.id)).map(c => { const o = nm[c.id] ? { ...c, name: nm[c.id] } : { ...c }; if (shopHidden.includes(c.id)) o.hidden = true; return o; }), admin: !!u.admin, coins: u.admin || u.infCoins ? null : u.coins, owned: u.admin ? CATALOG.map(c => c.id) : u.owned, equip: u.equip, dailyReady: !u.admin && !u.infCoins && u.daily !== todayStr() };
+  return { limited: limList.map(l => { const c = CATALOG.find(x => x.id === l.id); return { ...l, name: nm[l.id] || (c && c.name) || l.id, cat: c ? c.cat : l.id.split('-')[0] }; }), catalog: CATALOG.filter(c => (u.admin || !shopHidden.includes(c.id) || (u.owned || []).includes(c.id)) && (u.admin || !limList.some(l => l.id === c.id) || (u.owned || []).includes(c.id))).map(c => { const o = nm[c.id] ? { ...c, name: nm[c.id] } : { ...c }; if (shopHidden.includes(c.id)) o.hidden = true; return o; }), admin: !!u.admin, coins: u.admin || u.infCoins ? null : u.coins, owned: u.admin ? CATALOG.map(c => c.id) : u.owned, equip: u.equip, dailyReady: !u.admin && !u.infCoins && u.daily !== todayStr() };
 }
 function syncCosFromGame() { // im Spiel geänderte Auswahl (Cosmetics-Menü) in dein Konto übernehmen
   try {
@@ -1389,6 +1391,25 @@ function shopWrite(fn, quiet) { // Änderung am Konto des angemeldeten Nutzers s
   try { fs.writeFileSync(cosFile, JSON.stringify({ user: u.name, equip: u.equip || {}, owned: u.admin ? CATALOG.map(c => c.id) : (u.owned || []) })); } catch {}
   return { ...r, ok: r.ok !== false, state: shopOf(u) };
 }
+ipcMain.handle('limClaim', async (_e, { id, code }) => { // Limited-Item holen: Der Server zaehlt den Bestand und prueft den Code, der Launcher zieht die Coins ab
+  if (!srvCfg() || !srvTok) return { ok: false, error: 'Limited-Items brauchen den Konto-Server und eine Anmeldung.' };
+  const a = readAuth(), cu = currentUser && a.users[currentUser.toLowerCase()]; if (!cu) return { ok: false, error: 'Bitte zuerst bei Cloudy anmelden.' };
+  shopOf(cu); await limPull(); const off = limList.find(l => l.id === id); if (!off) return { ok: false, error: 'Dieses Limited-Item gibt es nicht mehr.' };
+  if (!cu.admin && !cu.infCoins && !cu.owned.includes(id) && off.mode === 'coins' && cu.coins < off.price) return { ok: false, error: `Dir fehlen ${off.price - cu.coins} CC.` };
+  const r = await srvCall('/limited/claim', { id, code: String(code || '') }, srvTok).catch(() => null);
+  if (!r) return { ok: false, error: 'Der Konto-Server ist nicht erreichbar.' };
+  if (!r.ok) return { ok: false, error: r.error || 'Das hat nicht geklappt.' };
+  await limPull();
+  return shopWrite(u => { if (!u.owned.includes(id)) u.owned.push(id); if (!u.admin && !u.infCoins && r.price && !r.already) u.coins = Math.max(0, u.coins - r.price); });
+});
+ipcMain.handle('limAdmin', async (_e, o) => { // Admin: Limited-Item anlegen/aendern/beenden
+  const a = readAuth(), cu = currentUser && a.users[currentUser.toLowerCase()];
+  if (!cu || !cu.admin) return { ok: false, error: 'Nur Admins.' };
+  if (!srvCfg() || !srvTok) return { ok: false, error: 'Brauche den Konto-Server.' };
+  const r = await srvCall('/admin/limited', { id: String(o.id || ''), del: !!o.del, mode: o.mode, price: o.price, stock: o.stock, code: o.code, hours: o.hours, note: o.note, reset: !!o.reset }, srvTok).catch(() => null);
+  if (!r || !r.ok) return { ok: false, error: (r && r.error) || 'Der Server hat das nicht gespeichert (Server aktuell?).' };
+  limList = r.items || []; return shopWrite(() => ({}));
+});
 ipcMain.handle('shopHide', async (_e, { id, on }) => {
   const a = readAuth(), cu = currentUser && a.users[currentUser.toLowerCase()];
   if (!cu || !cu.admin) return { ok: false, error: 'Nur Admins können Items verstecken.' };
@@ -1408,12 +1429,13 @@ ipcMain.handle('shopRename', async (_e, { id, name }) => {
     try { fs.writeFileSync(namesFile, JSON.stringify(nm, null, 1)); } catch { return { ok: false, error: 'Name konnte nicht gespeichert werden.' }; }
   });
 });
-ipcMain.handle('shopState', async () => { await srvPull(); const r = shopWrite(() => ({}), true); return r.ok ? r.state : null; });
-{ const _ih = ipcMain.handle.bind(ipcMain); ipcMain.handle = (n, f) => _ih(n, ['shopBuy', 'shopEquip', 'shopDaily', 'shopGift'].includes(n) ? async (...a) => { await srvPull(); return f(...a); } : f); } // vor jeder Shop-Aktion den neuesten Stand vom Server holen (Geschenke, Admin-Änderungen)
+ipcMain.handle('shopState', async () => { await srvPull(); await limPull(); const r = shopWrite(() => ({}), true); return r.ok ? r.state : null; });
+{ const _ih = ipcMain.handle.bind(ipcMain); ipcMain.handle = (n, f) => _ih(n, ['shopBuy', 'shopEquip', 'shopDaily', 'shopGift', 'limClaim'].includes(n) ? async (...a) => { await srvPull(); return f(...a); } : f); } // vor jeder Shop-Aktion den neuesten Stand vom Server holen (Geschenke, Admin-Änderungen)
 ipcMain.handle('shopBuy', (_e, id) => shopWrite(u => {
   const it = CATALOG.find(c => c.id === id); if (!it) return { ok: false, error: 'Unbekanntes Item.' };
   if (u.admin) return {}; if (u.owned.includes(id)) return { ok: false, error: 'Das besitzt du schon.' };
   if (shopHidden.includes(id)) return { ok: false, error: 'Dieses Item ist nicht mehr erhältlich.' };
+  if (limList.some(l => l.id === id)) return { ok: false, error: 'Dieses Item gibt es nur als Limited-Item (ganz unten im Shop).' };
   if (u.infCoins) { u.owned.push(id); return {}; } // Tester: unendlich Coins, nichts wird abgezogen
   if (u.coins < it.price) return { ok: false, error: `Dir fehlen ${it.price - u.coins} CC.` };
   u.coins -= it.price; u.owned.push(id);

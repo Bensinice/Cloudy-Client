@@ -23,7 +23,8 @@ public final class ZZ4 {
 	private static final class Mesh { float[] v; int[] idx; int poly; float px, py, pz; }
 	private static final Map<String, Identifier> TEX = new HashMap<>();
 
-	public static final String[] PACKS = {"zz4", "zz4m", "zz3", "zz3s", "zz5", "zk5", "yy", "zv", "zs", "zf", "zb"};
+	public static final String[] PACKS = {"zz4", "zz4m", "zz3", "zz3s", "zz5", "zk5", "yy", "zv", "zs", "zf", "zb", "zbs", "ghg"};
+	private static final java.util.Set<String> CONLY = java.util.Set.of("zbs", "ghg"); // reine Umhang-Pakete (Z4-Umhangmodell mit eigener Textur)
 	private static final java.util.Set<String> WONLY = java.util.Set.of("zv", "zs", "zf", "zb"); // reine Fluegel-Pakete (flache Fluegel aus Cosmetica-Modellen)
 	private static final Map<String, Mesh[]> MESHES = new HashMap<>();
 	private static final java.util.Set<String> FAILED = new java.util.HashSet<>();
@@ -36,6 +37,7 @@ public final class ZZ4 {
 		String c = id.substring(0, i), k = id.substring(i + 1);
 		if (!c.equals("cape") && !c.equals("wings") && !c.equals("shield")) return null;
 		if (WONLY.contains(k) && !c.equals("wings")) return null;
+		if (CONLY.contains(k) && !c.equals("cape")) return null;
 		for (String p : PACKS) if (p.equals(k)) return (c.equals("shield") && k.equals("zk5")) || (c.equals("wings") && k.equals("yy")) ? null : k;
 		return null;
 	}

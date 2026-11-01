@@ -113,7 +113,7 @@ public final class Cosmetics {
 		"wings-zv", "wings-zs", "wings-zf", "wings-zb", "cape-zbs", "cape-ghg"};
 
 	/** Umhaenge aus normalen 64x32-Texturen (in den Mod gepackt): fuer dich und fuer andere Cloudy-Spieler. */
-	public static boolean isTexCape(String id) { return "cape-zbs".equals(id) || "cape-ghg".equals(id); }
+	public static boolean isTexCape(String id) { return false; } // zbs/ghg laufen jetzt ueber das Z4-Umhangmodell (ZZ4)
 	private static final java.util.Map<String, Identifier> CAPETEX = new java.util.HashMap<>();
 	public static Identifier capeTex(String id) {
 		if (!isTexCape(id)) return null;

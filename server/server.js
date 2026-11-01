@@ -24,6 +24,17 @@ if (!db.gate) db.gate = {};
 if (!db.grants) db.grants = {};
 if (!db.fr) db.fr = { f: {}, msgs: {}, seq: 1 };
 const isAdm = u => !!u && (!!u.admin || (((db.tags || {})[String(u.name).toLowerCase()] || []).includes('owner'))); // Owner-Tag = Admin-Rechte
+const LIM = (db.lim = db.lim || {});
+const limView = (key, adm) => Object.values(LIM).map(l => ({ id: l.id, mode: l.mode, price: l.price, stock: l.stock, left: Math.max(0, l.stock - l.sold), until: l.until || 0, note: l.note || '', mine: l.claimed.includes(key), over: !!(l.until && l.until < Date.now()) || l.sold >= l.stock, ...(adm ? { code: l.code || '', sold: l.sold } : {}) }));
+const limSet = b => { const id = String(b.id || ''); if (!/^[a-z]+-[a-z0-9-]{1,30}$/.test(id)) return 'Ungueltiges Item.'; if (b.del) { delete LIM[id]; return ''; }
+  const mode = b.mode === 'code' ? 'code' : 'coins', old = LIM[id] || { sold: 0, claimed: [] };
+  const price = Math.max(0, Math.min(1e6, Math.round(+b.price || 0))), stock = Math.max(1, Math.min(1e5, Math.round(+b.stock || 1))), hrs = Math.max(0, Math.min(8760, +b.hours || 0));
+  let code = String(b.code || '').trim().slice(0, 30); if (mode === 'code' && !code) code = Math.random().toString(36).slice(2, 10).toUpperCase();
+  LIM[id] = { id, mode, price, stock, code: mode === 'code' ? code : '', until: hrs ? Date.now() + hrs * 3600e3 : 0, note: String(b.note || '').slice(0, 80), sold: b.reset ? 0 : old.sold, claimed: b.reset ? [] : old.claimed, t: old.t || Date.now() }; return ''; };
+const limClaim = (key, b) => { const l = LIM[String(b.id || '')]; if (!l) return { error: 'Dieses Limited-Item gibt es nicht.' }; if (l.claimed.includes(key)) return { ok: true, already: true, price: 0 };
+  if (l.until && l.until < Date.now()) return { error: 'Die Aktion ist abgelaufen.' }; if (l.sold >= l.stock) return { error: 'Ausverkauft.' };
+  if (l.mode === 'code' && String(b.code || '').trim().toLowerCase() !== String(l.code).toLowerCase()) return { error: 'Falscher Code.' };
+  l.sold++; l.claimed.push(key); return { ok: true, price: l.mode === 'coins' ? l.price : 0 }; };
 const TAGS_OK = ['owner', 'tester', 'plus', 'mod'];
 const tagsOf = k => { const t = ((db.tags || {})[k] || []).filter(x => TAGS_OK.includes(x)), u = db.users[k]; return u && u.admin ? ['owner', ...t.filter(x => x !== 'owner')] : t; }; // Admin-Konten sind automatisch Owner (rot)
 const pub = u => ({ hidden: db.hide || [], tags: tagsOf(String(u.name).toLowerCase()), names: db.names, name: u.name, admin: isAdm(u), coins: isAdm(u) || u.infCoins ? null : u.coins, mustChange: !!u.mustChange, state: { coins: u.admin || u.infCoins ? null : (u.coins == null ? 100 : u.coins), owned: u.owned || [], equip: u.equip || {}, daily: u.daily || '' } });
@@ -120,7 +131,7 @@ http.createServer(async (req, res) => {
     if (url === '/state' && req.method === 'POST') { // Shop-Stand des Kontos speichern (Coins, gekaufte Items, Auswahl)
       if (me.admin) return send(res, 200, { ok: true });
       if (!me.infCoins && Number.isFinite(+b.coins)) me.coins = Math.max(0, Math.min(1e9, Math.round(+b.coins)));
-      if (Array.isArray(b.owned)) me.owned = [...new Set([...(me.owned || []), ...rmBlock(me.name.toLowerCase(), b.owned.filter(x => typeof x === 'string' && (!(db.hide || []).includes(x) || (me.owned || []).includes(x))))])].slice(0, 500); // nur hinzufügen: Entfernen/Verschenken passiert nur auf dem Server
+      if (Array.isArray(b.owned)) me.owned = [...new Set([...(me.owned || []), ...rmBlock(me.name.toLowerCase(), b.owned.filter(x => typeof x === 'string' && (!(db.hide || []).includes(x) || (me.owned || []).includes(x)) && (!LIM[x] || LIM[x].claimed.includes(me.name.toLowerCase()) || (me.owned || []).includes(x))))])].slice(0, 500); // nur hinzufügen: Entfernen/Verschenken passiert nur auf dem Server
       if (b.equip && typeof b.equip === 'object') me.equip = Object.fromEntries(Object.entries(b.equip).filter(([k, v]) => typeof v === 'string').slice(0, 20));
       if (typeof b.daily === 'string') me.daily = b.daily.slice(0, 20);
       save(); return send(res, 200, { ok: true });
@@ -160,9 +171,12 @@ http.createServer(async (req, res) => {
       c.used.push(me.name.toLowerCase()); save(); return send(res, 200, { ok: true, coins, items: newItems, skipped: (c.items || []).length - newItems.length });
     }
     if (url === '/announce') return send(res, 200, db.announce || { text: '', t: 0 });
+    if (url === '/limited') return send(res, 200, { ok: true, items: limView(me.name.toLowerCase(), isAdm(me)) });
+    if (url === '/limited/claim') { const r = limClaim(me.name.toLowerCase(), b); if (r.ok && !r.already) save(); return send(res, r.error ? 400 : 200, r); }
     if (!isAdm(me)) return send(res, 403, { error: 'Nur für Admins.' });
     if (url === '/admin/announce') { db.announce = { text: String(b.text || '').trim().slice(0, 300), t: b.text ? Date.now() : 0 }; save(); return send(res, 200, { ok: true, ...db.announce }); }
     if (url === '/admin/stats') { const us = Object.values(db.users).filter(u => !u.admin), now = Date.now(); return send(res, 200, { users: us.length, online: us.filter(u => now - (SEEN.get(u.name.toLowerCase()) || 0) < 120000).length, banned: us.filter(u => u.banned && (!u.banUntil || u.banUntil > now)).length, paused: us.filter(u => u.paused).length, coins: us.reduce((a, u) => a + (u.infCoins || u.coins == null ? 0 : u.coins), 0), items: us.reduce((a, u) => a + (u.owned || []).length, 0), codes: Object.keys(db.codes).length, gate: Object.keys(db.gate).length, new7: us.filter(u => now - (u.created || 0) < 7 * 864e5).length, announce: db.announce || { text: '', t: 0 } }); }
+    if (url === '/admin/limited') { const e = limSet(b); if (e) return send(res, 400, { error: e }); save(); return send(res, 200, { ok: true, items: limView(me.name.toLowerCase(), true) }); }
     if (url === '/admin/hide') { const id = String(b.id || ''); if (!/^[a-z]+-[a-z0-9-]{1,30}$/.test(id)) return send(res, 400, { error: 'Ungueltiges Item.' }); db.hide = (db.hide || []).filter(x => x !== id); if (b.on) db.hide.push(id); save(); return send(res, 200, { ok: true, hidden: db.hide }); }
     if (url === '/admin/tag') { const k = String(b.name || '').trim().toLowerCase(), tg = String(b.tag || ''); if (!db.users[k] || db.users[k].admin) return send(res, 404, { error: 'Konto nicht gefunden.' }); if (!TAGS_OK.includes(tg)) return send(res, 400, { error: 'Unbekannter Tag.' }); db.tags = db.tags || {}; const a = (db.tags[k] || []).filter(x => x !== tg); if (b.on) a.push(tg); if (a.length) db.tags[k] = a; else delete db.tags[k]; save(); return send(res, 200, { ok: true, tags: a }); }
     if (url === '/admin/users') return send(res, 200, { users: Object.values(db.users).filter(u => !u.admin).map(u => ({ name: u.name, coins: u.infCoins ? '∞' : (u.coins == null ? 100 : u.coins), owned: (u.owned || []).length, inf: !!u.infCoins, banned: !!u.banned && (!u.banUntil || u.banUntil > Date.now()), until: u.banUntil || 0, paused: !!u.paused, items: u.owned || [], reason: u.banReason || '', created: u.created, tags: (db.tags || {})[u.name.toLowerCase()] || [], gate: (Object.values(db.grants).find(v => v && v.u === u.name.toLowerCase()) || {}).c || '' })) });

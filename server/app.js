@@ -21,7 +21,18 @@ let frT = null; const saveFr = async () => { clearTimeout(frT); frT = setTimeout
 const saveCodes = () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['codes', JSON.stringify(CODES)]);
 const lockMsg = u => { if (!u || isAdm(u)) return ''; if (u.paused) return 'Konto vorübergehend deaktiviert.'; const un = Number(u.ban_until) || 0; if (u.banned && (!un || un > Date.now())) { const r = u.ban_reason ? ': ' + u.ban_reason : ''; if (!un) return 'Konto dauerhaft gesperrt' + r; const m = Math.ceil((un - Date.now()) / 60000); return 'Konto gesperrt für noch ' + (m >= 1440 ? Math.ceil(m / 1440) + ' Tag(e)' : m >= 60 ? Math.ceil(m / 60) + ' Std.' : m + ' Min.') + r; } return ''; };
 const isAdm = u => !!u && (!!u.admin || ((TAGS[String(u.name).toLowerCase()] || []).includes('owner'))); // Owner-Tag = Admin-Rechte
+let LIM = {}; // Limited-Items: { itemId: { mode, price, stock, sold, code, until, note, claimed[] } }
 let HIDE = []; // vom Admin im Shop versteckte Items (nicht mehr kaufbar)
+const limView = (key, adm) => Object.values(LIM).map(l => ({ id: l.id, mode: l.mode, price: l.price, stock: l.stock, left: Math.max(0, l.stock - l.sold), until: l.until || 0, note: l.note || '', mine: l.claimed.includes(key), over: !!(l.until && l.until < Date.now()) || l.sold >= l.stock, ...(adm ? { code: l.code || '', sold: l.sold } : {}) }));
+const limSet = b => { const id = String(b.id || ''); if (!/^[a-z]+-[a-z0-9-]{1,30}$/.test(id)) return 'Ungueltiges Item.'; if (b.del) { delete LIM[id]; return ''; }
+  const mode = b.mode === 'code' ? 'code' : 'coins', old = LIM[id] || { sold: 0, claimed: [] };
+  const price = Math.max(0, Math.min(1e6, Math.round(+b.price || 0))), stock = Math.max(1, Math.min(1e5, Math.round(+b.stock || 1))), hrs = Math.max(0, Math.min(8760, +b.hours || 0));
+  let code = String(b.code || '').trim().slice(0, 30); if (mode === 'code' && !code) code = Math.random().toString(36).slice(2, 10).toUpperCase();
+  LIM[id] = { id, mode, price, stock, code: mode === 'code' ? code : '', until: hrs ? Date.now() + hrs * 3600e3 : 0, note: String(b.note || '').slice(0, 80), sold: b.reset ? 0 : old.sold, claimed: b.reset ? [] : old.claimed, t: old.t || Date.now() }; return ''; };
+const limClaim = (key, b) => { const l = LIM[String(b.id || '')]; if (!l) return { error: 'Dieses Limited-Item gibt es nicht.' }; if (l.claimed.includes(key)) return { ok: true, already: true, price: 0 };
+  if (l.until && l.until < Date.now()) return { error: 'Die Aktion ist abgelaufen.' }; if (l.sold >= l.stock) return { error: 'Ausverkauft.' };
+  if (l.mode === 'code' && String(b.code || '').trim().toLowerCase() !== String(l.code).toLowerCase()) return { error: 'Falscher Code.' };
+  l.sold++; l.claimed.push(key); return { ok: true, price: l.mode === 'coins' ? l.price : 0 }; };
 const TAGS_OK = ['owner', 'tester', 'plus', 'mod'];
 const tagsOf = k => { const t = (TAGS[k] || []).filter(x => TAGS_OK.includes(x)); return k === 'admin' ? ['owner', ...t.filter(x => x !== 'owner')] : t; }; // das Admin-Konto ist automatisch Owner (rot)
 const pub = u => ({ hidden: HIDE, tags: tagsOf(String(u.name).toLowerCase()), names: NAMES, name: u.name, admin: isAdm(u), coins: isAdm(u) || u.inf_coins ? null : u.coins, mustChange: !!u.must_change, state: { coins: u.admin || u.inf_coins ? null : (u.coins == null ? 100 : u.coins), owned: parse(u.owned, []), equip: parse(u.equip, {}), daily: u.daily || '' } });
@@ -40,6 +51,7 @@ async function init() {
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='tags'"); TAGS = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='cos'"); COS = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='hide'"); HIDE = r.length ? parse(r[0].v, []) : []; if (!Array.isArray(HIDE)) HIDE = []; }
+  { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='lim'"); LIM = r.length ? parse(r[0].v, {}) : {}; if (!LIM || typeof LIM !== 'object') LIM = {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='announce'"); ANN = r.length ? parse(r[0].v, ANN) : ANN; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='gate'"); GATE = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='friends'"); FR = r.length ? parse(r[0].v, FR) : FR; if (!FR.f) FR = { f: {}, msgs: {}, seq: 1 }; }
@@ -175,12 +187,16 @@ app.post('/state', auth(async (req, res, me) => { // Shop-Stand des Kontos speic
   if (me.admin) return res.json({ ok: true });
   const b = req.body || {}, u = { ...me };
   if (!me.inf_coins && Number.isFinite(+b.coins)) u.coins = Math.max(0, Math.min(1e9, Math.round(+b.coins)));
-  if (Array.isArray(b.owned)) u.owned = [...new Set([...parse(me.owned, []), ...rmBlock(me.name_key, b.owned.filter(x => typeof x === 'string' && (!HIDE.includes(x) || parse(me.owned, []).includes(x))))])].slice(0, 500); // nur hinzufügen: Entfernen/Verschenken passiert nur auf dem Server
+  if (Array.isArray(b.owned)) u.owned = [...new Set([...parse(me.owned, []), ...rmBlock(me.name_key, b.owned.filter(x => typeof x === 'string' && (!HIDE.includes(x) || parse(me.owned, []).includes(x)) && (!LIM[x] || LIM[x].claimed.includes(me.name_key) || parse(me.owned, []).includes(x))))])].slice(0, 500); // nur hinzufügen: Entfernen/Verschenken passiert nur auf dem Server
   if (b.equip && typeof b.equip === 'object') u.equip = Object.fromEntries(Object.entries(b.equip).filter(([k, v]) => typeof v === 'string').slice(0, 20));
   if (typeof b.daily === 'string') u.daily = b.daily.slice(0, 20);
   await put(u); res.json({ ok: true });
 }));
 const admin = f => auth(async (req, res, me) => { if (!isAdm(me)) return res.status(403).json({ error: 'Nur für Admins.' }); await f(req, res, me); });
+const saveLim = () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['lim', JSON.stringify(LIM)]);
+app.post('/limited', auth(async (req, res, me) => res.json({ ok: true, items: limView(me.name_key, isAdm(me)) })));
+app.post('/limited/claim', auth(async (req, res, me) => { const r = limClaim(me.name_key, req.body || {}); if (r.ok && !r.already) await saveLim(); res.status(r.error ? 400 : 200).json(r); }));
+app.post('/admin/limited', admin(async (req, res, me) => { const e = limSet(req.body || {}); if (e) return res.status(400).json({ error: e }); await saveLim(); res.json({ ok: true, items: limView(me.name_key, true) }); }));
 app.post('/admin/hide', admin(async (req, res) => { const id = String(req.body.id || ''); if (!/^[a-z]+-[a-z0-9-]{1,30}$/.test(id)) return res.status(400).json({ error: 'Ungueltiges Item.' }); HIDE = HIDE.filter(x => x !== id); if (req.body.on) HIDE.push(id); await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['hide', JSON.stringify(HIDE)]); res.json({ ok: true, hidden: HIDE }); }));
 app.post('/admin/tag', admin(async (req, res) => { const k = String(req.body.name || '').trim().toLowerCase(), tg = String(req.body.tag || ''); const t = await get(k); if (!t || t.admin) return res.status(404).json({ error: 'Konto nicht gefunden.' }); if (!TAGS_OK.includes(tg)) return res.status(400).json({ error: 'Unbekannter Tag.' }); const a = (TAGS[k] || []).filter(x => x !== tg); if (req.body.on) a.push(tg); if (a.length) TAGS[k] = a; else delete TAGS[k]; await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['tags', JSON.stringify(TAGS)]); res.json({ ok: true, tags: a }); }));
 app.all('/admin/users', admin(async (_q, res) => { const [r] = await db.query('SELECT * FROM cloudy_users WHERE admin=0 ORDER BY created'); res.json({ users: r.map(u => ({ name: u.name, tags: TAGS[String(u.name).toLowerCase()] || [], coins: u.inf_coins ? '∞' : (u.coins == null ? 100 : u.coins), owned: parse(u.owned, []).length, inf: !!u.inf_coins, banned: !!u.banned && (!Number(u.ban_until) || Number(u.ban_until) > Date.now()), until: Number(u.ban_until) || 0, paused: !!u.paused, items: parse(u.owned, []), reason: u.ban_reason || '', created: Number(u.created), gate: (Object.values(GRANTS).find(v => v && v.u === u.name.toLowerCase()) || {}).c || '' })) }); }));
