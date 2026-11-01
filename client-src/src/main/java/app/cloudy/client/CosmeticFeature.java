@@ -20,7 +20,11 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 	@Override
 	public void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, PlayerEntityRenderState state, float limbAngle, float limbDistance) {
 		try {
-			if (!Cosmetics.any() || !Cosmetics.isSelf(state.skinTextures) || !Cosmetics.ensure()) return;
+			net.minecraft.client.network.AbstractClientPlayerEntity who = CosmeticNet.entityOf(state);
+			net.minecraft.client.network.ClientPlayerEntity self0 = net.minecraft.client.MinecraftClient.getInstance().player;
+			boolean mine = who != null ? who == self0 : Cosmetics.isSelf(state.skinTextures);
+			if (!mine) { renderOther(matrices, vertexConsumers, light, who, limbDistance); return; }
+			if (!Cosmetics.any() || !Cosmetics.ensure()) return;
 			PlayerEntityModel m = this.getContextModel();
 			int held = 0; // 0 = nichts, 1 = Schild in der linken, 2 = in der rechten Hand
 			if (Cosmetics.shield != null) {
@@ -32,6 +36,16 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 			boolean ely = me != null && me.getEquippedStack(net.minecraft.entity.EquipmentSlot.CHEST).isOf(net.minecraft.item.Items.ELYTRA); // mit Elytra: Fluegel und Umhang ausblenden (sonst doppelt)
 			drawAll(matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV, m.head, m.body, m.leftArm, m.rightArm, Cosmetics.hat, ely ? null : Cosmetics.wings, Cosmetics.shield, held, !ely && ZZ4.handles(Cosmetics.cape) ? Cosmetics.cape : null, limbDistance);
 		} catch (RuntimeException e) { /* Cosmetics duerfen das Spiel nie zum Absturz bringen */ }
+	}
+
+	/** Cosmetics eines anderen Cloudy-Spielers (Hut, Fluegel, Z4-Umhang). Schild und normale Umhaenge bleiben nur bei dir selbst sichtbar. */
+	private void renderOther(MatrixStack matrices, VertexConsumerProvider vcp, int light, net.minecraft.client.network.AbstractClientPlayerEntity who, float limb) {
+		if (who == null || who.isInvisible() || !Cosmetics.ensure()) return;
+		String[] eq = CosmeticNet.get(who.getName().getString());
+		if (eq == null || (eq[1] == null && eq[2] == null && !ZZ4.handles(eq[0]))) return;
+		PlayerEntityModel m = this.getContextModel();
+		boolean ely = who.getEquippedStack(net.minecraft.entity.EquipmentSlot.CHEST).isOf(net.minecraft.item.Items.ELYTRA);
+		drawAll(matrices, vcp, light, OverlayTexture.DEFAULT_UV, m.head, m.body, m.leftArm, m.rightArm, eq[1], ely ? null : eq[2], null, 0, !ely && ZZ4.handles(eq[0]) ? eq[0] : null, limb);
 	}
 
 	/** Gemeinsamer Zeichencode (Spiel und Vorschau). held: 0 = kein Schild, 1 = links, 2 = rechts. */

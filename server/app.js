@@ -36,6 +36,7 @@ async function init() {
   try { await db.query('ALTER TABLE cloudy_kv MODIFY v MEDIUMTEXT'); } catch {}
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='names'"); NAMES = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='tags'"); TAGS = r.length ? parse(r[0].v, {}) : {}; }
+  { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='cos'"); COS = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='announce'"); ANN = r.length ? parse(r[0].v, ANN) : ANN; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='gate'"); GATE = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='friends'"); FR = r.length ? parse(r[0].v, FR) : FR; if (!FR.f) FR = { f: {}, msgs: {}, seq: 1 }; }
@@ -154,6 +155,18 @@ app.post('/gift', auth(async (req, res, me) => { // Item verschenken
   if (to_o.includes(id)) return res.status(409).json({ error: to.name + ' besitzt das schon.' });
   mo = mo.filter(x => x !== id); for (const k of Object.keys(eq)) if (eq[k] === id) delete eq[k];
   await put({ ...me, owned: mo, equip: eq }); await put({ ...to, owned: [...to_o, id] }); res.json({ ok: true, to: to.name });
+}));
+let COS = {}; // Minecraft-Name -> { u: Konto, equip } (Cosmetics, die andere Cloudy-Spieler sehen)
+app.post('/cos/reg', auth(async (req, res, me) => {
+  const b = req.body || {}, mc = String(b.mc || '').toLowerCase(); if (!/^\w{3,16}$/.test(mc)) return res.status(400).json({ error: 'Ungueltiger Spielername.' });
+  const own = me.admin ? null : parse(me.owned, []), eq = {};
+  for (const c of ['cape', 'hat', 'wings']) { const v = b.equip && b.equip[c]; if (typeof v === 'string' && /^[a-z0-9-]{3,30}$/.test(v) && v.startsWith(c + '-') && (!own || own.includes(v))) eq[c] = v; }
+  for (const k of Object.keys(COS)) if (COS[k].u === me.name_key && k !== mc) delete COS[k];
+  COS[mc] = { u: me.name_key, equip: eq, t: Date.now() }; await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['cos', JSON.stringify(COS)]); res.json({ ok: true });
+}));
+app.post('/cos/get', auth(async (req, res) => {
+  const out = {}; for (const n of (Array.isArray((req.body || {}).names) ? req.body.names : []).slice(0, 80)) { const k = String(n).toLowerCase(), e = COS[k]; if (e && Object.keys(e.equip).length) out[k] = e.equip; }
+  res.json({ ok: true, players: out });
 }));
 app.post('/state', auth(async (req, res, me) => { // Shop-Stand des Kontos speichern (Coins, gekaufte Items, Auswahl)
   if (me.admin) return res.json({ ok: true });

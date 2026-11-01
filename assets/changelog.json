@@ -1,5 +1,16 @@
 [
  {
+  "v": "0.9.30",
+  "date": "2026-11-01",
+  "added": [
+   "Cosmetics anderer Cloudy-Spieler: Spielen zwei Leute mit dem Cloudy Client zusammen (gleicher Server oder Welt), sieht jeder Hut, Flügel und Z4-Umhang des anderen (Schild und normale Umhänge bleiben nur bei dir sichtbar; benötigt aktualisierten Server und Anmeldung im Launcher)"
+  ],
+  "fixed": [
+   "Hat jemand denselben Skin wie du, bekommt er nicht mehr deine Cosmetics"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.29",
   "date": "2026-11-01",
   "added": [

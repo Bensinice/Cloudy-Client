@@ -124,6 +124,17 @@ http.createServer(async (req, res) => {
       if (typeof b.daily === 'string') me.daily = b.daily.slice(0, 20);
       save(); return send(res, 200, { ok: true });
     }
+    if (url === '/cos/reg' && req.method === 'POST') { // Minecraft-Name <-> Konto + ausgewaehlte Cosmetics (damit andere Cloudy-Spieler sie sehen)
+      const mc = String(b.mc || '').toLowerCase(); if (!/^\w{3,16}$/.test(mc)) return send(res, 400, { error: 'Ungueltiger Spielername.' });
+      const own = me.admin ? null : (me.owned || []), eq = {};
+      for (const c of ['cape', 'hat', 'wings']) { const v = b.equip && b.equip[c]; if (typeof v === 'string' && /^[a-z0-9-]{3,30}$/.test(v) && v.startsWith(c + '-') && (!own || own.includes(v))) eq[c] = v; }
+      db.cos = db.cos || {}; for (const k of Object.keys(db.cos)) if (db.cos[k].u === me.name.toLowerCase() && k !== mc) delete db.cos[k];
+      db.cos[mc] = { u: me.name.toLowerCase(), equip: eq, t: Date.now() }; save(); return send(res, 200, { ok: true });
+    }
+    if (url === '/cos/get' && req.method === 'POST') { // Cosmetics anderer Cloudy-Spieler abfragen (nach Minecraft-Namen)
+      const out = {}; for (const n of (Array.isArray(b.names) ? b.names : []).slice(0, 80)) { const k = String(n).toLowerCase(), e = (db.cos || {})[k]; if (e && Object.keys(e.equip).length) out[k] = e.equip; }
+      return send(res, 200, { ok: true, players: out });
+    }
     if (url === '/gift' && req.method === 'POST') { // Item verschenken
       if (me.admin) return send(res, 400, { error: 'Admins besitzen schon alles.' });
       const to = db.users[String(b.to || '').trim().toLowerCase()], id = String(b.id || '');

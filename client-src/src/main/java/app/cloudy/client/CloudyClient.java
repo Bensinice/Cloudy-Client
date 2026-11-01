@@ -79,6 +79,7 @@ public class CloudyClient implements ClientModInitializer {
 			while (modsKey.wasPressed()) if (mc.currentScreen == null) mc.setScreen(new CloudyModsScreen(null));
 		});
 		Cosmetics.init();
+		ClientTickEvents.END_CLIENT_TICK.register(mc -> { try { CosmeticNet.tick(mc); } catch (Throwable ignored) {} });
 		CreamHeist.init();
 		HudRenderCallback.EVENT.register(Hud::render);
 		try {

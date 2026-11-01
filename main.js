@@ -654,7 +654,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.28'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.30'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); if (!j) return false; try { const z = openZip(j); try { return z.has('app/cloudy/client/CosmeticsScreen.class') && z.has('cloudy-cos/build-' + CLIENT_BUILD + '.txt'); } finally { z.close(); } } catch { return false; } };
 
 // Eigener Classpath fuer neue Minecraft-Versionen (26.x): die Bibliotheksliste von minecraft-launcher-core bleibt dort leer (Fehler: KnotClient nicht gefunden)
@@ -896,7 +896,30 @@ async function srvPull() { // Stand vom Server holen (Admin kann Coins vergeben 
   if (!srvCfg() || !srvTok) return;
   try { const r = await srvCall('/me', {}, srvTok); if (r.user) srvMirror(r.user); else if (r.status === 403 && r.error) { currentUser = null; srvTok = null; fs.rmSync(sessFile, { force: true }); send('acctLocked', r.error); } } catch {}
 }
+// ---- Cosmetics fuer andere Cloudy-Spieler sichtbar machen: Minecraft-Name + Auswahl zum Server, Auswahl der Mitspieler zurueck ins Spiel ----
+const cosWant = path.join(app.getPath('userData'), 'cloudy-cos-want.json'), cosOth = path.join(app.getPath('userData'), 'cloudy-cos-others.json');
+let cosMc = '', cosTimer = null, cosLast = '';
+function cosReg(u) { try { if (!cosMc || !srvCfg() || !srvTok || !u) return; const eq = {}; for (const c of ['cape', 'hat', 'wings']) if (u.equip && u.equip[c]) eq[c] = u.equip[c]; const k = cosMc + JSON.stringify(eq); if (k === cosLast) return; cosLast = k; srvCall('/cos/reg', { mc: cosMc, equip: eq }, srvTok).then(r => { if (!r || r.ok !== true) cosLast = ''; }).catch(() => { cosLast = ''; }); } catch {} }
+function cosNetStart(mcName) {
+  try {
+    cosNetStop(); cosMc = /^\w{3,16}$/.test(String(mcName || '')) ? String(mcName) : ''; if (!cosMc || !srvCfg() || !srvTok) return;
+    try { fs.rmSync(cosWant, { force: true }); fs.rmSync(cosOth, { force: true }); } catch {}
+    const a = readAuth(), u = currentUser && a.users[currentUser.toLowerCase()]; cosReg(u);
+    let lastM = 0, busy = false;
+    cosTimer = setInterval(async () => {
+      if (busy) return; busy = true;
+      try {
+        const st = fs.statSync(cosWant), w = JSON.parse(fs.readFileSync(cosWant, 'utf8')), names = (w.names || []).filter(n => typeof n === 'string' && /^\w{3,16}$/.test(n)).slice(0, 80);
+        if (st.mtimeMs !== lastM || Date.now() - lastM > 20000) { lastM = st.mtimeMs === lastM ? Date.now() : st.mtimeMs; }
+        const r = names.length ? await srvCall('/cos/get', { names }, srvTok) : { ok: true, players: {} };
+        if (r && r.ok === true) { const tmp = cosOth + '.tmp'; fs.writeFileSync(tmp, JSON.stringify({ ts: Date.now(), players: r.players || {} })); fs.renameSync(tmp, cosOth); }
+      } catch {} finally { busy = false; }
+    }, 6000);
+  } catch {}
+}
+function cosNetStop() { if (cosTimer) clearInterval(cosTimer); cosTimer = null; cosMc = ''; cosLast = ''; }
 function srvPush(u) { // Shop-Stand zum Server schicken (im Hintergrund)
+  cosReg(u);
   if (!srvCfg() || !srvTok || !u || u.admin) return;
   srvCall('/state', { coins: u.infCoins ? undefined : u.coins, owned: u.owned || [], equip: u.equip || {}, daily: u.daily || '' }, srvTok).catch(() => {});
 }
@@ -2045,14 +2068,14 @@ ipcMain.handle('launch', async (_e, { username, version, type, ram, server, fabr
       overrides: { gameDirectory: gameDir(version), ...(newClasses ? { classes: newClasses } : {}) },
       memory: { max: `${ram}G`, min: '1G' },
       customArgs: [...(IS_MAC ? ['-XstartOnFirstThread'] : []), ...cdsFlags(version, safe), ...(/UseZGC|UseG1GC|UseShenandoah|UseParallelGC|UseSerialGC|UseConcMarkSweep/.test(jvm || '') || safe ? [] : GC_FLAGS), ...(jvm ? jvm.split(/\s+/).filter(Boolean) : []),
-        `-Dcloudy.mods=${clientMods.join(',')}`, ...(hasCape() ? [`-Dcloudy.cape=${capeFile}`] : []), ...(!safe && fs.existsSync(cosFile) ? [`-Dcloudy.cosmetics=${cosFile}`] : []), `-Dcloudy.cfg=${cfgFile}`, `-Dcloudy.lyrics=${lyricsFile}`, `-Dcloudy.cmd=${cmdFile}`, `-Dcloudy.ver=${CLIENT_BUILD}`, ...(hud && !safe ? [`-Dcloudy.hud=${Object.entries(hud).filter(([, v]) => v).map(([k]) => k).join(',')}`] : []), ...(sndOn ? [`-Dcloudy.sounds=${sndActive}`] : []), ...(cheats && unlocked() ? ['-Dcloudy.cheats=1'] : [])],
+        `-Dcloudy.mods=${clientMods.join(',')}`, ...(hasCape() ? [`-Dcloudy.cape=${capeFile}`] : []), ...(!safe && fs.existsSync(cosFile) ? [`-Dcloudy.cosmetics=${cosFile}`] : []), `-Dcloudy.cfg=${cfgFile}`, `-Dcloudy.coswant=${cosWant}`, `-Dcloudy.cosoth=${cosOth}`, `-Dcloudy.lyrics=${lyricsFile}`, `-Dcloudy.cmd=${cmdFile}`, `-Dcloudy.ver=${CLIENT_BUILD}`, ...(hud && !safe ? [`-Dcloudy.hud=${Object.entries(hud).filter(([, v]) => v).map(([k]) => k).join(',')}`] : []), ...(sndOn ? [`-Dcloudy.sounds=${sndActive}`] : []), ...(cheats && unlocked() ? ['-Dcloudy.cheats=1'] : [])],
       ...(ww && wh ? { window: { width: +ww, height: +wh } } : {}),
       ...(server && !modernQP(bv(version)) ? { server: { host: server.host, port: String(server.port || 25565) } } : {}),
       ...(server && modernQP(bv(version)) ? { customLaunchArgs: ['--quickPlayMultiplayer', `${server.host === 'localhost' ? '127.0.0.1' : server.host}:${server.port || 25565}`] } : {})
     });
     if (!proc) throw new Error('Start fehlgeschlagen.');
     if (launchCancelled) { try { proc.kill(); } catch {} throw new Error('Start abgebrochen.'); }
-    mcProc = proc; playSess = { who: currentUser, t: Date.now(), coinMs: 0, earned: 0 }; try { send('gameStart', {}); } catch {} proc.on('close', () => { playTick(true); if (mcProc === proc) mcProc = null; });
+    mcProc = proc; playSess = { who: currentUser, t: Date.now(), coinMs: 0, earned: 0 }; try { send('gameStart', {}); } catch {} try { cosNetStart(auth && auth.name); } catch {} proc.on('close', () => { playTick(true); if (mcProc === proc) { mcProc = null; cosNetStop(); } });
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err.message };

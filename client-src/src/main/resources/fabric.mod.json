@@ -7,6 +7,6 @@
   "authors": ["Cloudy"],
   "environment": "client",
   "entrypoints": { "client": ["app.cloudy.client.CloudyClient"] },
-  "mixins": ["cloudy-client.mixins.json", "cloudy-cam.mixins.json", "cloudy-phys.mixins.json"],
+  "mixins": ["cloudy-client.mixins.json", "cloudy-cam.mixins.json", "cloudy-phys.mixins.json", "cloudy-cosnet.mixins.json"],
   "depends": { "fabricloader": ">=0.16.0", "minecraft": "~1.21.4", "java": ">=21", "fabric-api": "*" }
 }
