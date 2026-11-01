@@ -1,5 +1,16 @@
 [
  {
+  "v": "0.9.40",
+  "date": "2026-11-01",
+  "added": [
+   "Limited-Formular: bei jeder Zeile ein kleines „?“ mit Erklärung; „⏳ Limited“ steht jetzt auch als Mini-Tab neben „Gekauft“"
+  ],
+  "fixed": [
+   "Zickzack-Schlangen-Umhang und GHG-Umhang waren kopfüber – jetzt richtig herum"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.39",
   "date": "2026-11-01",
   "added": [
