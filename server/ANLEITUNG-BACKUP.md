@@ -6,6 +6,9 @@
 - Eigene Datenbank auf dem Mac mit einer Kopie → nur der Stand der letzten Kopie, Änderungen auf dem Backup gehen später verloren. (Variante 2, Notlösung)
 - Die dateibasierte `server.js` hat keine gemeinsame Datenbank. Dafür gibt es kein echtes Backup.
 
+## Schnellweg (empfohlen): ein Doppelklick
+Ordner `server` auf den Mac kopieren und `mac-backup-einrichten.command` doppelklicken (beim ersten Mal: Rechtsklick → Öffnen). Das Skript installiert MySQL und Node, legt die Datenbank an, spielt die exportierte `.sql`-Datei ein und erstellt `mac-backup-starten.command`. Danach nur noch Abschnitt 3 (Tunnel) und 5 (in Cloudy eintragen). Die Abschnitte darunter sind die manuelle Variante.
+
 ## 1. Mac vorbereiten
 1. Node.js (LTS) installieren: https://nodejs.org
 2. Ordner `server` aus dem Repo auf den Mac kopieren, im Terminal dorthin wechseln und einmal ausführen:
