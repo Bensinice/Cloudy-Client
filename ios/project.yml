@@ -1,0 +1,32 @@
+name: Cloudy
+options:
+  bundleIdPrefix: app.cloudy
+  deploymentTarget:
+    iOS: "15.0"
+targets:
+  Cloudy:
+    type: application
+    platform: iOS
+    sources: [Cloudy]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.cloudy.ios
+        PRODUCT_NAME: Cloudy
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGNING_ALLOWED: "NO"
+        CODE_SIGNING_REQUIRED: "NO"
+        CODE_SIGN_IDENTITY: ""
+    info:
+      path: Cloudy/Info.plist
+      properties:
+        CFBundleDisplayName: Cloudy
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        NSLocalNetworkUsageDescription: "Cloudy verbindet sich mit dem Cloudy-Launcher auf deinem PC im Heimnetz."
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true

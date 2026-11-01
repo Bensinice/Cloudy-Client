@@ -1,0 +1,39 @@
+name: Cloudy iOS
+# Baut die iPhone-App (ungesignierte IPA) auf einem Mac-Server von GitHub. Installieren: mit AltStore, Sideloadly oder TrollStore (signieren mit deiner Apple-ID).
+on:
+  push:
+    branches: [main, master]
+    paths: ['ios/**', '.github/workflows/ios.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  ipa:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: XcodeGen installieren
+        run: brew install xcodegen
+      - name: Xcode-Projekt erzeugen
+        run: cd ios && xcodegen generate
+      - name: Bauen (ohne Signatur)
+        run: |
+          cd ios
+          xcodebuild -project Cloudy.xcodeproj -scheme Cloudy -configuration Release -sdk iphoneos -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+      - name: IPA packen
+        run: |
+          cd ios
+          rm -rf Payload && mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/Cloudy.app Payload/
+          zip -qry Cloudy-iOS.ipa Payload
+          ls -la Cloudy-iOS.ipa
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Cloudy-iOS
+          path: ios/Cloudy-iOS.ipa
+      - name: IPA an Release "ios" anhaengen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view ios >/dev/null 2>&1 || gh release create ios --prerelease --title "Cloudy iOS (ungesignierte IPA)" --notes "Zum Sideloaden (AltStore, Sideloadly, TrollStore)." --target "$GITHUB_SHA"
+          gh release upload ios ios/Cloudy-iOS.ipa --clobber
