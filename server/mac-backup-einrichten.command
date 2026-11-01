@@ -48,7 +48,9 @@ read -r F
 F="${F%"${F##*[![:space:]]}"}"; F="${F#\'}"; F="${F%\'}"; F="${F#\"}"; F="${F%\"}"; F="${F//\\ / }"
 if [ -n "$F" ]; then
   [ -f "$F" ] || fail "Die Datei wurde nicht gefunden: $F"
-  mysql -u CloudyClient -p"$DB_PASS" -h 127.0.0.1 CloudyClient < "$F" || fail "Die Datei konnte nicht eingespielt werden."
+  # Alte (evtl. halbe) Daten aus einem frueheren Versuch zuerst loeschen, sonst meldet MySQL "Table already exists"
+  mysql -u root -e "DROP DATABASE IF EXISTS CloudyClient; CREATE DATABASE CloudyClient CHARACTER SET utf8mb4; GRANT ALL ON CloudyClient.* TO 'CloudyClient'@'127.0.0.1';" || fail "Die alte Datenbank konnte nicht geleert werden."
+  MYSQL_PWD="$DB_PASS" mysql -u CloudyClient -h 127.0.0.1 CloudyClient < "$F" || fail "Die Datei konnte nicht eingespielt werden."
   echo "Daten eingespielt."
 fi
 
