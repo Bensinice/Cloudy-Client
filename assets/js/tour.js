@@ -26,7 +26,8 @@
     { s: '.nav[data-p="versions"]', t: 'Versionen', d: 'Installiere Minecraft-Versionen, auch mit Fabric. Hier wählst du, welche Version du spielst.', p: 'versions' },
     { s: '.nav[data-p="mods"]', t: 'Mods', d: 'Suche Mods auf Modrinth und installiere sie mit einem Klick. Ressourcenpakete und Shader findest du unter Ressourcen.', p: 'mods' },
     { s: '.nav[data-p="shop"]', t: 'Shop', d: 'Umhänge, Flügel, Hüte und Schilde für dein Spiel. Du siehst alles direkt in der 3D-Vorschau.', p: 'shop' },
-    { s: '.nav[data-p="skins"]', t: 'Skins', d: 'Verwalte deine Skins und probiere sie in 3D aus.', p: 'skins' },
+    { s: '.nav[data-p="shop"]', t: 'Cosmetics ansehen', d: 'Deine Cosmetics siehst du im Spiel mit Minecraft 1.21.4 und dem Cloudy Client – beides ist beim ersten Start schon für dich ausgewählt, der Client wird automatisch geladen und aktuell gehalten. Andere Spieler sehen deine Hüte, Flügel und Spezial-Umhänge nur, wenn sie auch den Cloudy Client nutzen. Schild und normale Umhänge sieht nur du.', p: 'shop' },
+    { s: '.nav[data-p="shop"]', t: 'Skins im Shop', d: 'Deine Skins findest du im Shop unter „Skins“. Den Skins-Reiter im Menü kannst du in den Einstellungen unter „Darstellung“ ausblenden.', p: 'shop' },
     { s: '.nav[data-p="settings"]', t: 'Einstellungen', d: 'Hier stellst du Themes, Arbeitsspeicher, Spotify und mehr ein. Diese Tour kannst du dort jederzeit wiederholen.', p: 'settings' },
     { s: '#themeBtn', t: 'Hell / Dunkel', d: 'Wechsle schnell zwischen hellem und dunklem Modus. Weitere Themes wählst du in den Einstellungen.' },
     { s: '#play', t: 'Spielen', d: 'Mit diesem Knopf startest du Minecraft mit der gewählten Version. Tipp: Strg + Enter.' }

@@ -1,0 +1,103 @@
+{
+ "0.9.51": [
+  "Shop: new mini tab “Skins” – your skins are now in the shop too; you can hide the Skins tab in the menu in Settings (Appearance)",
+  "Cloudy Client is set up and kept up to date automatically – no manual building/downloading in the shop any more",
+  "First start: Minecraft 1.21.4 is preselected (with Cloudy Client); the tour explains how to see cosmetics and who sees them",
+  "“What's new” is now available in English too (for the latest versions)"
+ ],
+ "0.9.50": [
+  "Mini player: YouTube, YouTube Music and SoundCloud links too (video, playlist, track). Lyrics now work with these sources as soon as something plays (new, only tested with sample data)",
+  "In-game tags: rank and clan tags (e.g. [Owner] [CLD]) appear before the name above the head and in the player list – visible to Cloudy players (re-upload the server file!)",
+  "Linux: Cloudy is now available as an AppImage (Cloudy-Linux.AppImage) with updates; new and not yet tested on real Linux",
+  "English: about 400 previously German texts (groups, calls, modpacks, shop, tour, error messages …) translated",
+  "Custom icon: the cloud symbol at the top left can be replaced by your own picture (Settings → Appearance)"
+ ],
+ "0.9.49": [
+  "Groups: custom group picture, color for the clan tag, new messages and calls as a bubble and as a desktop notification",
+  "Calls: floating call window (mute / hang up), one-to-one calls with friends (📞 in the chat), friends in a call are marked in the list",
+  "Custom chat profile picture (Friends tab, can be reset)",
+  "New tag “Manager” (Thepa1); tags are also shown next to your name and in the greeting",
+  "Possible stutter/freezing: removed an invisible, permanently animated bubble layer"
+ ],
+ "0.9.48": [
+  "Groups (Friends tab): group chat, group voice calls (directly between players), add/remove members, leave/delete group",
+  "Clan tag: every group can have a tag (up to 4 characters); show it as a second tag next to your rank or hide it (re-upload the server file!)",
+  "The Discord link in the settings opens now"
+ ],
+ "0.9.47": [
+  "Discord: “Playing Cloudy” (Settings → Discord, enter the Application ID)",
+  "Friends: play button next to the name and in the chat header when a friend is playing on a server (shows for friends using the new server)",
+  "Server: visible “Choose picture” button for custom thumbnails",
+  "Server thumbnails, the chat server card and the message bubble had no styling – now liquid glass in your theme"
+ ],
+ "0.9.46": [
+  "Custom server pictures: click the picture or “Picture” under “My servers” and choose a photo",
+  "Chat: server codes (CLD-…) and server addresses in messages automatically get a “Connect” button; your server code is now shown under “Own server” for copying",
+  "Server and friends explained more simply (3 steps)",
+  "Message bubble bigger, translucent in the theme color and in liquid-glass look"
+ ],
+ "0.9.45": [
+  "Mods: new mini tab “Modpacks” – search Modrinth modpacks and install them with one click (own instance per modpack), plus “Import .mrpack” for downloaded modpacks (Fabric only)"
+ ],
+ "0.9.44": [
+  "Admin: click shop item prices in the shop to change them (leave empty = default price; applies to all players, re-upload the server file)",
+  "When a friend writes, a small message bubble appears at the bottom right (click opens the chat)"
+ ],
+ "0.9.43": [
+  "19 new Cloudy mods (all off by default, in Cloudy Mods): displays for biome, light level, Nether coordinates, day/time, durability, arrows, potions, item counter, server, play time, effects, death point, food, health and look direction",
+  "Zigzag snake and GHG cape mirrored",
+  "“Client outdated”: the same or a newer client build now counts as up to date; the message shows the found and the required build"
+ ],
+ "0.9.42": [
+  "Limited by code: every code is valid for one player only – with 5 pieces there are 5 codes (admin sees all, used ones struck through). Re-upload the server file!"
+ ],
+ "0.9.41": [
+  "Claimed limited items now appear immediately under “Owned” and can be equipped (state is sent to the server before syncing)",
+  "Skies, totems and hotbars were removed from the shop"
+ ],
+ "0.9.40": [
+  "Limited form: a small “?” with an explanation on every row; “⏳ Limited” is now also a mini tab next to “Owned”",
+  "Zigzag snake cape and GHG cape were upside down – now the right way up"
+ ],
+ "0.9.39": [
+  "Limited form: 3D preview of the selected item and the buttons “🎲 Random item” and “🎲 Code” (random code)"
+ ],
+ "0.9.38": [
+  "Limited items: there is now a “Limited” section at the very bottom of the shop. The admin decides which item, whether you get it with coins or a code, how many exist, the price, the duration and a note (needs the current server)",
+  "Zigzag snake cape and GHG cape now use the 3D cape model with the texture on it"
+ ],
+ "0.9.37": [
+  "New 3D wings are smaller (preview and in game)",
+  "New capes (zigzag snake, GHG) are shown correctly as capes in the preview instead of a small square"
+ ],
+ "0.9.36": [
+  "Access code screen: new “Update” button that fetches and installs the newest version directly"
+ ],
+ "0.9.35": [
+  "Access code screen: “Admin?” button – only admin accounts (and owners) sign in directly with it, without an access code"
+ ],
+ "0.9.34": [
+  "New 3D items in the shop: zigzag wings (purple and blue), shadow wings, ice feather wings as well as the zigzag snake cape and the GHG cape – also visible to other Cloudy players",
+  "Admins can hide items in the shop (👁 Hide): nobody can buy hidden items any more, whoever already has them keeps them (needs an updated server)"
+ ],
+ "0.9.33": [
+  "Diagnostics for shared cosmetics: the launcher writes a small log (cloudy-cos.log in the Cloudy data folder) that shows whether name and selection reach the server",
+  "Shared cosmetics: all Z4 items are accepted"
+ ],
+ "0.9.32": [
+  "Anyone with the Owner tag gets admin rights (admin area, cannot be banned/paused; needs an updated server)"
+ ],
+ "0.9.31": [
+  "New tag “Owner” (red, glowing) – the admin account wears it automatically, for others you give it in the admin list with a click (needs an updated server)",
+  "Other players' cosmetics: the mod is now also loaded if you were never in the shop (otherwise you did not see others' cosmetics), plus a fallback for matching players"
+ ],
+ "0.9.30": [
+  "Cosmetics of other Cloudy players: when two people play with the Cloudy Client together (same server or world), everybody sees the other's hat, wings and Z4 cape (shield and normal capes stay visible only to you; needs the current server)",
+  "If someone has the same skin as you, they no longer get your cosmetics"
+ ],
+ "0.9.29": [
+  "Tags for accounts: Tester, Cloudy+, Moderator (you give admin in the admin list with a click; admin accounts automatically wear “Admin”). The badges appear in the friends list, in the chat header and next to your name (needs the current server)",
+  "Mods: “Modrinth can't be reached” in the mod search – a program error (missing variables), not your connection",
+  "While wearing an elytra, cosmetic wings and cape are hidden (no doubles)"
+ ]
+}

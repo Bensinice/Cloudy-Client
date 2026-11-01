@@ -656,6 +656,7 @@ ipcMain.handle('packInstall', async (_e, id, v, t) => {
 
 // ---- Cloudy-Updates (GitHub Releases, siehe update/updater.js) ----
 ipcMain.handle('accRefresh', async () => { await srvPull(); return !!currentUser; });
+ipcMain.handle('changelogEn', () => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'assets', 'changelog-en.json'), 'utf8')); } catch { return {}; } });
 ipcMain.handle('changelog', () => { try { const j = JSON.parse(fs.readFileSync(path.join(__dirname, 'assets', 'changelog.json'), 'utf8')); return Array.isArray(j) ? j : []; } catch { return []; } });
 ipcMain.handle('appVersion', () => ({ v: app.getVersion(), suffix: (() => { try { return require('./package.json').versionSuffix || ''; } catch { return ''; } })(), repo: DEFAULT_REPO, platform: process.platform, packaged: app.isPackaged }));
 ipcMain.handle('notify', (_e, { title, body, kind, id }) => { // Desktop-Hinweis (z. B. „Anruf läuft“); Klick holt Cloudy nach vorn
@@ -748,7 +749,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.50'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.51'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 

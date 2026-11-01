@@ -1,5 +1,11 @@
 // Cloudy – zusätzliche englische Texte (werden von i18n.js zu EN dazugemischt). Format: "Deutsch": "English"
 window.CLOUDY_EN_EXTRA = {
+"Cosmetics ansehen": "Seeing cosmetics", "Skins im Shop": "Skins in the shop",
+"Deine Cosmetics siehst du im Spiel mit Minecraft 1.21.4 und dem Cloudy Client – beides ist beim ersten Start schon für dich ausgewählt, der Client wird automatisch geladen und aktuell gehalten. Andere Spieler sehen deine Hüte, Flügel und Spezial-Umhänge nur, wenn sie auch den Cloudy Client nutzen. Schild und normale Umhänge sieht nur du.": "You see your cosmetics in game with Minecraft 1.21.4 and the Cloudy Client – both are already selected for you on the first start, and the client is downloaded and kept up to date automatically. Other players only see your hats, wings and special capes if they use the Cloudy Client too. Only you see the shield and normal capes.",
+"Deine Skins findest du im Shop unter „Skins“. Den Skins-Reiter im Menü kannst du in den Einstellungen unter „Darstellung“ ausblenden.": "You find your skins in the shop under “Skins”. You can hide the Skins tab in the top menu in Settings under “Appearance”.",
+"Die Client-Mod wird automatisch eingerichtet …": "Setting up the Cloudy Client automatically …",
+"✓ Cloudy Client ist installiert und wird automatisch aktuell gehalten.": "✓ Cloudy Client is installed and is kept up to date automatically.",
+"Automatisch einrichten": "Set up automatically", "Die Client-Mod konnte nicht automatisch eingerichtet werden.": "The Cloudy Client could not be set up automatically.", "Erneut versuchen": "Try again",
 // Gruppen, Anrufe, Chat
 "Sie klicken im Reiter „Freunde“ auf das ▶ neben deinem Namen. Oder du kopierst den": "They click the ▶ next to your name in the “Friends” tab. Or you copy the",
 "(erscheint, sobald der Server läuft) und schickst ihn im Chat – dort erscheint für sie automatisch ein „Verbinden“-Knopf.": "(appears as soon as the server is running) and send it in the chat – a “Connect” button appears for them automatically.",
@@ -112,6 +118,7 @@ window.CLOUDY_EN_EXTRA = {
 "Der Gradle-Bau ist fehlgeschlagen (Code": "The Gradle build failed (code"
 };
 window.CLOUDY_RX_EXTRA = [
+ [/^✓ Cloudy Client ist installiert und wird automatisch aktuell gehalten\. Deine Cosmetics erscheinen in Minecraft (.+)\.$/, '✓ Cloudy Client is installed and kept up to date automatically. Your cosmetics appear in Minecraft $1.'],
  [/^Kein Fabric für (.+)$/, 'No Fabric for $1'], [/^Suche Versionen für Minecraft (.+) …$/, 'Looking up versions for Minecraft $1 …'],
  [/^Für Minecraft (.+) gibt es noch keine Fabric-Mappings\.$/, 'There are no Fabric mappings for Minecraft $1 yet.'], [/^Für Minecraft (.+) gibt es noch keine Fabric API\.$/, 'There is no Fabric API for Minecraft $1 yet.'],
  [/^Server beendet \(Code (.+)\)\.$/, 'Server stopped (code $1).'], [/^Port (\d+) ist schon belegt\.$/, 'Port $1 is already in use.'], [/^Anruf in (.+)$/, 'Call in $1'],

@@ -1,5 +1,17 @@
 [
  {
+  "v": "0.9.51",
+  "date": "2026-11-01",
+  "added": [
+   "Shop: neuer Mini-Tab „Skins“ – deine Skins sind jetzt auch im Shop; den Skins-Reiter im Menü kannst du in den Einstellungen (Darstellung) ausblenden",
+   "Cloudy Client wird automatisch eingerichtet und aktuell gehalten – kein manuelles Bauen/Herunterladen im Shop mehr",
+   "Erster Start: Minecraft 1.21.4 ist vorausgewählt (mit Cloudy Client); die Tour erklärt, wie man Cosmetics sieht und wer sie sieht",
+   "„Neuigkeiten“ gibt es jetzt auch auf Englisch (für die letzten Versionen)"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.50",
   "date": "2026-11-01",
   "added": [

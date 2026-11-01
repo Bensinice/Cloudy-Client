@@ -423,15 +423,19 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
     const el = $('#shopCl'); if (!el) return;
     const c = await window.cloudy.clientStatus(version), L2 = x => L(x); let msg, btn = '', cls = '';
     if (building || c.building) { msg = buildStatus || 'Die Client-Mod wird gebaut …'; }
-    else if (!c.jar || !c.cosmetics) { msg = !c.jar ? 'Die Client-Mod für diese Version fehlt noch – ohne sie zeigt Minecraft keine Cosmetics.' : 'Deine Client-Mod ist veraltet und kennt die Cosmetics noch nicht.' + ` (Stand ${c.have || '?'}, nötig ${c.want || '?'})`; btn = c.src ? '<button class="btn" id="clBuild">Client-Mod jetzt bauen</button>' : '<span class="muted">Quellen fehlen – installiere die komplette Cloudy-Version neu.</span>'; }
+    else if (!c.jar || !c.cosmetics) { // wird automatisch eingerichtet und aktuell gehalten – kein manuelles Herunterladen mehr
+      if (c.src && c.supported.includes(bvr(version)) && !autoTried[version] && !buildLog) { autoTried[version] = true; setTimeout(buildCl, 300); }
+      msg = buildLog ? 'Die Client-Mod konnte nicht automatisch eingerichtet werden.' : 'Die Client-Mod wird automatisch eingerichtet …';
+      btn = buildLog ? '<button class="btn" id="clBuild">Erneut versuchen</button>' : (c.src ? '' : '<span class="muted">Quellen fehlen – installiere die komplette Cloudy-Version neu.</span>');
+    }
     else if (!c.supported.includes(bvr(version))) { msg = `Cosmetics gibt es im Spiel ab Minecraft 1.21.4 (gewählt: ${version}).`; btn = `<button class="btn" id="clVer">Auf 1.21.4 wechseln</button>`; }
-    else { msg = `✓ Bereit: Deine Cosmetics erscheinen in Minecraft ${version} (mit Fabric).`; cls = 'ok'; }
+    else { msg = `✓ Cloudy Client ist installiert und wird automatisch aktuell gehalten. Deine Cosmetics erscheinen in Minecraft ${version}.`; cls = 'ok'; }
     el.innerHTML = `<div style="font-weight:700">${L2(msg)}</div>${buildLog ? `<small class="muted" style="white-space:pre-wrap;word-break:break-all">${esc(buildLog)}</small>` : ''}${btn}`;
     const b = $('#clBuild'); if (b) b.onclick = buildCl;
     const v = $('#clVer'); if (v) v.onclick = () => { version = '1.21.4'; st.set('version', version); paintVersion(); paintCl(); };
     if (window.setLang) window.setLang(document.documentElement.lang || 'de');
   }
-  let building = false, buildStatus = '', buildLog = '';
+  const autoTried = {}; let building = false, buildStatus = '', buildLog = '';
   async function buildCl() {
     building = true; buildLog = ''; buildStatus = 'Starte Bau …'; paintCl();
     const r = await window.cloudy.clientBuild(version); building = false; buildStatus = '';

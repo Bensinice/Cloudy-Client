@@ -12,7 +12,15 @@
     document.body.appendChild(d); d.onclick = e => { if (e.target === d) d.remove(); }; d.querySelector('[data-x]').onclick = () => d.remove();
     if (window.setLang) window.setLang(document.documentElement.lang || 'de');
   }
-  const all = async () => { try { return await window.cloudy.changelog() || []; } catch { return []; } };
+  const isEn = () => (document.documentElement.lang || 'de') !== 'de';
+  let enLog = null;
+  // Englisch: nur Einträge mit englischem Text zeigen (ältere Versionen gibt es nur auf Deutsch)
+  const all = async () => {
+    let l = []; try { l = await window.cloudy.changelog() || []; } catch {}
+    if (!isEn()) return l;
+    if (!enLog) { try { enLog = await window.cloudy.changelogEn() || {}; } catch { enLog = {}; } }
+    return l.filter(e => enLog[e.v]).map(e => ({ v: e.v, date: e.date, added: enLog[e.v], fixed: [], removed: [] }));
+  };
   const open = async () => show(await all(), 'Neuigkeiten & alte Updates');
   ['#newsBtn', '#newsBtn2'].forEach(s => { const b = $(s); if (b) b.onclick = open; });
   (async () => {
