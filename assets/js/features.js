@@ -596,6 +596,12 @@ window.showOnb = showOnb;
   if (window.__remote) { card.remove(); return; }
   const ip = document.getElementById('strIp'), open = u => window.cloudy.openExternal(u);
   (window.cloudy.lanInfo ? window.cloudy.lanInfo() : Promise.resolve(null)).then(r => { ip.textContent = r && r.ips && r.ips.length ? r.ips.join('  ·  ') : (window.t ? window.t('(keine Netzwerk-Adresse gefunden)') : '(keine Netzwerk-Adresse gefunden)'); }).catch(() => {});
+  const tt = (x) => (window.t ? window.t(x) : x), C = window.cloudy;
+  const go = document.getElementById('strGo'), msg = document.getElementById('strMsg'), pin = document.getElementById('strPin'), pm = document.getElementById('strPairMsg');
+  if (C.onStreamProgress) C.onStreamProgress(t => { msg.textContent = tt(t); });
+  if (C.streamStatus) C.streamStatus().then(r => { if (r && r.ready) msg.textContent = tt('Streaming ist eingerichtet ✓'); if (r && !r.win) go.disabled = true, msg.textContent = tt('Automatisch nur unter Windows: Sunshine installieren (Knopf unten), dann Moonlight am Handy.'); }).catch(() => {});
+  go.onclick = async () => { go.disabled = true; msg.textContent = tt('Einrichtung läuft …'); const r = await C.streamSetup().catch(() => null); go.disabled = false; msg.textContent = r && r.ok ? tt('Fertig ✓ Jetzt am Handy Moonlight öffnen.') : tt((r && r.error) || 'Das hat nicht geklappt.'); };
+  document.getElementById('strPair').onclick = async () => { pm.textContent = '…'; const r = await C.streamPair(pin.value).catch(() => null); pm.textContent = r && r.ok ? tt('Gekoppelt ✓') : tt((r && r.error) || 'Das hat nicht geklappt.'); };
   document.getElementById('strSun').onclick = () => open('https://github.com/LizardByte/Sunshine/releases/latest');
   document.getElementById('strWeb').onclick = () => open('https://localhost:47990/');
   document.getElementById('strMoon').onclick = () => open('https://moonlight-stream.org/');

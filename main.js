@@ -810,7 +810,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.68'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.69'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1821,6 +1821,51 @@ remoteBus = (ch, d) => remote.broadcast(ch, d);
 const remoteView = () => { const s = remote.state(); return { on: s.on, pin: s.pin, devices: s.devices, urls: s.on ? lanIps().map(ip => `http://${ip}:${s.port}`) : [] }; };
 ipcMain.handle('remoteGet', () => remoteView());
 ipcMain.handle('lanInfo', () => ({ ips: lanIps() }));
+// ---- Streaming aufs Handy: Sunshine (Server am PC) einrichten; Moonlight (Handy) koppelt per PIN, die hier eingegeben wird. Nur Windows automatisch. ----
+const streamFile = path.join(app.getPath('userData'), 'cloudy-stream.json');
+const SUN_EXE = path.join(process.env.ProgramFiles || 'C:\\Program Files', 'Sunshine', 'sunshine.exe');
+const streamCreds = () => { try { const j = JSON.parse(fs.readFileSync(streamFile, 'utf8')); return j.user && j.pass ? j : null; } catch { return null; } };
+function sunReq(method, p, body, c) { // Sunshine hat ein selbst signiertes Zertifikat auf localhost
+  return new Promise(res => {
+    const d = body ? JSON.stringify(body) : null;
+    const r = require('https').request({ host: '127.0.0.1', port: 47990, path: p, method, rejectUnauthorized: false, timeout: 5000,
+      headers: { ...(c ? { Authorization: 'Basic ' + Buffer.from(c.user + ':' + c.pass).toString('base64') } : {}), ...(d ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(d) } : {}) } },
+      rs => { let b = ''; rs.on('data', x => b += x); rs.on('end', () => res({ status: rs.statusCode, body: b })); });
+    r.on('error', () => res(null)); r.on('timeout', () => { r.destroy(); res(null); }); if (d) r.write(d); r.end();
+  });
+}
+const sunUp = async () => { const r = await sunReq('GET', '/api/config', null, streamCreds()); return !!(r && r.status === 200); };
+const runWait = (cmd, args, ms) => new Promise(res => { let done = false; const f = c => { if (!done) { done = true; res(c); } }; try { const p = spawn(cmd, args, { windowsHide: true, stdio: 'ignore' }); p.on('error', () => f(-1)); p.on('exit', c => f(c)); setTimeout(() => { try { p.kill(); } catch {} f(-2); }, ms); } catch { f(-1); } });
+ipcMain.handle('streamStatus', async () => ({ win: process.platform === 'win32', installed: fs.existsSync(SUN_EXE), ready: !!streamCreds() && await sunUp() }));
+ipcMain.handle('streamSetup', async () => {
+  if (process.platform !== 'win32') return { ok: false, error: 'Die automatische Einrichtung gibt es nur unter Windows. Installiere Sunshine von der Projektseite und folge den Schritten.' };
+  try {
+    if (!fs.existsSync(SUN_EXE)) {
+      send('streamProgress', 'Sunshine wird installiert … (Windows fragt evtl. nach Administrator-Rechten: bitte „Ja“)');
+      const c = await runWait('winget', ['install', '-e', '--id', 'LizardByte.Sunshine', '--silent', '--accept-package-agreements', '--accept-source-agreements'], 15 * 60 * 1000);
+      if (c === -1) return { ok: false, error: 'winget wurde nicht gefunden. Lade Sunshine über den Knopf unten herunter und installiere es von Hand.' };
+      if (!fs.existsSync(SUN_EXE)) return { ok: false, error: 'Die Installation von Sunshine hat nicht geklappt (Code ' + c + '). Lade Sunshine über den Knopf unten herunter.' };
+    }
+    send('streamProgress', 'Zugangsdaten werden angelegt …');
+    let c = streamCreds(); if (!c) { c = { user: 'cloudy', pass: crypto.randomBytes(9).toString('hex') }; fs.writeFileSync(streamFile, JSON.stringify(c)); }
+    await runWait(SUN_EXE, ['--creds', c.user, c.pass], 30000);
+    if (!(await sunUp())) {
+      send('streamProgress', 'Sunshine wird gestartet …');
+      await runWait('taskkill', ['/IM', 'sunshine.exe', '/F'], 10000);
+      try { spawn(SUN_EXE, [], { detached: true, stdio: 'ignore', windowsHide: true, cwd: path.dirname(SUN_EXE) }).unref(); } catch {}
+      for (let i = 0; i < 25 && !(await sunUp()); i++) await wait(1000);
+    }
+    if (!(await sunUp())) return { ok: false, error: 'Sunshine läuft, aber Cloudy kommt nicht hinein. Öffne unten die Sunshine-Oberfläche und lege dort selbst einen Benutzer an.' };
+    return { ok: true };
+  } catch (e) { return { ok: false, error: 'Fehler: ' + String(e && e.message || e).slice(0, 120) }; }
+});
+ipcMain.handle('streamPair', async (_e, pin) => { // PIN aus Moonlight (Handy) an Sunshine geben
+  pin = String(pin || '').replace(/\D/g, ''); if (pin.length !== 4) return { ok: false, error: 'Die PIN hat 4 Ziffern.' };
+  const r = await sunReq('POST', '/api/pin', { pin, name: 'Handy' }, streamCreds());
+  if (!r) return { ok: false, error: 'Sunshine antwortet nicht. Erst „Streaming einrichten“ drücken.' };
+  let j = {}; try { j = JSON.parse(r.body); } catch {}
+  return r.status === 200 && j.status !== false ? { ok: true } : { ok: false, error: 'Sunshine hat die PIN nicht angenommen. Ist die PIN noch auf dem Handy zu sehen?' };
+});
 ipcMain.handle('remoteSet', async (_e, o) => {
   o = o || {};
   if (o.revoke) remote.revokeAll();

@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.69",
+  "date": "2026-11-02",
+  "added": [
+   "Streaming aufs Handy: ein Knopf richtet Sunshine am PC automatisch ein (Windows), die Moonlight-PIN vom Handy gibst du direkt in Cloudy ein"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.68",
   "date": "2026-11-02",
   "added": [
