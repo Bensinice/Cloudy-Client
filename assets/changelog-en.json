@@ -1,4 +1,8 @@
 {
+ "0.9.59": [
+  "Bundles can now be limited (amount and/or time) and hidden by admins",
+  "Bundles were not shown when a shop filter other than “All” was active"
+ ],
  "0.9.58": [
   "Admins can delete messages in groups and chats (🗑)",
   "All accounts are automatically friends with the owner",

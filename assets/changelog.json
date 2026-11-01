@@ -1,5 +1,16 @@
 [
  {
+  "v": "0.9.59",
+  "date": "2026-11-01",
+  "added": [
+   "Pakete können jetzt Limited sein (Menge und/oder Zeit) und vom Admin versteckt werden"
+  ],
+  "fixed": [
+   "Pakete wurden nicht angezeigt, wenn im Shop ein anderer Filter als „Alle“ aktiv war"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.58",
   "date": "2026-11-01",
   "added": [

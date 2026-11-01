@@ -41,7 +41,20 @@ const limClaim = (key, b) => { const l = LIM[String(b.id || '')]; if (!l) return
 const TAGS_OK = ['owner', 'manager', 'tester', 'plus', 'mod'];
 const AUTO_TAGS = { thepa1: ['manager'] }; // feste Rollen
 const tagsOf = k => { const t = [...new Set([...((db.tags || {})[k] || []), ...(AUTO_TAGS[k] || []), 'tester'])].filter(x => TAGS_OK.includes(x)), u = db.users[k]; return u && u.admin ? ['owner', ...t.filter(x => x !== 'owner')] : t; }; // Admin-Konten sind automatisch Owner (rot)
-const pub = u => ({ bundles: db.bundles || {}, hidden: db.hide || [], tags: tagsOf(String(u.name).toLowerCase()), names: db.names, prices: db.prices, name: u.name, admin: isAdm(u), coins: isAdm(u) || u.infCoins ? null : u.coins, mustChange: !!u.mustChange, state: { coins: u.admin || u.infCoins ? null : (u.coins == null ? 100 : u.coins), owned: u.owned || [], equip: u.equip || {}, daily: u.daily || '' } });
+// Pakete: sichtbare Daten (ohne Käuferliste), Verstecken, Limited (Menge/Zeit) – wie bei Limited-Items zählt der Server
+const bunPub = (B, adm) => { const o = {}; for (const [id, b] of Object.entries(B || {})) { if (b.hidden && !adm) continue; o[id] = { name: b.name, items: b.items, price: b.price, hidden: !!b.hidden, stock: b.stock || 0, until: b.until || 0, sold: b.sold || 0 }; } return o; };
+const bunSave = (B, id, b, adm) => { if (b.del) { if (id) delete B[id]; return ''; }
+  if (b.hide !== undefined && id && B[id] && !b.name) { B[id].hidden = !!b.hide; return ''; }
+  const items = (Array.isArray(b.items) ? b.items : []).filter(x => typeof x === 'string' && /^[a-z]+-[a-z0-9-]{1,30}$/.test(x)).slice(0, 12), name = String(b.name || '').trim().slice(0, 40), price = Math.max(0, Math.min(1e6, Math.round(+b.price || 0)));
+  if (!name || items.length < 2) return 'Name und mindestens 2 Items nötig.';
+  const old = B[id] || {}, stock = Math.max(0, Math.min(1e5, Math.round(+b.stock || 0))), hrs = Math.max(0, Math.min(8760, +b.hours || 0));
+  B[id] = { name, items, price, hidden: !!b.hidden, stock, until: hrs ? Date.now() + hrs * 3600e3 : 0, sold: old.sold || 0, claimed: old.claimed || [] }; return ''; };
+const bunClaim = (B, key, id, undo) => { const b = (B || {})[String(id || '')]; if (!b) return { error: 'Dieses Paket gibt es nicht mehr.' }; b.claimed = b.claimed || [];
+  if (undo) { const i = b.claimed.indexOf(key); if (i >= 0) { b.claimed.splice(i, 1); b.sold = Math.max(0, (b.sold || 0) - 1); } return { ok: true }; }
+  if (b.hidden) return { error: 'Dieses Paket ist gerade nicht verfügbar.' }; if (b.claimed.includes(key)) return { ok: true, already: true };
+  if (b.until && b.until < Date.now()) return { error: 'Die Aktion ist abgelaufen.' }; if (b.stock && (b.sold || 0) >= b.stock) return { error: 'Ausverkauft.' };
+  b.sold = (b.sold || 0) + 1; b.claimed.push(key); return { ok: true }; };
+const pub = u => ({ bundles: bunPub(db.bundles || {}, isAdm(u)), hidden: db.hide || [], tags: tagsOf(String(u.name).toLowerCase()), names: db.names, prices: db.prices, name: u.name, admin: isAdm(u), coins: isAdm(u) || u.infCoins ? null : u.coins, mustChange: !!u.mustChange, state: { coins: u.admin || u.infCoins ? null : (u.coins == null ? 100 : u.coins), owned: u.owned || [], equip: u.equip || {}, daily: u.daily || '' } });
 function body(req) { return new Promise(r => { let s = ''; req.on('data', d => { s += d; if (s.length > 1e5) req.destroy(); }); req.on('end', () => { try { r(JSON.parse(s || '{}')); } catch { r({}); } }); }); }
 const send = (res, c, o) => { res.writeHead(c, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' }); res.end(JSON.stringify(o)); };
 function limited(ip) { const t = tries.get(ip) || { n: 0, t: Date.now() }; if (Date.now() - t.t > 60000) { t.n = 0; t.t = Date.now(); } t.n++; tries.set(ip, t); return t.n > 10; }
@@ -252,6 +265,7 @@ http.createServer(async (req, res) => {
     }
     if (url === '/announce') return send(res, 200, db.announce || { text: '', t: 0 });
     if (url === '/limited') return send(res, 200, { ok: true, items: limView(me.name.toLowerCase(), isAdm(me)) });
+    if (url === '/bundle/claim') { db.bundles = db.bundles || {}; const r = bunClaim(db.bundles, me.name.toLowerCase(), b.id, !!b.undo); if (r.ok && !r.already) save(); return send(res, r.error ? 400 : 200, r); }
     if (url === '/limited/claim') { const r = limClaim(me.name.toLowerCase(), b); if (r.ok && !r.already) save(); return send(res, r.error ? 400 : 200, r); }
     if (!isAdm(me)) return send(res, 403, { error: 'Nur für Admins.' });
     if (url === '/admin/announce') { db.announce = { text: String(b.text || '').trim().slice(0, 300), t: b.text ? Date.now() : 0 }; save(); return send(res, 200, { ok: true, ...db.announce }); }
@@ -260,11 +274,10 @@ http.createServer(async (req, res) => {
     if (url === '/admin/hide') { const id = String(b.id || ''); if (!/^[a-z]+-[a-z0-9-]{1,30}$/.test(id)) return send(res, 400, { error: 'Ungueltiges Item.' }); db.hide = (db.hide || []).filter(x => x !== id); if (b.on) db.hide.push(id); save(); return send(res, 200, { ok: true, hidden: db.hide }); }
     if (url === '/admin/tag') { const k = String(b.name || '').trim().toLowerCase(), tg = String(b.tag || ''); if (!db.users[k] || db.users[k].admin) return send(res, 404, { error: 'Konto nicht gefunden.' }); if (!TAGS_OK.includes(tg)) return send(res, 400, { error: 'Unbekannter Tag.' }); db.tags = db.tags || {}; const a = (db.tags[k] || []).filter(x => x !== tg); if (b.on) a.push(tg); if (a.length) db.tags[k] = a; else delete db.tags[k]; save(); return send(res, 200, { ok: true, tags: a }); }
     if (url === '/admin/users') return send(res, 200, { users: Object.values(db.users).filter(u => !u.admin).map(u => ({ name: u.name, coins: u.infCoins ? '∞' : (u.coins == null ? 100 : u.coins), owned: (u.owned || []).length, inf: !!u.infCoins, banned: !!u.banned && (!u.banUntil || u.banUntil > Date.now()), until: u.banUntil || 0, paused: !!u.paused, items: u.owned || [], reason: u.banReason || '', created: u.created, tags: (db.tags || {})[u.name.toLowerCase()] || [], gate: (Object.values(db.grants).find(v => v && v.u === u.name.toLowerCase()) || {}).c || '' })) });
-    if (url === '/admin/bundle') { // Paket anlegen/ändern (id leer = neu) oder löschen (del)
-      db.bundles = db.bundles || {}; let id = String(b.id || '').replace(/[^a-z0-9]/gi, '').slice(0, 12).toLowerCase();
-      if (b.del) { if (id) delete db.bundles[id]; }
-      else { const items = (Array.isArray(b.items) ? b.items : []).filter(x => typeof x === 'string' && /^[a-z]+-[a-z0-9-]{1,30}$/.test(x)).slice(0, 12), name = String(b.name || '').trim().slice(0, 40), price = Math.max(0, Math.min(1e6, Math.round(+b.price || 0))); if (!name || items.length < 2) return send(res, 400, { error: 'Name und mindestens 2 Items nötig.' }); if (!id) id = 'b' + Date.now().toString(36).slice(-6); db.bundles[id] = { name, items, price }; }
-      save(); return send(res, 200, { ok: true, bundles: db.bundles });
+    if (url === '/admin/bundle') { // Paket anlegen/ändern (id leer = neu), verstecken (hide) oder löschen (del)
+      db.bundles = db.bundles || {}; let id = String(b.id || '').replace(/[^a-z0-9]/gi, '').slice(0, 12).toLowerCase(); if (!id && !b.del) id = 'b' + Date.now().toString(36).slice(-6);
+      const err = bunSave(db.bundles, id, b, true); if (err) return send(res, 400, { error: err });
+      save(); return send(res, 200, { ok: true, bundles: bunPub(db.bundles, true) });
     }
     if (url === '/admin/shopprice') { const id = String(b.id || '').slice(0, 40); if (!id) return send(res, 400, { error: 'id fehlt' }); if (b.price === null || b.price === '' || b.price === undefined) delete db.prices[id]; else db.prices[id] = Math.max(0, Math.min(1e6, Math.round(+b.price || 0))); save(); return send(res, 200, { ok: true, prices: db.prices }); }
     if (url === '/admin/shopname') { const id = String(b.id || '').slice(0, 40), v = String(b.name || '').trim().slice(0, 40); if (!id) return send(res, 400, { error: 'id fehlt' }); if (v) db.names[id] = v; else delete db.names[id]; save(); return send(res, 200, { ok: true }); }

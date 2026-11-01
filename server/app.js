@@ -39,7 +39,20 @@ const limClaim = (key, b) => { const l = LIM[String(b.id || '')]; if (!l) return
 const TAGS_OK = ['owner', 'manager', 'tester', 'plus', 'mod'];
 const AUTO_TAGS = { thepa1: ['manager'] }; // feste Rollen
 const tagsOf = k => { const t = [...new Set([...(TAGS[k] || []), ...(AUTO_TAGS[k] || []), 'tester'])].filter(x => TAGS_OK.includes(x)); return k === 'admin' ? ['owner', ...t.filter(x => x !== 'owner')] : t; }; // das Admin-Konto ist automatisch Owner (rot)
-const pub = u => ({ bundles: BUNDLES, hidden: HIDE, tags: tagsOf(String(u.name).toLowerCase()), names: NAMES, prices: PRICES, name: u.name, admin: isAdm(u), coins: isAdm(u) || u.inf_coins ? null : u.coins, mustChange: !!u.must_change, state: { coins: u.admin || u.inf_coins ? null : (u.coins == null ? 100 : u.coins), owned: parse(u.owned, []), equip: parse(u.equip, {}), daily: u.daily || '' } });
+// Pakete: sichtbare Daten (ohne Käuferliste), Verstecken, Limited (Menge/Zeit) – wie bei Limited-Items zählt der Server
+const bunPub = (B, adm) => { const o = {}; for (const [id, b] of Object.entries(B || {})) { if (b.hidden && !adm) continue; o[id] = { name: b.name, items: b.items, price: b.price, hidden: !!b.hidden, stock: b.stock || 0, until: b.until || 0, sold: b.sold || 0 }; } return o; };
+const bunSave = (B, id, b, adm) => { if (b.del) { if (id) delete B[id]; return ''; }
+  if (b.hide !== undefined && id && B[id] && !b.name) { B[id].hidden = !!b.hide; return ''; }
+  const items = (Array.isArray(b.items) ? b.items : []).filter(x => typeof x === 'string' && /^[a-z]+-[a-z0-9-]{1,30}$/.test(x)).slice(0, 12), name = String(b.name || '').trim().slice(0, 40), price = Math.max(0, Math.min(1e6, Math.round(+b.price || 0)));
+  if (!name || items.length < 2) return 'Name und mindestens 2 Items nötig.';
+  const old = B[id] || {}, stock = Math.max(0, Math.min(1e5, Math.round(+b.stock || 0))), hrs = Math.max(0, Math.min(8760, +b.hours || 0));
+  B[id] = { name, items, price, hidden: !!b.hidden, stock, until: hrs ? Date.now() + hrs * 3600e3 : 0, sold: old.sold || 0, claimed: old.claimed || [] }; return ''; };
+const bunClaim = (B, key, id, undo) => { const b = (B || {})[String(id || '')]; if (!b) return { error: 'Dieses Paket gibt es nicht mehr.' }; b.claimed = b.claimed || [];
+  if (undo) { const i = b.claimed.indexOf(key); if (i >= 0) { b.claimed.splice(i, 1); b.sold = Math.max(0, (b.sold || 0) - 1); } return { ok: true }; }
+  if (b.hidden) return { error: 'Dieses Paket ist gerade nicht verfügbar.' }; if (b.claimed.includes(key)) return { ok: true, already: true };
+  if (b.until && b.until < Date.now()) return { error: 'Die Aktion ist abgelaufen.' }; if (b.stock && (b.sold || 0) >= b.stock) return { error: 'Ausverkauft.' };
+  b.sold = (b.sold || 0) + 1; b.claimed.push(key); return { ok: true }; };
+const pub = u => ({ bundles: bunPub(BUNDLES, isAdm(u)), hidden: HIDE, tags: tagsOf(String(u.name).toLowerCase()), names: NAMES, prices: PRICES, name: u.name, admin: isAdm(u), coins: isAdm(u) || u.inf_coins ? null : u.coins, mustChange: !!u.must_change, state: { coins: u.admin || u.inf_coins ? null : (u.coins == null ? 100 : u.coins), owned: parse(u.owned, []), equip: parse(u.equip, {}), daily: u.daily || '' } });
 const okPw = (u, p) => { if (!u) return false; try { return crypto.timingSafeEqual(Buffer.from(u.hash, 'hex'), Buffer.from(hash(p, u.salt), 'hex')); } catch { return false; } };
 const fk = (o, s) => { const u = String(s || '').trim().toUpperCase(); if (Object.prototype.hasOwnProperty.call(o, u)) return u; const n = u.replace(/[^A-Z0-9]/g, ''); return n ? (Object.keys(o).find(k => k.replace(/[^A-Z0-9]/g, '') === n) || u) : u; }; // Codes mit oder ohne Bindestriche, Groß-/Kleinschreibung egal
 const sessions = new Map(), tries = new Map(), RM = new Map(); // RM: kürzlich entfernte Items je Konto – verhindert, dass ein veralteter Launcher sie sofort wieder hochlädt
@@ -277,6 +290,7 @@ app.post('/state', auth(async (req, res, me) => { // Shop-Stand des Kontos speic
 const admin = f => auth(async (req, res, me) => { if (!isAdm(me)) return res.status(403).json({ error: 'Nur für Admins.' }); await f(req, res, me); });
 const saveLim = () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['lim', JSON.stringify(LIM)]);
 app.post('/limited', auth(async (req, res, me) => res.json({ ok: true, items: limView(me.name_key, isAdm(me)) })));
+app.post('/bundle/claim', auth(async (req, res, me) => { const r = bunClaim(BUNDLES, me.name_key, (req.body || {}).id, !!(req.body || {}).undo); if (r.ok && !r.already) await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['bundles', JSON.stringify(BUNDLES)]); res.status(r.error ? 400 : 200).json(r); }));
 app.post('/limited/claim', auth(async (req, res, me) => { const r = limClaim(me.name_key, req.body || {}); if (r.ok && !r.already) await saveLim(); res.status(r.error ? 400 : 200).json(r); }));
 app.post('/admin/limited', admin(async (req, res, me) => { const e = limSet(req.body || {}); if (e) return res.status(400).json({ error: e }); await saveLim(); res.json({ ok: true, items: limView(me.name_key, true) }); }));
 app.post('/admin/hide', admin(async (req, res) => { const id = String(req.body.id || ''); if (!/^[a-z]+-[a-z0-9-]{1,30}$/.test(id)) return res.status(400).json({ error: 'Ungueltiges Item.' }); HIDE = HIDE.filter(x => x !== id); if (req.body.on) HIDE.push(id); await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['hide', JSON.stringify(HIDE)]); res.json({ ok: true, hidden: HIDE }); }));
@@ -310,11 +324,10 @@ app.post('/admin/inf', target(async (req, res, t) => { await put({ ...t, inf_coi
 app.post('/admin/pause', target(async (req, res, t) => { await put({ ...t, paused: req.body.paused ? 1 : 0 }); res.json({ ok: true }); }));
 app.post('/admin/removeitem', target(async (req, res, t) => { let o = parse(t.owned, []), e = parse(t.equip, {}); { const m = RM.get(t.name_key) || {}; m[req.body.all ? '*' : String(req.body.id || '')] = Date.now(); RM.set(t.name_key, m); } if (req.body.all) { o = []; e = {}; } else { const id = String(req.body.id || ''); o = o.filter(x => x !== id); for (const k of Object.keys(e)) if (e[k] === id) delete e[k]; } await put({ ...t, owned: o, equip: e }); res.json({ ok: true }); }));
 app.post('/admin/shopprice', admin(async (req, res) => { const id = String(req.body.id || '').slice(0, 40); if (!id) return res.status(400).json({ error: 'id fehlt' }); if (req.body.price === null || req.body.price === '' || req.body.price === undefined) delete PRICES[id]; else PRICES[id] = Math.max(0, Math.min(1e6, Math.round(+req.body.price || 0))); await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['prices', JSON.stringify(PRICES)]); res.json({ ok: true, prices: PRICES }); }));
-app.post('/admin/bundle', admin(async (req, res) => { // Paket anlegen/ändern (id leer = neu) oder löschen (del)
-  const b = req.body || {}; let id = String(b.id || '').replace(/[^a-z0-9]/gi, '').slice(0, 12).toLowerCase();
-  if (b.del) { if (id) delete BUNDLES[id]; }
-  else { const items = (Array.isArray(b.items) ? b.items : []).filter(x => typeof x === 'string' && /^[a-z]+-[a-z0-9-]{1,30}$/.test(x)).slice(0, 12), name = String(b.name || '').trim().slice(0, 40), price = Math.max(0, Math.min(1e6, Math.round(+b.price || 0))); if (!name || items.length < 2) return res.status(400).json({ error: 'Name und mindestens 2 Items nötig.' }); if (!id) id = 'b' + Date.now().toString(36).slice(-6); BUNDLES[id] = { name, items, price }; }
-  await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['bundles', JSON.stringify(BUNDLES)]); res.json({ ok: true, bundles: BUNDLES });
+app.post('/admin/bundle', admin(async (req, res) => { // Paket anlegen/ändern (id leer = neu), verstecken (hide) oder löschen (del)
+  const b = req.body || {}; let id = String(b.id || '').replace(/[^a-z0-9]/gi, '').slice(0, 12).toLowerCase(); if (!id && !b.del) id = 'b' + Date.now().toString(36).slice(-6);
+  const err = bunSave(BUNDLES, id, b, true); if (err) return res.status(400).json({ error: err });
+  await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['bundles', JSON.stringify(BUNDLES)]); res.json({ ok: true, bundles: bunPub(BUNDLES, true) });
 }));
 app.post('/admin/shopname', admin(async (req, res) => { const id = String(req.body.id || '').slice(0, 40), v = String(req.body.name || '').trim().slice(0, 40); if (!id) return res.status(400).json({ error: 'id fehlt' }); if (v) NAMES[id] = v; else delete NAMES[id]; await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['names', JSON.stringify(NAMES)]); res.json({ ok: true }); }));
 app.post('/admin/ban', target(async (req, res, t) => { await put({ ...t, ban_until: req.body.banned && +req.body.until > Date.now() ? Math.round(+req.body.until) : 0, banned: req.body.banned ? 1 : 0, ban_reason: String(req.body.reason || '').slice(0, 80) }); res.json({ ok: true }); }));

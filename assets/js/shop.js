@@ -391,16 +391,20 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
     const sv = $('#limSave'); if (sv) sv.onclick = async () => { sv.disabled = true; take(await window.cloudy.limAdmin({ id: $('#limId').value, mode: $('#limMode').value, price: +$('#limPrice').value, stock: +$('#limStock').value, hours: +$('#limHours').value, code: $('#limCode').value, note: $('#limNote').value, reset: $('#limReset').checked })); };
   }
   // ---- Pakete (Bundles): vom Admin zusammengestellt, ein Preis für mehrere Items ----
-  const bundleOpen = new Set(), bndSel = new Set(), bndDraft = { name: '', price: '' };
+  const bundleOpen = new Set(), bndSel = new Set(), bndDraft = { name: '', price: '', stock: '', hours: '', hidden: false };
   function bundlesHtml() {
-    const B = (shop && shop.bundles) || [], nameOf = id => ((shop.catalog.find(c => c.id === id) || {}).name || id);
-    if (!B.length && !shop.admin) return '';
-    const cards = B.map(b => `<div class="glass shi bnd"><b>🎁 ${escL(b.name)}</b><small>${b.ownedAll ? L('Gehört dir') : (shop.admin ? L('gratis (Admin)') : cc(b.price))}</small><div class="bprev">${b.items.map(i => `<div class="bpi"><div class="i3h" data-i3="${i}"></div><small>${escL(nameOf(i))}</small></div>`).join('')}</div>
-      ${b.ownedAll ? '<button class="btn ghost" disabled>' + L('Gehört dir') + '</button>' : `<button class="btn" data-bnd-buy="${b.id}">${L('Paket kaufen')}</button>`}
-      ${shop.admin ? `<button class="btn ghost" data-bnd-del="${b.id}">${L('Löschen')}</button>` : ''}</div>`).join('');
+    const nameOf = id => ((shop.catalog.find(c => c.id === id) || {}).name || id), isAll = shopFilt === 'all';
+    // Pakete erscheinen bei jedem Filter (Alle / Nicht gekauft / Gekauft / Limited), nicht nur bei „Alle“
+    const B = ((shop && shop.bundles) || []).filter(b => isAll || (shopFilt === 'new' ? !b.ownedAll : shopFilt === 'own' ? b.ownedAll : !!(b.stock || b.until)));
+    if (!B.length && !(shop.admin && isAll)) return '';
+    const lim = b => (b.stock || b.until) ? `<small class="muted">⏳ Limited${b.stock ? ' · ' + L('noch') + ' ' + b.left + '/' + b.stock : ''}${b.until ? ' · ' + (b.until < Date.now() ? L('abgelaufen') : L('bis') + ' ' + new Date(b.until).toLocaleString()) : ''}</small>` : '';
+    const cards = B.map(b => `<div class="glass shi bnd" ${b.hidden ? 'style="opacity:.6"' : ''}><b>🎁 ${escL(b.name)}</b>${b.hidden ? '<small class="muted">🙈 ' + L('Versteckt') + '</small>' : ''}${lim(b)}<small>${b.ownedAll ? L('Gehört dir') : (shop.admin ? L('gratis (Admin)') : cc(b.price))}</small><div class="bprev">${b.items.map(i => `<div class="bpi"><div class="i3h" data-i3="${i}"></div><small>${escL(nameOf(i))}</small></div>`).join('')}</div>
+      ${b.ownedAll ? '<button class="btn ghost" disabled>' + L('Gehört dir') + '</button>' : b.over && !shop.admin ? '<button class="btn ghost" disabled>' + L('Nicht mehr erhältlich') + '</button>' : `<button class="btn" data-bnd-buy="${b.id}">${L('Paket kaufen')}</button>`}
+      ${shop.admin ? `<button class="btn ghost" data-bnd-hide="${b.id}|${b.hidden ? 0 : 1}">${b.hidden ? '👁 ' + L('Zeigen') : '🙈 ' + L('Verstecken')}</button><button class="btn ghost" data-bnd-del="${b.id}">${L('Löschen')}</button>` : ''}</div>`).join('');
     const cats = [...new Set(shop.catalog.map(c => c.cat))];
-    const form = shop.admin ? `<div class="glass set wide" style="margin:10px 0"><h3 style="margin:0 0 6px">${L('Paket erstellen')}</h3><p class="muted">${L('Tippe Items an, um sie ins Paket zu legen. Name und Preis gelten fürs ganze Paket.')}</p>
+    const form = shop.admin && isAll ? `<div class="glass set wide" style="margin:10px 0"><h3 style="margin:0 0 6px">${L('Paket erstellen')}</h3><p class="muted">${L('Tippe Items an, um sie ins Paket zu legen. Name und Preis gelten fürs ganze Paket.')}</p>
       <div class="tools" style="margin:0 0 8px"><input id="bndName" class="field" maxlength="40" placeholder="${L('Name des Pakets')}" value="${escL(bndDraft.name)}" style="flex:1;min-width:160px"><input id="bndPrice" class="field" type="number" min="0" placeholder="${L('Preis (CC)')}" value="${bndDraft.price}" style="max-width:130px"></div>
+      <div class="tools" style="margin:0 0 8px"><input id="bndStock" class="field" type="number" min="0" placeholder="${L('Limited: Menge (0 = unbegrenzt)')}" value="${bndDraft.stock}" style="flex:1;min-width:150px"><input id="bndHours" class="field" type="number" min="0" placeholder="${L('Limited: Stunden (0 = unbegrenzt)')}" value="${bndDraft.hours}" style="flex:1;min-width:150px"><label class="cb"><input type="checkbox" id="bndHid" ${bndDraft.hidden ? 'checked' : ''}> ${L('Versteckt')}</label></div>
       <div class="bsum" id="bndSum"></div>
       <div class="tools" style="margin:6px 0"><input id="bndSearch" class="field" placeholder="${L('Suchen')}…" style="max-width:160px"><button class="chip on" data-bf="">${L('Alle')}</button>${cats.map(c => `<button class="chip" data-bf="${escL(c)}">${escL(c)}</button>`).join('')}</div>
       <div class="bgrid" id="bndItems">${shop.catalog.map(c => `<div class="glass shi bpick ${bndSel.has(c.id) ? 'sel' : ''}" data-bp="${c.id}" data-bcat="${escL(c.cat)}" data-bname="${escL(c.name).toLowerCase()}"><div class="i3h" data-i3="${c.id}"></div><b>${escL(c.name)}</b><small>${c.price} CC</small><span class="bchk">✓</span></div>`).join('')}</div>
@@ -412,13 +416,14 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
     $$('[data-bnd-buy]').forEach(b => b.onclick = async () => { b.disabled = true; take(await window.cloudy.bundleBuy(b.dataset.bndBuy)); try { buySound(); } catch {} });
     $$('[data-bnd-del]').forEach(b => b.onclick = async () => { if (confirm(L('Paket löschen') + '?')) take(await window.cloudy.bundleAdmin({ id: b.dataset.bndDel, del: true })); });
     const sum = () => { const el = $('#bndSum'); if (!el) return; const its = [...bndSel].map(id => shop.catalog.find(c => c.id === id)).filter(Boolean), tot = its.reduce((a, c) => a + c.price, 0); el.innerHTML = its.length ? `<b>${its.length}</b> ${L('Items')}: ${its.map(c => escL(c.name)).join(' · ')}<br><small class="muted">${L('Einzeln zusammen')}: ${tot} CC</small>` : `<small class="muted">${L('Noch nichts ausgewählt.')}</small>`; };
-    const nm = $('#bndName'), pr = $('#bndPrice'); if (nm) nm.oninput = () => bndDraft.name = nm.value; if (pr) pr.oninput = () => bndDraft.price = pr.value;
+    const nm = $('#bndName'), pr = $('#bndPrice'); if (nm) nm.oninput = () => bndDraft.name = nm.value; if (pr) pr.oninput = () => bndDraft.price = pr.value; const bs = $('#bndStock'), bh = $('#bndHours'), bx = $('#bndHid'); if (bs) bs.oninput = () => bndDraft.stock = bs.value; if (bh) bh.oninput = () => bndDraft.hours = bh.value; if (bx) bx.onchange = () => bndDraft.hidden = bx.checked;
+    $$('[data-bnd-hide]').forEach(b => b.onclick = async () => { const [id, on] = b.dataset.bndHide.split('|'); take(await window.cloudy.bundleAdmin({ id, hide: on === '1' })); });
     $$('[data-bp]').forEach(c => c.onclick = () => { const id = c.dataset.bp; bndSel.has(id) ? bndSel.delete(id) : bndSel.add(id); c.classList.toggle('sel', bndSel.has(id)); sum(); });
     let bcat = ''; const flt = () => { const q = ($('#bndSearch').value || '').toLowerCase().trim(); $$('[data-bp]').forEach(c => c.style.display = (!bcat || c.dataset.bcat === bcat) && (!q || c.dataset.bname.includes(q)) ? '' : 'none'); };
     const se = $('#bndSearch'); if (se) se.oninput = flt;
     $$('[data-bf]').forEach(b => b.onclick = () => { bcat = b.dataset.bf; $$('[data-bf]').forEach(x => x.classList.toggle('on', x === b)); flt(); });
     sum();
-    const sv = $('#bndSave'); if (sv) sv.onclick = async () => { const items = [...bndSel]; if (items.length < 2) { $('#bndMsg').textContent = L('Wähle mindestens 2 Items.'); return; } sv.disabled = true; const r = await window.cloudy.bundleAdmin({ name: bndDraft.name, price: +bndDraft.price, items }); if (r && r.ok) { bndSel.clear(); bndDraft.name = ''; bndDraft.price = ''; } take(r); };
+    const sv = $('#bndSave'); if (sv) sv.onclick = async () => { const items = [...bndSel]; if (items.length < 2) { $('#bndMsg').textContent = L('Wähle mindestens 2 Items.'); return; } sv.disabled = true; const r = await window.cloudy.bundleAdmin({ name: bndDraft.name, price: +bndDraft.price, items, stock: +bndDraft.stock || 0, hours: +bndDraft.hours || 0, hidden: bndDraft.hidden }); if (r && r.ok) { bndSel.clear(); Object.assign(bndDraft, { name: '', price: '', stock: '', hours: '', hidden: false }); } take(r); };
   }
   function paintShop() {
     paintCoins(); paintCl(); const box = $('#shopItems'); if (!box || !shop) return; regCustom();
@@ -432,7 +437,7 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
       return `<div class="glass shi ${on ? 'sel' : ''}"><div class="i3h" data-i3="${i.id}"></div><b ${shop.admin ? `contenteditable="plaintext-only" spellcheck="false" title="Admin: Namen anklicken und ändern" data-rn="${i.id}"` : ''}>${i.name}</b><small>${shop.admin ? `<span contenteditable="plaintext-only" spellcheck="false" title="Admin: Preis anklicken und ändern (leer = Standardpreis)" data-pr="${i.id}" style="border-bottom:1px dashed currentColor;padding:0 2px">${i.price}</span> CC · gratis (Admin)` : cc(i.price)}</small>
         ${shop.admin ? `<button class="btn ghost ${i.hidden ? 'tagon' : ''}" data-hide="${i.id}|${i.hidden ? 0 : 1}" title="Admin: ${i.hidden ? 'Wieder im Shop anzeigen' : 'Im Shop verstecken (niemand kann es mehr kaufen)'}">${i.hidden ? '🙈 Versteckt – zeigen' : '👁 Verstecken'}</button>` : ''}        ${shop.admin && i.custom ? `<button class="btn ghost" data-ci-del="${i.id}">Löschen</button>` : ''}${own ? `<button class="btn ${on ? 'ghost' : ''}" data-eq="${i.id}" data-cat="${cat}">${on ? 'Ablegen' : 'Anlegen'}</button>${!shop.admin && !i.custom ? `<button class="btn ghost" data-gift="${i.id}">🎁 Verschenken</button>` : ''}` : `<button class="btn" data-buy="${i.id}">Kaufen</button>`}</div>`;
     }).join('')}</div>`).join('');
-    if (shopFilt === 'all') box.insertAdjacentHTML('afterbegin', bundlesHtml());
+    box.insertAdjacentHTML('afterbegin', bundlesHtml());
     if (shopFilt === 'all' || shopFilt === 'lim') box.insertAdjacentHTML('beforeend', limHtml());
     wireLim();
     wireBundles();

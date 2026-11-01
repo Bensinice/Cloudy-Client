@@ -788,7 +788,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.58'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.59'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1498,7 +1498,7 @@ const namesFile = path.join(app.getPath('userData'), 'shop-names.json'); // vom 
 const pricesFile = path.join(app.getPath('userData'), 'shop-prices.json'); // vom Admin geaenderte Preise
 const bundlesFile = path.join(app.getPath('userData'), 'shop-bundles.json');
 const shopBundles = () => { try { const j = JSON.parse(fs.readFileSync(bundlesFile, 'utf8')); return j && typeof j === 'object' && !Array.isArray(j) ? j : {}; } catch { return {}; } };
-const bundlesView = u => Object.entries(shopBundles()).map(([id, b]) => { const items = (b.items || []).filter(x => CATALOG.some(c => c.id === x)); return { id, name: String(b.name || id), price: Math.max(0, +b.price || 0), items, ownedAll: items.length > 0 && items.every(x => (u.owned || []).includes(x)) }; }).filter(b => b.items.length >= 2);
+const bundlesView = u => Object.entries(shopBundles()).map(([id, b]) => { const items = (b.items || []).filter(x => CATALOG.some(c => c.id === x)), stock = Math.max(0, +b.stock || 0), until = +b.until || 0, left = stock ? Math.max(0, stock - (+b.sold || 0)) : 0, over = !!((until && until < Date.now()) || (stock && left <= 0)), ownedAll = items.length > 0 && items.every(x => (u.owned || []).includes(x)); return { id, name: String(b.name || id), price: Math.max(0, +b.price || 0), items, ownedAll, hidden: !!b.hidden, stock, left, until, over }; }).filter(b => b.items.length >= 2 && (u.admin || (!b.hidden && (!b.over || b.ownedAll))));
 const shopPrices = () => { try { const j = JSON.parse(fs.readFileSync(pricesFile, 'utf8')); return j && typeof j === 'object' ? j : {}; } catch { return {}; } };
 const priceOf = (c, pr) => Number.isFinite(+pr[c.id]) && pr[c.id] !== null ? Math.max(0, Math.round(+pr[c.id])) : c.price;
 const shopNames = () => { try { const j = JSON.parse(fs.readFileSync(namesFile, 'utf8')); return j && typeof j === 'object' ? j : {}; } catch { return {}; } };
@@ -1587,7 +1587,14 @@ ipcMain.handle('shopBuy', (_e, id) => shopWrite(u => {
   if (u.coins < price) return { ok: false, error: `Dir fehlen ${price - u.coins} CC.` };
   u.coins -= price; u.owned.push(id);
 }));
-ipcMain.handle('bundleBuy', (_e, id) => shopWrite(u => {
+ipcMain.handle('bundleBuy', async (_e, id) => { // Limited-Pakete: Der Server zählt den Bestand (erst reservieren, bei Fehlschlag wieder freigeben)
+  const bb = shopBundles()[id]; let claimed = false;
+  const cu0 = currentUser && readAuth().users[currentUser.toLowerCase()];
+  if (bb && (bb.stock || bb.until) && srvCfg() && srvTok && !(cu0 && cu0.admin)) {
+    const c = await srvCall('/bundle/claim', { id }, srvTok).catch(() => null);
+    if (!c) return { ok: false, error: 'Der Konto-Server ist nicht erreichbar.' }; if (!c.ok) return { ok: false, error: c.error || 'Das hat nicht geklappt.' }; claimed = !c.already;
+  }
+  const res = shopWrite(u => {
   const b = shopBundles()[id]; if (!b) return { ok: false, error: 'Dieses Paket gibt es nicht mehr.' };
   const items = (b.items || []).filter(x => CATALOG.some(c => c.id === x)); if (u.admin) return {};
   const missing = items.filter(x => !u.owned.includes(x)); if (!missing.length) return { ok: false, error: 'Du besitzt schon alles aus diesem Paket.' };
@@ -1595,14 +1602,17 @@ ipcMain.handle('bundleBuy', (_e, id) => shopWrite(u => {
   const price = Math.max(0, Math.round(+b.price || 0));
   if (!u.infCoins) { if (u.coins < price) return { ok: false, error: `Dir fehlen ${price - u.coins} CC.` }; u.coins -= price; }
   for (const x of missing) u.owned.push(x);
-}));
+});
+  if (claimed && res && res.ok === false) srvCall('/bundle/claim', { id, undo: true }, srvTok).catch(() => {});
+  return res;
+});
 ipcMain.handle('bundleAdmin', async (_e, o) => { // Admin: Paket anlegen / ändern / löschen
   const a = readAuth(), cu = currentUser && a.users[currentUser.toLowerCase()]; if (!cu || !cu.admin) return { ok: false, error: 'Nur Admins können Pakete anlegen.' };
   o = o || {}; const items = (Array.isArray(o.items) ? o.items : []).filter(x => CATALOG.some(c => c.id === x)).slice(0, 12), price = Math.max(0, Math.min(1e6, Math.round(+o.price || 0))), name = String(o.name || '').trim().slice(0, 40);
-  if (!o.del && (!name || items.length < 2)) return { ok: false, error: 'Gib einen Namen an und wähle mindestens 2 Items.' };
+  if (!o.del && o.hide === undefined && (!name || items.length < 2)) return { ok: false, error: 'Gib einen Namen an und wähle mindestens 2 Items.' };
   let all;
-  if (srvCfg()) { const r = await srvCall('/admin/bundle', { id: o.id || '', name, items, price, del: !!o.del }, srvTok).catch(() => ({})); if (!r.ok) return { ok: false, error: r.error || 'Der Server hat das nicht gespeichert (Server aktuell?).' }; all = r.bundles || {}; }
-  else { all = shopBundles(); const id = String(o.id || '') || 'b' + Date.now().toString(36).slice(-6); if (o.del) delete all[id]; else all[id] = { name, items, price }; }
+  if (srvCfg()) { const r = await srvCall('/admin/bundle', { id: o.id || '', name, items, price, del: !!o.del, hide: o.hide, hidden: !!o.hidden, stock: o.stock, hours: o.hours }, srvTok).catch(() => ({})); if (!r.ok) return { ok: false, error: r.error || 'Der Server hat das nicht gespeichert (Server aktuell?).' }; all = r.bundles || {}; }
+  else { all = shopBundles(); const id = String(o.id || '') || 'b' + Date.now().toString(36).slice(-6); if (o.del) delete all[id]; else if (o.hide !== undefined && all[id]) all[id].hidden = !!o.hide; else all[id] = { name, items, price, hidden: !!o.hidden, stock: Math.max(0, Math.round(+o.stock || 0)), until: +o.hours ? Date.now() + (+o.hours) * 3600e3 : 0, sold: 0 }; }
   try { fs.writeFileSync(bundlesFile, JSON.stringify(all)); } catch { return { ok: false, error: 'Paket konnte nicht gespeichert werden.' }; }
   return shopWrite(() => ({}), true);
 });
