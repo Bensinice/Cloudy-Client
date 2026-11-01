@@ -101,6 +101,7 @@ const auth = wrap2 => wrap(async (req, res) => {
   await wrap2(req, res, me);
 });
 // ---- Freunde & Chat direkt über den Konto-Server (kein extra Freundesserver nötig) ----
+let TAGLIVE = () => []; // Clan-Tags (wird von frHandle gesetzt) – für die Namens-Tags im Spiel
 const PRES = new Map(); // Konto -> { srv, t } (wo jemand gerade spielt/hostet)
 const CALLS = new Map(); // Gruppen-ID -> { m: Konto -> letzter Kontakt, q: Konto -> wartende Verbindungsdaten }
 const SEEN = new Map(); // Konto -> letzter Kontakt (für „online“)
@@ -111,6 +112,7 @@ async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
   const online = k => now - (SEEN.get(k) || 0) < 45000;
   FR.groups = FR.groups || {}; FR.clan = FR.clan || {}; const GR = FR.groups;
   const clanOf = k => { const g = GR[FR.clan[k]]; return g && g.tag && g.members.includes(k) ? ['clan:' + g.tag + (g.color ? ':' + g.color.slice(1) : '')] : []; };
+  TAGLIVE = clanOf;
   const hexOk = c => /^#[0-9a-fA-F]{6}$/.test(String(c || '')) ? String(c).toLowerCase() : '';
   const imgOk = i => /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]{20,12000}$/.test(String(i || ''));
   const gOf = id => { id = String(id || ''); if (id.startsWith('dm:')) { const k = key(id.slice(3)); return u.friends.includes(k) ? { id: 'dm:' + frPair(me, k), members: [me, k], owner: me, msgs: [], dm: true } : null; } const g = GR[id]; return g && g.members.includes(me) ? g : null; };
@@ -245,7 +247,7 @@ app.post('/cos/reg', auth(async (req, res, me) => {
   COS[mc] = { u: me.name_key, equip: eq, t: Date.now() }; await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['cos', JSON.stringify(COS)]); res.json({ ok: true });
 }));
 app.post('/cos/get', auth(async (req, res) => {
-  const out = {}; for (const n of (Array.isArray((req.body || {}).names) ? req.body.names : []).slice(0, 80)) { const k = String(n).toLowerCase(), e = COS[k]; if (e && Object.keys(e.equip).length) out[k] = e.equip; }
+  const out = {}; for (const n of (Array.isArray((req.body || {}).names) ? req.body.names : []).slice(0, 80)) { const k = String(n).toLowerCase(), e = COS[k]; if (!e) continue; const tg = tagsOf(e.u).concat(TAGLIVE(e.u)); if (Object.keys(e.equip).length || tg.length) out[k] = { ...e.equip, tg }; }
   res.json({ ok: true, players: out });
 }));
 app.post('/state', auth(async (req, res, me) => { // Shop-Stand des Kontos speichern (Coins, gekaufte Items, Auswahl)

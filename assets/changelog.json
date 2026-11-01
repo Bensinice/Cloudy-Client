@@ -1,5 +1,18 @@
 [
  {
+  "v": "0.9.50",
+  "date": "2026-11-01",
+  "added": [
+   "Mini-Player: auch YouTube-, YouTube-Music- und SoundCloud-Links (Video, Playlist, Track). Lyrics laufen jetzt auch mit diesen Quellen, sobald etwas spielt (neu, nur mit Testdaten geprüft)",
+   "Tags im Spiel: Rang- und Clan-Tags (z. B. [Owner] [CLD]) stehen vor dem Namen über dem Kopf und in der Spielerliste – sichtbar für Cloudy-Spieler (Server-Datei neu hochladen!)",
+   "Linux: Cloudy gibt es jetzt als AppImage (Cloudy-Linux.AppImage) mit Updates; neu und noch nicht auf echtem Linux getestet",
+   "Englisch: rund 400 bisher deutsche Texte (Gruppen, Anrufe, Modpacks, Shop, Tour, Fehlermeldungen …) übersetzt",
+   "Eigenes Icon: oben links lässt sich das Wolken-Symbol durch ein eigenes Bild ersetzen (Einstellungen → Darstellung)"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.49",
   "date": "2026-11-01",
   "added": [

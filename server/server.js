@@ -48,6 +48,7 @@ function limited(ip) { const t = tries.get(ip) || { n: 0, t: Date.now() }; if (D
 const who = req => { const m = /^Bearer (.+)$/.exec(req.headers.authorization || ''); const k = m && sessions.get(m[1]); return k ? db.users[k] : null; };
 const fk = (o, s) => { const u = String(s || '').trim().toUpperCase(); if (Object.prototype.hasOwnProperty.call(o, u)) return u; const n = u.replace(/[^A-Z0-9]/g, ''); return n ? (Object.keys(o).find(k => k.replace(/[^A-Z0-9]/g, '') === n) || u) : u; }; // Codes mit oder ohne Bindestriche, Groß-/Kleinschreibung egal
 // ---- Freunde & Chat direkt über den Konto-Server (kein extra Freundesserver nötig) ----
+let TAGLIVE = () => []; // Clan-Tags (wird von frHandle gesetzt) – für die Namens-Tags im Spiel
 const PRES = new Map(); // Konto -> { srv, t } (wo jemand gerade spielt/hostet)
 const CALLS = new Map(); // Gruppen-ID -> { m: Konto -> letzter Kontakt, q: Konto -> wartende Verbindungsdaten }
 const SEEN = new Map(); // Konto -> letzter Kontakt (für „online“)
@@ -58,6 +59,7 @@ async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
   const online = k => now - (SEEN.get(k) || 0) < 45000;
   FR.groups = FR.groups || {}; FR.clan = FR.clan || {}; const GR = FR.groups;
   const clanOf = k => { const g = GR[FR.clan[k]]; return g && g.tag && g.members.includes(k) ? ['clan:' + g.tag + (g.color ? ':' + g.color.slice(1) : '')] : []; };
+  TAGLIVE = clanOf;
   const hexOk = c => /^#[0-9a-fA-F]{6}$/.test(String(c || '')) ? String(c).toLowerCase() : '';
   const imgOk = i => /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]{20,12000}$/.test(String(i || ''));
   const gOf = id => { id = String(id || ''); if (id.startsWith('dm:')) { const k = key(id.slice(3)); return u.friends.includes(k) ? { id: 'dm:' + frPair(me, k), members: [me, k], owner: me, msgs: [], dm: true } : null; } const g = GR[id]; return g && g.members.includes(me) ? g : null; };
@@ -209,7 +211,7 @@ http.createServer(async (req, res) => {
       db.cos[mc] = { u: me.name.toLowerCase(), equip: eq, t: Date.now() }; save(); return send(res, 200, { ok: true });
     }
     if (url === '/cos/get' && req.method === 'POST') { // Cosmetics anderer Cloudy-Spieler abfragen (nach Minecraft-Namen)
-      const out = {}; for (const n of (Array.isArray(b.names) ? b.names : []).slice(0, 80)) { const k = String(n).toLowerCase(), e = (db.cos || {})[k]; if (e && Object.keys(e.equip).length) out[k] = e.equip; }
+      const out = {}; for (const n of (Array.isArray(b.names) ? b.names : []).slice(0, 80)) { const k = String(n).toLowerCase(), e = (db.cos || {})[k]; if (!e) continue; const tg = tagsOf(e.u).concat(TAGLIVE(e.u)); if (Object.keys(e.equip).length || tg.length) out[k] = { ...e.equip, tg }; }
       return send(res, 200, { ok: true, players: out });
     }
     if (url === '/gift' && req.method === 'POST') { // Item verschenken

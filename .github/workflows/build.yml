@@ -59,8 +59,23 @@ jobs:
       - run: npx electron-builder --mac dmg --${{ matrix.arch }} --publish never
       - uses: actions/upload-artifact@v4
         with: { name: "mac-${{ matrix.arch }}", path: "dist/*.dmg" }
+  linux:
+    needs: client
+    runs-on: ubuntu-latest
+    continue-on-error: true   # Linux ist neu: ein Fehler hier darf den Windows/Mac-Release nie verhindern
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with: { name: cloudy-client, path: client }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install
+      - run: npx electron-builder --linux AppImage --x64 --publish never
+      - uses: actions/upload-artifact@v4
+        with: { name: linux, path: "dist/*.AppImage" }
   release:
-    needs: [windows, mac]
+    needs: [windows, mac, linux]
     if: always() && needs.windows.result == 'success'
     runs-on: ubuntu-latest
     steps:
@@ -69,7 +84,7 @@ jobs:
         id: v
         run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
       - uses: actions/download-artifact@v4
-        with: { path: release, merge-multiple: true, pattern: "{windows,mac-*}" }
+        with: { path: release, merge-multiple: true, pattern: "{windows,mac-*,linux}" }
       # Der Update-Knopf in Cloudy vergleicht diese Version (Tag v<Version>) mit der installierten.
       # Für ein neues Update: "version" in package.json erhöhen und hochladen.
       - uses: softprops/action-gh-release@v2

@@ -90,6 +90,8 @@
     [/^Lade (.+) \((\d+)\/(\d+)\)$/, 'Loading $1 ($2/$3)'], [/^Minecraft wurde beendet \(Code (.+)\)\.$/, 'Minecraft was closed (code $1).'], [/^Aktiv für Minecraft (.+)\.$/, 'Active for Minecraft $1.'],
     [/^Angemeldet als (.+) – Administrator$/, 'Signed in as $1 – administrator'], [/^Minecraft startet …$/, 'Minecraft is starting …']
   ];
+  if (window.CLOUDY_EN_EXTRA) for (const k in window.CLOUDY_EN_EXTRA) if (EN[k] == null) EN[k] = window.CLOUDY_EN_EXTRA[k];
+  if (window.CLOUDY_RX_EXTRA) RX.push(...window.CLOUDY_RX_EXTRA);
   const LANGS = { de: null, en: EN, ...(window.CLOUDY_LANGS || {}) };
   const orig = new WeakMap(), attrOrig = new WeakMap();
   let lang = 'de', busy = false;

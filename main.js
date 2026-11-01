@@ -62,6 +62,7 @@ async function download(url, dest) {
 }
 
 const IS_MAC = process.platform === 'darwin', IS_WIN = process.platform === 'win32';
+if (process.platform === 'linux') { app.commandLine.appendSwitch('no-sandbox'); app.commandLine.appendSwitch('disable-gpu-sandbox'); } // AppImage hat kein setuid-Sandbox-Helferprogramm
 
 const uiPrefFile = path.join(app.getPath('userData'), 'ui-pref.json');
 const uiPref = () => { try { return JSON.parse(fs.readFileSync(uiPrefFile, 'utf8')) || {}; } catch { return {}; } };
@@ -666,7 +667,7 @@ ipcMain.handle('notify', (_e, { title, body, kind, id }) => { // Desktop-Hinweis
   } catch { return false; }
 });
 ipcMain.handle('micAccess', async () => { try { if (process.platform === 'darwin') return await require('electron').systemPreferences.askForMediaAccess('microphone'); return true; } catch { return true; } });
-ipcMain.handle('openExternal', (_e, u) => /^spotify:(playlist|album|track|artist|show|episode):[A-Za-z0-9]+$/.test(u) ? shell.openExternal(u) : /^https:\/\/(github\.com|developer\.spotify\.com|open\.spotify\.com|modrinth\.com|www\.minecraft\.net|namemc\.com|www\.minecraftskins\.com|www\.planetminecraft\.com|discord\.com)\//.test(u) ? shell.openExternal(u) : null);
+ipcMain.handle('openExternal', (_e, u) => /^spotify:(playlist|album|track|artist|show|episode):[A-Za-z0-9]+$/.test(u) ? shell.openExternal(u) : /^https:\/\/(github\.com|developer\.spotify\.com|open\.spotify\.com|www\.youtube\.com|music\.youtube\.com|soundcloud\.com|modrinth\.com|www\.minecraft\.net|namemc\.com|www\.minecraftskins\.com|www\.planetminecraft\.com|discord\.com)\//.test(u) ? shell.openExternal(u) : null);
 ipcMain.handle('spotifyTitle', async (_e, u) => { // Name einer Playlist/eines Albums für die Schnellauswahl
   try { if (!/^https:\/\/open\.spotify\.com\/(playlist|album|track|artist|show|episode)\/[A-Za-z0-9]+$/.test(String(u))) return null; const d = await getJSON('https://open.spotify.com/oembed?url=' + encodeURIComponent(u)); return d && d.title ? String(d.title).slice(0, 60) : null; } catch { return null; }
 });
@@ -747,7 +748,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.49'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.50'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1889,7 +1890,37 @@ async function spotifyNow() {
   }
   spCache = { t: Date.now(), v }; return v;
 }
-const mediaNowP = async () => { try { const v = await spotifyNow(); if (v) return v; } catch {} return mediaNowLocal(); };
+// ---- Web-Player (YouTube, YouTube Music, SoundCloud): Der Mini-Player meldet, was gerade läuft – das dient als dritte Quelle für die Lyrics ----
+let webNow = null;
+const cleanTrack = (title, author) => {
+  let t = String(title || '').replace(/[\[(][^\])]*(official|lyric|lyrics|video|audio|visuali[sz]er|hd|4k|remaster|musikvideo|offizielles)[^\])]*[\])]/gi, '').replace(/\s*\|.*$/, '').replace(/\s{2,}/g, ' ').trim();
+  let a = String(author || '').replace(/\s*-\s*Topic$/i, '').replace(/VEVO$/i, '').trim();
+  const i = t.indexOf(' - ');
+  if (i > 0) { a = t.slice(0, i).trim(); t = t.slice(i + 3).trim(); }
+  t = t.replace(/\s+(ft\.?|feat\.?)\s.*$/i, '').trim();
+  return { title: t.slice(0, 120), artist: a.slice(0, 80) };
+};
+ipcMain.handle('webReport', (_e, o) => {
+  try { if (!o || typeof o !== 'object') { webNow = null; return; } const c = cleanTrack(o.title, o.artist); webNow = { ...c, playing: !!o.playing, posMs: Number.isFinite(+o.posMs) ? Math.max(0, +o.posMs) : 0, t: Date.now() }; } catch { webNow = null; }
+});
+ipcMain.handle('webTitle', async (_e, u) => { // Titel eines YouTube-/SoundCloud-Links für die Schnellauswahl
+  try {
+    u = String(u); let api = null;
+    if (/^https:\/\/(www\.|music\.)?youtube\.com\/(watch\?v=|playlist\?list=)[\w-]+$/.test(u)) api = 'https://www.youtube.com/oembed?format=json&url=' + encodeURIComponent(u.replace('music.youtube.com', 'www.youtube.com'));
+    else if (/^https:\/\/soundcloud\.com\/[\w-]+(\/[\w-]+(\/[\w-]+)?)?$/.test(u)) api = 'https://soundcloud.com/oembed?format=json&url=' + encodeURIComponent(u);
+    if (!api) return null; const d = await getJSON(api); return d && d.title ? { title: String(d.title).slice(0, 80), author: String(d.author_name || '').slice(0, 60) } : null;
+  } catch { return null; }
+});
+try { app.whenReady().then(() => { // YouTube verlangt für eingebettete Player einen Referer (sonst „Fehler 153“)
+  require('electron').session.defaultSession.webRequest.onBeforeSendHeaders({ urls: ['https://www.youtube.com/embed/*', 'https://www.youtube-nocookie.com/embed/*'] }, (d, cb) => { const h = { ...d.requestHeaders }; if (!h.Referer) h.Referer = 'https://cloudy-launcher.app/'; cb({ requestHeaders: h }); });
+}); } catch {}
+const mediaNowP = async () => {
+  try { const v = await spotifyNow(); if (v && v.playing) return v; } catch {}
+  const l = await mediaNowLocal();
+  if (l && l.playing) return l;
+  if (webNow && webNow.playing && Date.now() - webNow.t < 6000 && webNow.title) return { running: true, playing: true, title: webNow.title, artist: webNow.artist, posMs: webNow.posMs + (Date.now() - webNow.t), src: 'web' };
+  return l;
+};
 ipcMain.handle('spotifyState', () => { const j = spLoad(); return { connected: !!j.refresh, clientId: j.clientId || '', redirect: SP_REDIRECT, last: spLast }; });
 ipcMain.handle('spotifyTest', async () => { spCache = { t: 0, v: null }; try { await spotifyNow(); } catch (e) { spLast = { ok: false, msg: String(e && e.message || e) }; } return spLast; });
 ipcMain.handle('spotifyDisconnect', () => { const j = spLoad(); spSave({ clientId: j.clientId || '' }); spCache = { t: 0, v: null }; return true; });

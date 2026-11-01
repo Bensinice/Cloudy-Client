@@ -79,6 +79,49 @@
   // ---- Spotify: Mini-Player mit gespeicherten Playlists ----
   const SPOT = /open\.spotify\.com\/(?:intl-[a-z]+\/)?(playlist|album|track|artist|episode|show)\/([A-Za-z0-9]+)|spotify:(playlist|album|track|artist|episode|show):([A-Za-z0-9]+)/;
   const parse = v => { const m = SPOT.exec(String(v || '')); return m ? { type: m[1] || m[3], id: m[2] || m[4] } : null; };
+  // YouTube / YouTube Music / SoundCloud
+  const webParse = v => {
+    v = String(v || '').trim(); let m;
+    if ((m = /(?:youtube\.com\/watch\?(?:[^#]*&)?v=|youtu\.be\/)([\w-]{11})/.exec(v))) return { kind: 'yt', url: 'https://www.youtube.com/watch?v=' + m[1], src: 'https://www.youtube.com/embed/' + m[1] + '?enablejsapi=1&playsinline=1&rel=0', h: 220 };
+    if ((m = /(?:youtube\.com\/playlist\?(?:[^#]*&)?list=)([\w-]+)/.exec(v))) return { kind: 'yt', url: 'https://www.youtube.com/playlist?list=' + m[1], src: 'https://www.youtube.com/embed/videoseries?list=' + m[1] + '&enablejsapi=1&playsinline=1', h: 220 };
+    if ((m = /^https?:\/\/(?:www\.|m\.)?soundcloud\.com\/([\w-]+(?:\/[\w-]+(?:\/[\w-]+)?)?)\/?(?:[?#].*)?$/.exec(v)) && !/^(discover|stream|you|upload|pages|jobs|terms-of-use)(\/|$)/.test(m[1])) { const u = 'https://soundcloud.com/' + m[1]; return { kind: 'sc', url: u, src: 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(u) + '&auto_play=false&show_comments=false&visual=false', h: 166 }; }
+    return null;
+  };
+  // Meldet Titel und Position des laufenden Web-Players an Cloudy (für Lyrics)
+  const webTrack = { w: null, title: '', artist: '', playing: false, pos: 0, t: 0, timer: 0 };
+  const webReport = () => { try { if (webTrack.w && webTrack.title) window.cloudy.webReport({ title: webTrack.title, artist: webTrack.artist, playing: webTrack.playing, posMs: webTrack.pos * 1000 + (webTrack.playing ? Date.now() - webTrack.t : 0) }); else window.cloudy.webReport(null); } catch {} };
+  window.addEventListener('message', ev => {
+    const w = webTrack.w; if (!w) return; let d = ev.data;
+    try {
+      if (typeof d === 'string') d = JSON.parse(d); if (!d || typeof d !== 'object') return;
+      if (/youtube\.com$/.test(new URL(ev.origin).hostname) && w.kind === 'yt') {
+        const i = d.info || {};
+        if (d.event === 'infoDelivery' || d.event === 'initialDelivery') {
+          if (i.videoData && i.videoData.title) { webTrack.title = i.videoData.title; webTrack.artist = i.videoData.author || ''; }
+          if (typeof i.currentTime === 'number') { webTrack.pos = i.currentTime; webTrack.t = Date.now(); }
+          if (typeof i.playerState === 'number') webTrack.playing = i.playerState === 1;
+          webReport();
+        }
+      } else if (/soundcloud\.com$/.test(new URL(ev.origin).hostname) && w.kind === 'sc') {
+        if (d.method === 'ready') { const f = $('#spFrame iframe'); if (f && f.contentWindow) for (const k of ['play', 'pause', 'finish', 'playProgress']) f.contentWindow.postMessage(JSON.stringify({ method: 'addEventListener', value: k }), '*'); }
+        else if (d.method === 'play') { webTrack.playing = true; webTrack.t = Date.now(); const f = $('#spFrame iframe'); if (f && f.contentWindow) f.contentWindow.postMessage(JSON.stringify({ method: 'getCurrentSound' }), '*'); }
+        else if (d.method === 'pause' || d.method === 'finish') { webTrack.playing = false; }
+        else if (d.method === 'playProgress' && d.value) { webTrack.pos = (d.value.currentPosition || 0) / 1000; webTrack.t = Date.now(); webTrack.playing = true; }
+        else if (d.method === 'getCurrentSound' && d.value) { webTrack.title = d.value.title || webTrack.title; webTrack.artist = (d.value.user && d.value.user.username) || webTrack.artist; }
+        webReport();
+      }
+    } catch {}
+  });
+  const webAttach = w => {
+    clearInterval(webTrack.timer); webTrack.w = w; webTrack.title = webTrack.artist = ''; webTrack.playing = false; webTrack.pos = 0; webTrack.t = Date.now();
+    if (!w) { webReport(); return; }
+    try { window.cloudy.webTitle(w.url).then(r => { if (r && r.title && !webTrack.title) { webTrack.title = r.title; webTrack.artist = r.author || ''; } }).catch(() => {}); } catch {}
+    webTrack.timer = setInterval(() => { // YouTube liefert erst Daten, wenn man „zuhört“
+      const f = $('#spFrame iframe'); if (!f || !f.contentWindow) return;
+      if (w.kind === 'yt') f.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), '*');
+      webReport();
+    }, 1000);
+  };
   const urlOf = r => 'https://open.spotify.com/' + r.type + '/' + r.id;
   const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const DEFAULTS = [{ name: 'Today’s Top Hits (Beispiel)', url: 'https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M' }];
@@ -100,7 +143,15 @@
       box.querySelectorAll('[data-d]').forEach(x => x.onclick = () => { const a = lst().slice(); a.splice(+x.dataset.d, 1); S.set('spl', a); paintList(); });
     };
     const load = (link, quiet) => {
-      const r = parse(link); if (!r) { $('#spNote').textContent = en() ? 'That is not a Spotify link.' : 'Das ist kein Spotify-Link.'; return; }
+      const wp = webParse(link);
+      if (wp) {
+        cur = wp.url; S.set('spc', cur);
+        $('#spFrame').innerHTML = `<iframe title="${wp.kind === 'yt' ? 'YouTube' : 'SoundCloud'}" src="${wp.src}" width="100%" height="${wp.h}" frameborder="0" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" style="border-radius:14px;border:0"></iframe>`;
+        webAttach(wp); paintList(); if (!quiet) { const m = $('#lgMute'); if (m && !m.classList.contains('off')) m.click(); }
+        return;
+      }
+      webAttach(null);
+      const r = parse(link); if (!r) { $('#spNote').textContent = en() ? 'That is not a Spotify, YouTube or SoundCloud link.' : 'Das ist kein Spotify-, YouTube- oder SoundCloud-Link.'; return; }
       cur = urlOf(r); S.set('spc', cur);
       const h = /^(track|episode)$/.test(r.type) ? 152 : 352;
       $('#spFrame').innerHTML = `<iframe title="Spotify" src="https://open.spotify.com/embed/${r.type}/${r.id}?utm_source=generator&theme=0" width="100%" height="${h}" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="border-radius:14px;border:0"></iframe>`;
@@ -108,7 +159,13 @@
       if (!quiet) { const m = $('#lgMute'); if (m && !m.classList.contains('off')) m.click(); }
     };
     const save = async () => {
-      const v = $('#spIn').value, r = parse(v); if (!r) { $('#spNote').textContent = en() ? 'That is not a Spotify link.' : 'Das ist kein Spotify-Link.'; return; }
+      const v = $('#spIn').value, wp = webParse(v);
+      if (wp) {
+        const a = lst().slice(); $('#spIn').value = '';
+        if (!a.some(x => x.url === wp.url)) { let name = null; try { const t = await window.cloudy.webTitle(wp.url); if (t && t.title) name = t.title; } catch {} a.unshift({ name: (wp.kind === 'yt' ? '▶ ' : '☁ ') + (name || (wp.kind === 'yt' ? 'YouTube' : 'SoundCloud')), url: wp.url }); S.set('spl', a); }
+        load(wp.url); return;
+      }
+      const r = parse(v); if (!r) { $('#spNote').textContent = en() ? 'That is not a Spotify, YouTube or SoundCloud link.' : 'Das ist kein Spotify-, YouTube- oder SoundCloud-Link.'; return; }
       const u = urlOf(r), a = lst().slice(); $('#spIn').value = '';
       if (!a.some(x => x.url === u)) {
         let name = null; try { name = await window.cloudy.spotifyTitle(u); if (typeof name !== 'string') name = null; } catch {}
@@ -116,7 +173,7 @@
       }
       load(u);
     };
-    const open = () => { const r = parse(cur || $('#spIn').value); try { if (r) window.cloudy.openExternal('spotify:' + r.type + ':' + r.id); else window.cloudy.openExternal('https://open.spotify.com/'); } catch {} };
+    const open = () => { const wb = webParse(cur); if (wb) { try { window.cloudy.openExternal(wb.url); } catch {} return; } const r = parse(cur || $('#spIn').value); try { if (r) window.cloudy.openExternal('spotify:' + r.type + ':' + r.id); else window.cloudy.openExternal('https://open.spotify.com/'); } catch {} };
     b.onclick = e => { e.stopPropagation(); p.hidden = !p.hidden; if (!p.hidden) { txt(); paintList(); } };
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && !p.hidden) p.hidden = true; });
     $('#spGo').onclick = save; $('#spApp').onclick = open;
@@ -313,4 +370,20 @@
     if (window.onLoggedIn) { const o = window.onLoggedIn; window.onLoggedIn = function () { try { paintQ(); tryDebug(); } catch {} return o.apply(this, arguments); }; }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+
+  // ---- Eigenes Icon: ersetzt das Wolken-Symbol oben links (Einstellungen → Darstellung) ----
+  function brandIcon() {
+    const br = $('.brand'); if (!br) return; const img = S.get('brandIcon', ''), svg = br.querySelector('svg'), cur = br.querySelector('img.bico');
+    if (img) { if (svg) svg.style.display = 'none'; if (cur) cur.src = img; else { const i = document.createElement('img'); i.className = 'bico'; i.src = img; i.alt = ''; i.style.cssText = 'width:30px;height:30px;border-radius:8px;object-fit:cover;vertical-align:middle;margin-right:8px'; br.insertBefore(i, br.firstChild); } }
+    else { if (svg) svg.style.display = ''; if (cur) cur.remove(); }
+  }
+  function brandUi() {
+    const h = [...document.querySelectorAll('#p-settings h3')].find(x => /Darstellung|Appearance/.test(x.textContent)); if (!h || $('#biSet')) return;
+    const row = document.createElement('div'); row.className = 'tools'; row.style.margin = '10px 0 0';
+    row.innerHTML = `<button class="btn ghost" id="biSet">🖼 ${en() ? 'Custom icon' : 'Eigenes Icon'}</button><button class="btn ghost" id="biReset">${en() ? 'Reset icon' : 'Icon zurücksetzen'}</button>`;
+    h.parentElement.appendChild(row);
+    $('#biSet').onclick = () => { const f = document.createElement('input'); f.type = 'file'; f.accept = 'image/*'; f.onchange = () => { const file = f.files && f.files[0]; if (!file) return; const u = URL.createObjectURL(file), im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = c.height = 96; const g = c.getContext('2d'), r = Math.min(im.width, im.height); g.drawImage(im, (im.width - r) / 2, (im.height - r) / 2, r, r, 0, 0, 96, 96); URL.revokeObjectURL(u); S.set('brandIcon', c.toDataURL('image/png')); brandIcon(); }; im.src = u; }; f.click(); };
+    $('#biReset').onclick = () => { S.set('brandIcon', ''); brandIcon(); };
+  }
+  brandIcon(); brandUi(); setTimeout(brandUi, 1500);
 })();

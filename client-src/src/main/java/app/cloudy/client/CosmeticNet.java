@@ -20,6 +20,7 @@ import java.util.WeakHashMap;
 public final class CosmeticNet {
 	private static final Map<PlayerEntityRenderState, AbstractClientPlayerEntity> STASH = new WeakHashMap<>();
 	private static volatile Map<String, String[]> others = new HashMap<>(); // Name (klein) -> {cape, hat, wings}
+	private static volatile Map<String, List<String>> tagMap = new HashMap<>(); // Name (klein) -> Tags (owner, manager, clan:TAG:farbe ...)
 	private static long lastWant, lastRead, otherMod;
 	private static String lastNames = "";
 
@@ -40,6 +41,25 @@ public final class CosmeticNet {
 		} catch (Throwable t) { return null; }
 	}
 
+	public static List<String> tagsOf(String name) { return name == null ? null : tagMap.get(name.toLowerCase()); }
+	private static int tagColor(String t) {
+		switch (t) { case "owner": return 0xFFAA00; case "admin": return 0xFF5555; case "manager": return 0xFF8A3D; case "mod": return 0x55FF55; case "plus": return 0x55FFFF; case "tester": return 0xAA77FF; default: return 0x9CC9FF; }
+	}
+	/** Vorsatz vor dem Namen, z. B. "[Owner] [CLD] ". Null, wenn der Spieler keine Tags hat. */
+	public static net.minecraft.text.MutableText tagPrefix(String name) {
+		List<String> l = tagsOf(name); if (l == null || l.isEmpty()) return null;
+		net.minecraft.text.MutableText out = null;
+		for (String t : l) {
+			String label; int col;
+			if (t.startsWith("clan:")) { String[] p = t.split(":"); label = p.length > 1 ? p[1] : ""; col = 0x9CC9FF; if (p.length > 2) { try { col = Integer.parseInt(p[2], 16); } catch (Exception ignored) {} } }
+			else { label = t.isEmpty() ? "" : Character.toUpperCase(t.charAt(0)) + t.substring(1); col = tagColor(t); if (t.equals("plus")) label = "Cloudy+"; if (t.equals("mod")) label = "Mod"; }
+			if (label.isEmpty()) continue;
+			final int c = col;
+			net.minecraft.text.MutableText part = net.minecraft.text.Text.literal("[" + label + "] ").styled(st -> st.withColor(c));
+			if (out == null) out = part; else out.append(part);
+		}
+		return out;
+	}
 	public static String[] get(String name) { return name == null ? null : others.get(name.toLowerCase()); }
 
 	private static boolean okId(String v, String cat) { return v != null && v.startsWith(cat + "-") && (java.util.Arrays.asList(Cosmetics.ALL).contains(v) || ZZ4.handles(v)); }
@@ -53,7 +73,7 @@ public final class CosmeticNet {
 			try {
 				List<String> names = new ArrayList<>();
 				String me = mc.player.getName().getString();
-				for (PlayerListEntry e : mc.getNetworkHandler().getPlayerList()) { String n = e.getProfile().getName(); if (n != null && !n.equalsIgnoreCase(me)) names.add(n); }
+				for (PlayerListEntry e : mc.getNetworkHandler().getPlayerList()) { String n = e.getProfile().getName(); if (n != null) names.add(n); }
 				java.util.Collections.sort(names);
 				String joined = String.join(",", names);
 				if (!joined.equals(lastNames) || now - lastRead > 20000) { // geaendert oder alle 20 s auffrischen (Mitspieler wechseln ihre Cosmetics)
@@ -70,14 +90,16 @@ public final class CosmeticNet {
 				if (m != otherMod) {
 					otherMod = m;
 					JsonObject root = JsonParser.parseString(Files.readString(p)).getAsJsonObject(), pl = root.getAsJsonObject("players");
-					Map<String, String[]> nm = new HashMap<>();
+					Map<String, String[]> nm = new HashMap<>(); Map<String, List<String>> tm = new HashMap<>(); String selfN = mc.player.getName().getString();
 					if (pl != null) for (Map.Entry<String, JsonElement> en : pl.entrySet()) {
 						JsonObject e = en.getValue().getAsJsonObject();
+						try { if (e.has("tg") && e.get("tg").isJsonArray()) { List<String> tl = new ArrayList<>(); for (JsonElement x : e.getAsJsonArray("tg")) tl.add(x.getAsString()); if (!tl.isEmpty()) tm.put(en.getKey().toLowerCase(), tl); } } catch (Throwable ignored) {}
+						if (en.getKey().equalsIgnoreCase(selfN)) continue;
 						String c = e.has("cape") ? e.get("cape").getAsString() : null, h = e.has("hat") ? e.get("hat").getAsString() : null, w = e.has("wings") ? e.get("wings").getAsString() : null;
 						nm.put(en.getKey().toLowerCase(), new String[] { okId(c, "cape") ? c : null, okId(h, "hat") ? h : null, okId(w, "wings") ? w : null });
 					}
 					if (nm.size() != others.size()) CloudyClient.LOG.info("Cloudy: Cosmetics von {} Mitspielern geladen", nm.size());
-					others = nm;
+					others = nm; tagMap = tm;
 				}
 			}
 		} catch (Throwable ignored) {}

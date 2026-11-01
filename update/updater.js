@@ -24,6 +24,7 @@ exports.init = function init({ app, ipcMain, shell, send, defaultRepo, userAgent
     const a = assets || [];
     if (IS_WIN) return a.find(x => /\.exe$/i.test(x.name) && (PORTABLE ? /portable/i : /setup/i).test(x.name)) || a.find(x => /\.exe$/i.test(x.name) && !/portable/i.test(x.name));
     if (IS_MAC) return a.find(x => /\.dmg$/i.test(x.name) && x.name.toLowerCase().includes(process.arch === 'arm64' ? 'arm64' : 'x64'));
+    if (process.platform === 'linux') return a.find(x => /\.AppImage$/i.test(x.name));
     return null;
   }
 
@@ -110,6 +111,11 @@ if cp -R "$S" "$T.new" && rm -rf "$T" && mv "$T.new" "$T"; then
 else hdiutil detach -quiet "$M"; open "$DMG"; fi
 `, { mode: 0o755 });
       spawn('/bin/sh', [sh, file, target], detached).unref();
+    } else if (process.platform === 'linux') {
+      const old = process.env.APPIMAGE; if (!old) return shell.openPath(path.dirname(file));
+      const sh = path.join(path.dirname(file), 'apply.sh');
+      fs.writeFileSync(sh, '#!/bin/sh\nsleep 2\nchmod +x "$1"\nif mv -f "$1" "$2"; then nohup "$2" >/dev/null 2>&1 & else nohup "$1" >/dev/null 2>&1 & fi\n', { mode: 0o755 });
+      spawn('/bin/sh', [sh, file, old], detached).unref();
     }
     send('update-progress', { phase: 'install', pct: 100 });
     setTimeout(() => app.quit(), 800);
