@@ -85,7 +85,7 @@
   async function poll() {
     clearTimeout(fr.timer); if (!fr.conn) return;
     const r = await api('GET', '/state');
-    if (r.ok) { try { bubbleCheck(r.data); } catch {} fr.state = r.data; paintFriends(); const n = r.data.friends.reduce((a, f) => a + f.unread, 0) + r.data.incoming.length; const b = $('#frBadge'); b.textContent = n ? n : ''; b.style.display = n ? '' : 'none'; $('#frOff').textContent = ''; }
+    if (r.ok) { try { bubbleCheck(r.data); } catch {} fr.state = r.data; paintFriends(); try { window.grpUpdate && window.grpUpdate(r.data); } catch {} const n = r.data.friends.reduce((a, f) => a + f.unread, 0) + r.data.incoming.length + (r.data.groups || []).reduce((a, g) => a + (g.unread || 0), 0); const b = $('#frBadge'); b.textContent = n ? n : ''; b.style.display = n ? '' : 'none'; $('#frOff').textContent = ''; }
     else if (r.offline) $('#frOff').textContent = L(r.error);
     if (fr.chat) await loadMsgs();
     fr.timer = setTimeout(poll, $('#p-friends').classList.contains('on') ? 3000 : 6000);
@@ -131,6 +131,7 @@
     if (!r.ok || who !== fr.chat) return;
     if (r.data.msgs.length) { fr.msgs.push(...r.data.msgs); fr.last = fr.msgs[fr.msgs.length - 1].id; paintChat(true); }
   }
+  window.__frSetChat = n => { fr.chat = n; fr.last = 0; fr.msgs = []; paintChat(); if (n) loadMsgs(); paintFriends(); };
   function paintChat(scroll) {
     { const ff = fr.state && fr.state.friends.find(x => x.name === fr.chat); $('#frChatHead').innerHTML = fr.chat ? esc(fr.chat) + (window.cloudyTags ? window.cloudyTags(ff && ff.tags) : '') + (ff && ff.server ? ` <button class="btn frplay" id="frHeadPlay" title="${L('Mitspielen')}" style="width:auto;border-radius:999px;padding:0 14px;margin-left:8px">▶ ${L('Mitspielen')}</button>` : '') : esc(L('Wähle einen Freund')); ; { const hp = $('#frHeadPlay'); if (hp) hp.onclick = () => joinFriend(fr.chat, hp); } }
     $('#frChatBox').style.display = fr.chat ? '' : 'none';

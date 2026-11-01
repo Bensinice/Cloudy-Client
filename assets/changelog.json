@@ -1,5 +1,17 @@
 [
  {
+  "v": "0.9.48",
+  "date": "2026-11-01",
+  "added": [
+   "Gruppen (Freunde-Reiter): Gruppenchat, Gruppen-Anruf mit Sprache (direkt zwischen den Spielern), Mitglieder hinzufügen/entfernen, Gruppe verlassen/auflösen",
+   "Clan-Tag: Jede Gruppe kann ein Tag (bis 4 Zeichen) haben; als zweites Tag neben dem Rang zeigen oder ausblenden (Server-Datei neu hochladen!)"
+  ],
+  "fixed": [
+   "Der Discord-Link in den Einstellungen öffnet sich jetzt"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.47",
   "date": "2026-11-01",
   "added": [

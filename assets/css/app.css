@@ -597,3 +597,10 @@ html[data-theme="glass"]{background:rgba(8,20,40,var(--win-a,0))!important}
 #frBubble b{display:block;font-size:16px;margin-bottom:2px}
 #frBubble span.t{display:block;font-size:15px;line-height:1.3;word-break:break-word;opacity:.96}
 #frBubble small{display:block;margin-top:4px;font-size:11px;opacity:.75}
+
+/* Gruppen */
+.ctag.clan{background:color-mix(in srgb,var(--accent) 30%,transparent);border-color:var(--accent);color:#fff}
+#grpBox .grpform{display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);margin-bottom:8px}
+.grpcall{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;padding:8px 12px;border-radius:14px;font-size:13px;font-weight:600;background:color-mix(in srgb,var(--accent) 22%,rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(14px)}
+.grpcall span{flex:1;opacity:.9;font-weight:500}
+.grptools{margin-top:8px;padding:10px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);font-weight:500;font-size:13px}

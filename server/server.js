@@ -48,16 +48,22 @@ const who = req => { const m = /^Bearer (.+)$/.exec(req.headers.authorization ||
 const fk = (o, s) => { const u = String(s || '').trim().toUpperCase(); if (Object.prototype.hasOwnProperty.call(o, u)) return u; const n = u.replace(/[^A-Z0-9]/g, ''); return n ? (Object.keys(o).find(k => k.replace(/[^A-Z0-9]/g, '') === n) || u) : u; }; // Codes mit oder ohne Bindestriche, Groß-/Kleinschreibung egal
 // ---- Freunde & Chat direkt über den Konto-Server (kein extra Freundesserver nötig) ----
 const PRES = new Map(); // Konto -> { srv, t } (wo jemand gerade spielt/hostet)
+const CALLS = new Map(); // Gruppen-ID -> { m: Konto -> letzter Kontakt, q: Konto -> wartende Verbindungsdaten }
 const SEEN = new Map(); // Konto -> letzter Kontakt (für „online“)
 const frPair = (a, b) => [a, b].sort().join('|');
 async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
   const key = n => String(n || '').trim().toLowerCase(), now = Date.now(); SEEN.set(me, now);
   const u = FR.f[me] = FR.f[me] || { friends: [], in: [], out: [], read: {} }, uf = k => FR.f[k] = FR.f[k] || { friends: [], in: [], out: [], read: {} };
   const online = k => now - (SEEN.get(k) || 0) < 45000;
+  FR.groups = FR.groups || {}; FR.clan = FR.clan || {}; const GR = FR.groups;
+  const clanOf = k => { const g = GR[FR.clan[k]]; return g && g.tag && g.members.includes(k) ? ['clan:' + g.tag] : []; };
+  const gOf = id => { const g = GR[String(id || '')]; return g && g.members.includes(me) ? g : null; };
+  const callNames = async gid => { const c = CALLS.get(gid), r = []; if (c) for (const [k, t] of c.m) if (now - t < 15000) { const n = await nameOf(k); if (n) r.push(n); } return r; };
+  const groupsOut = async () => { const out = []; for (const g of Object.values(GR)) { if (!g.members.includes(me)) continue; const ms = []; for (const k of g.members) { const n = await nameOf(k); if (n) ms.push(n); } out.push({ id: g.id, name: g.name, tag: g.tag, mine: g.owner === me, members: ms, unread: g.msgs.filter(m => m.fk !== me && m.id > ((g.read || {})[me] || 0)).length, call: await callNames(g.id), clan: FR.clan[me] === g.id }); } return out; };
   const unread = k => (FR.msgs[frPair(me, k)] || []).filter(m => m.fk !== me && m.id > (u.read[k] || 0)).length;
   if (p === 'state') {
-    const out = { ok: true, me: myName, tags: tagsOf(me), friends: [], incoming: [], outgoing: [] };
-    for (const k of u.friends) { const n = await nameOf(k); const pr = PRES.get(k); if (n) out.friends.push({ name: n, tags: tagsOf(k), online: online(k), unread: unread(k), av: (FR.av && FR.av[k]) || '', ...(pr && online(k) && now - pr.t < 90000 ? { server: pr.srv } : {}) }); }
+    const out = { ok: true, me: myName, tags: tagsOf(me).concat(clanOf(me)), groups: await groupsOut(), friends: [], incoming: [], outgoing: [] };
+    for (const k of u.friends) { const n = await nameOf(k); const pr = PRES.get(k); if (n) out.friends.push({ name: n, tags: tagsOf(k).concat(clanOf(k)), online: online(k), unread: unread(k), av: (FR.av && FR.av[k]) || '', ...(pr && online(k) && now - pr.t < 90000 ? { server: pr.srv } : {}) }); }
     for (const k of u.in) { const n = await nameOf(k); if (n) out.incoming.push(n); }
     for (const k of u.out) { const n = await nameOf(k); if (n) out.outgoing.push(n); }
     return [200, out];
@@ -81,6 +87,52 @@ async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
     const ok = key(b.name), o = uf(ok);
     for (const [a, c, ka, kc] of [[u, o, ok, me], [o, u, me, ok]]) { a.friends = a.friends.filter(x => x !== ka); a.in = a.in.filter(x => x !== ka); a.out = a.out.filter(x => x !== ka); }
     await save(); return [200, { ok: true }];
+  }
+  // ---- Gruppen: Chat, Clan-Tag (zweites Tag) und Sprachanruf ----
+  if (p === 'group/create') {
+    const name = String(b.name || '').trim().slice(0, 24), tag = String(b.tag || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
+    if (name.length < 2) return [400, { error: 'Bitte einen Gruppennamen (mind. 2 Zeichen).' }];
+    if (Object.values(GR).filter(g => g.members.includes(me)).length >= 10) return [400, { error: 'Du bist schon in 10 Gruppen.' }];
+    const ms = [me]; for (const n of (Array.isArray(b.members) ? b.members : []).slice(0, 19)) { const k = key(n); if (u.friends.includes(k) && !ms.includes(k)) ms.push(k); }
+    const id = 'g' + (FR.seq++).toString(36) + Math.random().toString(36).slice(2, 6);
+    GR[id] = { id, name, tag, owner: me, members: ms, msgs: [], read: {}, t: now }; if (tag && !FR.clan[me]) FR.clan[me] = id; await save(); return [200, { ok: true, id }];
+  }
+  if (p.startsWith('group/') || p.startsWith('call/')) {
+    const g = gOf(b.id); if (!g) return [404, { error: 'Diese Gruppe gibt es nicht (mehr).' }];
+    if (p === 'group/add') {
+      const k = key(b.name); if (!u.friends.includes(k)) return [403, { error: 'Nur Freunde können in die Gruppe.' }]; if (g.members.includes(k)) return [200, { ok: true }]; if (g.members.length >= 20) return [400, { error: 'Die Gruppe ist voll (20).' }];
+      g.members.push(k); await save(); return [200, { ok: true }];
+    }
+    if (p === 'group/leave' || p === 'group/kick') {
+      const k = p === 'group/kick' ? key(b.name) : me; if (p === 'group/kick' && (g.owner !== me || k === me || !g.members.includes(k))) return [403, { error: 'Nur der Besitzer kann Mitglieder entfernen.' }];
+      g.members = g.members.filter(x => x !== k); if (FR.clan[k] === g.id) delete FR.clan[k]; const c = CALLS.get(g.id); if (c) { c.m.delete(k); c.q.delete(k); }
+      if (!g.members.length) delete GR[g.id]; else if (g.owner === k) g.owner = g.members[0]; await save(); return [200, { ok: true }];
+    }
+    if (p === 'group/delete') { if (g.owner !== me) return [403, { error: 'Nur der Besitzer kann die Gruppe auflösen.' }]; for (const k of g.members) if (FR.clan[k] === g.id) delete FR.clan[k]; CALLS.delete(g.id); delete GR[g.id]; await save(); return [200, { ok: true }]; }
+    if (p === 'group/edit') {
+      if (g.owner !== me) return [403, { error: 'Nur der Besitzer kann die Gruppe ändern.' }];
+      const name = String(b.name || '').trim().slice(0, 24), tag = String(b.tag || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4); if (name.length >= 2) g.name = name; g.tag = tag;
+      if (!tag) for (const k of g.members) if (FR.clan[k] === g.id) delete FR.clan[k]; await save(); return [200, { ok: true }];
+    }
+    if (p === 'group/clan') { if (b.on === false) { if (FR.clan[me] === g.id) delete FR.clan[me]; } else { if (!g.tag) return [400, { error: 'Diese Gruppe hat kein Clan-Tag.' }]; FR.clan[me] = g.id; } await save(); return [200, { ok: true }]; }
+    if (p === 'group/msg') {
+      const text = String(b.text || '').trim().slice(0, 500); if (!text) return [400, { error: 'Leere Nachricht.' }];
+      const m = { id: FR.seq++, from: myName, fk: me, text, t: now }; g.msgs.push(m); if (g.msgs.length > 200) g.msgs.splice(0, g.msgs.length - 200); g.read = g.read || {}; g.read[me] = m.id; await save(); return [200, { ok: true, id: m.id }];
+    }
+    if (p === 'group/msgs') {
+      const after = +b.after || 0, l = g.msgs.filter(m => m.id > after).slice(-100).map(({ id, from, text, t }) => ({ id, from, text, t })), last = g.msgs[g.msgs.length - 1];
+      g.read = g.read || {}; if (last && g.read[me] !== last.id) { g.read[me] = last.id; await save(); } return [200, { ok: true, msgs: l }];
+    }
+    // Sprachanruf: der Server vermittelt nur die Verbindungsdaten (WebRTC), die Sprache läuft direkt zwischen den Spielern
+    let c = CALLS.get(g.id); if (!c) { c = { m: new Map(), q: new Map() }; CALLS.set(g.id, c); }
+    for (const [k, t] of c.m) if (now - t > 15000) { c.m.delete(k); c.q.delete(k); }
+    if (p === 'call/join') { const peers = await callNames(g.id); c.m.set(me, now); c.q.set(me, []); return [200, { ok: true, peers: peers.filter(n => key(n) !== me) }]; }
+    if (p === 'call/leave') { c.m.delete(me); c.q.delete(me); return [200, { ok: true }]; }
+    if (p === 'call/signal') {
+      const k = key(b.to), d = b.data; if (!c.m.has(k) || !c.m.has(me)) return [404, { error: 'Nicht im Anruf.' }]; const s = JSON.stringify(d || {}); if (s.length > 20000) return [400, { error: 'Zu groß.' }];
+      const q = c.q.get(k) || []; q.push({ from: myName, data: d }); if (q.length > 200) q.shift(); c.q.set(k, q); return [200, { ok: true }];
+    }
+    if (p === 'call/poll') { if (!c.m.has(me)) return [200, { ok: true, left: true, peers: [], signals: [] }]; c.m.set(me, now); const sig = c.q.get(me) || []; c.q.set(me, []); return [200, { ok: true, peers: (await callNames(g.id)).filter(n => key(n) !== me), signals: sig }]; }
   }
   if (p === 'msg') {
     const ok = key(b.to), text = String(b.text || '').trim().slice(0, 500);
