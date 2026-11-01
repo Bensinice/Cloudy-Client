@@ -1,4 +1,6 @@
 const { app, BrowserWindow, ipcMain, shell, safeStorage, dialog, nativeImage, net, Notification } = require('electron');
+const REMOTE_H = new Map(); let remoteBus = () => {}; // Handy-Fernsteuerung (lib/remote.js): alle ipcMain.handle-Funktionen merken, damit der Browser sie aufrufen kann
+{ const _h0 = ipcMain.handle.bind(ipcMain); ipcMain.handle = (n, f) => { REMOTE_H.set(n, f); return _h0(n, f); }; }
 // Unvollständige Installation (z. B. abgebrochenes Update, Virenscanner): verständliche Meldung statt „JavaScript error in the main process“
 {
   const need = ['lib/zipread.js', 'lib/modinfo.js', 'lib/options.js', 'lib/java.js', 'lib/packs.js', 'lib/net.js'], miss = need.filter(f => !require('fs').existsSync(require('path').join(__dirname, f)));
@@ -27,7 +29,7 @@ const DEFAULT_REPO = 'Bensinice/Cloudy-Client'; // immer dieselbe Quelle (config
 let win;
 const root = path.join(app.getPath('userData'), 'minecraft');
 const HDR = { headers: { 'User-Agent': 'Cloudy-Launcher/0.9.10 (github.com/cloudy-launcher; contact via launcher)' } };
-const send = (ch, d) => win && !win.isDestroyed() && win.webContents.send(ch, d);
+const send = (ch, d) => { try { remoteBus(ch, d); } catch {} return win && !win.isDestroyed() && win.webContents.send(ch, d); };
 // Netzwerk: zuerst Chromium (nutzt Windows-Proxy, DNS und Zertifikate des Systems – klappt auch bei Freunden mit Schul-/Firmen-/Antivirus-Netz), sonst Node. Mit Zeitlimit und einem zweiten Versuch.
 async function mfetch(u, o) {
   let last;
@@ -808,7 +810,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.66'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.67'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1813,6 +1815,20 @@ ipcMain.handle('skinApply', async (_e, id) => {
 const srvRoot = path.join(app.getPath('userData'), 'servers');
 let srvProc = null, srvInfo = null, srvStopTimer = null;
 const lanIps = () => { const o = []; for (const l of Object.values(os.networkInterfaces())) for (const a of l || []) if (a.family === 'IPv4' && !a.internal) o.push(a.address); return o; };
+// ---- Handy-Fernsteuerung (Standard: aus). Der Browser (z. B. iPhone-Safari) bekommt dieselbe Oberflaeche und ruft die Funktionen des PCs auf. Nur Heimnetz, nur mit PIN. ----
+const remote = require('./lib/remote').create({ root: __dirname, handlers: REMOTE_H, stateFile: path.join(app.getPath('userData'), 'cloudy-remote.json') });
+remoteBus = (ch, d) => remote.broadcast(ch, d);
+const remoteView = () => { const s = remote.state(); return { on: s.on, pin: s.pin, devices: s.devices, urls: s.on ? lanIps().map(ip => `http://${ip}:${s.port}`) : [] }; };
+ipcMain.handle('remoteGet', () => remoteView());
+ipcMain.handle('remoteSet', async (_e, o) => {
+  o = o || {};
+  if (o.revoke) remote.revokeAll();
+  if (o.newPin) remote.newPin();
+  if (o.on === true) { const r = await remote.start(); if (!r.ok) return { ok: false, error: r.error, ...remoteView() }; }
+  if (o.on === false) remote.stop();
+  return { ok: true, ...remoteView() };
+});
+app.whenReady().then(() => { if (remote.wasOn()) remote.start().catch(() => {}); }).catch(() => {});
 const srvState = () => ({ running: !!srvProc, ready: !!(srvInfo && srvInfo.ready), type: srvInfo && srvInfo.type, version: srvInfo && srvInfo.version, port: srvInfo && srvInfo.port, ips: lanIps() });
 const NET = require('./lib/net');
 const srvDir = (v, type) => path.join(srvRoot, String(v).replace(/[^\w.-]/g, '') + (type === 'paper' ? '-paper' : ''));

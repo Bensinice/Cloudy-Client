@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.67",
+  "date": "2026-11-01",
+  "added": [
+   "Handy-Fernsteuerung (Einstellungen, standardmäßig aus): Cloudy im Handy-Browser öffnen (iPhone: Safari), mit PIN koppeln, im selben WLAN – Mods, Updates, Shop, Freunde und Spielstart laufen auf dem PC"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.66",
   "date": "2026-11-01",
   "added": [

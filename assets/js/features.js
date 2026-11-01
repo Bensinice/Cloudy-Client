@@ -590,6 +590,19 @@ window.showOnb = showOnb;
   };
 })();
 
+// ---------- Handy-Fernsteuerung (Einstellungen) ----------
+(function () {
+  const card = document.getElementById('remCard'); if (!card) return;
+  if (window.__remote || !window.cloudy.remoteGet) { card.remove(); return; } // im Handy-Browser selbst gibt es den Schalter nicht
+  const on = document.getElementById('remOn'), info = document.getElementById('remInfo'), msg = document.getElementById('remMsg'), T = s => window.t ? window.t(s) : s;
+  const paint = r => { if (!r) return; on.checked = !!r.on; info.style.display = r.on ? '' : 'none'; document.getElementById('remUrl').textContent = (r.urls || []).join('  ·  ') || T('(keine Netzwerk-Adresse gefunden)'); document.getElementById('remPin').textContent = r.pin || ''; document.getElementById('remDev').textContent = r.devices || 0; };
+  const load = () => window.cloudy.remoteGet().then(paint).catch(() => {});
+  load();
+  on.onchange = async () => { msg.textContent = ''; const r = await window.cloudy.remoteSet({ on: on.checked }).catch(() => null); if (r && r.ok === false) { msg.textContent = T(r.error || 'Fehler.'); } paint(r); };
+  document.getElementById('remNew').onclick = async () => paint(await window.cloudy.remoteSet({ newPin: true }).catch(() => null));
+  document.getElementById('remOut').onclick = async () => { paint(await window.cloudy.remoteSet({ revoke: true }).catch(() => null)); msg.textContent = T('Alle Handys wurden abgemeldet.'); };
+})();
+
 // ---------- Backup-Server (Einstellungen) ----------
 (function () {
   const inp = document.getElementById('srvBackup'), btn = document.getElementById('srvBackupSave'), msg = document.getElementById('srvBackupMsg'); if (!inp || !btn || !window.cloudy.srvBackupGet) return;
