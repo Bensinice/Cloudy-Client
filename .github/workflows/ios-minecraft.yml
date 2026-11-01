@@ -35,8 +35,8 @@ jobs:
           export JAVA_HOME_8=$JAVA_HOME
           git rev-parse HEAD > ../AMETHYST_COMMIT.txt
           /usr/libexec/java_home -V || true
-          SLIMMED=1 gmake -j$(sysctl -n hw.ncpu) dsym package PLATFORM=2
-          SLIMMED=1 gmake -j$(sysctl -n hw.ncpu) dsym package PLATFORM=2 TROLLSTORE_JIT_ENT=1
+          SLIMMED=1 gmake -j$(sysctl -n hw.ncpu) dsym package PLATFORM=2 BOOTJDK="$JAVA_HOME/bin"
+          SLIMMED=1 gmake -j$(sysctl -n hw.ncpu) dsym package PLATFORM=2 BOOTJDK="$JAVA_HOME/bin" TROLLSTORE_JIT_ENT=1
           ls -la artifacts
       - uses: actions/upload-artifact@v4
         with:
