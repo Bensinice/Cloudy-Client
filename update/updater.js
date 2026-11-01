@@ -101,6 +101,7 @@ exports.init = function init({ app, ipcMain, shell, send, defaultRepo, userAgent
       // Installer läuft still, behält den Installationsordner und startet Cloudy danach neu
       try { fs.writeFileSync(pendFile, JSON.stringify({ file, ver: found && found.ver, url: found && found.url, t: Date.now() })); } catch {}
       spawn(file, ['/S', '--updated', '--force-run'], detached).unref();
+      setTimeout(() => { try { app.quit(); } catch {} }, 800); // Cloudy schliesst sich selbst, damit der Installer keine gesperrten Dateien findet
     } else if (IS_WIN) {
       // Die neue Datei ersetzt die alte selbst (siehe replacePortable in main.js) – ohne Hilfsskript
       spawn(file, ['--cloudy-replace=' + process.env.PORTABLE_EXECUTABLE_FILE], detached).unref();

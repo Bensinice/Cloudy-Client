@@ -1,4 +1,7 @@
 {
+ "0.9.62": [
+  "Windows update: Cloudy now quits itself after starting the installer, so locked files can't cause a half-finished update"
+ ],
  "0.9.61": [
   "If a silent update fails, Cloudy asks on the next start and runs the installer visibly",
   "Crash “Cannot find module ./lib/discord”: Discord is now optional; an incomplete install shows a clear message with a download link"

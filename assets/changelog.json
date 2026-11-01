@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.62",
+  "date": "2026-11-01",
+  "added": [],
+  "fixed": [
+   "Update unter Windows: Cloudy beendet sich nach dem Start des Installers selbst, damit keine gesperrten Dateien ein halbes Update verursachen"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.61",
   "date": "2026-11-01",
   "added": [
