@@ -1,4 +1,12 @@
 const { app, BrowserWindow, ipcMain, shell, safeStorage, dialog, nativeImage, net, Notification } = require('electron');
+// Unvollständige Installation (z. B. abgebrochenes Update, Virenscanner): verständliche Meldung statt „JavaScript error in the main process“
+{
+  const need = ['lib/zipread.js', 'lib/modinfo.js', 'lib/options.js', 'lib/java.js', 'lib/packs.js', 'lib/net.js'], miss = need.filter(f => !require('fs').existsSync(require('path').join(__dirname, f)));
+  if (miss.length) {
+    app.whenReady().then(() => { try { const r = dialog.showMessageBoxSync({ type: 'error', title: 'Cloudy', message: 'Die Cloudy-Installation ist unvollständig.', detail: 'Es fehlen Dateien (' + miss.join(', ') + '). Wahrscheinlich wurde ein Update abgebrochen oder ein Virenscanner hat eine Datei entfernt.\n\nLade den aktuellen Installer von GitHub und installiere Cloudy einfach darüber – Konten, Einstellungen und Mods bleiben erhalten.', buttons: ['Download-Seite öffnen', 'Beenden'], defaultId: 0 }); if (r === 0) shell.openExternal('https://github.com/Bensinice/cloudy-client/releases/latest'); } catch {} app.exit(1); });
+    return;
+  }
+}
 const os = require('os');
 const crypto = require('crypto');
 
@@ -725,7 +733,7 @@ ipcMain.handle('resetJava', () => fs.rmSync(path.join(app.getPath('userData'), '
 const autoFile = path.join(app.getPath('userData'), 'autoupdate.json');
 const autoUpdOn = () => { try { return JSON.parse(fs.readFileSync(autoFile, 'utf8')).on === true; } catch { return false; } }; // Auto-Accept: nur wenn ausdrücklich eingeschaltet
 // ---- Discord Rich Presence: „Spielt mit Cloudy“ (braucht die Anwendungs-ID aus dem Discord Developer Portal) ----
-const discord = require('./lib/discord').create(); let dcGame = null, dcStart = Date.now();
+let discord; try { discord = require('./lib/discord').create(); } catch { discord = { set() {}, stop() {} }; } /* Discord ist optional: fehlt die Datei, läuft Cloudy trotzdem */ let dcGame = null, dcStart = Date.now();
 // Eingebaute Discord-Application-ID (assets/discord.json): dann läuft „Spielt mit Cloudy“ bei allen automatisch, ohne eigene Einrichtung
 const DC_ID = (() => { try { const c = String(JSON.parse(fs.readFileSync(path.join(__dirname, 'assets', 'discord.json'), 'utf8')).appId || '').replace(/\D/g, ''); return c.length >= 17 ? c : ''; } catch { return ''; } })();
 const dcCfg = () => { const c = cfgPatch({}); return { on: c.discordOn !== false, id: String(c.discordId || DC_ID || ''), builtin: !!DC_ID }; };
@@ -800,7 +808,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.60'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.61'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 

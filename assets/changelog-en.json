@@ -1,4 +1,8 @@
 {
+ "0.9.61": [
+  "If a silent update fails, Cloudy asks on the next start and runs the installer visibly",
+  "Crash “Cannot find module ./lib/discord”: Discord is now optional; an incomplete install shows a clear message with a download link"
+ ],
  "0.9.60": [
   "Bundles can be code-only (random code button for admins); savings and separate price are shown",
   "Try-on button for cosmetics and bundles",

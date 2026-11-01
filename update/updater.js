@@ -8,6 +8,16 @@ exports.init = function init({ app, ipcMain, shell, send, defaultRepo, userAgent
   const PORTABLE = IS_WIN && process.env.PORTABLE_EXECUTABLE_FILE;
   const H = { 'User-Agent': userAgent || 'Cloudy-Updater' };
   let found = null, busy = false;
+  // Hat ein stilles Update nicht geklappt (Version unverändert), fragt Cloudy beim nächsten Start nach und startet den Installer sichtbar – dann sieht man, woran es hängt
+  const pendFile = path.join(app.getPath('userData'), 'update-pending.json');
+  app.whenReady().then(() => { try {
+    const p = JSON.parse(fs.readFileSync(pendFile, 'utf8')); fs.rmSync(pendFile, { force: true });
+    if (!p || !p.ver || Date.now() - p.t > 12 * 3600e3 || !newer(p.ver, app.getVersion())) return;
+    const { dialog } = require('electron');
+    const r = dialog.showMessageBoxSync({ type: 'warning', title: 'Cloudy', message: 'Das letzte Update hat nicht geklappt.', detail: 'Cloudy ist noch auf Version ' + app.getVersion() + ' (neu: ' + p.ver + '). Soll der Installer jetzt sichtbar gestartet werden? Dann siehst du, woran es hängt (z. B. Virenscanner oder Cloudy läuft noch).', buttons: ['Installer sichtbar starten', 'Download-Seite öffnen', 'Später'], defaultId: 0 });
+    if (r === 0 && p.file && fs.existsSync(p.file)) { spawn(p.file, [], { detached: true, stdio: 'ignore' }).unref(); setTimeout(() => app.quit(), 600); }
+    else if (r !== 2) shell.openExternal(p.url || 'https://github.com/Bensinice/cloudy-client/releases/latest');
+  } catch {} });
 
   const nums = v => String(v).replace(/^v/i, '').split('.').map(n => parseInt(n, 10) || 0);
   const newer = (a, b) => { const x = nums(a), y = nums(b); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); return false; };
@@ -58,7 +68,7 @@ exports.init = function init({ app, ipcMain, shell, send, defaultRepo, userAgent
       }).filter(c => c.v && (c.exe || c.zip)); // GitHub liefert die neueste Veröffentlichung zuerst
       if (!cands.length) throw new Error('Kein Release mit Versionsnummer (z. B. cloudy-0.8.13-voll.zip) gefunden.');
       const c = cands[0], latest = c.v, cur = app.getVersion(), asset = c.exe || c.zip, isZip = !c.exe;
-      found = { asset, isZip, url: c.r.html_url };
+      found = { asset, isZip, url: c.r.html_url, ver: latest };
       const nw = newer(latest, cur);
       return { ok: true, current: cur, latest, newer: nw, mandatory: nw && seen(latest), url: c.r.html_url, canInstall: !!asset && app.isPackaged,
         size: asset ? asset.size : 0, notes: String(c.r.body || '').slice(0, 600) };
@@ -89,6 +99,7 @@ exports.init = function init({ app, ipcMain, shell, send, defaultRepo, userAgent
     const detached = { detached: true, stdio: 'ignore', windowsHide: true };
     if (IS_WIN && !PORTABLE) {
       // Installer läuft still, behält den Installationsordner und startet Cloudy danach neu
+      try { fs.writeFileSync(pendFile, JSON.stringify({ file, ver: found && found.ver, url: found && found.url, t: Date.now() })); } catch {}
       spawn(file, ['/S', '--updated', '--force-run'], detached).unref();
     } else if (IS_WIN) {
       // Die neue Datei ersetzt die alte selbst (siehe replacePortable in main.js) – ohne Hilfsskript

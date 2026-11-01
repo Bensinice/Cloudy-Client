@@ -1,5 +1,16 @@
 [
  {
+  "v": "0.9.61",
+  "date": "2026-11-01",
+  "added": [
+   "Hat ein stilles Update nicht geklappt, fragt Cloudy beim nächsten Start nach und startet den Installer sichtbar"
+  ],
+  "fixed": [
+   "Absturz „Cannot find module ./lib/discord“: Discord ist jetzt optional, bei unvollständiger Installation erscheint eine verständliche Meldung mit Download-Link"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.60",
   "date": "2026-11-01",
   "added": [
