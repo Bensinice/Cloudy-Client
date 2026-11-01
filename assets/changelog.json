@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.68",
+  "date": "2026-11-02",
+  "added": [
+   "Einstellungen: Anleitung „Auf dem Handy spielen (Streaming)“ mit Sunshine und Moonlight, Links und Adresse deines PCs"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.67",
   "date": "2026-11-01",
   "added": [

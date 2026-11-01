@@ -590,6 +590,17 @@ window.showOnb = showOnb;
   };
 })();
 
+// ---------- Streaming aufs Handy (Einstellungen) ----------
+(function () {
+  const card = document.getElementById('strCard'); if (!card) return;
+  if (window.__remote) { card.remove(); return; }
+  const ip = document.getElementById('strIp'), open = u => window.cloudy.openExternal(u);
+  (window.cloudy.lanInfo ? window.cloudy.lanInfo() : Promise.resolve(null)).then(r => { ip.textContent = r && r.ips && r.ips.length ? r.ips.join('  ·  ') : (window.t ? window.t('(keine Netzwerk-Adresse gefunden)') : '(keine Netzwerk-Adresse gefunden)'); }).catch(() => {});
+  document.getElementById('strSun').onclick = () => open('https://github.com/LizardByte/Sunshine/releases/latest');
+  document.getElementById('strWeb').onclick = () => open('https://localhost:47990/');
+  document.getElementById('strMoon').onclick = () => open('https://moonlight-stream.org/');
+})();
+
 // ---------- Handy-Fernsteuerung (Einstellungen) ----------
 (function () {
   const card = document.getElementById('remCard'); if (!card) return;

@@ -727,7 +727,7 @@ ipcMain.handle('notify', (_e, { title, body, kind, id }) => { // Desktop-Hinweis
   } catch { return false; }
 });
 ipcMain.handle('micAccess', async () => { try { if (process.platform === 'darwin') return await require('electron').systemPreferences.askForMediaAccess('microphone'); return true; } catch { return true; } });
-ipcMain.handle('openExternal', (_e, u) => /^spotify:(playlist|album|track|artist|show|episode):[A-Za-z0-9]+$/.test(u) ? shell.openExternal(u) : /^https:\/\/(github\.com|developer\.spotify\.com|open\.spotify\.com|www\.youtube\.com|music\.youtube\.com|soundcloud\.com|modrinth\.com|www\.minecraft\.net|namemc\.com|www\.minecraftskins\.com|www\.planetminecraft\.com|discord\.com)\//.test(u) ? shell.openExternal(u) : null);
+ipcMain.handle('openExternal', (_e, u) => /^spotify:(playlist|album|track|artist|show|episode):[A-Za-z0-9]+$/.test(u) ? shell.openExternal(u) : /^https:\/\/(github\.com|developer\.spotify\.com|open\.spotify\.com|www\.youtube\.com|music\.youtube\.com|soundcloud\.com|modrinth\.com|www\.minecraft\.net|namemc\.com|www\.minecraftskins\.com|www\.planetminecraft\.com|discord\.com|moonlight-stream\.org)\//.test(u) || u === 'https://localhost:47990/' ? shell.openExternal(u) : null);
 ipcMain.handle('spotifyTitle', async (_e, u) => { // Name einer Playlist/eines Albums für die Schnellauswahl
   try { if (!/^https:\/\/open\.spotify\.com\/(playlist|album|track|artist|show|episode)\/[A-Za-z0-9]+$/.test(String(u))) return null; const d = await getJSON('https://open.spotify.com/oembed?url=' + encodeURIComponent(u)); return d && d.title ? String(d.title).slice(0, 60) : null; } catch { return null; }
 });
@@ -810,7 +810,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.67'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.68'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1820,6 +1820,7 @@ const remote = require('./lib/remote').create({ root: __dirname, handlers: REMOT
 remoteBus = (ch, d) => remote.broadcast(ch, d);
 const remoteView = () => { const s = remote.state(); return { on: s.on, pin: s.pin, devices: s.devices, urls: s.on ? lanIps().map(ip => `http://${ip}:${s.port}`) : [] }; };
 ipcMain.handle('remoteGet', () => remoteView());
+ipcMain.handle('lanInfo', () => ({ ips: lanIps() }));
 ipcMain.handle('remoteSet', async (_e, o) => {
   o = o || {};
   if (o.revoke) remote.revokeAll();
