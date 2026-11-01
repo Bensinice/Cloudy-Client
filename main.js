@@ -664,7 +664,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.40'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.41'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); if (!j) return false; try { const z = openZip(j); try { return z.has('app/cloudy/client/CosmeticsScreen.class') && z.has('cloudy-cos/build-' + CLIENT_BUILD + '.txt'); } finally { z.close(); } } catch { return false; } };
 
 // Eigener Classpath fuer neue Minecraft-Versionen (26.x): die Bibliotheksliste von minecraft-launcher-core bleibt dort leer (Fehler: KnotClient nicht gefunden)
@@ -895,7 +895,7 @@ function srvMirror(pu) { // lokale Kopie (für Shop, Cosmetics, Spielzeit) – A
   const u = a.users[key] || (a.users[key] = mkUser(pu.name, crypto.randomBytes(12).toString('hex'), { coins: 100 }));
   if (pu.names && typeof pu.names === 'object') { try { fs.writeFileSync(namesFile, JSON.stringify(pu.names)); } catch {} }
   if (Array.isArray(pu.hidden)) setHidden(pu.hidden); u.name = pu.name; u.admin = !!pu.admin; u.infCoins = !pu.admin && pu.coins === null; u.mustChange = false; u.banned = false;
-  if (pu.state && !pu.admin) { const s = pu.state; if (!u.infCoins && Number.isFinite(+s.coins)) u.coins = +s.coins; u.owned = Array.isArray(s.owned) ? s.owned : []; u.equip = s.equip && typeof s.equip === 'object' ? s.equip : {}; u.daily = s.daily || ''; }
+  if (pu.state && !pu.admin) { const s = pu.state; if (!u.infCoins && Number.isFinite(+s.coins)) u.coins = +s.coins; u.owned = [...new Set([...(Array.isArray(s.owned) ? s.owned : []), ...limList.filter(l => l.mine).map(l => l.id)])]; u.equip = s.equip && typeof s.equip === 'object' ? s.equip : {}; u.daily = s.daily || ''; }
   saveAuth(a); return key;
 }
 function srvOpen(key, tok, remember) {
@@ -932,8 +932,8 @@ function cosNetStart(mcName) {
 function cosNetStop() { if (cosTimer) clearInterval(cosTimer); cosTimer = null; cosMc = ''; cosLast = ''; }
 function srvPush(u) { // Shop-Stand zum Server schicken (im Hintergrund)
   cosReg(u);
-  if (!srvCfg() || !srvTok || !u || u.admin) return;
-  srvCall('/state', { coins: u.infCoins ? undefined : u.coins, owned: u.owned || [], equip: u.equip || {}, daily: u.daily || '' }, srvTok).catch(() => {});
+  if (!srvCfg() || !srvTok || !u || u.admin) return Promise.resolve();
+  return srvCall('/state', { coins: u.infCoins ? undefined : u.coins, owned: u.owned || [], equip: u.equip || {}, daily: u.daily || '' }, srvTok).catch(() => {});
 }
 async function srvAuth(path_, { user, pass, remember }) {
   let r; try { r = await srvCall(path_, { user: String(user || '').trim(), pass: String(pass || ''), grant: cfgPatch({}).gateTok || '' }); } catch { return SRV_DOWN; }
@@ -1155,12 +1155,10 @@ const CATALOG = [
   { id: 'cape-zz5', cat: 'cape', name: 'ZZ5 2 Mio.-Umhang (3D)', price: 1500 }, { id: 'wings-zz5', cat: 'wings', name: 'ZZ5 2 Mio.-Flügel (3D)', price: 1800 }, { id: 'shield-zz5', cat: 'shield', name: 'ZZ5 2 Mio.-Schild (3D)', price: 1200 },
   { id: 'cape-yy', cat: 'cape', name: 'Yin-Yang-Umhang (3D)', price: 1500 }, { id: 'shield-yy', cat: 'shield', name: 'Yin-Yang-Schild (3D)', price: 1200 },
   { id: 'cape-zk5', cat: 'cape', name: '500K-Umhang (3D)', price: 1500 }, { id: 'wings-zk5', cat: 'wings', name: '500K-Flügel (3D)', price: 1800 },
-  { id: 'totem-zz', cat: 'totem', name: 'ZickZack-Totem (3D)', price: 800 }, { id: 'hotbar-zz', cat: 'hotbar', name: 'ZickZack-Hotbar (animiert)', price: 800 },
-  { id: 'sky-sunset', cat: 'sky', name: 'Sonnenuntergang-Himmel', price: 400 }, { id: 'sky-aurora', cat: 'sky', name: 'Polarlicht-Himmel', price: 500 }, { id: 'sky-galaxy', cat: 'sky', name: 'Galaxie-Himmel (Sonne & Mond)', price: 900 }
 ];
-const PACK_FILES = { 'totem-zz': 'cloudy-totem-zz.zip', 'hotbar-zz': 'cloudy-hotbar-zz.zip', 'sky-galaxy': 'cloudy-sky-galaxy.zip',
+const PACK_FILES = {
   ...Object.fromEntries(['zz4', 'zz4m', 'zz3', 'zz3s', 'zz5', 'yy'].map(k => ['shield-' + k, `cloudy-shield-${k}.zip`])) };
-const SKIES = { 'sky-sunset': ['#ff8a5c', '#ffd9a0', true], 'sky-aurora': ['#0b1f3a', '#2fe6a8', true], 'sky-galaxy': ['#12062e', '#5b3df5', true] };
+const SKIES = {};
 
 // ---- Eigene Shop-Items (nur Admin): Umhang aus eigener PNG (64×32-Umhangtextur) oder eigener Himmel aus zwei Farben ----
 const ciFile = path.join(app.getPath('userData'), 'custom-items.json'), ciDir = path.join(app.getPath('userData'), 'custom-items');
@@ -1400,7 +1398,9 @@ ipcMain.handle('limClaim', async (_e, { id, code }) => { // Limited-Item holen: 
   if (!r) return { ok: false, error: 'Der Konto-Server ist nicht erreichbar.' };
   if (!r.ok) return { ok: false, error: r.error || 'Das hat nicht geklappt.' };
   await limPull();
-  return shopWrite(u => { if (!u.owned.includes(id)) u.owned.push(id); if (!u.admin && !u.infCoins && r.price && !r.already) u.coins = Math.max(0, u.coins - r.price); });
+  const res = shopWrite(u => { if (!u.owned.includes(id)) u.owned.push(id); if (!u.admin && !u.infCoins && r.price && !r.already) u.coins = Math.max(0, u.coins - r.price); }, true);
+  try { const a2 = readAuth(), u2 = a2.users[currentUser.toLowerCase()]; await srvPush(u2); } catch {}
+  return res;
 });
 ipcMain.handle('limAdmin', async (_e, o) => { // Admin: Limited-Item anlegen/aendern/beenden
   const a = readAuth(), cu = currentUser && a.users[currentUser.toLowerCase()];

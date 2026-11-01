@@ -330,7 +330,7 @@
   $$('[data-skn]').forEach(b => b.onclick = () => add(window.cloudy.skinAddName(b.dataset.skn)));
 
   // ---------- Shop ----------
-  const CATS = [['cape', 'Umhänge'], ['wings', 'Flügel'], ['shield', 'Schilde'], ['hat', 'Hüte'], ['totem', 'Totems'], ['hotbar', 'Hotbars'], ['sky', 'Himmel']];
+  const CATS = [['cape', 'Umhänge'], ['wings', 'Flügel'], ['shield', 'Schilde'], ['hat', 'Hüte']];
   function paintCoins() {
     const t = shop ? cc(shop.coins) : ''; const a = $('#accCC'); if (a) a.textContent = t; const b = $('#shopCC'); if (b) b.textContent = t;
     const d = $('#shopDaily'); if (d) { d.style.display = shop && !shop.admin ? '' : 'none'; d.disabled = !shop || !shop.dailyReady; }

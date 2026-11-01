@@ -1,7 +1,7 @@
 {
   "name": "cloudy",
   "productName": "Cloudy",
-  "version": "0.9.40",
+  "version": "0.9.41",
   "versionEpoch": 1,
   "description": "Cloudy – ein Minecraft-Launcher in Babyblau und Liquid Glass",
   "main": "main.js",

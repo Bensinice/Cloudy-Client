@@ -1,5 +1,16 @@
 [
  {
+  "v": "0.9.41",
+  "date": "2026-11-01",
+  "added": [],
+  "fixed": [
+   "Geholte Limited-Items erscheinen jetzt sofort unter „Gekauft“ und lassen sich ausrüsten (Stand wird vor dem Abgleich zum Server geschickt)"
+  ],
+  "removed": [
+   "Himmel, Totems und Hotbars wurden aus dem Shop entfernt"
+  ]
+ },
+ {
   "v": "0.9.40",
   "date": "2026-11-01",
   "added": [
