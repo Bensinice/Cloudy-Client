@@ -1,0 +1,54 @@
+name: Cloudy iOS Minecraft
+# Baut Amethyst-iOS (GPL-3.0, Nachfolger von PojavLauncher; https://github.com/AngelAuraMC/Amethyst-iOS): Minecraft Java Edition auf iPhone/iPad.
+# Ergebnis: ungesignierte IPA (AltStore/SideStore/Sideloadly) und TrollStore-.tipa. Quelltext des gebauten Stands: siehe Release-Beschreibung.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths: ['.github/workflows/ios-minecraft.yml', 'ios-minecraft/**']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Amethyst-iOS holen
+        uses: actions/checkout@v4
+        with:
+          repository: AngelAuraMC/Amethyst-iOS
+          path: amethyst
+          submodules: recursive
+      - name: Werkzeuge installieren
+        run: |
+          brew install make cmake ldid wget || true
+          echo "/opt/homebrew/opt/make/libexec/gnubin" >> $GITHUB_PATH
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '8'
+      - name: Bauen
+        working-directory: amethyst
+        run: |
+          export PATH=/opt/homebrew/bin:$PATH
+          export JAVA_HOME_8=$JAVA_HOME
+          git rev-parse HEAD > ../AMETHYST_COMMIT.txt
+          /usr/libexec/java_home -V || true
+          SLIMMED=1 gmake -j$(sysctl -n hw.ncpu) dsym package PLATFORM=2
+          SLIMMED=1 gmake -j$(sysctl -n hw.ncpu) dsym package PLATFORM=2 TROLLSTORE_JIT_ENT=1
+          ls -la artifacts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Cloudy-iOS-Minecraft
+          path: |
+            amethyst/artifacts/*.ipa
+            amethyst/artifacts/*.tipa
+            AMETHYST_COMMIT.txt
+      - name: An Release "ios-minecraft" anhaengen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          C=$(cat AMETHYST_COMMIT.txt)
+          gh release view ios-minecraft >/dev/null 2>&1 || gh release create ios-minecraft --prerelease --title "Minecraft auf iOS (Amethyst-iOS, ungesigniert)" --notes "Gebaut aus https://github.com/AngelAuraMC/Amethyst-iOS (GPL-3.0), Stand $C" --target "$GITHUB_SHA"
+          for f in amethyst/artifacts/*.ipa amethyst/artifacts/*.tipa; do [ -f "$f" ] && gh release upload ios-minecraft "$f" --clobber; done
