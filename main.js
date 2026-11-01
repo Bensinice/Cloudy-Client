@@ -654,7 +654,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.30'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.31'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); if (!j) return false; try { const z = openZip(j); try { return z.has('app/cloudy/client/CosmeticsScreen.class') && z.has('cloudy-cos/build-' + CLIENT_BUILD + '.txt'); } finally { z.close(); } } catch { return false; } };
 
 // Eigener Classpath fuer neue Minecraft-Versionen (26.x): die Bibliotheksliste von minecraft-launcher-core bleibt dort leer (Fehler: KnotClient nicht gefunden)
@@ -905,12 +905,11 @@ function cosNetStart(mcName) {
     cosNetStop(); cosMc = /^\w{3,16}$/.test(String(mcName || '')) ? String(mcName) : ''; if (!cosMc || !srvCfg() || !srvTok) return;
     try { fs.rmSync(cosWant, { force: true }); fs.rmSync(cosOth, { force: true }); } catch {}
     const a = readAuth(), u = currentUser && a.users[currentUser.toLowerCase()]; cosReg(u);
-    let lastM = 0, busy = false;
+    let busy = false;
     cosTimer = setInterval(async () => {
       if (busy) return; busy = true;
       try {
-        const st = fs.statSync(cosWant), w = JSON.parse(fs.readFileSync(cosWant, 'utf8')), names = (w.names || []).filter(n => typeof n === 'string' && /^\w{3,16}$/.test(n)).slice(0, 80);
-        if (st.mtimeMs !== lastM || Date.now() - lastM > 20000) { lastM = st.mtimeMs === lastM ? Date.now() : st.mtimeMs; }
+        const w = JSON.parse(fs.readFileSync(cosWant, 'utf8')), names = (w.names || []).filter(n => typeof n === 'string' && /^\w{3,16}$/.test(n)).slice(0, 80);
         const r = names.length ? await srvCall('/cos/get', { names }, srvTok) : { ok: true, players: {} };
         if (r && r.ok === true) { const tmp = cosOth + '.tmp'; fs.writeFileSync(tmp, JSON.stringify({ ts: Date.now(), players: r.players || {} })); fs.renameSync(tmp, cosOth); }
       } catch {} finally { busy = false; }
@@ -2061,6 +2060,7 @@ ipcMain.handle('launch', async (_e, { username, version, type, ram, server, fabr
     const auth = await authP;
     let newClasses = null; // 26.x: eigenen Classpath verwenden
     if (custom && !/^1\./.test(bv(version))) { try { send('status', 'Bibliotheken werden geprüft …'); const cp = await buildClasspath(custom, bv(version)); if (cp.some(f => /fabric-loader/.test(f))) newClasses = cp; } catch (e) { send('status', 'Eigener Classpath nicht möglich: ' + e.message); } }
+    try { if (!fs.existsSync(cosFile)) fs.writeFileSync(cosFile, JSON.stringify({ user: '', equip: {}, owned: [] })); } catch {} // ohne Datei laedt die Mod keine Cosmetics-Anzeige (auch nicht die der anderen)
     const proc = await launcher.launch({
       authorization: auth,
       root, javaPath,

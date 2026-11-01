@@ -24,7 +24,21 @@ public final class CosmeticNet {
 	private static String lastNames = "";
 
 	public static void stash(PlayerEntityRenderState s, AbstractClientPlayerEntity p) { try { STASH.put(s, p); } catch (Throwable ignored) {} }
-	public static AbstractClientPlayerEntity entityOf(PlayerEntityRenderState s) { try { return STASH.get(s); } catch (Throwable t) { return null; } }
+	public static AbstractClientPlayerEntity entityOf(PlayerEntityRenderState s) {
+		try {
+			AbstractClientPlayerEntity p = STASH.get(s);
+			if (p != null) return p;
+			// Ausweg ohne Mixin: genau ein anderer Spieler mit demselben Skin
+			MinecraftClient mc = MinecraftClient.getInstance();
+			if (mc.world == null || s == null || s.skinTextures == null) return null;
+			AbstractClientPlayerEntity found = null; int n = 0;
+			for (AbstractClientPlayerEntity o : mc.world.getPlayers()) {
+				if (o == mc.player || !o.getSkinTextures().texture().equals(s.skinTextures.texture())) continue;
+				found = o; n++;
+			}
+			return n == 1 && !Cosmetics.isSelf(s.skinTextures) ? found : null;
+		} catch (Throwable t) { return null; }
+	}
 
 	public static String[] get(String name) { return name == null ? null : others.get(name.toLowerCase()); }
 

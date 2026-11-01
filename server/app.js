@@ -20,8 +20,8 @@ const saveGate = async () => { await db.query('REPLACE INTO cloudy_kv (k,v) VALU
 let frT = null; const saveFr = async () => { clearTimeout(frT); frT = setTimeout(() => { db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['friends', JSON.stringify(FR)]).catch(() => {}); }, 400); };
 const saveCodes = () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['codes', JSON.stringify(CODES)]);
 const lockMsg = u => { if (!u || u.admin) return ''; if (u.paused) return 'Konto vorübergehend deaktiviert.'; const un = Number(u.ban_until) || 0; if (u.banned && (!un || un > Date.now())) { const r = u.ban_reason ? ': ' + u.ban_reason : ''; if (!un) return 'Konto dauerhaft gesperrt' + r; const m = Math.ceil((un - Date.now()) / 60000); return 'Konto gesperrt für noch ' + (m >= 1440 ? Math.ceil(m / 1440) + ' Tag(e)' : m >= 60 ? Math.ceil(m / 60) + ' Std.' : m + ' Min.') + r; } return ''; };
-const TAGS_OK = ['tester', 'plus', 'mod'];
-const tagsOf = k => { const t = (TAGS[k] || []).filter(x => TAGS_OK.includes(x)); return k === 'admin' ? ['admin', ...t] : t; };
+const TAGS_OK = ['owner', 'tester', 'plus', 'mod'];
+const tagsOf = k => { const t = (TAGS[k] || []).filter(x => TAGS_OK.includes(x)); return k === 'admin' ? ['owner', ...t.filter(x => x !== 'owner')] : t; }; // das Admin-Konto ist automatisch Owner (rot)
 const pub = u => ({ tags: tagsOf(String(u.name).toLowerCase()), names: NAMES, name: u.name, admin: !!u.admin, coins: u.admin || u.inf_coins ? null : u.coins, mustChange: !!u.must_change, state: { coins: u.admin || u.inf_coins ? null : (u.coins == null ? 100 : u.coins), owned: parse(u.owned, []), equip: parse(u.equip, {}), daily: u.daily || '' } });
 const okPw = (u, p) => { if (!u) return false; try { return crypto.timingSafeEqual(Buffer.from(u.hash, 'hex'), Buffer.from(hash(p, u.salt), 'hex')); } catch { return false; } };
 const fk = (o, s) => { const u = String(s || '').trim().toUpperCase(); if (Object.prototype.hasOwnProperty.call(o, u)) return u; const n = u.replace(/[^A-Z0-9]/g, ''); return n ? (Object.keys(o).find(k => k.replace(/[^A-Z0-9]/g, '') === n) || u) : u; }; // Codes mit oder ohne Bindestriche, Groß-/Kleinschreibung egal

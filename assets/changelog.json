@@ -1,5 +1,16 @@
 [
  {
+  "v": "0.9.31",
+  "date": "2026-11-01",
+  "added": [
+   "Neuer Tag „Owner“ (rot, leuchtend) – das Admin-Konto trägt ihn automatisch, für andere vergibst du ihn in der Admin-Liste per Klick (benötigt aktualisierten Server)"
+  ],
+  "fixed": [
+   "Cosmetics anderer Spieler: Die Mod wird jetzt auch geladen, wenn du nie im Shop warst (sonst sah man die Cosmetics der anderen nicht), plus ein Ausweg bei der Zuordnung der Spieler"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.30",
   "date": "2026-11-01",
   "added": [

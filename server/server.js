@@ -23,8 +23,8 @@ if (!db.codes) db.codes = {};
 if (!db.gate) db.gate = {};
 if (!db.grants) db.grants = {};
 if (!db.fr) db.fr = { f: {}, msgs: {}, seq: 1 };
-const TAGS_OK = ['tester', 'plus', 'mod'];
-const tagsOf = k => { const t = ((db.tags || {})[k] || []).filter(x => TAGS_OK.includes(x)), u = db.users[k]; return u && u.admin ? ['admin', ...t] : t; };
+const TAGS_OK = ['owner', 'tester', 'plus', 'mod'];
+const tagsOf = k => { const t = ((db.tags || {})[k] || []).filter(x => TAGS_OK.includes(x)), u = db.users[k]; return u && u.admin ? ['owner', ...t.filter(x => x !== 'owner')] : t; }; // Admin-Konten sind automatisch Owner (rot)
 const pub = u => ({ tags: tagsOf(String(u.name).toLowerCase()), names: db.names, name: u.name, admin: !!u.admin, coins: u.admin || u.infCoins ? null : u.coins, mustChange: !!u.mustChange, state: { coins: u.admin || u.infCoins ? null : (u.coins == null ? 100 : u.coins), owned: u.owned || [], equip: u.equip || {}, daily: u.daily || '' } });
 function body(req) { return new Promise(r => { let s = ''; req.on('data', d => { s += d; if (s.length > 1e5) req.destroy(); }); req.on('end', () => { try { r(JSON.parse(s || '{}')); } catch { r({}); } }); }); }
 const send = (res, c, o) => { res.writeHead(c, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' }); res.end(JSON.stringify(o)); };
