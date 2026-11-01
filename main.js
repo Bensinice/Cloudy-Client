@@ -808,7 +808,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.63'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.64'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1026,16 +1026,38 @@ const info = u => ({ user: u.name, admin: !!u.admin });
 const accSrvFile = path.join(app.getPath('userData'), 'cloudy-server.json');
 const srvCfg = () => { let u = ''; try { u = String(JSON.parse(fs.readFileSync(accSrvFile, 'utf8')).url || ''); } catch {} if (!u) u = String(APP_CFG.accountServer || 'https://account1234444.framebound.win'); return /^https?:\/\//i.test(u) ? { url: u.replace(/\/+$/, '') } : null; }; // 1. in den Einstellungen gesetzt, 2. config/app.json -> accountServer
 let srvTok = null, srvPendTok = null;
-async function srvCall(p, body, tok) {
-  const c = srvCfg(); if (!c) throw new Error('kein Server');
-  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 10000);
+// Backup-Server: faellt der Haupt-Server aus (Verbindung, Timeout oder 5xx vom Proxy), wird derselbe Aufruf am Backup-Server versucht. Die Adresse kommt vom Haupt-Server (/health) und wird zwischengespeichert, damit auch Freunde ohne Einstellung profitieren.
+const backupFile = path.join(app.getPath('userData'), 'cloudy-backup.json');
+const backupUrl = () => { try { const u = String(JSON.parse(fs.readFileSync(backupFile, 'utf8')).url || '').replace(/\/+$/, ''); return /^https?:\/\//i.test(u) ? u : ''; } catch { return ''; } };
+let srvBackUntil = 0; // bis dahin zuerst der Backup-Server (damit nicht jeder Aufruf erst 6 s auf den toten Haupt-Server wartet)
+async function srvTry(base, p, body, tok, ms) {
+  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), ms);
   try {
-    const r = await fetch(c.url + p, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}) }, body: JSON.stringify(body || {}), signal: ctl.signal });
+    const r = await fetch(base + p, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}) }, body: JSON.stringify(body || {}), signal: ctl.signal });
+    if (r.status === 502 || r.status === 503 || r.status === 504 || (r.status >= 520 && r.status <= 530)) throw new Error('gateway ' + r.status);
     const j = await r.json().catch(() => ({}));
-    if (r.status === 401 && tok && tok === srvTok && Date.now() - srvExpAt > 8000) { srvExpAt = Date.now(); try { send('acctLocked', 'Sitzung abgelaufen (Server wurde neu gestartet) – bitte neu anmelden.'); } catch {} } // statt „Cloudy neu starten“: direkt zum Login
     return { status: r.status, ...j };
   } finally { clearTimeout(to); }
 }
+async function srvCall(p, body, tok) {
+  const c = srvCfg(); if (!c) throw new Error('kein Server');
+  const b = backupUrl(); let r;
+  if (!b || b === c.url) r = await srvTry(c.url, p, body, tok, 10000);
+  else {
+    const order = Date.now() < srvBackUntil ? [b, c.url] : [c.url, b]; let err;
+    for (const base of order) {
+      try { r = await srvTry(base, p, body, tok, base === order[0] ? 6000 : 10000); if (base === b) srvBackUntil = Date.now() + 60000; else if (srvBackUntil) srvBackUntil = 0; err = null; break; } catch (e) { err = e; if (base === c.url) srvBackUntil = Date.now() + 60000; }
+    }
+    if (err) throw err;
+  }
+  if (r.status === 401 && tok && tok === srvTok && Date.now() - srvExpAt > 8000) { srvExpAt = Date.now(); try { send('acctLocked', 'Sitzung abgelaufen (Server wurde neu gestartet) – bitte neu anmelden.'); } catch {} } // statt „Cloudy neu starten“: direkt neu anmelden
+  return r;
+}
+async function backupSync() { // Backup-Adresse vom Haupt-Server holen (der Admin setzt sie dort einmal fuer alle)
+  try { const c = srvCfg(); if (!c) return; const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 6000); const r = await fetch(c.url + '/health', { signal: ctl.signal }).finally(() => clearTimeout(to)); const j = await r.json(); if (!j || !j.ok || typeof j.backup !== 'string') return;
+    const u = /^https?:\/\//i.test(j.backup) ? j.backup.replace(/\/+$/, '') : ''; if (u !== backupUrl()) { if (u) fs.writeFileSync(backupFile, JSON.stringify({ url: u })); else fs.rmSync(backupFile, { force: true }); } } catch {}
+}
+app.whenReady().then(() => { setTimeout(backupSync, 4000); setInterval(backupSync, 600000); });
 let srvExpAt = 0;
 const SRV_DOWN = { ok: false, error: 'Der Konto-Server ist nicht erreichbar. Prüfe deine Internetverbindung oder die Server-Adresse in den Einstellungen.' };
 function srvMirror(pu) { // lokale Kopie (für Shop, Cosmetics, Spielzeit) – Anmeldung und Rechte kommen vom Server
@@ -1100,13 +1122,27 @@ async function accSrvState() {
   } catch { currentUser = null; return { fresh: false, user: null }; }
 }
 ipcMain.handle('srvGet', () => { const c = srvCfg(); return c ? c.url : ''; });
+ipcMain.handle('srvBackupGet', () => backupUrl());
+ipcMain.handle('srvBackupSet', async (_e, url) => {
+  if (!adminOnly()) return { ok: false, error: 'Nur der Admin kann den Backup-Server ändern.' };
+  if (!srvCfg() || !srvTok) return { ok: false, error: 'Zuerst mit dem Haupt-Server verbinden und anmelden.' };
+  url = String(url || '').trim().replace(/\/+$/, '');
+  if (url) {
+    if (!/^https?:\/\//i.test(url)) return { ok: false, error: 'Die Adresse muss mit http:// oder https:// beginnen.' };
+    try { const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 8000); const r = await fetch(url + '/health', { signal: ctl.signal }).finally(() => clearTimeout(to)); const j = await r.json(); if (!j.ok) throw 0; } catch { return { ok: false, error: 'Dort antwortet kein Cloudy-Server.' }; }
+  }
+  const r = await srvCall('/admin/backup', { url }, srvTok).catch(() => null);
+  if (!r || !r.ok) return { ok: false, error: 'Der Haupt-Server hat das nicht gespeichert (Server aktuell? Neue app.js/server.js einspielen).' };
+  if (url) fs.writeFileSync(backupFile, JSON.stringify({ url })); else fs.rmSync(backupFile, { force: true });
+  srvBackUntil = 0; return { ok: true, off: !url };
+});
 ipcMain.handle('srvSet', async (_e, url) => {
   if (!adminOnly()) return { ok: false, error: 'Nur der Admin kann den Konto-Server ändern.' };
   url = String(url || '').trim().replace(/\/+$/, '');
   if (!url) { fs.rmSync(accSrvFile, { force: true }); currentUser = null; srvTok = null; fs.rmSync(sessFile, { force: true }); return { ok: true, off: true }; }
   if (!/^https?:\/\//i.test(url)) return { ok: false, error: 'Die Adresse muss mit http:// oder https:// beginnen.' };
   try { const r = await fetch(url + '/health'); const j = await r.json(); if (!j.ok) throw 0; } catch { return { ok: false, error: 'Dort antwortet kein Cloudy-Server.' }; }
-  fs.writeFileSync(accSrvFile, JSON.stringify({ url })); currentUser = null; srvTok = null; fs.rmSync(sessFile, { force: true }); return { ok: true };
+  fs.writeFileSync(accSrvFile, JSON.stringify({ url })); try { fs.rmSync(backupFile, { force: true }); } catch {} setTimeout(backupSync, 500); currentUser = null; srvTok = null; fs.rmSync(sessFile, { force: true }); return { ok: true };
 });
 ipcMain.handle('authState', () => {
   if (srvCfg()) return accSrvState();

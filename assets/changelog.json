@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.64",
+  "date": "2026-11-01",
+  "added": [
+   "Backup-Server: In den Einstellungen unter dem Konto-Server eintragen; fällt der Haupt-Server aus, wechselt Cloudy automatisch um (Adresse wird für alle Spieler vom Haupt-Server geholt)"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.63",
   "date": "2026-11-01",
   "added": [

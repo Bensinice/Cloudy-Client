@@ -1,4 +1,7 @@
 {
+ "0.9.64": [
+  "Backup server: set it in Settings below the account server; if the main server goes down Cloudy switches automatically (the address is fetched from the main server for all players)"
+ ],
  "0.9.63": [
   "On launch Cloudy checks that Sodium, Lithium & co. are really installed; if something is missing or the version is unsupported, the launch status says so"
  ],

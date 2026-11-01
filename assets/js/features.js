@@ -584,6 +584,17 @@ window.showOnb = showOnb;
   };
 })();
 
+// ---------- Backup-Server (Einstellungen) ----------
+(function () {
+  const inp = document.getElementById('srvBackup'), btn = document.getElementById('srvBackupSave'), msg = document.getElementById('srvBackupMsg'); if (!inp || !btn || !window.cloudy.srvBackupGet) return;
+  const T = s => window.t ? window.t(s) : s;
+  window.cloudy.srvBackupGet().then(u => { inp.value = u || ''; msg.textContent = u ? T('Backup-Server aktiv eingetragen.') : T('Kein Backup-Server.'); }).catch(() => {});
+  btn.onclick = async () => {
+    btn.disabled = true; msg.textContent = T('Prüfe …'); const r = await window.cloudy.srvBackupSet(inp.value).catch(() => ({ ok: false, error: 'Fehler.' })); btn.disabled = false;
+    msg.textContent = r.ok ? T(r.off ? 'Backup-Server entfernt.' : 'Backup-Server gespeichert.') : T(r.error);
+  };
+})();
+
 // ---------- Knopfform (Theme-Standard / rund / eckig) ----------
 (function () {
   const sel = document.getElementById('shape'), OK = ['auto', 'round', 'square'];

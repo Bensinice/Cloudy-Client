@@ -205,7 +205,7 @@ http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') return send(res, 204, {});
   const ip = String(req.headers['cf-connecting-ip'] || String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress), url = req.url.split('?')[0], b = req.method === 'POST' ? await body(req) : {};
   try {
-    if (url === '/health') return send(res, 200, { ok: true });
+    if (url === '/health') return send(res, 200, { ok: true, backup: db.backup || '' });
     if (url === '/register' && req.method === 'POST') {
       if (limited(ip)) return send(res, 429, { error: 'Zu viele Versuche, warte kurz.' });
       const user = String(b.user || '').trim(), pass = String(b.pass || ''), key = user.toLowerCase();
@@ -283,6 +283,7 @@ http.createServer(async (req, res) => {
     if (url === '/bundle/claim') { db.bundles = db.bundles || {}; const r = bunClaim(db.bundles, me.name.toLowerCase(), b.id, !!b.undo, b.code); if (r.ok && !r.already) save(); return send(res, r.error ? 400 : 200, r); }
     if (url === '/limited/claim') { const r = limClaim(me.name.toLowerCase(), b); if (r.ok && !r.already) save(); return send(res, r.error ? 400 : 200, r); }
     if (!isAdm(me)) return send(res, 403, { error: 'Nur für Admins.' });
+    if (url === '/admin/backup') { const u = String(b.url || '').trim().replace(/\/+$/, '').slice(0, 200); if (u && !/^https?:\/\//i.test(u)) return send(res, 400, { error: 'Adresse muss mit http:// oder https:// beginnen.' }); db.backup = u; save(); return send(res, 200, { ok: true, backup: u }); }
     if (url === '/admin/announce') { db.announce = { text: String(b.text || '').trim().slice(0, 300), t: b.text ? Date.now() : 0 }; save(); return send(res, 200, { ok: true, ...db.announce }); }
     if (url === '/admin/stats') { const us = Object.values(db.users).filter(u => !u.admin), now = Date.now(); return send(res, 200, { users: us.length, online: us.filter(u => now - (SEEN.get(u.name.toLowerCase()) || 0) < 120000).length, banned: us.filter(u => u.banned && (!u.banUntil || u.banUntil > now)).length, paused: us.filter(u => u.paused).length, coins: us.reduce((a, u) => a + (u.infCoins || u.coins == null ? 0 : u.coins), 0), items: us.reduce((a, u) => a + (u.owned || []).length, 0), codes: Object.keys(db.codes).length, gate: Object.keys(db.gate).length, new7: us.filter(u => now - (u.created || 0) < 7 * 864e5).length, announce: db.announce || { text: '', t: 0 } }); }
     if (url === '/admin/limited') { const e = limSet(b); if (e) return send(res, 400, { error: e }); save(); return send(res, 200, { ok: true, items: limView(me.name.toLowerCase(), true) }); }
