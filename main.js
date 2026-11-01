@@ -779,7 +779,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.56'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.57'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1264,7 +1264,7 @@ const CATALOG = [
   { id: 'shield-ice', cat: 'shield', name: 'Eisschild', price: 300 }, { id: 'hat-party', cat: 'hat', name: 'Partyhut', price: 250 }, { id: 'hat-frost', cat: 'hat', name: 'Frostmütze', price: 350 },
   { id: 'cape-nebula', cat: 'cape', name: 'Nebel-Umhang', price: 700 }, { id: 'cape-emerald', cat: 'cape', name: 'Smaragd-Umhang', price: 700 }, { id: 'cape-royal', cat: 'cape', name: 'Königs-Umhang', price: 900 },
   { id: 'hat-zzv', cat: 'hat', name: 'Zickzack-Hut Violett (3D)', price: 600 }, { id: 'hat-zzb', cat: 'hat', name: 'Zickzack-Zylinder Blau (3D)', price: 600 }, { id: 'hat-zsh', cat: 'hat', name: 'Schattenhut (3D)', price: 650 }, { id: 'hat-zif', cat: 'hat', name: 'Eisfeder-Hut (3D)', price: 650 },
-  { id: 'hat-crown', cat: 'hat', name: 'Krone', price: 700 }, { id: 'hat-halo', cat: 'hat', name: 'Heiligenschein', price: 600 },
+  { id: 'hat-crown', cat: 'hat', name: 'Krone', price: 700 }, { id: 'hat-halo', cat: 'hat', name: 'Heiligenschein', price: 600 }, { id: 'hat-haloblack', cat: 'hat', name: 'Heiligenschein – Black Edition', price: 900 },
   { id: 'wings-zv', cat: 'wings', name: 'Zickzack-Flügel Violett (3D)', price: 1800 }, { id: 'wings-zb', cat: 'wings', name: 'Zickzack-Flügel Blau (3D)', price: 1800 }, { id: 'wings-zs', cat: 'wings', name: 'Schattenflügel (3D)', price: 1800 }, { id: 'wings-zf', cat: 'wings', name: 'Eisfeder-Flügel (3D)', price: 1800 },
   { id: 'cape-zbs', cat: 'cape', name: 'Zickzack-Schlangen-Umhang', price: 1500 }, { id: 'cape-ghg', cat: 'cape', name: 'GHG-Umhang', price: 1000 },
   { id: 'cape-zz4', cat: 'cape', name: 'ZZ4-Umhang (3D)', price: 1500 }, { id: 'wings-zz4', cat: 'wings', name: 'ZZ4-Flügel (3D)', price: 1800 }, { id: 'shield-zz4', cat: 'shield', name: 'ZZ4-Schild (3D)', price: 1200 },
@@ -1976,11 +1976,13 @@ const mediaNowP = async () => {
   if (webNow && webNow.playing && Date.now() - webNow.t < 6000 && webNow.title) return { running: true, playing: true, title: webNow.title, artist: webNow.artist, posMs: webNow.posMs + (Date.now() - webNow.t), src: 'web' };
   return l;
 };
-ipcMain.handle('spotifyState', () => { const j = spLoad(); return { connected: !!j.refresh, clientId: j.clientId || '', redirect: SP_REDIRECT, last: spLast }; });
+// Eingebaute Spotify-Client-ID (assets/spotify.json): damit melden sich alle mit einem Klick an, ohne eigene Spotify-App
+const SP_CID = (() => { try { const c = String(JSON.parse(fs.readFileSync(path.join(__dirname, 'assets', 'spotify.json'), 'utf8')).clientId || '').trim(); return /^[a-f0-9]{32}$/i.test(c) ? c : ''; } catch { return ''; } })();
+ipcMain.handle('spotifyState', () => { const j = spLoad(); return { connected: !!j.refresh, clientId: j.clientId || SP_CID, builtin: !!SP_CID, redirect: SP_REDIRECT, last: spLast }; });
 ipcMain.handle('spotifyTest', async () => { spCache = { t: 0, v: null }; try { await spotifyNow(); } catch (e) { spLast = { ok: false, msg: String(e && e.message || e) }; } return spLast; });
 ipcMain.handle('spotifyDisconnect', () => { const j = spLoad(); spSave({ clientId: j.clientId || '' }); spCache = { t: 0, v: null }; return true; });
 ipcMain.handle('spotifyConnect', async (_e, clientId) => {
-  clientId = String(clientId || '').trim(); if (!/^[a-f0-9]{32}$/i.test(clientId)) return { ok: false, error: 'Bitte die Client ID (32 Zeichen) aus deiner Spotify-App eintragen.' };
+  clientId = String(clientId || '').trim() || SP_CID; if (!/^[a-f0-9]{32}$/i.test(clientId)) return { ok: false, error: 'Bitte die Client ID (32 Zeichen) aus deiner Spotify-App eintragen.' };
   try { if (spSrv) { spSrv.close(); spSrv = null; } } catch {}
   const verifier = crypto.randomBytes(48).toString('base64url'), challenge = crypto.createHash('sha256').update(verifier).digest('base64url'), state = crypto.randomBytes(8).toString('hex');
   return new Promise(resolve => {

@@ -1,5 +1,21 @@
 [
  {
+  "v": "0.9.57",
+  "date": "2026-11-01",
+  "added": [
+   "Neue Tour durch den kompletten Launcher (ersetzt die alte Willkommens-Einführung)",
+   "Alle bekommen automatisch den Tester-Tag und sind in der Gruppe „Bugs“ (Fehler & Wünsche melden)",
+   "Shop: Heiligenschein – Black Edition",
+   "Spotify: Anmeldung mit einem Klick, sobald die Spotify-Client-ID eingebaut ist"
+  ],
+  "fixed": [
+   "Flügel schwingen nicht mehr durch den Körper"
+  ],
+  "removed": [
+   "Alte Willkommens-Einführung"
+  ]
+ },
+ {
   "v": "0.9.56",
   "date": "2026-11-01",
   "added": [],

@@ -168,24 +168,7 @@ const ICO = {
   pack: '<rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/>',
   style: '<circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10" r="1.2"/><circle cx="12" cy="7.5" r="1.2"/><circle cx="15.5" cy="10" r="1.2"/><path d="M12 21c-1.5 0-2-1.2-1.4-2.3.6-1 .2-2.2-1-2.2H8"/>'
 };
-const OB = [
-  { i: ICO.cloud, t: 'Willkommen bei Cloudy', p: 'Dein Minecraft-Launcher in Wolkenoptik. In einer Minute zeigen wir dir, wie alles funktioniert.' },
-  { i: ICO.play, t: 'Version wählen und spielen', p: 'Unter „Versionen“ suchst du dir eine Minecraft-Version aus. Der große Spielen-Knopf startet das Spiel. Java und alle Dateien lädt Cloudy automatisch.' },
-  { i: ICO.mods, t: 'Mods mit Fabric', p: 'Im Tab „Mods“ findest du Mods von Modrinth. Fabric richtet Cloudy selbst ein. In der „Bibliothek“ schaltest du Mods ein oder aus, suchst und löschst sie.' },
-  { i: ICO.pack, t: 'Ressourcenpakete und Shader', p: 'Im Tab „Ressourcen“ verwaltest du Ressourcenpakete und Shader. Für Shader installiert Cloudy bei Bedarf Fabric und Iris dazu.' },
-  { i: ICO.style, t: 'Dein Stil, dein Konto', p: 'In den Einstellungen wählst du eines von vielen Farbthemen, meldest dich mit Microsoft an und hältst Cloudy mit einem Klick aktuell.' }
-];
-let obStep = 0;
-function obDone() { st.set('onboarded', true); $('#onb').classList.remove('on'); }
-function obDraw() {
-  const s = OB[obStep], last = obStep === OB.length - 1;
-  $('#obBox').innerHTML = `<div class="slide" key="${obStep}"><div class="art"><svg viewBox="0 0 24 24">${s.i}</svg></div><h2>${s.t}</h2><p>${s.p}</p></div>
-    <div class="dots">${OB.map((_, i) => `<i class="${i === obStep ? 'on' : ''}"></i>`).join('')}</div>
-    <div class="go"><button class="btn ghost" id="obSkip">Überspringen</button><button class="btn" id="obNext">${last ? 'Los geht’s' : 'Weiter'}</button></div>`;
-  $('#obSkip').onclick = obDone;
-  $('#obNext').onclick = () => { if (last) obDone(); else { obStep++; obDraw(); } };
-}
-function showOnb() { obStep = 0; obDraw(); $('#onb').classList.add('on'); }
+function showOnb() { if (window.cloudyTour) window.cloudyTour(); }  // die alte Willkommens-Einführung gibt es nicht mehr – nur noch die neue Tour (tour.js)
 $('#onbAgain').onclick = showOnb;
 
 
@@ -535,7 +518,7 @@ function lgDone(name, first, admin) {
   if (first) { st.set('name', name); $('#name').value = name; paintUser(); }
   $('#delBtn').style.display = admin ? 'none' : ''; $('#delRow').style.display = 'none';
   paintAdmin(!!admin); if (window.onLoggedIn) window.onLoggedIn();
-  if (!st.get('onboarded', false)) showOnb();
+  if (!st.get('onboarded', false)) { st.set('onboarded', true); setTimeout(showOnb, 900); }
 }
 $('#lgForm').onsubmit = async e => {
   e.preventDefault();

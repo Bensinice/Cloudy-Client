@@ -324,7 +324,7 @@ html.perf .btn:hover{transform:none}
 
 /* Gelenk-Animationen der Bild-Modelle (jedes Glied schwingt etwas später) */
 .wj{will-change:transform;animation:jflap 1.8s cubic-bezier(.45,.05,.55,.95) infinite;animation-delay:calc(var(--wd,0)*-.16s)}
-@keyframes jflap{0%,100%{rotate:y calc(var(--ws,1)*-12deg)}50%{rotate:y calc(var(--ws,1)*20deg)}}
+@keyframes jflap{0%,100%{rotate:y calc(var(--ws,1)*8deg)}50%{rotate:y calc(var(--ws,1)*28deg)}}
 .cj{animation:jsway 3.2s cubic-bezier(.45,.05,.55,.95) infinite;animation-delay:calc(var(--cd,0)*-.28s)}
 @keyframes jsway{0%,100%{rotate:x -3deg}50%{rotate:x 6deg}}
 .sbob{animation:sbob 3s ease-in-out infinite}

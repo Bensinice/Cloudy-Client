@@ -230,7 +230,7 @@ public final class Ui {
 					case "hat-wizard", "hat-witch" -> { for (int i = 0; i < 8; i++) { int gw = 2 + i; r(c, x, y, u, 8 - gw / 2, 2 + i, gw, 1, i % 2 == 0 ? a : b); } r(c, x, y, u, 1, 10, 14, 2, b); r(c, x, y, u, 4, 8, 8, 1, d); }
 					case "hat-santa" -> { for (int i = 0; i < 8; i++) { int gw = 4 + i; r(c, x, y, u, 7 - gw / 2 + i / 3, 2 + i, gw, 1, a); } r(c, x, y, u, 2, 10, 12, 2, 0xFFFFFFFF); r(c, x, y, u, 11, 1, 3, 3, 0xFFFFFFFF); }
 					case "hat-crown" -> { r(c, x, y, u, 2, 6, 12, 6, a); r(c, x, y, u, 2, 3, 2, 3, a); r(c, x, y, u, 7, 2, 2, 4, a); r(c, x, y, u, 12, 3, 2, 3, a); r(c, x, y, u, 2, 10, 12, 2, b); r(c, x, y, u, 7, 8, 2, 2, 0xFFE23B3B); }
-					case "hat-halo" -> { r(c, x, y, u, 3, 5, 10, 2, a); r(c, x, y, u, 3, 9, 10, 2, a); r(c, x, y, u, 2, 6, 2, 4, a); r(c, x, y, u, 12, 6, 2, 4, a); r(c, x, y, u, 4, 7, 8, 2, 0x44FFF7B0); }
+					case "hat-halo", "hat-haloblack" -> { r(c, x, y, u, 3, 5, 10, 2, a); r(c, x, y, u, 3, 9, 10, 2, a); r(c, x, y, u, 2, 6, 2, 4, a); r(c, x, y, u, 12, 6, 2, 4, a); r(c, x, y, u, 4, 7, 8, 2, 0x44FFF7B0); }
 					default -> { r(c, x, y, u, 4, 2, 8, 9, a); r(c, x, y, u, 1, 11, 14, 2, a); r(c, x, y, u, 4, 8, 8, 2, d); r(c, x, y, u, 1, 12, 14, 1, b); }
 				}
 			}

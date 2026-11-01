@@ -105,7 +105,7 @@ public final class Cosmetics {
 
 
 	public static final String[] ALL = {"cape-cloud", "cape-aurora", "cape-sunset", "cape-galaxy", "cape-fire", "cape-ocean", "cape-sakura",
-		"hat-top", "hat-gold", "hat-wizard", "hat-santa", "hat-witch", "hat-crown", "hat-halo", "hat-party", "hat-frost", "hat-zzv", "hat-zzb", "hat-zsh", "hat-zif",
+		"hat-top", "hat-gold", "hat-wizard", "hat-santa", "hat-witch", "hat-crown", "hat-halo", "hat-haloblack", "hat-party", "hat-frost", "hat-zzv", "hat-zzb", "hat-zsh", "hat-zif",
 		"wings-angel", "wings-neon", "wings-fire", "wings-bat", "wings-crystal", "wings-shadow", "shield-cloud", "shield-sun", "shield-dragon", "shield-forest", "shield-ice",
 		"cape-nebula", "cape-emerald", "cape-royal",
 		"cape-zz4", "cape-zz4m", "cape-zz3", "cape-zz3s", "cape-zz5", "cape-zk5", "wings-zz4", "wings-zz4m", "wings-zz3", "wings-zz3s", "wings-zz5", "wings-zk5",
@@ -177,6 +177,7 @@ public final class Cosmetics {
 			case "hat-witch" -> "Witch Hat";
 			case "hat-crown" -> "Crown";
 			case "hat-halo" -> "Halo";
+			case "hat-haloblack" -> "Halo Black Edition";
 			case "wings-fire" -> "Fire Wings";
 			case "wings-bat" -> "Bat Wings";
 			case "shield-dragon" -> "Dragon Shield";
@@ -229,7 +230,7 @@ public final class Cosmetics {
 
 	// Jedes Item bekommt eine Zelle (64x48) im 256x256-Atlas. Form (Hut/Flügel/Schild) und Farben stehen in der Tabelle.
 	private static final String[] IDS = {"hat-top", "hat-gold", "hat-wizard", "hat-santa", "hat-witch", "hat-crown", "hat-halo",
-		"wings-angel", "wings-neon", "wings-fire", "wings-bat", "wings-crystal", "wings-shadow", "shield-cloud", "shield-sun", "shield-dragon", "shield-forest", "shield-ice", "hat-party", "hat-frost", "hat-zzv", "hat-zzb", "hat-zsh", "hat-zif"};
+		"wings-angel", "wings-neon", "wings-fire", "wings-bat", "wings-crystal", "wings-shadow", "shield-cloud", "shield-sun", "shield-dragon", "shield-forest", "shield-ice", "hat-party", "hat-frost", "hat-zzv", "hat-zzb", "hat-zsh", "hat-zif", "hat-haloblack"};
 	private static final int[][] COL = {
 		{0xFF2A2A3C, 0xFF1C1C28, 0xFF6DB8FF, 0xFF2F7FE0}, {0xFFF4C430, 0xFFB8860B, 0xFFE23B3B, 0xFF9E1B1B},
 		{0xFF8B5CF6, 0xFF5B34C4, 0xFFA98BFF, 0xFF7C5CE0, 0xFFFFD24A}, {0xFFFFFFFF, 0xFFD8E4F0, 0xFFE0262E, 0xFFA3121A, 0xFFFFFFFF},
@@ -238,7 +239,7 @@ public final class Cosmetics {
 		{0xFFB9F6FF, 0xFF6A7BFF, 0xFFFFFFFF}, {0xFF3B2A55, 0xFF07050D, 0xFFB07CFF},
 		{0xFF9BD2FF, 0xFF2F7FE0}, {0xFFFFD24A, 0xFFE8741A}, {0xFFE23B3B, 0xFF3A0A0A, 0xFFFFD24A}, {0xFF5BD98A, 0xFF1B6A45, 0xFFFFFFFF}, {0xFFD9F6FF, 0xFF4AA8D8, 0xFFFFFFFF},
 		{0xFFFF4FA3, 0xFFC02275, 0xFFFFE14A, 0xFFE0B800, 0xFFFFFFFF}, {0xFF8FE3FF, 0xFF3FA9D6, 0xFFFFFFFF, 0xFFD8F1FA, 0xFFFFFFFF},
-		{0xFF6D28D9, 0xFF3B1A8A, 0xFFB26BFF, 0xFF7C3AED, 0xFFE9D5FF}, {0xFF1D4ED8, 0xFF0B2A78, 0xFF60A5FA, 0xFF2563EB}, {0xFF1B1030, 0xFF07050D, 0xFF3B2A55, 0xFF15101F, 0xFFB07CFF}, {0xFFBFEAFF, 0xFF8FD3F0, 0xFFEFFBFF, 0xFFA9E3F7, 0xFFFFFFFF}};
+		{0xFF6D28D9, 0xFF3B1A8A, 0xFFB26BFF, 0xFF7C3AED, 0xFFE9D5FF}, {0xFF1D4ED8, 0xFF0B2A78, 0xFF60A5FA, 0xFF2563EB}, {0xFF1B1030, 0xFF07050D, 0xFF3B2A55, 0xFF15101F, 0xFFB07CFF}, {0xFFBFEAFF, 0xFF8FD3F0, 0xFFEFFBFF, 0xFFA9E3F7, 0xFFFFFFFF}, {0xFF2A1F4D, 0xFF0B0B12}};
 	private static final int SZ = 512; // Atlas: 4 Spalten à 64 px, genug Zeilen für alle Items
 
 	private static int idx(String id) { for (int i = 0; i < IDS.length; i++) if (IDS[i].equals(id)) return i; return -1; }
@@ -267,7 +268,7 @@ public final class Cosmetics {
 					box(r, id + ".s1", u, v + 12, -4, -13, -4, 2, 3, 2); box(r, id + ".s2", u, v + 12, 2, -13, -4, 2, 3, 2); box(r, id + ".s3", u, v + 12, -4, -13, 2, 2, 3, 2); box(r, id + ".s4", u, v + 12, 2, -13, 2, 2, 3, 2);
 					fill(px, u, v, 32, 10, c[0], c[1]); fill(px, u, v + 12, 8, 5, c[0], c[1]);
 					for (int k = 0; k < 4; k++) dot(px, u + 2 + k * 8, v + 5, 0xFFE23B3B);
-				} else if (id.equals("hat-halo")) {
+				} else if (id.equals("hat-halo") || id.equals("hat-haloblack")) {
 					box(r, id, u, v, -3.5f, -14, -3.5f, 7, 1, 7); fill(px, u, v, 28, 8, c[0], c[1]);
 				} else if (id.startsWith("wings-")) {
 					wing(r, id, u, v);
@@ -368,7 +369,7 @@ public final class Cosmetics {
 		if (isTop(id)) return new String[]{id + ".brim", id + ".tube", id + ".band"};
 		if (isWiz(id)) return new String[]{id + ".brim", id + ".c1", id + ".c2", id + ".c3"};
 		if (id.equals("hat-crown")) return new String[]{id + ".base", id + ".s1", id + ".s2", id + ".s3", id + ".s4"};
-		if (idx(id) >= 0 && (id.equals("hat-halo") || id.startsWith("shield-"))) return new String[]{id};
+		if (idx(id) >= 0 && (id.equals("hat-halo") || id.equals("hat-haloblack") || id.startsWith("shield-"))) return new String[]{id};
 		return new String[0];
 	}
 

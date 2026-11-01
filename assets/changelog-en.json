@@ -1,4 +1,11 @@
 {
+ "0.9.57": [
+  "New tour through the whole launcher (replaces the old welcome intro)",
+  "Everyone automatically gets the Tester tag and joins the “Bugs” group (report bugs & wishes)",
+  "Shop: Halo – Black Edition",
+  "Spotify: one-click sign-in once the Spotify client ID is built in",
+  "Wings no longer swing through the body"
+ ],
  "0.9.56": [
   "Shop: much smoother scrolling (3D previews load only when scrolled into view, fewer blur effects)",
   "Windows: portable update and uninstall no longer use batch scripts – should avoid antivirus false alarms (VirusTotal)"

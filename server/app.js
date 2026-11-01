@@ -38,7 +38,7 @@ const limClaim = (key, b) => { const l = LIM[String(b.id || '')]; if (!l) return
   if (cd) cd.by = key; l.sold++; l.claimed.push(key); return { ok: true, price: l.mode === 'coins' ? l.price : 0 }; };
 const TAGS_OK = ['owner', 'manager', 'tester', 'plus', 'mod'];
 const AUTO_TAGS = { thepa1: ['manager'] }; // feste Rollen
-const tagsOf = k => { const t = [...new Set([...(TAGS[k] || []), ...(AUTO_TAGS[k] || [])])].filter(x => TAGS_OK.includes(x)); return k === 'admin' ? ['owner', ...t.filter(x => x !== 'owner')] : t; }; // das Admin-Konto ist automatisch Owner (rot)
+const tagsOf = k => { const t = [...new Set([...(TAGS[k] || []), ...(AUTO_TAGS[k] || []), 'tester'])].filter(x => TAGS_OK.includes(x)); return k === 'admin' ? ['owner', ...t.filter(x => x !== 'owner')] : t; }; // das Admin-Konto ist automatisch Owner (rot)
 const pub = u => ({ bundles: BUNDLES, hidden: HIDE, tags: tagsOf(String(u.name).toLowerCase()), names: NAMES, prices: PRICES, name: u.name, admin: isAdm(u), coins: isAdm(u) || u.inf_coins ? null : u.coins, mustChange: !!u.must_change, state: { coins: u.admin || u.inf_coins ? null : (u.coins == null ? 100 : u.coins), owned: parse(u.owned, []), equip: parse(u.equip, {}), daily: u.daily || '' } });
 const okPw = (u, p) => { if (!u) return false; try { return crypto.timingSafeEqual(Buffer.from(u.hash, 'hex'), Buffer.from(hash(p, u.salt), 'hex')); } catch { return false; } };
 const fk = (o, s) => { const u = String(s || '').trim().toUpperCase(); if (Object.prototype.hasOwnProperty.call(o, u)) return u; const n = u.replace(/[^A-Z0-9]/g, ''); return n ? (Object.keys(o).find(k => k.replace(/[^A-Z0-9]/g, '') === n) || u) : u; }; // Codes mit oder ohne Bindestriche, Groß-/Kleinschreibung egal
@@ -113,6 +113,9 @@ async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
   const u = FR.f[me] = FR.f[me] || { friends: [], in: [], out: [], read: {} }, uf = k => FR.f[k] = FR.f[k] || { friends: [], in: [], out: [], read: {} };
   const online = k => now - (SEEN.get(k) || 0) < 45000;
   FR.groups = FR.groups || {}; FR.clan = FR.clan || {}; const GR = FR.groups;
+  // Alle landen einmalig automatisch in der Gruppe „Bugs“ (Fehler & Wünsche melden); verlassen ist danach erlaubt
+  FR.bugsIn = FR.bugsIn || {};
+  if (!FR.bugsIn[me]) { FR.bugsIn[me] = 1; const bg = GR.bugs = GR.bugs || { id: 'bugs', name: 'Bugs', tag: '', color: '', av: '', owner: 'admin', members: [], msgs: [], read: {}, t: now }; if (!bg.members.includes(me)) bg.members.push(me); await save(); }
   const clanOf = k => { const g = GR[FR.clan[k]]; return g && g.tag && g.members.includes(k) ? ['clan:' + g.tag + (g.color ? ':' + g.color.slice(1) : '')] : []; };
   TAGLIVE = clanOf;
   const hexOk = c => /^#[0-9a-fA-F]{6}$/.test(String(c || '')) ? String(c).toLowerCase() : '';

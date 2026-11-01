@@ -22,19 +22,21 @@
 
   // ---------- Tour ----------
   const STEPS = [
-    { s: '.nav[data-p="home"]', t: 'Start', d: 'Deine Startseite: schneller Zugriff auf Spielen, Neuigkeiten und deinen Skin mit Cosmetics.', p: 'home' },
-    { s: '.nav[data-p="versions"]', t: 'Versionen – warum 1.21.4?', d: 'Hier wählst du, welche Minecraft-Version du spielst. Vorausgewählt ist 1.21.4, weil der Cloudy Client (Cosmetics, Anzeigen, Tags) aktuell genau dafür gebaut ist. Andere Versionen kannst du auch spielen, dann aber ohne Cosmetics. Der Client wird automatisch geladen und aktuell gehalten.', p: 'versions' },
+    { s: null, t: 'Willkommen bei Cloudy', d: 'Eine kurze Runde durch den ganzen Launcher – in etwa einer Minute weißt du, wo alles ist. Mit den Pfeiltasten oder „Weiter“ geht es voran, „Überspringen“ beendet die Tour.', p: 'home' },
+    { s: '.nav[data-p="home"]', t: 'Start', d: 'Deine Startseite: schneller Zugriff auf Spielen, Neuigkeiten („Was ist neu“) und deinen Skin mit Cosmetics.', p: 'home' },
+    { s: '.nav[data-p="versions"]', t: 'Versionen – warum 1.21.4?', d: 'Hier wählst du die Minecraft-Version. Vorausgewählt ist 1.21.4, weil der Cloudy Client (Cosmetics, Anzeigen, Tags) aktuell genau darauf läuft. Java und alle Spieldateien lädt Cloudy selbst herunter, der Cloudy Client wird automatisch installiert und aktuell gehalten.', p: 'versions' },
     { s: '.nav[data-p="servers"]', t: 'Server', d: 'Speichere Server, tritt mit einem Klick bei oder starte einen eigenen Server für deine Freunde.', p: 'servers' },
-    { s: '.nav[data-p="friends"]', t: 'Freunde', d: 'Füge Freunde hinzu, chatte, gründe Gruppen mit Clan-Tag und telefoniere. Ein ▶ neben dem Namen bringt dich auf den Server deines Freundes.', p: 'friends' },
-    { s: '.nav[data-p="mods"]', t: 'Mods', d: 'Suche Mods auf Modrinth und installiere sie mit einem Klick, auch komplette Modpacks. Ressourcenpakete und Shader findest du unter Ressourcen.', p: 'mods' },
-    { s: '.nav[data-p="shop"]', t: 'Shop & Cosmetics', d: 'Umhänge, Flügel, Hüte und Schilde siehst du in der 3D-Vorschau und im Spiel mit 1.21.4. Andere Spieler sehen Hüte, Flügel und Spezial-Umhänge nur, wenn sie auch den Cloudy Client nutzen. Schild und normale Umhänge sieht nur du. Deine Skins findest du hier unter „Skins“.', p: 'shop' },
-    { s: '.nav[data-p="settings"]', t: 'Einstellungen', d: 'Themes, Arbeitsspeicher, Spotify, Discord, Sprache und mehr. Diese Tour kannst du dort jederzeit wiederholen.', p: 'settings' },
+    { s: '.nav[data-p="friends"]', t: 'Freunde, Gruppen & Anrufe', d: 'Füge Freunde hinzu, chatte, gründe Gruppen mit Clan-Tag und telefoniere. Du bist automatisch in der Bugs-Gruppe: dort meldest du Fehler und Wünsche. Ein ▶ neben dem Namen bringt dich auf den Server deines Freundes.', p: 'friends' },
+    { s: '.nav[data-p="mods"]', t: 'Mods, Ressourcen & Bibliothek', d: 'Suche Mods auf Modrinth und installiere sie mit einem Klick, auch komplette Modpacks. In der Bibliothek schaltest du Mods ein/aus, unter Ressourcen verwaltest du Ressourcenpakete und Shader.', p: 'mods' },
+    { s: '.nav[data-p="shop"]', t: 'Shop & Cosmetics', d: 'Umhänge, Flügel, Hüte, Halos und mehr mit 3D-Vorschau, dazu Pakete (mehrere Items günstiger) und Limited-Items. Oben findest du auch deine Skins. Andere Spieler sehen deine Cosmetics im Spiel, wenn sie den Cloudy Client nutzen.', p: 'shop' },
+    { s: '#musicBtn', t: 'Musik', d: 'Der Musik-Player zeigt, was gerade läuft (Spotify, YouTube, SoundCloud), mit Songtext und Steuerung. Ein Mini-Player folgt dir durch den Launcher und im Spiel.' },
     { s: '#themeBtn', t: 'Hell / Dunkel', d: 'Wechsle schnell zwischen hellem und dunklem Modus. Weitere Themes wählst du in den Einstellungen.' },
-    { s: '#play', t: 'Spielen', d: 'Mit diesem Knopf startest du Minecraft mit der gewählten Version. Tipp: Strg + Enter.' }
+    { s: '.nav[data-p="settings"]', t: 'Einstellungen', d: 'Themes, Arbeitsspeicher, Spotify, Discord, Sprache, Updates und Deinstallation. Diese Tour kannst du dort jederzeit wiederholen.', p: 'settings' },
+    { s: '#play', t: 'Spielen', d: 'Mit diesem Knopf startest du Minecraft mit der gewählten Version. Tipp: Strg + Enter. Viel Spaß mit Cloudy!', p: 'home' }
   ];
   let idx = 0, ov;
   function place() {
-    const st = STEPS[idx], tgt = q(st.s); if (!ov) return;
+    const st = STEPS[idx], tgt = st.s ? q(st.s) : null; if (!ov) return;
     if (st.p && window.go) window.go(st.p);
     const r = tgt && tgt.getBoundingClientRect(), hole = ov.querySelector('.ct-hole'), card = ov.querySelector('.ct-card');
     if (r && r.width) { hole.style.cssText = `left:${r.left - 6}px;top:${r.top - 6}px;width:${r.width + 12}px;height:${r.height + 12}px`; hole.hidden = false; } else hole.hidden = true;
@@ -56,7 +58,7 @@
     ov.querySelector('[data-a="skip"]').onclick = close; ov.querySelector('[data-a="next"]').onclick = nxt; ov.querySelector('[data-a="prev"]').onclick = () => { if (idx) { idx--; place(); } };
     addEventListener('resize', place); document.addEventListener('keydown', key); place(); setTimeout(place, 350);
   }
-  window.cloudyTour = () => { if (window.showOnb) window.showOnb(); }; window.cloudyIntro = () => intro(true);
+  window.cloudyTour = () => tour(); window.cloudyIntro = () => intro(true);
 
   // ---------- Einstellungen und Start ----------
   function wire() {
@@ -67,7 +69,7 @@
       for (const k in ids) { const e = q(ids[k]); if (e) e.onchange = () => { window.cloudy.texCfg({ [k]: e.checked }); if (k === 'texTheme' && col) col.disabled = e.checked; }; }
       if (col) col.onchange = () => window.cloudy.texCfg({ texColor: col.value });
     }
-    const t = q('#tourBtn'); if (t) t.onclick = () => { if (window.go) window.go('home'); if (window.showOnb) window.showOnb(); };
+    const t = q('#tourBtn'); if (t) t.onclick = () => { if (window.go) window.go('home'); tour(); };
     const i = q('#introBtn'); if (i) i.onclick = () => intro(true);
   }
   function afterLogin() {

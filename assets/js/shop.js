@@ -48,7 +48,7 @@
     'cape-zk5': { b: [0, 8, 16, 24], c: ['#ffffff','#9aa0b0'], img: 'assets/cosmetics/zz-zk5-cape.png', ar: 336 / 200 }, 'wings-zk5': { b: [-9, 0, 34, 24], c: ['#ffffff','#9aa0b0'], img: 'assets/cosmetics/zz-zk5-wings.png', ar: 340 / 520 },
     'cape-yy': { b: [0, 8, 16, 24], c: ['#f2f2f2', '#14141a'], img: 'assets/cosmetics/zz-yy-cape.png', ar: 336 / 200 }, 'shield-yy': { b: [-7, 10, 12, 18], c: ['#f2f2f2', '#14141a'], img: 'assets/cosmetics/zz-yy-shield.png', ar: 1 },
     'hat-zzv': { b: [0, -12, 16, 14], c: ['#6d28d9', '#e9d5ff'] }, 'hat-zzb': { b: [1, -9, 14, 11], c: ['#1d4ed8', '#60a5fa'] }, 'hat-zsh': { b: [0, -12, 16, 14], c: ['#1b1030', '#b07cff'] }, 'hat-zif': { b: [0, -12, 16, 14], c: ['#bfeaff', '#ffffff'] },
-    'hat-crown': { b: [3, -6, 10, 6], c: ['#ffd24a', '#e23b3b'] }, 'hat-halo': { b: [3, -9, 10, 5], c: ['#fff7b0', '#ffd24a'] }
+    'hat-crown': { b: [3, -6, 10, 6], c: ['#ffd24a', '#e23b3b'] }, 'hat-halo': { b: [3, -9, 10, 5], c: ['#fff7b0', '#ffd24a'] }, 'hat-haloblack': { b: [3, -9, 10, 5], c: ['#7c5cff', '#0b0b12'] }
   };
   const lt = (hex, k) => { const n = parseInt(hex.slice(1), 16), f = c => Math.round(c + (255 - c) * k); return '#' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(f).map(x => x.toString(16).padStart(2, '0')).join(''); };
   const grad = (ctx, x0, y0, x1, y1, c) => { const g = ctx.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, c[0]); g.addColorStop(1, c[1]); return g; };
@@ -75,7 +75,7 @@
     } else if (id === 'hat-crown') {
       ctx.fillStyle = grad(ctx, 0, -6, 0, 0, c); ctx.beginPath(); ctx.moveTo(3.5, 0); ctx.lineTo(3.5, -5); ctx.lineTo(6, -2.6); ctx.lineTo(8, -5.6); ctx.lineTo(10, -2.6); ctx.lineTo(12.5, -5); ctx.lineTo(12.5, 0); ctx.closePath(); ctx.fill(); outline(ctx);
       ctx.fillStyle = '#e23b3b'; [[5, -1.4], [8, -1.4], [11, -1.4]].forEach(([x, y]) => ctx.fillRect(x - .5, y, 1, 1));
-    } else if (id === 'hat-halo') {
+    } else if (id === 'hat-halo' || id === 'hat-haloblack') {
       ctx.strokeStyle = c[1]; ctx.lineWidth = 1.1; ctx.shadowColor = c[0]; ctx.shadowBlur = 4; ctx.beginPath(); ctx.ellipse(8, -5, 5, 1.4, 0, 0, 7); ctx.stroke(); ctx.shadowBlur = 0;
     } else if (id === 'hat-top' || id === 'hat-gold' || id === 'hat-zzb') {
       ctx.fillStyle = c[0]; ctx.fillRect(4.5, -7, 7, 7); ctx.fillRect(2.5, -1, 11, 1.6); ctx.fillStyle = c[1]; ctx.fillRect(4.5, -2.6, 7, 1.6);
@@ -187,7 +187,7 @@
     if (H === 'hat-top' || H === 'hat-gold' || H === 'hat-zzb') { add(box3(7, 7, 7, 0, -3.9, 0, solid(hc[0]))); add(box3(7.2, 1.6, 7.2, 0, -2.4, 0, solid(hc[1]))); add(box3(11, 1.2, 11, 0, -0.5, 0, solid(hc[0]))); }
     else if (H === 'hat-wizard' || H === 'hat-santa' || H === 'hat-witch' || H === 'hat-party' || H === 'hat-frost' || H === 'hat-zzv' || H === 'hat-zsh' || H === 'hat-zif') { const brim = ITEMS[H].brim || hc[0]; add(box3(14, 1, 14, 0, -0.5, 0, solid(brim))); let y = -1; [[9, 3, hc[0]], [7, 3, lt(hc[0], .15)], [5, 3, lt(hc[0], .3)], [3, 3, lt(hc[0], .45)], [1.6, 2, H === 'hat-santa' || H === 'hat-frost' ? '#ffffff' : hc[1]]].forEach(([w, h, col]) => { add(box3(w, h, w, 0, y - h / 2, 0, solid(col))); y -= h; }); if (H !== 'hat-santa' && H !== 'hat-frost') add(box3(9.2, 0.9, 9.2, 0, -1.9, 0, solid(hc[1]))); }
     else if (H === 'hat-crown') { add(box3(8.6, 2, 8.6, 0, -1.2, 0, solid(hc[0]))); [[-3.3, -3.3], [3.3, -3.3], [-3.3, 3.3], [3.3, 3.3]].forEach(([x, z]) => add(box3(2, 3, 2, x, -3.7, z, solid(hc[0])))); add(box3(1.2, 1.2, 0.3, 0, -1.2, 4.4, solid(hc[1]))); }
-    else if (H === 'hat-halo') { [[0, 3.6, 8, 0.8], [0, -3.6, 8, 0.8], [3.6, 0, 0.8, 8], [-3.6, 0, 0.8, 8]].forEach(([x, z, w, d]) => add(box3(w, 0.7, d, x, -6.5, z, solid(hc[1])))); }
+    else if (H === 'hat-halo' || H === 'hat-haloblack') { [[0, 3.6, 8, 0.8], [0, -3.6, 8, 0.8], [3.6, 0, 0.8, 8], [-3.6, 0, 0.8, 8]].forEach(([x, z, w, d]) => add(box3(w, 0.7, d, x, -6.5, z, solid(hc[1])))); }
   }
   // ---------- 3D-Karten: jedes Item als drehbares Objekt (Hüte aus Quadern, Flaches mit echter Tiefe durch Schichten) ----------
 
@@ -260,7 +260,7 @@
     } else if (cat === 'sky') {
       const d = document.createElement('div'); d.style.cssText = `width:100px;height:100px;border-radius:50%;transform:translateY(20px);background:linear-gradient(${ITEMS[id].c[0]},${ITEMS[id].c[1]});box-shadow:0 0 30px ${ITEMS[id].c[1]}`; add(d); rig.style.setProperty('--sc', '1');
     } else if (cat === 'hat') {
-      const dy = { 'hat-top': 20, 'hat-gold': 20, 'hat-zzb': 20, 'hat-crown': 19, 'hat-halo': 22.5 }[id] || 27, g = grp(`translate3d(0,${dy * S3}px,0)`);
+      const dy = { 'hat-top': 20, 'hat-gold': 20, 'hat-zzb': 20, 'hat-crown': 19, 'hat-halo': 22.5, 'hat-haloblack': 22.5 }[id] || 27, g = grp(`translate3d(0,${dy * S3}px,0)`);
       hat3(id, e => g.appendChild(e)); add(g); rig.style.setProperty('--sc', '.6');
     } else if (cat === 'cape') { cape3(id, add); rig.style.setProperty('--sc', '.78'); }
     else if (cat === 'wings') { wings3(id, add, 14, true); rig.style.setProperty('--sc', ITEMS[id].img ? '.62' : '.52'); }
