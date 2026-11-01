@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.36",
+  "date": "2026-11-01",
+  "added": [
+   "Zugangscode-Bildschirm: neuer „Update“-Knopf, der direkt die neueste Version holt und installiert"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.35",
   "date": "2026-11-01",
   "added": [
