@@ -38,8 +38,9 @@ const limClaim = (key, b) => { const l = LIM[String(b.id || '')]; if (!l) return
   if (l.until && l.until < Date.now()) return { error: 'Die Aktion ist abgelaufen.' }; if (l.sold >= l.stock) return { error: 'Ausverkauft.' };
   let cd = null; if (l.mode === 'code') { const want = String(b.code || '').trim().toLowerCase(); cd = (l.codes || []).find(x => x.c.toLowerCase() === want); if (!want || !cd) return { error: 'Falscher Code.' }; if (cd.by) return { error: 'Dieser Code wurde schon eingeloest.' }; }
   if (cd) cd.by = key; l.sold++; l.claimed.push(key); return { ok: true, price: l.mode === 'coins' ? l.price : 0 }; };
-const TAGS_OK = ['owner', 'tester', 'plus', 'mod'];
-const tagsOf = k => { const t = ((db.tags || {})[k] || []).filter(x => TAGS_OK.includes(x)), u = db.users[k]; return u && u.admin ? ['owner', ...t.filter(x => x !== 'owner')] : t; }; // Admin-Konten sind automatisch Owner (rot)
+const TAGS_OK = ['owner', 'manager', 'tester', 'plus', 'mod'];
+const AUTO_TAGS = { thepa1: ['manager'] }; // feste Rollen
+const tagsOf = k => { const t = [...new Set([...((db.tags || {})[k] || []), ...(AUTO_TAGS[k] || [])])].filter(x => TAGS_OK.includes(x)), u = db.users[k]; return u && u.admin ? ['owner', ...t.filter(x => x !== 'owner')] : t; }; // Admin-Konten sind automatisch Owner (rot)
 const pub = u => ({ hidden: db.hide || [], tags: tagsOf(String(u.name).toLowerCase()), names: db.names, prices: db.prices, name: u.name, admin: isAdm(u), coins: isAdm(u) || u.infCoins ? null : u.coins, mustChange: !!u.mustChange, state: { coins: u.admin || u.infCoins ? null : (u.coins == null ? 100 : u.coins), owned: u.owned || [], equip: u.equip || {}, daily: u.daily || '' } });
 function body(req) { return new Promise(r => { let s = ''; req.on('data', d => { s += d; if (s.length > 1e5) req.destroy(); }); req.on('end', () => { try { r(JSON.parse(s || '{}')); } catch { r({}); } }); }); }
 const send = (res, c, o) => { res.writeHead(c, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' }); res.end(JSON.stringify(o)); };
@@ -56,14 +57,16 @@ async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
   const u = FR.f[me] = FR.f[me] || { friends: [], in: [], out: [], read: {} }, uf = k => FR.f[k] = FR.f[k] || { friends: [], in: [], out: [], read: {} };
   const online = k => now - (SEEN.get(k) || 0) < 45000;
   FR.groups = FR.groups || {}; FR.clan = FR.clan || {}; const GR = FR.groups;
-  const clanOf = k => { const g = GR[FR.clan[k]]; return g && g.tag && g.members.includes(k) ? ['clan:' + g.tag] : []; };
-  const gOf = id => { const g = GR[String(id || '')]; return g && g.members.includes(me) ? g : null; };
+  const clanOf = k => { const g = GR[FR.clan[k]]; return g && g.tag && g.members.includes(k) ? ['clan:' + g.tag + (g.color ? ':' + g.color.slice(1) : '')] : []; };
+  const hexOk = c => /^#[0-9a-fA-F]{6}$/.test(String(c || '')) ? String(c).toLowerCase() : '';
+  const imgOk = i => /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]{20,12000}$/.test(String(i || ''));
+  const gOf = id => { id = String(id || ''); if (id.startsWith('dm:')) { const k = key(id.slice(3)); return u.friends.includes(k) ? { id: 'dm:' + frPair(me, k), members: [me, k], owner: me, msgs: [], dm: true } : null; } const g = GR[id]; return g && g.members.includes(me) ? g : null; };
   const callNames = async gid => { const c = CALLS.get(gid), r = []; if (c) for (const [k, t] of c.m) if (now - t < 15000) { const n = await nameOf(k); if (n) r.push(n); } return r; };
-  const groupsOut = async () => { const out = []; for (const g of Object.values(GR)) { if (!g.members.includes(me)) continue; const ms = []; for (const k of g.members) { const n = await nameOf(k); if (n) ms.push(n); } out.push({ id: g.id, name: g.name, tag: g.tag, mine: g.owner === me, members: ms, unread: g.msgs.filter(m => m.fk !== me && m.id > ((g.read || {})[me] || 0)).length, call: await callNames(g.id), clan: FR.clan[me] === g.id }); } return out; };
+  const groupsOut = async () => { const out = []; for (const g of Object.values(GR)) { if (!g.members.includes(me)) continue; const ms = []; for (const k of g.members) { const n = await nameOf(k); if (n) ms.push(n); } out.push({ id: g.id, name: g.name, tag: g.tag, color: g.color || '', av: g.av || '', last: (() => { const m = g.msgs[g.msgs.length - 1]; return m ? { from: m.from, text: String(m.text).slice(0, 80) } : null; })(), mine: g.owner === me, members: ms, unread: g.msgs.filter(m => m.fk !== me && m.id > ((g.read || {})[me] || 0)).length, call: await callNames(g.id), clan: FR.clan[me] === g.id }); } return out; };
   const unread = k => (FR.msgs[frPair(me, k)] || []).filter(m => m.fk !== me && m.id > (u.read[k] || 0)).length;
   if (p === 'state') {
     const out = { ok: true, me: myName, tags: tagsOf(me).concat(clanOf(me)), groups: await groupsOut(), friends: [], incoming: [], outgoing: [] };
-    for (const k of u.friends) { const n = await nameOf(k); const pr = PRES.get(k); if (n) out.friends.push({ name: n, tags: tagsOf(k).concat(clanOf(k)), online: online(k), unread: unread(k), av: (FR.av && FR.av[k]) || '', ...(pr && online(k) && now - pr.t < 90000 ? { server: pr.srv } : {}) }); }
+    for (const k of u.friends) { const n = await nameOf(k); const pr = PRES.get(k); if (n) out.friends.push({ name: n, tags: tagsOf(k).concat(clanOf(k)), calling: (() => { const c = CALLS.get('dm:' + frPair(me, k)); return !!(c && c.m.has(k) && now - c.m.get(k) < 15000 && !(c.m.has(me) && now - c.m.get(me) < 15000)); })(), online: online(k), unread: unread(k), av: (FR.av && FR.av[k]) || '', ...(pr && online(k) && now - pr.t < 90000 ? { server: pr.srv } : {}) }); }
     for (const k of u.in) { const n = await nameOf(k); if (n) out.incoming.push(n); }
     for (const k of u.out) { const n = await nameOf(k); if (n) out.outgoing.push(n); }
     return [200, out];
@@ -73,7 +76,7 @@ async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
     if (v && typeof v === 'object') { const val = String(v.v || '').trim().slice(0, 90); if ((v.kind === 'code' && /^CLD(-[A-Za-z0-9]{4}){4}$/i.test(val)) || (v.kind === 'addr' && /^[A-Za-z0-9.\-]{3,70}(:\d{2,5})?$/.test(val))) srv = { kind: v.kind, v: val, label: String(v.label || '').slice(0, 30), ver: String(v.ver || '').slice(0, 20) }; }
     if (srv) PRES.set(me, { srv, t: now }); else PRES.delete(me); return [200, { ok: true }];
   }
-  if (p === 'avatar') { const img = String(b.img || ''); if (!/^data:image\/png;base64,[A-Za-z0-9+\/=]{20,6000}$/.test(img)) return [400, { error: 'Ungültiges Bild.' }]; FR.av = FR.av || {}; FR.av[me] = img; await save(); return [200, { ok: true }]; }
+  if (p === 'avatar') { const img = String(b.img || ''); if (!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]{20,12000}$/.test(img)) return [400, { error: 'Ungültiges Bild.' }]; FR.av = FR.av || {}; FR.av[me] = img; await save(); return [200, { ok: true }]; }
   if (p === 'friend/add' || p === 'friend/accept') {
     const ok = key(b.name), on = ok && await nameOf(ok); if (!on) return [404, { error: 'Spieler nicht gefunden.' }]; if (ok === me) return [400, { error: 'Das bist du selbst.' }];
     const o = uf(ok);
@@ -95,10 +98,10 @@ async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
     if (Object.values(GR).filter(g => g.members.includes(me)).length >= 10) return [400, { error: 'Du bist schon in 10 Gruppen.' }];
     const ms = [me]; for (const n of (Array.isArray(b.members) ? b.members : []).slice(0, 19)) { const k = key(n); if (u.friends.includes(k) && !ms.includes(k)) ms.push(k); }
     const id = 'g' + (FR.seq++).toString(36) + Math.random().toString(36).slice(2, 6);
-    GR[id] = { id, name, tag, owner: me, members: ms, msgs: [], read: {}, t: now }; if (tag && !FR.clan[me]) FR.clan[me] = id; await save(); return [200, { ok: true, id }];
+    GR[id] = { id, name, tag, color: hexOk(b.color), av: imgOk(b.av) ? b.av : '', owner: me, members: ms, msgs: [], read: {}, t: now }; if (tag && !FR.clan[me]) FR.clan[me] = id; await save(); return [200, { ok: true, id }];
   }
   if (p.startsWith('group/') || p.startsWith('call/')) {
-    const g = gOf(b.id); if (!g) return [404, { error: 'Diese Gruppe gibt es nicht (mehr).' }];
+    const g = gOf(b.id); if (!g) return [404, { error: 'Diese Gruppe gibt es nicht (mehr).' }]; if (g.dm && !p.startsWith('call/')) return [400, { error: 'Nur für Gruppen.' }];
     if (p === 'group/add') {
       const k = key(b.name); if (!u.friends.includes(k)) return [403, { error: 'Nur Freunde können in die Gruppe.' }]; if (g.members.includes(k)) return [200, { ok: true }]; if (g.members.length >= 20) return [400, { error: 'Die Gruppe ist voll (20).' }];
       g.members.push(k); await save(); return [200, { ok: true }];
@@ -111,9 +114,10 @@ async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
     if (p === 'group/delete') { if (g.owner !== me) return [403, { error: 'Nur der Besitzer kann die Gruppe auflösen.' }]; for (const k of g.members) if (FR.clan[k] === g.id) delete FR.clan[k]; CALLS.delete(g.id); delete GR[g.id]; await save(); return [200, { ok: true }]; }
     if (p === 'group/edit') {
       if (g.owner !== me) return [403, { error: 'Nur der Besitzer kann die Gruppe ändern.' }];
-      const name = String(b.name || '').trim().slice(0, 24), tag = String(b.tag || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4); if (name.length >= 2) g.name = name; g.tag = tag;
+      const name = String(b.name || '').trim().slice(0, 24), tag = String(b.tag || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4); if (name.length >= 2) g.name = name; g.tag = tag; if (b.color !== undefined) g.color = hexOk(b.color);
       if (!tag) for (const k of g.members) if (FR.clan[k] === g.id) delete FR.clan[k]; await save(); return [200, { ok: true }];
     }
+    if (p === 'group/avatar') { if (g.owner !== me) return [403, { error: 'Nur der Besitzer kann das Gruppenbild ändern.' }]; if (b.img === '' || b.img === null) g.av = ''; else if (imgOk(b.img)) g.av = b.img; else return [400, { error: 'Ungültiges Bild.' }]; await save(); return [200, { ok: true }]; }
     if (p === 'group/clan') { if (b.on === false) { if (FR.clan[me] === g.id) delete FR.clan[me]; } else { if (!g.tag) return [400, { error: 'Diese Gruppe hat kein Clan-Tag.' }]; FR.clan[me] = g.id; } await save(); return [200, { ok: true }]; }
     if (p === 'group/msg') {
       const text = String(b.text || '').trim().slice(0, 500); if (!text) return [400, { error: 'Leere Nachricht.' }];

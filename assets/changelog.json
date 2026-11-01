@@ -1,5 +1,19 @@
 [
  {
+  "v": "0.9.49",
+  "date": "2026-11-01",
+  "added": [
+   "Gruppen: eigenes Gruppenbild, Farbe für das Clan-Tag, neue Nachrichten und Anrufe als Bubble und als Desktop-Benachrichtigung",
+   "Anrufe: schwebendes Anruf-Fenster (stumm / auflegen), Einzel-Anrufe mit Freunden (📞 im Chat), Freunde im Anruf werden in der Liste markiert",
+   "Eigenes Chat-Profilbild (Freunde-Reiter, auch zurücksetzbar)",
+   "Neues Tag „Manager“ (Thepa1); Tags werden auch neben deinem Namen und in der Begrüßung gezeigt"
+  ],
+  "fixed": [
+   "Mögliche Ruckler/Einfrieren: unsichtbare, dauernd animierte Bubble-Ebene entfernt"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.48",
   "date": "2026-11-01",
   "added": [

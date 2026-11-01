@@ -685,4 +685,4 @@ window.rewardAnim = function (o) {
 })();
 
 // Tags (Tester, Cloudy+, Moderator, Admin) als kleine Abzeichen
-window.cloudyTags = tags => (tags || []).map(k => /^clan:[A-Z0-9]{1,4}$/.test(k) ? [k.slice(5), 'clan'] : ({ owner: ['Owner', 'owner'], admin: ['Admin', 'admin'], mod: ['Moderator', 'mod'], plus: ['Cloudy+', 'plus'], tester: ['Tester', 'tester'] }[k])).filter(Boolean).map(([l, c]) => `<span class="ctag ${c}">${l}</span>`).join('');
+window.cloudyTags = tags => (tags || []).map(k => { const m = /^clan:([A-Z0-9]{1,4})(?::([0-9a-f]{6}))?$/i.exec(String(k)); if (m) return [m[1], 'clan', m[2] ? '#' + m[2] : '']; const t = ({ owner: ['Owner', 'owner'], admin: ['Admin', 'admin'], manager: ['Manager', 'manager'], mod: ['Moderator', 'mod'], plus: ['Cloudy+', 'plus'], tester: ['Tester', 'tester'] })[k]; return t ? [t[0], t[1], ''] : null; }).filter(Boolean).map(([l, c, col]) => `<span class="ctag ${c}"${col ? ` style="background:${col}40;border-color:${col};color:#fff"` : ''}>${l}</span>`).join('');

@@ -6,19 +6,54 @@
   const api = (path, body) => window.cloudy.frApi({ method: 'POST', path, body: body || {} });
   const box = document.createElement('div'); box.id = 'grpBox';
   box.innerHTML = `<div class="tools" style="margin:14px 0 4px"><b style="flex:1">${L('Gruppen')}</b><button class="btn ghost" id="grpNew">＋ ${L('Neue Gruppe')}</button></div>
-    <div id="grpForm" style="display:none" class="grpform"><input id="gfName" class="field" maxlength="24" placeholder="${L('Gruppenname')}" autocomplete="off"><input id="gfTag" class="field" maxlength="4" placeholder="${L('Clan-Tag (bis 4 Zeichen, optional)')}" autocomplete="off"><div id="gfFr" class="muted"></div><div class="tools" style="margin:6px 0 0"><button class="btn" id="gfOk">${L('Erstellen')}</button><button class="btn ghost" id="gfNo">${L('Abbrechen')}</button></div><small class="muted" id="gfMsg"></small></div>
+    <div id="grpForm" style="display:none" class="grpform"><input id="gfName" class="field" maxlength="24" placeholder="${L('Gruppenname')}" autocomplete="off"><input id="gfTag" class="field" maxlength="4" placeholder="${L('Clan-Tag (bis 4 Zeichen, optional)')}" autocomplete="off"><label class="muted" style="display:flex;gap:8px;align-items:center;font-size:12.5px">${L('Farbe des Clan-Tags')} <input type="color" id="gfCol" value="#5aa2f5"></label><div id="gfFr" class="muted"></div><div class="tools" style="margin:6px 0 0"><button class="btn" id="gfOk">${L('Erstellen')}</button><button class="btn ghost" id="gfNo">${L('Abbrechen')}</button></div><small class="muted" id="gfMsg"></small></div>
     <div id="grpList"></div>`;
   list.after(box);
+  // Bild als kleines, quadratisches JPEG (für Gruppenbild und Chat-Profilbild)
+  const cropSquare = (file, size) => new Promise(res => { const u = URL.createObjectURL(file), im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = c.height = size; const g = c.getContext('2d'), r = Math.min(im.width, im.height); g.fillStyle = '#fff'; g.fillRect(0, 0, size, size); g.drawImage(im, (im.width - r) / 2, (im.height - r) / 2, r, r, 0, 0, size, size); URL.revokeObjectURL(u); res(c.toDataURL('image/jpeg', .82)); }; im.onerror = () => { URL.revokeObjectURL(u); res(''); }; im.src = u; });
+  const pickImage = size => new Promise(res => { const f = document.createElement('input'); f.type = 'file'; f.accept = 'image/*'; f.onchange = async () => { const file = f.files && f.files[0]; res(file ? await cropSquare(file, size) : ''); }; f.click(); });
+  const avHtml = g => `<span class="grpav">${g.av ? `<img src="${g.av}" alt="">` : esc((g.name[0] || '?').toUpperCase())}</span>`;
+  const colTag = (t, c) => t ? `<span class="ctag clan"${c ? ` style="background:${c}40;border-color:${c};color:#fff"` : ''}>${esc(t)}</span>` : '';
   let D = { friends: [], groups: [], me: '' }, cur = null, lastId = 0, msgs = [], tools = false, timer = null, call = null, early = new Map(), note = '';
+  const dock = document.createElement('div'); dock.id = 'callDock'; document.body.appendChild(dock);
+  function paintDock() {
+    if (!call && !note) { dock.classList.remove('on'); return; }
+    dock.classList.add('on');
+    if (!call) { dock.innerHTML = `<b>📞 ${esc(L('Anruf'))}</b><small>${esc(note)}</small><div class="tools"><button class="btn ghost" id="cdOk">OK</button></div>`; $('#cdOk').onclick = () => { note = ''; paintDock(); }; return; }
+    dock.innerHTML = `<b>📞 ${esc(call.label || '')}</b><small>${esc([D.me, ...(call.peers || [])].join(', '))}</small><div class="tools"><button class="btn ghost" id="cdMute">${call.muted ? '🔇 ' + L('Stumm') : '🎙 ' + L('Mikrofon an')}</button><button class="btn" id="cdHang">${L('Auflegen')}</button></div>`;
+    $('#cdHang').onclick = () => endCall();
+    $('#cdMute').onclick = () => { call.muted = !call.muted; call.stream.getAudioTracks().forEach(t => { t.enabled = !call.muted; }); paintDock(); };
+  }
   const grp = () => D.groups.find(g => g.id === cur);
-  const tagHtml = t => t ? `<span class="ctag clan">${esc(t)}</span>` : '';
+  const tagHtml = (t, c) => colTag(t, c);
 
   // ---------- Liste ----------
   function paintList() {
-    $('#grpList').innerHTML = D.groups.length ? D.groups.map(g => `<div class="frrow clk ${cur === g.id ? 'sel' : ''}" data-g="${esc(g.id)}"><b style="flex:1">${esc(g.name)} ${tagHtml(g.tag)}<br><small class="fron">${g.members.length} ${L('Mitglieder')}${g.call && g.call.length ? ' · 📞 ' + L('Anruf läuft') + ' (' + g.call.length + ')' : ''}</small></b>${g.unread && cur !== g.id ? `<span class="badge">${g.unread}</span>` : ''}</div>`).join('') : `<p class="muted" style="font-size:12.5px">${L('Noch keine Gruppen. Mit „Neue Gruppe“ holst du Freunde zusammen: Chat, Anruf und ein Clan-Tag neben deinem Namen.')}</p>`;
+    $('#grpList').innerHTML = D.groups.length ? D.groups.map(g => `<div class="frrow clk ${cur === g.id ? 'sel' : ''}" data-g="${esc(g.id)}">${avHtml(g)}<b style="flex:1">${esc(g.name)} ${tagHtml(g.tag, g.color)}<br><small class="fron">${g.members.length} ${L('Mitglieder')}${g.call && g.call.length ? ' · 📞 ' + L('Anruf läuft') + ' (' + g.call.length + ')' : ''}</small></b>${g.unread && cur !== g.id ? `<span class="badge">${g.unread}</span>` : ''}</div>`).join('') : `<p class="muted" style="font-size:12.5px">${L('Noch keine Gruppen. Mit „Neue Gruppe“ holst du Freunde zusammen: Chat, Anruf und ein Clan-Tag neben deinem Namen.')}</p>`;
     $('#grpList').querySelectorAll('[data-g]').forEach(b => b.onclick = () => open(b.dataset.g));
   }
-  window.grpUpdate = d => { D = { friends: d.friends || [], groups: d.groups || [], me: d.me || '' }; if (cur && !grp()) { cur = null; window.__frSetChat && window.__frSetChat(null); } paintList(); if (cur && !tools) paintHead(); };
+  const seen = new Map(), callLen = new Map(); let first = true;
+  function news(groups) {
+    for (const g of groups) {
+      const n = g.unread || 0, was = seen.get(g.id), cl = (g.call || []).length, cw = callLen.get(g.id) || 0;
+      if (!first) {
+        if (was != null && n > was && g.last && cur !== g.id) {
+          const txt = (g.last.from ? g.last.from + ': ' : '') + (g.last.text || '');
+          if (window.__frBubble) window.__frBubble(g.name, txt, { onClick: () => open(g.id) });
+          if (!document.hasFocus() && window.cloudy.notify) window.cloudy.notify({ title: g.name, body: txt, kind: 'group', id: g.id });
+        }
+        if (cl > 0 && cw === 0 && !(call && call.gid === g.id)) {
+          const t = L('Anruf in') + ' ' + g.name;
+          if (window.__frBubble) window.__frBubble(g.name, '📞 ' + t, { hint: L('Tippen zum Beitreten'), ms: 9000, onClick: () => window.grpCall(g.id, g.name) });
+          if (!document.hasFocus() && window.cloudy.notify) window.cloudy.notify({ title: g.name, body: '📞 ' + t, kind: 'group', id: g.id });
+        }
+      }
+      seen.set(g.id, n); callLen.set(g.id, cl);
+    }
+    first = false;
+  }
+  if (window.cloudy.on) window.cloudy.on('notifyClick', o => { if (o && o.kind === 'group' && o.id) { const b = document.querySelector('[data-tab="friends"]'); if (b) b.click(); open(o.id); } });
+  window.grpUpdate = d => { D = { friends: d.friends || [], groups: d.groups || [], me: d.me || '' }; news(D.groups); if (cur && !grp()) { cur = null; window.__frSetChat && window.__frSetChat(null); } paintList(); if (cur && !tools) paintHead(); };
   list.addEventListener('click', () => { if (cur) { cur = null; clearInterval(timer); paintList(); } }, true);
 
   // ---------- Neue Gruppe ----------
@@ -26,7 +61,7 @@
   $('#gfNo').onclick = () => { $('#grpForm').style.display = 'none'; };
   $('#gfOk').onclick = async () => {
     const members = [...document.querySelectorAll('[data-gf]:checked')].map(c => c.dataset.gf);
-    const r = await api('/group/create', { name: $('#gfName').value, tag: $('#gfTag').value, members });
+    const r = await api('/group/create', { name: $('#gfName').value, tag: $('#gfTag').value, color: $('#gfTag').value ? $('#gfCol').value : '', members });
     if (!r.ok) { $('#gfMsg').textContent = L(r.error || 'Das hat nicht geklappt.'); return; }
     $('#gfMsg').textContent = ''; $('#gfName').value = $('#gfTag').value = ''; $('#grpForm').style.display = 'none';
     await refresh(); open(r.data.id);
@@ -41,32 +76,33 @@
   function paintHead() {
     const g = grp(); if (!g) return;
     const mine = call && call.gid === g.id, running = g.call && g.call.length;
-    $('#frChatHead').innerHTML = `<span>${esc(g.name)} ${tagHtml(g.tag)}</span> ` +
+    $('#frChatHead').innerHTML = `${avHtml(g)} <span>${esc(g.name)} ${tagHtml(g.tag, g.color)}</span> ` +
       (mine ? '' : `<button class="btn frplay" id="gCall" style="width:auto;border-radius:999px;padding:0 14px;margin-left:8px">📞 ${running ? L('Anruf beitreten') + ' (' + g.call.length + ')' : L('Anruf starten')}</button>`) +
       ` <button class="btn ghost" id="gTools" style="margin-left:6px">⚙ ${L('Verwalten')}</button>` +
-      (mine ? `<div id="gCallBar" class="grpcall"><b>📞 ${L('Im Anruf')}</b> <span id="gCallWho"></span><button class="btn ghost" id="gMute">${call.muted ? '🔇 ' + L('Stumm') : '🎙 ' + L('Mikro an')}</button><button class="btn" id="gHang">${L('Auflegen')}</button></div>` : '') +
       (note ? `<div class="muted" style="font-size:12.5px;margin-top:4px">${esc(note)}</div>` : '') +
       (tools ? toolsHtml(g) : '');
-    const c = $('#gCall'); if (c) c.onclick = () => startCall(g.id);
+    const c = $('#gCall'); if (c) c.onclick = () => startCall(g.id, g.name);
     $('#gTools').onclick = () => { tools = !tools; paintHead(); };
-    if (mine) { $('#gHang').onclick = () => endCall(); $('#gMute').onclick = () => { call.muted = !call.muted; call.stream.getAudioTracks().forEach(t => { t.enabled = !call.muted; }); paintHead(); }; paintWho(); }
     if (tools) wireTools(g);
   }
-  function paintWho() { const w = $('#gCallWho'); if (w && call) w.textContent = [D.me, ...(call.peers || [])].join(', '); }
+  function paintWho() { paintDock(); }
   function toolsHtml(g) {
     const addable = D.friends.filter(f => !g.members.includes(f.name));
     return `<div class="grptools">
       ${g.tag ? `<button class="btn ghost" id="gClan">${g.clan ? '🏷 ' + L('Mein Clan-Tag ausblenden') : '🏷 ' + L('Als mein Clan-Tag zeigen') + ' [' + esc(g.tag) + ']'}</button>` : `<small class="muted">${L('Diese Gruppe hat noch kein Clan-Tag.')}</small>`}
       <div class="tools" style="margin:6px 0 0"><select id="gAddSel" class="field"><option value="">${L('Freund hinzufügen …')}</option>${addable.map(f => `<option>${esc(f.name)}</option>`).join('')}</select><button class="btn" id="gAdd">＋</button></div>
       <div class="muted" style="font-size:12.5px;margin-top:6px">${L('Mitglieder')}: ${g.members.map(esc).join(', ')}</div>
-      ${g.mine ? `<div class="tools" style="margin:6px 0 0"><input id="gEName" class="field" maxlength="24" value="${esc(g.name)}"><input id="gETag" class="field" maxlength="4" value="${esc(g.tag)}" style="max-width:90px" placeholder="TAG"><button class="btn" id="gEdit">${L('Speichern')}</button></div>` : ''}
+      ${g.mine ? `<div class="tools" style="margin:6px 0 0"><input id="gEName" class="field" maxlength="24" value="${esc(g.name)}"><input id="gETag" class="field" maxlength="4" value="${esc(g.tag)}" style="max-width:90px" placeholder="TAG"><input type="color" id="gECol" value="${esc(g.color || '#5aa2f5')}" title="${L('Farbe des Clan-Tags')}"><button class="btn" id="gEdit">${L('Speichern')}</button></div>
+      <div class="tools" style="margin:6px 0 0"><button class="btn ghost" id="gAv">🖼 ${L('Gruppenbild ändern')}</button>${g.av ? `<button class="btn ghost" id="gAvDel">✕</button>` : ''}</div>` : ''}
       <div class="tools" style="margin:6px 0 0"><button class="btn ghost" id="gLeave">${L('Gruppe verlassen')}</button>${g.mine ? `<button class="btn ghost" id="gDel">${L('Gruppe auflösen')}</button>` : ''}</div></div>`;
   }
   function wireTools(g) {
     const act = async (path, body, after) => { const r = await api(path, { id: g.id, ...body }); if (!r.ok) { note = r.error || ''; paintHead(); return; } await refresh(); if (after) after(); else paintHead(); };
     const c = $('#gClan'); if (c) c.onclick = () => act('/group/clan', { on: !g.clan });
     $('#gAdd').onclick = () => { const n = $('#gAddSel').value; if (n) act('/group/add', { name: n }); };
-    const e = $('#gEdit'); if (e) e.onclick = () => act('/group/edit', { name: $('#gEName').value, tag: $('#gETag').value });
+    const e = $('#gEdit'); if (e) e.onclick = () => act('/group/edit', { name: $('#gEName').value, tag: $('#gETag').value, color: $('#gETag').value ? $('#gECol').value : '' });
+    const av = $('#gAv'); if (av) av.onclick = async () => { const img = await pickImage(64); if (img) act('/group/avatar', { img }); };
+    const ad = $('#gAvDel'); if (ad) ad.onclick = () => act('/group/avatar', { img: '' });
     const two = (id, fn) => { const b = $(id); if (!b) return; let armed = false; b.onclick = () => { if (!armed) { armed = true; b.textContent = L('Sicher?'); setTimeout(() => { armed = false; if (b.isConnected) b.textContent = id === '#gLeave' ? L('Gruppe verlassen') : L('Gruppe auflösen'); }, 4000); } else fn(); };
     };
     two('#gLeave', () => { if (call && call.gid === g.id) endCall(); act('/group/leave', {}, () => { cur = null; clearInterval(timer); window.__frSetChat && window.__frSetChat(null); paintList(); }); });
@@ -85,22 +121,32 @@
   $('#frSend').addEventListener('click', e => { if (cur) { e.stopImmediatePropagation(); send(); } }, true);
   $('#frText').addEventListener('keydown', e => { if (cur && e.key === 'Enter') { e.stopImmediatePropagation(); e.preventDefault(); send(); } }, true);
 
+  // ---------- eigenes Chat-Profilbild ----------
+  const out = $('#frOut');
+  if (out) {
+    const wrap = document.createElement('span'); wrap.innerHTML = `<button class="btn ghost" id="pfpSet">🖼 ${L('Chat-Profilbild')}</button><button class="btn ghost" id="pfpReset" title="${L('Zurücksetzen')}">✕</button>`;
+    out.after(wrap);
+    $('#pfpSet').onclick = async () => { const img = await pickImage(64); if (img && st) { st.set('chatPfp', img); window.pushHead && window.pushHead(); } };
+    $('#pfpReset').onclick = () => { if (st) { st.set('chatPfp', ''); window.pushHead && window.pushHead(); } };
+  }
+
   // ---------- Sprachanruf (WebRTC) ----------
   const ICE = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
   const sig = (to, data) => api('/call/signal', { id: call && call.gid, to, data });
-  async function startCall(gid) {
-    if (call) return; note = '';
+  async function startCall(gid, label) {
+    if (call) { if (call.gid === gid) return; note = L('Du bist schon in einem Anruf.'); paintDock(); return; } note = '';
     let stream;
     try {
-      if (window.cloudy.micAccess && !(await window.cloudy.micAccess())) { note = L('Kein Zugriff aufs Mikrofon – erlaube es in den Systemeinstellungen.'); paintHead(); return; }
+      if (window.cloudy.micAccess && !(await window.cloudy.micAccess())) { note = L('Kein Zugriff aufs Mikrofon – erlaube es in den Systemeinstellungen.'); paintDock(); return; }
       stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
-    } catch { note = L('Kein Mikrofon gefunden oder der Zugriff wurde verweigert.'); paintHead(); return; }
+    } catch { note = L('Kein Mikrofon gefunden oder der Zugriff wurde verweigert.'); paintDock(); return; }
     const r = await api('/call/join', { id: gid });
-    if (!r.ok) { stream.getTracks().forEach(t => t.stop()); note = r.error || L('Das hat nicht geklappt.'); paintHead(); return; }
-    call = { gid, stream, pcs: new Map(), peers: r.data.peers || [], muted: false, busy: false, timer: setInterval(pollCall, 1000) };
+    if (!r.ok) { stream.getTracks().forEach(t => t.stop()); note = r.error || L('Das hat nicht geklappt.'); paintDock(); return; }
+    call = { gid, label: label || gid, stream, pcs: new Map(), peers: r.data.peers || [], muted: false, busy: false, timer: setInterval(pollCall, 1000) };
     for (const n of call.peers) mkPeer(n, true);
-    paintHead(); paintList();
+    paintDock(); if (cur) paintHead(); paintList();
   }
+  window.grpCall = (id, label) => startCall(id, label);
   function mkPeer(name, init) {
     const pc = new RTCPeerConnection(ICE), ent = { pc, audio: new Audio(), queue: [], remote: false };
     call.stream.getTracks().forEach(t => pc.addTrack(t, call.stream));
@@ -137,7 +183,7 @@
     if (!call) return; const c = call; call = null; clearInterval(c.timer); early.clear();
     for (const [, e] of c.pcs) { try { e.pc.close(); } catch {} e.audio.srcObject = null; }
     c.stream.getTracks().forEach(t => t.stop()); if (!quiet) api('/call/leave', { id: c.gid }); else api('/call/leave', { id: c.gid });
-    if (cur) paintHead(); paintList();
+    paintDock(); if (cur) paintHead(); paintList();
   }
   window.addEventListener('beforeunload', () => { if (call) api('/call/leave', { id: call.gid }); });
 })();

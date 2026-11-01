@@ -460,6 +460,7 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
   async function refresh() { shop = await window.cloudy.shopState(); if (shop) window.shopCatalog = shop.catalog; skins = await window.cloudy.skinList(); if (!skins.length) { try { const nm = (window.who && who()) || ''; if (nm) { await window.cloudy.skinAddName(nm); skins = await window.cloudy.skinList(); } } catch {} } sel = st.get('skinSel', sel); if (!skins.find(s => s.id === sel)) sel = skins[0] ? skins[0].id : ''; paintShop(); setTimeout(() => { try { window.pushHead(); } catch {} }, 1500); }
   // Kopf des gewählten Skins (32×32) – steht im Chat vor den Nachrichten; wird auch an den Konto-Server geschickt, damit Freunde ihn sehen
   window.cloudyHeadMine = () => {
+    try { const c = st.get('chatPfp', ''); if (c) return c; } catch {}
     try { const sk = skins.find(x => x.id === sel) || skins[0], im = sk && load(sk.data); if (!im || !im.complete || !im.naturalWidth) return null;
       const cv = document.createElement('canvas'); cv.width = cv.height = 32; const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(im, 8, 8, 8, 8, 0, 0, 32, 32); if (im.naturalHeight >= 64) g.drawImage(im, 40, 8, 8, 8, 0, 0, 32, 32); return cv.toDataURL('image/png'); } catch { return null; }
   };

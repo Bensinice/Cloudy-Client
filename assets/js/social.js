@@ -63,9 +63,10 @@
   $('#frOut').onclick = async () => { await window.cloudy.frDisconnect(); fr.chat = null; clearTimeout(fr.timer); frCheck(); };
   async function api(method, path, body) { const r = await window.cloudy.frApi({ method, path, body }); if (r.auth) { frCheck(); } return r; }
   // Kleine Nachrichten-Bubble unten rechts, wenn ein Freund schreibt (nicht, solange du genau mit ihm im Chat bist)
-  let seenUn = null, bubT = null;
+  let seenUn = null, bubT = null, callSeen = {};
   async function bubbleCheck(d) {
     const cur = {}; for (const f of d.friends || []) cur[f.name] = f.unread || 0;
+    for (const f of d.friends || []) { const was = callSeen[f.name]; callSeen[f.name] = !!f.calling; if (f.calling && was === false) { try { window.cloudy.notify({ title: '📞 ' + f.name, body: L('ruft dich an – tippe zum Beitreten'), kind: 'dm', id: f.name }); } catch {} showBubble(f.name, L('ruft dich an'), { hint: L('Tippen zum Beitreten'), ms: 12000, onClick: () => { go('friends'); if (window.grpCall) window.grpCall('dm:' + f.name.toLowerCase(), f.name); } }); } }
     const prev = seenUn; seenUn = cur; if (!prev) return;
     const onChat = $('#p-friends').classList.contains('on');
     for (const f of d.friends || []) {
@@ -74,18 +75,28 @@
       showBubble(f.name, txt); break;
     }
   }
-  function showBubble(name, txt) {
+  function showBubble(name, txt, o) {
+    o = o || {};
     let b = document.getElementById('frBubble'); if (!b) { b = document.createElement('div'); b.id = 'frBubble'; document.body.appendChild(b); }
-    const f = ((fr.state && fr.state.friends) || []).find(x => x.name === name), av = f && f.av;
-    b.innerHTML = `<div class="bav">${av ? `<img src="${av}" alt="">` : esc((name[0] || '?').toUpperCase())}</div><div style="min-width:0"><b>${esc(name)}</b><span class="t">${esc(cens(txt) || L('hat dir geschrieben'))}</span><small>${L('Tippen zum Antworten')}</small></div>`;
-    b.onclick = () => { b.classList.add('hide'); b.classList.remove('show'); try { go('friends'); fr.chat = name; fr.last = 0; fr.msgs = []; paintChat(); loadMsgs(); paintFriends(); } catch {} };
+    const f = ((fr.state && fr.state.friends) || []).find(x => x.name === name), av = o.av !== undefined ? o.av : (f && f.av);
+    const hide = () => { b.classList.add('hide'); b.classList.remove('show'); setTimeout(() => { if (!b.classList.contains('show')) b.classList.remove('hide'); }, 400); };
+    b.innerHTML = `<div class="bav">${av ? `<img src="${av}" alt="">` : esc((name[0] || '?').toUpperCase())}</div><div style="min-width:0"><b>${esc(name)}</b><span class="t">${esc(cens(txt) || L('hat dir geschrieben'))}</span><small>${esc(o.hint || L('Tippen zum Antworten'))}</small></div>`;
+    b.onclick = () => { hide(); try { if (o.onClick) o.onClick(); else { go('friends'); fr.chat = name; fr.last = 0; fr.msgs = []; paintChat(); loadMsgs(); paintFriends(); } } catch {} };
     b.classList.remove('hide', 'show'); void b.offsetWidth; b.classList.add('show');
-    clearTimeout(bubT); bubT = setTimeout(() => { b.classList.add('hide'); b.classList.remove('show'); }, 7000);
+    clearTimeout(bubT); bubT = setTimeout(hide, o.ms || 7000);
+  }
+  window.__frBubble = showBubble;
+  // Banner: Rang- und Clan-Tags neben deinem Namen
+  function paintMyTags(tags) {
+    try {
+      const h = window.cloudyTags ? window.cloudyTags(tags) : '', a = $('#accTags'); if (a) a.innerHTML = h ? ' ' + h : '';
+      let t = $('#hiTags'); if (!t) { const hi = $('#hi'); if (!hi) return; t = document.createElement('div'); t.id = 'hiTags'; t.style.cssText = 'margin:2px 0 6px'; hi.after(t); } t.innerHTML = h;
+    } catch {}
   }
   async function poll() {
     clearTimeout(fr.timer); if (!fr.conn) return;
     const r = await api('GET', '/state');
-    if (r.ok) { try { bubbleCheck(r.data); } catch {} fr.state = r.data; paintFriends(); try { window.grpUpdate && window.grpUpdate(r.data); } catch {} const n = r.data.friends.reduce((a, f) => a + f.unread, 0) + r.data.incoming.length + (r.data.groups || []).reduce((a, g) => a + (g.unread || 0), 0); const b = $('#frBadge'); b.textContent = n ? n : ''; b.style.display = n ? '' : 'none'; $('#frOff').textContent = ''; }
+    if (r.ok) { try { bubbleCheck(r.data); } catch {} fr.state = r.data; paintFriends(); paintMyTags(r.data.tags); try { window.grpUpdate && window.grpUpdate(r.data); } catch {} const n = r.data.friends.reduce((a, f) => a + f.unread, 0) + r.data.incoming.length + (r.data.groups || []).reduce((a, g) => a + (g.unread || 0), 0); const b = $('#frBadge'); b.textContent = n ? n : ''; b.style.display = n ? '' : 'none'; $('#frOff').textContent = ''; }
     else if (r.offline) $('#frOff').textContent = L(r.error);
     if (fr.chat) await loadMsgs();
     fr.timer = setTimeout(poll, $('#p-friends').classList.contains('on') ? 3000 : 6000);
@@ -93,7 +104,7 @@
   function paintFriends() {
     const s = fr.state; if (!s) return;
     $('#frReq').innerHTML = s.incoming.map(n => `<div class="frrow"><b>${esc(n)}</b><span class="muted" style="flex:1">${L('möchte dein Freund sein')}</span><button class="btn" data-ac="${esc(n)}">✓</button><button class="btn ghost" data-dc="${esc(n)}">✕</button></div>`).join('');
-    $('#frList').innerHTML = s.friends.length ? s.friends.map(f => `<div class="frrow clk ${fr.chat === f.name ? 'sel' : ''}" data-f="${esc(f.name)}"><i class="dot ${f.online ? 'on' : ''}"></i><b style="flex:1">${esc(f.name)}${(window.cloudyTags || (() => ''))(f.tags)}${f.server ? `<br><small class="fron">🎮 ${esc(f.server.label || L('Server online'))}${f.server.ver ? ' · ' + esc(f.server.ver) : ''}</small>` : ''}</b>${f.server ? `<button class="btn frplay" data-j="${esc(f.name)}" title="${L('Mitspielen')}">▶</button>` : ''}${f.unread ? `<span class="badge">${f.unread}</span>` : ''}</div>`).join('') : `<p class="muted">${L('Noch keine Freunde. Füge oben jemanden hinzu.')}</p>`;
+    $('#frList').innerHTML = s.friends.length ? s.friends.map(f => `<div class="frrow clk ${fr.chat === f.name ? 'sel' : ''}" data-f="${esc(f.name)}"><i class="dot ${f.online ? 'on' : ''}"></i><b style="flex:1">${esc(f.name)}${(window.cloudyTags || (() => ''))(f.tags)}${f.calling ? ' <span title="Anruf">📞</span>' : ''}${f.server ? `<br><small class="fron">🎮 ${esc(f.server.label || L('Server online'))}${f.server.ver ? ' · ' + esc(f.server.ver) : ''}</small>` : ''}</b>${f.server ? `<button class="btn frplay" data-j="${esc(f.name)}" title="${L('Mitspielen')}">▶</button>` : ''}${f.unread ? `<span class="badge">${f.unread}</span>` : ''}</div>`).join('') : `<p class="muted">${L('Noch keine Freunde. Füge oben jemanden hinzu.')}</p>`;
     $$('#frReq [data-ac]').forEach(b => b.onclick = async () => { await api('POST', '/friend/accept', { name: b.dataset.ac }); poll(); });
     $$('#frReq [data-dc]').forEach(b => b.onclick = async () => { await api('POST', '/friend/decline', { name: b.dataset.dc }); poll(); });
     $$('#frList [data-j]').forEach(b => b.onclick = e => { e.stopPropagation(); joinFriend(b.dataset.j, b); });
@@ -133,7 +144,7 @@
   }
   window.__frSetChat = n => { fr.chat = n; fr.last = 0; fr.msgs = []; paintChat(); if (n) loadMsgs(); paintFriends(); };
   function paintChat(scroll) {
-    { const ff = fr.state && fr.state.friends.find(x => x.name === fr.chat); $('#frChatHead').innerHTML = fr.chat ? esc(fr.chat) + (window.cloudyTags ? window.cloudyTags(ff && ff.tags) : '') + (ff && ff.server ? ` <button class="btn frplay" id="frHeadPlay" title="${L('Mitspielen')}" style="width:auto;border-radius:999px;padding:0 14px;margin-left:8px">▶ ${L('Mitspielen')}</button>` : '') : esc(L('Wähle einen Freund')); ; { const hp = $('#frHeadPlay'); if (hp) hp.onclick = () => joinFriend(fr.chat, hp); } }
+    { const ff = fr.state && fr.state.friends.find(x => x.name === fr.chat); $('#frChatHead').innerHTML = fr.chat ? esc(fr.chat) + (window.cloudyTags ? window.cloudyTags(ff && ff.tags) : '') + (fr.chat ? ` <button class="btn frplay" id="frHeadCall" title="${L('Anruf')}" style="width:auto;border-radius:999px;padding:0 14px;margin-left:8px">📞 ${ff && ff.calling ? L('Anruf beitreten') : L('Anruf')}</button>` : '') + (ff && ff.server ? ` <button class="btn frplay" id="frHeadPlay" title="${L('Mitspielen')}" style="width:auto;border-radius:999px;padding:0 14px;margin-left:8px">▶ ${L('Mitspielen')}</button>` : '') : esc(L('Wähle einen Freund')); ; { const hp = $('#frHeadPlay'); if (hp) hp.onclick = () => joinFriend(fr.chat, hp); } { const hc = $('#frHeadCall'); if (hc) hc.onclick = () => { if (window.grpCall) window.grpCall('dm:' + fr.chat.toLowerCase(), fr.chat); }; } }
     $('#frChatBox').style.display = fr.chat ? '' : 'none';
     const me = fr.state ? fr.state.me : '', box = $('#frMsgs');
     const avs = {}; ((fr.state && fr.state.friends) || []).forEach(f => { if (f.av) avs[f.name] = f.av; });
