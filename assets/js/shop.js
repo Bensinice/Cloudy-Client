@@ -38,8 +38,8 @@
 
     'totem-zz': { b: [0, 0, 16, 16], c: ['#e8c34a', '#5a3b0a'], tot: 'assets/cosmetics/totem-zz.png' }, 'hotbar-zz': { b: [0, 0, 16, 16], c: ['#5aa2f5', '#0de1e5'], hb: 'assets/cosmetics/hotbar-zz.png' },
     'sky-sunset': { b: [0, 0, 16, 16], c: ['#ff8a5c', '#ffd9a0'], sky: 1 }, 'sky-aurora': { b: [0, 0, 16, 16], c: ['#0b1f3a', '#2fe6a8'], sky: 1 }, 'sky-galaxy': { b: [0, 0, 16, 16], c: ['#12062e', '#a055ff'], sky: 1 },
-    'wings-zv': { b: [-9, 0, 34, 24], c: ['#b05cff','#3b1a8a'], img: 'assets/cosmetics/zz-zv-wings.png', ar: 1.26 }, 'wings-zb': { b: [-9, 0, 34, 24], c: ['#3b9bff','#0a3a8a'], img: 'assets/cosmetics/zz-zb-wings.png', ar: 1.27 }, 'wings-zs': { b: [-9, 0, 34, 24], c: ['#3a3a44','#0a0a0e'], img: 'assets/cosmetics/zz-zs-wings.png', ar: 1.28 }, 'wings-zf': { b: [-9, 0, 34, 24], c: ['#4fd8ff','#0a4a7a'], img: 'assets/cosmetics/zz-zf-wings.png', ar: 1.41 },
-    'cape-zbs': { b: [0, 8, 16, 24], c: ['#3b9bff','#0a1a4a'], img: 'assets/cosmetics/zz-zbs-cape.png', ar: 0.625 }, 'cape-ghg': { b: [0, 8, 16, 24], c: ['#8a3cff','#111118'], img: 'assets/cosmetics/zz-ghg-cape.png', ar: 0.625 },
+    'wings-zv': { b: [-9, 0, 34, 24], c: ['#b05cff','#3b1a8a'], img: 'assets/cosmetics/zz-zv-wings.png', ar: 0.787, sc: 0.62 }, 'wings-zb': { b: [-9, 0, 34, 24], c: ['#3b9bff','#0a3a8a'], img: 'assets/cosmetics/zz-zb-wings.png', ar: 0.775, sc: 0.62 }, 'wings-zs': { b: [-9, 0, 34, 24], c: ['#3a3a44','#0a0a0e'], img: 'assets/cosmetics/zz-zs-wings.png', ar: 0.763, sc: 0.62 }, 'wings-zf': { b: [-9, 0, 34, 24], c: ['#4fd8ff','#0a4a7a'], img: 'assets/cosmetics/zz-zf-wings.png', ar: 0.694, sc: 0.62 },
+    'cape-zbs': { b: [0, 8, 16, 24], c: ['#3b9bff','#0a1a4a'], img: 'assets/cosmetics/zz-zbs-cape.png', ar: 1.6 }, 'cape-ghg': { b: [0, 8, 16, 24], c: ['#8a3cff','#111118'], img: 'assets/cosmetics/zz-ghg-cape.png', ar: 1.6 },
     'cape-zz4': { b: [0, 8, 16, 24], c: ['#c04bff','#2a0b6b'], img: 'assets/cosmetics/zz-zz4-cape.png', ar: 336 / 200 }, 'wings-zz4': { b: [-9, 0, 34, 24], c: ['#c04bff','#2a0b6b'], img: 'assets/cosmetics/zz-zz4-wings.png', ar: 340 / 520 }, 'shield-zz4': { b: [-7, 10, 12, 18], c: ['#c04bff','#2a0b6b'], img: 'assets/cosmetics/zz-zz4-shield.png', ar: 0.6484 },
     'cape-zz4m': { b: [0, 8, 16, 24], c: ['#e8e8f0','#2a2a34'], img: 'assets/cosmetics/zz-zz4m-cape.png', ar: 336 / 200 }, 'wings-zz4m': { b: [-9, 0, 34, 24], c: ['#e8e8f0','#2a2a34'], img: 'assets/cosmetics/zz-zz4m-wings.png', ar: 340 / 520 }, 'shield-zz4m': { b: [-7, 10, 12, 18], c: ['#e8e8f0','#2a2a34'], img: 'assets/cosmetics/zz-zz4m-shield.png', ar: 0.6484 },
     'cape-zz3': { b: [0, 8, 16, 24], c: ['#ff4a4a','#5a0a0a'], img: 'assets/cosmetics/zz-zz3-cape.png', ar: 336 / 200 }, 'wings-zz3': { b: [-9, 0, 34, 24], c: ['#ff4a4a','#5a0a0a'], img: 'assets/cosmetics/zz-zz3-wings.png', ar: 340 / 520 }, 'shield-zz3': { b: [-7, 10, 12, 18], c: ['#ff4a4a','#5a0a0a'], img: 'assets/cosmetics/zz-zz3-shield.png', ar: 1.0000 },
@@ -234,7 +234,7 @@
   const spr = (f, sx) => { const o = { front: 'img:' + f, back: 'img:' + f, left: 'transparent', right: 'transparent', top: 'transparent', bottom: 'transparent' }; return o; };
   function flat(el) { el.classList.add('spr'); return el; }
   function wingsImg(id, root) { // zwei Hälften, die am Rücken ansetzen und schlagen
-    const I = ITEMS[id], W = 41.6, H = W * I.ar;
+    const I = ITEMS[id], W = 41.6 * (I.sc || 1), H = W * I.ar;
     for (const s of [-1, 1]) {
       const j = nest(root, `translate3d(0,0,0)`, 'wj', { '--ws': s, '--wd': 0 }), b = flat(box3(W / 2, H, .1, s * W / 4, 12, -3.4, spr(I.img)));
       b.querySelectorAll('.f3').forEach(f => { if (!f.classList.contains('front') && !f.classList.contains('back')) return; const left = f.classList.contains('front') ? s < 0 : s > 0; f.style.backgroundSize = '200% 100%'; f.style.backgroundPosition = left ? '0 0' : '100% 0'; });

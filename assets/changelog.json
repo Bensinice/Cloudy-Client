@@ -1,5 +1,15 @@
 [
  {
+  "v": "0.9.37",
+  "date": "2026-11-01",
+  "added": [],
+  "fixed": [
+   "Neue 3D-Flügel sind kleiner (Vorschau und im Spiel)",
+   "Neue Umhänge (Zickzack-Schlange, GHG) werden in der Vorschau richtig als Umhang gezeigt statt als kleines Quadrat"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.36",
   "date": "2026-11-01",
   "added": [
