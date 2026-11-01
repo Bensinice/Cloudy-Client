@@ -75,12 +75,12 @@
     }
   }
   function showBubble(name, txt) {
-    let b = document.getElementById('frBubble');
-    if (!b) { b = document.createElement('div'); b.id = 'frBubble'; b.style.cssText = 'position:fixed;right:22px;bottom:22px;z-index:9999;width:340px;max-width:calc(100vw - 44px);padding:16px 20px 17px;border-radius:26px;background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 34%,transparent),color-mix(in srgb,var(--accent2) 16%,transparent) 55%,rgba(255,255,255,.07));backdrop-filter:blur(26px) saturate(1.7);-webkit-backdrop-filter:blur(26px) saturate(1.7);border:1px solid rgba(255,255,255,.34);box-shadow:0 16px 48px rgba(0,0,0,.38),inset 0 1.5px 0 rgba(255,255,255,.5),inset 0 -10px 24px rgba(255,255,255,.05);color:#fff;font-size:16px;line-height:1.35;cursor:pointer;transition:opacity .35s cubic-bezier(.2,.9,.3,1.2),transform .35s cubic-bezier(.2,.9,.3,1.2);opacity:0;transform:translateY(18px) scale(.94);text-shadow:0 1px 8px rgba(0,0,0,.35)'; document.body.appendChild(b); }
-    b.innerHTML = `<b style="display:block;font-size:17px;margin-bottom:3px">💬 ${esc(name)}</b><span style="opacity:.95;word-break:break-word">${esc(cens(txt) || L('hat dir geschrieben'))}</span>`;
-    b.onclick = () => { b.style.opacity = 0; b.style.transform = 'translateY(18px) scale(.94)'; b.style.pointerEvents = 'none'; try { go('friends'); fr.chat = name; fr.last = 0; fr.msgs = []; paintChat(); loadMsgs(); paintFriends(); } catch {} };
-    b.style.pointerEvents = ''; requestAnimationFrame(() => { b.style.opacity = 1; b.style.transform = 'none'; });
-    clearTimeout(bubT); bubT = setTimeout(() => { b.style.opacity = 0; b.style.transform = 'translateY(18px) scale(.94)'; b.style.pointerEvents = 'none'; }, 6000);
+    let b = document.getElementById('frBubble'); if (!b) { b = document.createElement('div'); b.id = 'frBubble'; document.body.appendChild(b); }
+    const f = ((fr.state && fr.state.friends) || []).find(x => x.name === name), av = f && f.av;
+    b.innerHTML = `<div class="bav">${av ? `<img src="${av}" alt="">` : esc((name[0] || '?').toUpperCase())}</div><div style="min-width:0"><b>${esc(name)}</b><span class="t">${esc(cens(txt) || L('hat dir geschrieben'))}</span><small>${L('Tippen zum Antworten')}</small></div>`;
+    b.onclick = () => { b.classList.add('hide'); b.classList.remove('show'); try { go('friends'); fr.chat = name; fr.last = 0; fr.msgs = []; paintChat(); loadMsgs(); paintFriends(); } catch {} };
+    b.classList.remove('hide', 'show'); void b.offsetWidth; b.classList.add('show');
+    clearTimeout(bubT); bubT = setTimeout(() => { b.classList.add('hide'); b.classList.remove('show'); }, 7000);
   }
   async function poll() {
     clearTimeout(fr.timer); if (!fr.conn) return;
@@ -93,20 +93,46 @@
   function paintFriends() {
     const s = fr.state; if (!s) return;
     $('#frReq').innerHTML = s.incoming.map(n => `<div class="frrow"><b>${esc(n)}</b><span class="muted" style="flex:1">${L('möchte dein Freund sein')}</span><button class="btn" data-ac="${esc(n)}">✓</button><button class="btn ghost" data-dc="${esc(n)}">✕</button></div>`).join('');
-    $('#frList').innerHTML = s.friends.length ? s.friends.map(f => `<div class="frrow clk ${fr.chat === f.name ? 'sel' : ''}" data-f="${esc(f.name)}"><i class="dot ${f.online ? 'on' : ''}"></i><b style="flex:1">${esc(f.name)}${(window.cloudyTags || (() => ''))(f.tags)}${f.server ? `<br><small class="muted">${L('Server online')} · ${esc(f.server.version || '')}</small>` : ''}</b>${f.server ? `<button class="btn" data-j="${esc(f.name)}">${L('Beitreten')}</button>` : ''}${f.unread ? `<span class="badge">${f.unread}</span>` : ''}</div>`).join('') : `<p class="muted">${L('Noch keine Freunde. Füge oben jemanden hinzu.')}</p>`;
+    $('#frList').innerHTML = s.friends.length ? s.friends.map(f => `<div class="frrow clk ${fr.chat === f.name ? 'sel' : ''}" data-f="${esc(f.name)}"><i class="dot ${f.online ? 'on' : ''}"></i><b style="flex:1">${esc(f.name)}${(window.cloudyTags || (() => ''))(f.tags)}${f.server ? `<br><small class="fron">🎮 ${esc(f.server.label || L('Server online'))}${f.server.ver ? ' · ' + esc(f.server.ver) : ''}</small>` : ''}</b>${f.server ? `<button class="btn frplay" data-j="${esc(f.name)}" title="${L('Mitspielen')}">▶</button>` : ''}${f.unread ? `<span class="badge">${f.unread}</span>` : ''}</div>`).join('') : `<p class="muted">${L('Noch keine Freunde. Füge oben jemanden hinzu.')}</p>`;
     $$('#frReq [data-ac]').forEach(b => b.onclick = async () => { await api('POST', '/friend/accept', { name: b.dataset.ac }); poll(); });
     $$('#frReq [data-dc]').forEach(b => b.onclick = async () => { await api('POST', '/friend/decline', { name: b.dataset.dc }); poll(); });
-    $$('#frList [data-j]').forEach(b => b.onclick = async e => { e.stopPropagation(); const f = s.friends.find(x => x.name === b.dataset.j); if (!f || !f.server) return; b.disabled = true; $('#frOff').textContent = L('Verbinde …'); const r = await window.cloudy.frJoin({ hosts: f.server.hosts, port: f.server.port }); b.disabled = false; $('#frOff').textContent = ''; if (!r.ok) { $('#frOff').textContent = L(r.error); return; } if (f.server.version) { version = f.server.version; st.set('version', version); paintVersion(); } play({ name: f.name, host: r.host, port: r.port }); });
+    $$('#frList [data-j]').forEach(b => b.onclick = e => { e.stopPropagation(); joinFriend(b.dataset.j, b); });
     $$('#frList [data-f]').forEach(b => b.onclick = () => { fr.chat = b.dataset.f; fr.last = 0; fr.msgs = []; paintChat(); loadMsgs(); paintFriends(); });
     tr();
   }
+  async function joinFriend(name, btn) { // ▶ neben dem Namen: direkt auf den Server des Freundes
+    const f = ((fr.state && fr.state.friends) || []).find(x => x.name === name), sv = f && f.server; if (!sv) return;
+    if (btn) btn.disabled = true; $('#frOff').textContent = L('Verbinde …');
+    try {
+      let host, port;
+      if (sv.kind === 'code') { const r = await window.cloudy.srvCodeJoin(sv.v); if (!r.ok) { $('#frOff').textContent = L(r.error); return; } host = r.host; port = r.port; }
+      else { const i = sv.v.lastIndexOf(':'); host = i > 0 ? sv.v.slice(0, i) : sv.v; port = i > 0 ? +sv.v.slice(i + 1) : 25565; }
+      $('#frOff').textContent = ''; if (sv.ver && /^\d+\.\d+(\.\d+)?$/.test(sv.ver)) { version = sv.ver; st.set('version', version); paintVersion(); }
+      play({ name: f.name, host, port });
+    } catch { $('#frOff').textContent = L('Das hat nicht geklappt.'); } finally { if (btn) btn.disabled = false; }
+  }
+  // Eigenen Standort (eigener Server oder Server, auf dem du spielst) den Freunden zeigen
+  let lastPres = '';
+  async function publishPresence(force) {
+    try {
+      if (!fr.conn) return; const share = $('#frShare') ? $('#frShare').checked : true; let srv = null;
+      if (share) {
+        if (host.running && host.ready) { const c = await window.cloudy.srvShareCode({ port: host.port || 25565 }); if (c && c.ok) srv = { kind: 'code', v: c.code, label: L('Eigener Server'), ver: host.version || '' }; }
+        else if (window.__playSrv) srv = { kind: 'addr', v: window.__playSrv.host + (window.__playSrv.port && window.__playSrv.port !== 25565 ? ':' + window.__playSrv.port : ''), label: String(window.__playSrv.name || window.__playSrv.host).slice(0, 30), ver: '' };
+      }
+      const k = JSON.stringify(srv); if (!force && k === lastPres && Date.now() % 4 !== 0) { /* Keepalive nur alle paar Runden */ }
+      lastPres = k; await api('POST', '/presence', { srv });
+    } catch {}
+  }
+  { const sh = $('#frShare'); if (sh) { try { sh.checked = st.get('frShare', true) !== false; } catch {} sh.onchange = () => { try { st.set('frShare', sh.checked); } catch {} publishPresence(true); }; } }
+  setInterval(publishPresence, 25000); window.cloudy.on('closed', () => { window.__playSrv = null; setTimeout(() => publishPresence(true), 500); }); window.cloudy.on('gameStart', () => setTimeout(() => publishPresence(true), 1500));
   async function loadMsgs() {
     if (!fr.chat) return; const who = fr.chat, r = await api('GET', `/msgs?with=${encodeURIComponent(who)}&after=${fr.last}`);
     if (!r.ok || who !== fr.chat) return;
     if (r.data.msgs.length) { fr.msgs.push(...r.data.msgs); fr.last = fr.msgs[fr.msgs.length - 1].id; paintChat(true); }
   }
   function paintChat(scroll) {
-    { const ff = fr.state && fr.state.friends.find(x => x.name === fr.chat); $('#frChatHead').innerHTML = fr.chat ? esc(fr.chat) + (window.cloudyTags ? window.cloudyTags(ff && ff.tags) : '') : esc(L('Wähle einen Freund')); }
+    { const ff = fr.state && fr.state.friends.find(x => x.name === fr.chat); $('#frChatHead').innerHTML = fr.chat ? esc(fr.chat) + (window.cloudyTags ? window.cloudyTags(ff && ff.tags) : '') + (ff && ff.server ? ` <button class="btn frplay" id="frHeadPlay" title="${L('Mitspielen')}" style="width:auto;border-radius:999px;padding:0 14px;margin-left:8px">▶ ${L('Mitspielen')}</button>` : '') : esc(L('Wähle einen Freund')); ; { const hp = $('#frHeadPlay'); if (hp) hp.onclick = () => joinFriend(fr.chat, hp); } }
     $('#frChatBox').style.display = fr.chat ? '' : 'none';
     const me = fr.state ? fr.state.me : '', box = $('#frMsgs');
     const avs = {}; ((fr.state && fr.state.friends) || []).forEach(f => { if (f.av) avs[f.name] = f.av; });
@@ -124,7 +150,7 @@
       }
       return null;
     };
-    box.innerHTML = fr.msgs.map(m => `<div class="mrow ${m.from === me ? 'me' : ''}">${head(m.from)}<div class="msg ${m.from === me ? 'me' : ''}"><span>${esc(cens(m.text))}</span>${isCode(m.text) && m.from !== me ? `<button class="btn rdm" data-rc="${esc(m.text.trim())}">${L('Einlösen')}</button><em class="rdr"></em>` : (() => { const sv = !isCode(m.text) && srvOf(m.text); return sv ? `<button class="btn rdm" data-sv="${esc(sv.code || (sv.host + ':' + sv.port))}">${L('Verbinden')}</button><em class="rdr">${esc(sv.code ? L('Server-Code') : sv.host + (sv.port !== 25565 ? ':' + sv.port : ''))}</em>` : ''; })()}<small>${new Date(m.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small></div></div>`).join('');
+    box.innerHTML = fr.msgs.map(m => `<div class="mrow ${m.from === me ? 'me' : ''}">${head(m.from)}<div class="msg ${m.from === me ? 'me' : ''}"><span>${esc(cens(m.text))}</span>${isCode(m.text) && m.from !== me ? `<button class="btn rdm" data-rc="${esc(m.text.trim())}">${L('Einlösen')}</button><em class="rdr"></em>` : (() => { const sv = !isCode(m.text) && srvOf(m.text); return sv ? `<div class="svcard"><small>🌐 ${esc(sv.code ? L('Server-Code erkannt') : L('Server erkannt') + ': ' + sv.host + (sv.port !== 25565 ? ':' + sv.port : ''))}</small><button class="btn rdm" data-sv="${esc(sv.code || (sv.host + ':' + sv.port))}">▶ ${L('Verbinden')}</button><em class="rdr"></em></div>` : ''; })()}<small>${new Date(m.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small></div></div>`).join('');
     box.querySelectorAll('[data-sv]').forEach(b => b.onclick = async () => {
       const out = b.parentNode.querySelector('.rdr'), v = b.dataset.sv; b.disabled = true;
       try {

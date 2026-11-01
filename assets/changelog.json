@@ -1,5 +1,18 @@
 [
  {
+  "v": "0.9.47",
+  "date": "2026-11-01",
+  "added": [
+   "Discord: „Spielt mit Cloudy“ (Einstellungen → Discord, Application-ID eintragen)",
+   "Freunde: Play-Knopf neben dem Namen und im Chat-Kopf, wenn ein Freund auf einem Server spielt (zeigt sich bei Freunden, die den neuen Server nutzen)",
+   "Server: sichtbarer „Bild wählen“-Knopf für eigene Thumbnails"
+  ],
+  "fixed": [
+   "Server-Thumbnails, Chat-Server-Karte und Nachrichten-Bubble hatten kein Styling – jetzt Liquid-Glas im Theme"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.46",
   "date": "2026-11-01",
   "added": [

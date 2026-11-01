@@ -114,6 +114,9 @@ window.cloudy.appVersion().then(i => {
   if (i.repo) $('#repoRow').style.display = 'none';
   $('#heroVer').textContent = 'Cloudy ' + i.v + (i.suffix ? ' ' + i.suffix : '');
   $('#updMsg').textContent = 'Cloudy ' + i.v + (i.suffix ? ' ' + i.suffix : '');
+  try { const dc = window.cloudy.discordGet; if (dc && $('#dcId')) { dc().then(c => { $('#dcOn').checked = c.on; $('#dcId').value = c.id; });
+    const sv = async () => { const c = await window.cloudy.discordSet({ on: $('#dcOn').checked, id: $('#dcId').value }); $('#dcId').value = c.id; $('#dcMsg').textContent = !c.on ? 'Aus.' : c.id ? 'Gespeichert – ist Discord offen, steht gleich „Spielt mit Cloudy“ da.' : 'Noch keine ID eingetragen.'; };
+    $('#dcOn').onchange = sv; $('#dcId').onchange = sv; $('#dcLink').onclick = e => { e.preventDefault(); window.cloudy.openExternal('https://discord.com/developers/applications'); }; } } catch {}
   window.cloudy.autoUpdGet().then(on => { // Beim Start prüfen; mit Auto-Accept gleich installieren, sonst nach 10 s nachfragen
     $('#autoUpd').checked = on;
     setTimeout(async () => { await checkUpd(false); if (upd && upd.newer && upd.mandatory) return forceUpd(); if (upd && upd.newer && upd.canInstall) offerUpdate('Cloudy ' + upd.latest, runUpdate); await checkUrlUpd(); }, 2500);

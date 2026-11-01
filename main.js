@@ -664,6 +664,20 @@ ipcMain.handle('spotifyTitle', async (_e, u) => { // Name einer Playlist/eines A
 ipcMain.handle('resetJava', () => fs.rmSync(path.join(app.getPath('userData'), 'runtimes'), { recursive: true, force: true }));
 const autoFile = path.join(app.getPath('userData'), 'autoupdate.json');
 const autoUpdOn = () => { try { return JSON.parse(fs.readFileSync(autoFile, 'utf8')).on === true; } catch { return false; } }; // Auto-Accept: nur wenn ausdrücklich eingeschaltet
+// ---- Discord Rich Presence: „Spielt mit Cloudy“ (braucht die Anwendungs-ID aus dem Discord Developer Portal) ----
+const discord = require('./lib/discord').create(); let dcGame = null, dcStart = Date.now();
+const dcCfg = () => { const c = cfgPatch({}); return { on: c.discordOn !== false, id: String(c.discordId || '') }; };
+function dcUpdate() {
+  try {
+    const c = dcCfg(); if (!c.on || !c.id) { discord.stop(); return; }
+    const act = dcGame ? { details: 'Spielt mit Cloudy', state: dcGame.server ? `Minecraft ${dcGame.version} · ${dcGame.server}` : `Minecraft ${dcGame.version}`, timestamps: { start: dcStart } }
+      : { details: 'Im Cloudy-Launcher', state: 'Minecraft-Launcher', timestamps: { start: dcStart } };
+    discord.set(c.id, act);
+  } catch {}
+}
+ipcMain.handle('discordGet', () => dcCfg());
+ipcMain.handle('discordSet', (_e, { on, id }) => { cfgPatch({ discordOn: !!on, discordId: String(id || '').replace(/\D/g, '').slice(0, 22) }); dcUpdate(); return dcCfg(); });
+app.whenReady().then(() => setTimeout(dcUpdate, 3000)).catch(() => {});
 ipcMain.handle('autoUpdGet', () => autoUpdOn());
 ipcMain.handle('autoUpdSet', (_e, on) => { fs.writeFileSync(autoFile, JSON.stringify({ on: !!on })); return !!on; });
 const localUpdate = require('./update/localupdate').init({ app, ipcMain, shell, auto: autoUpdOn });
@@ -724,7 +738,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.46'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.47'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1779,7 +1793,7 @@ ipcMain.handle('frApi', async (_e, { method = 'GET', path: p, body }) => {
     return { ok: r.status === 200, data: r.data, error: r.data.error };
   } catch { return { ok: false, offline: true, error: 'Freundesserver nicht erreichbar.' }; }
 });
-app.on('before-quit', () => { try { if (srvProc) srvProc.kill(); } catch {} try { if (relaySrv) relaySrv.close(); } catch {} });
+app.on('before-quit', () => { try { discord.stop(); } catch {} try { if (srvProc) srvProc.kill(); } catch {} try { if (relaySrv) relaySrv.close(); } catch {} });
 
 // Java 19+ : Klassen-Archiv (CDS) beim ersten Beenden anlegen, danach startet Minecraft deutlich schneller
 // Abgebrochene Downloads erkennen: eine .jar ohne ZIP-Ende ("zip END header not found") wird gelöscht und beim Start neu geladen
@@ -2204,7 +2218,7 @@ ipcMain.handle('launch', async (_e, { username, version, type, ram, server, fabr
     });
     if (!proc) throw new Error('Start fehlgeschlagen.');
     if (launchCancelled) { try { proc.kill(); } catch {} throw new Error('Start abgebrochen.'); }
-    mcProc = proc; playSess = { who: currentUser, t: Date.now(), coinMs: 0, earned: 0 }; try { send('gameStart', {}); } catch {} try { cosNetStart(auth && auth.name); } catch {} proc.on('close', () => { playTick(true); if (mcProc === proc) { mcProc = null; cosNetStop(); } });
+    mcProc = proc; playSess = { who: currentUser, t: Date.now(), coinMs: 0, earned: 0 }; try { send('gameStart', {}); } catch {} try { dcGame = { version: bv(version), server: server && server.host ? String(server.name || server.host).slice(0, 30) : '' }; dcStart = Date.now(); dcUpdate(); } catch {} try { cosNetStart(auth && auth.name); } catch {} proc.on('close', () => { playTick(true); if (mcProc === proc) { mcProc = null; cosNetStop(); dcGame = null; dcStart = Date.now(); dcUpdate(); } });
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err.message };

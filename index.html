@@ -60,7 +60,7 @@
     <div id="slist"></div></div>
     <div class="srvsec" data-ss="public" style="display:none"><p class="muted">Beliebte öffentliche Server. Die meisten großen Server verlangen ein echtes Minecraft-Konto (Microsoft-Anmeldung in den Einstellungen).</p><div id="pubList"></div></div>
     <div class="srvsec" data-ss="own" style="display:none"><div class="glass set" id="hostCard" ><h3>Eigenen Server starten</h3>
-      <p class="muted"><b>So einfach geht’s:</b> 1) Version wählen &nbsp;2) Haken bei der EULA setzen &nbsp;3) „Server starten“ klicken. Das war’s – Cloudy erledigt den Rest (Server laden, Router-Port öffnen).<br><b>Freunde einladen:</b> Sie sehen deinen Server im Reiter „Freunde“ und klicken auf „Beitreten“. Oder du schickst ihnen den <b>Server-Code</b> (erscheint unten, sobald der Server läuft) per Chat – dort steht dann automatisch ein „Verbinden“-Knopf.</p>
+      <p class="muted"><b>So einfach:</b> ① Version wählen ② Haken bei der EULA setzen ③ „Server starten“. Mehr nicht.<br><b>Freunde dazu holen:</b> Sie klicken im Reiter „Freunde“ auf das ▶ neben deinem Namen. Oder du kopierst den <b>Server-Code</b> (erscheint, sobald der Server läuft) und schickst ihn im Chat – dort erscheint für sie automatisch ein „Verbinden“-Knopf.</p>
       <div class="tools"><select id="hv" class="field" title="Version"></select><select id="hType" class="field" title="Server-Art"><option value="vanilla">Vanilla</option><option value="paper">Paper (mit Plugins)</option></select><select id="hr" class="field" title="Arbeitsspeicher"><option value="2">2 GB RAM</option><option value="4">4 GB RAM</option><option value="6">6 GB RAM</option><option value="8">8 GB RAM</option></select><input id="hp" class="field" value="25565" style="width:110px" title="Port"><input id="hMotd" class="field" placeholder="Servername (MOTD)" maxlength="60" style="flex:1;min-width:150px"></div>
       <label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="hOnline"> Nur echte Minecraft-Konten erlauben (sonst können auch Offline-Konten beitreten)</label>
       <label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="hEula"> Ich akzeptiere die <a href="#" id="hEulaLink" style="color:var(--accent)">Minecraft-EULA</a></label>
@@ -74,7 +74,7 @@
       <h3>Installiert</h3><div id="plInst"></div><h3>Ergebnisse</h3><div id="plRes"></div></div></div>
   </div>
   <div class="page" id="p-friends">
-    <h2>Freunde</h2><p class="muted">Füge Freunde per Benutzername hinzu und chatte mit ihnen. Das läuft über dein Cloudy-Konto, ein extra Freundesserver ist nicht nötig.</p>
+    <h2>Freunde</h2><p class="muted">Freund hinzufügen und chatten. Spielt er gerade auf einem Server, steht ein <b>▶</b> neben seinem Namen: ein Klick, und du bist dabei. Schickst du einen Server-Code oder eine Adresse im Chat, erscheint dort ein „Verbinden“-Knopf. Alles läuft über dein Cloudy-Konto.</p>
     <div class="tools" id="frTabs"><button class="chip on" data-ft="chat">Freunde &amp; Chat</button><button class="chip" data-ft="conn">Verbindung &amp; Server</button></div>
     <div class="glass set" id="frOffline" style="display:none;max-width:560px"><h3>Noch nicht verbunden</h3><p class="muted">Freunde hinzufügen und chatten geht, sobald du mit einem Freundesserver verbunden bist. Das dauert eine Minute.</p><div class="tools" style="margin:0"><button class="btn" id="frGoConn">Jetzt verbinden</button></div></div>
     <div class="glass set" id="frConnect" style="max-width:560px;display:none"><h3>Mit einem Freundesserver verbinden</h3>
@@ -83,7 +83,7 @@
       <div class="tools" style="margin:0"><button class="btn" id="frLogin">Anmelden</button><button class="btn ghost" id="frReg">Konto erstellen</button></div><p class="muted" id="frMsg" style="color:var(--accent);min-height:18px"></p>
       <h3 style="margin-top:8px">Freundesserver selbst hosten</h3><p class="muted">Startet den Server auf diesem PC (Port 7777, wird automatisch im Router freigegeben, wenn möglich). Gib Freunden nur deinen Freundescode – keine IP nötig.</p>
       <div class="tools" style="margin:0"><button class="btn ghost" id="frHostBtn">Freundesserver hier starten</button><button class="btn ghost" id="frCodeCopy" style="display:none">Code kopieren</button></div><p class="muted" id="frHostInfo"></p></div>
-    <div id="frMain" style="display:none"><p class="muted"><span id="frMe"></span> · <a href="#" id="frOut" style="color:var(--accent);font-weight:600">Trennen</a> <span id="frOff" style="color:var(--accent)"></span></p>
+    <div id="frMain" style="display:none"><label style="display:flex;gap:8px;align-items:center;font-weight:600;margin:0 0 8px"><input type="checkbox" id="frShare" checked> Freunden zeigen, wo ich spiele (▶ neben meinem Namen)</label><p class="muted"><span id="frMe"></span> · <a href="#" id="frOut" style="color:var(--accent);font-weight:600">Trennen</a> <span id="frOff" style="color:var(--accent)"></span></p>
       <div class="frgrid"><div class="glass set frside"><div class="tools" style="margin:0"><input id="frAddName" class="field" placeholder="Freund hinzufügen (Name)" style="flex:1;min-width:0"><button class="btn" id="frAdd">+</button></div><small class="muted" id="frAddMsg"></small><div id="frReq"></div><div id="frList"></div></div>
         <div class="glass set frchat"><h3 id="frChatHead">Wähle einen Freund</h3><div id="frChatBox" style="display:none"><div id="frMsgs"></div><div class="tools" style="margin:8px 0 0"><input id="frText" class="field" placeholder="Nachricht …" maxlength="500" style="flex:1" autocomplete="off"><button class="btn" id="frSend">Senden</button></div></div></div></div></div>
   </div>
@@ -212,6 +212,10 @@
         <label>Abdunklung des Bildes<input id="bgDim" type="range" min="0" max="90" value="35"></label>
         <label>Unschärfe des Bildes<input id="bgBlur" type="range" min="0" max="30" value="0"></label>
         <p class="muted" id="bgMsg"></p></div>
+      <div class="glass set" id="dcCard"><h3>Discord</h3>
+        <p class="muted" style="font-size:12.5px">Zeigt bei Discord „Spielt mit Cloudy“. <b>So geht’s:</b> ① <a href="#" id="dcLink" style="color:var(--accent)">discord.com/developers/applications</a> öffnen → „New Application“ → Name <b>Cloudy</b>. ② Die „Application ID“ kopieren. ③ Hier einfügen – fertig. Discord muss dabei laufen.</p>
+        <label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="dcOn" checked> „Spielt mit Cloudy“ bei Discord anzeigen</label>
+        <input id="dcId" class="field" placeholder="Application ID (nur Zahlen)" autocomplete="off" inputmode="numeric"><p class="muted" id="dcMsg"></p></div>
       <div class="glass set"><h3>Updates</h3>
         <p class="muted" id="updMsg">Cloudy</p>
         <label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="autoUpd"> Auto-Accept: Updates ohne Rückfrage installieren</label>
@@ -312,8 +316,9 @@ $('#q').oninput=renderVersions;
 $$('[data-f]').forEach(c=>c.onclick=()=>{filter=c.dataset.f;$$('[data-f]').forEach(x=>x.classList.toggle('on',x===c));renderVersions()});
 
 function renderServers(){
-  const avs=s=>s.img?`<div class="av" style="background:center/cover url('${s.img}');color:transparent" title="Bild ändern" data-img="SRVI">&nbsp;</div>`:`<div class="av" title="Bild ändern" data-img="SRVI" style="cursor:pointer">${esc(s.name[0]||'S').toUpperCase()}</div>`;
-  const html=servers.map((s,i)=>`<div class="glass srv">${avs(s).replace(/SRVI/g,i)}<div style="flex:1"><b>${esc(s.name)}</b><br><small>${esc(s.host)}${s.port!=25565?':'+s.port:''}</small></div><button class="btn ghost" data-img="${i}" title="Eigenes Bild für diesen Server wählen">Bild</button>${s.img?`<button class="btn ghost" data-noimg="${i}" title="Bild entfernen">✕ Bild</button>`:''}<button class="btn" data-j="${i}">Beitreten</button><button class="btn ghost" data-d="${i}">Entfernen</button></div>`).join('')||'<p class="muted">Noch keine Server. Füge oben einen hinzu.</p>';
+  const avs=(s,i)=>`<div class="sthumb" data-img="${i}" title="Thumbnail ändern" ${s.img?`style="background-image:url('${s.img}')"`:''}>${s.img?'':`<span>${esc(s.name[0]||'S').toUpperCase()}</span>`}<em>📷 Thumbnail ändern</em></div>`;
+  const pick=(s,i)=>`<button class="btn ghost" data-img="${i}">📷 ${s.img?'Bild ändern':'Bild wählen'}</button>`;
+  const html=servers.map((s,i)=>`<div class="glass srv">${avs(s,i)}<div style="flex:1"><b>${esc(s.name)}</b><br><small>${esc(s.host)}${s.port!=25565?':'+s.port:''}</small></div>${pick(s,i)}${s.img?`<button class="btn ghost" data-noimg="${i}" title="Thumbnail entfernen">✕ Bild</button>`:''}<button class="btn" data-j="${i}">Beitreten</button><button class="btn ghost" data-d="${i}">Entfernen</button></div>`).join('')||'<p class="muted">Noch keine Server. Füge oben einen hinzu.</p>';
   $('#slist').innerHTML=html;
   $('#homeSrv').innerHTML=servers.slice(0,4).map((s,i)=>`<div class="glass tile" data-j="${i}" ${s.img?`style="background-image:linear-gradient(rgba(10,14,30,.55),rgba(10,14,30,.7)),url('${s.img}');background-size:cover;background-position:center"`:''}><b>${esc(s.name)}</b><br><small class="muted">${esc(s.host)}</small><br><span class="pill">Beitreten</span></div>`).join('')||'<p class="muted">Füge Server im Reiter „Server“ hinzu.</p>';
   $$('[data-j]').forEach(b=>b.onclick=()=>play(servers[b.dataset.j]));
@@ -322,7 +327,7 @@ function renderServers(){
   $$('#slist [data-noimg]').forEach(b=>b.onclick=()=>{delete servers[+b.dataset.noimg].img;st.set('servers',servers);renderServers()});
 }
 // Eigenes Bild (Thumbnail) fuer einen Server: wird auf 128x128 zugeschnitten und im Launcher gespeichert
-function pickSrvImg(i){const f=document.createElement('input');f.type='file';f.accept='image/*';f.onchange=()=>{const file=f.files&&f.files[0];if(!file||!servers[i])return;const im=new Image(),u=URL.createObjectURL(file);im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d'),s=Math.min(im.width,im.height);x.drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,128,128);URL.revokeObjectURL(u);servers[i].img=c.toDataURL('image/jpeg',.85);st.set('servers',servers);renderServers()};im.onerror=()=>URL.revokeObjectURL(u);im.src=u};f.click()}
+function pickSrvImg(i){const f=document.createElement('input');f.type='file';f.accept='image/*';f.onchange=()=>{const file=f.files&&f.files[0];if(!file||!servers[i])return;const im=new Image(),u=URL.createObjectURL(file);im.onload=()=>{const c=document.createElement('canvas');c.width=320;c.height=180;const x=c.getContext('2d'),r=Math.min(im.width/320,im.height/180),sw=320*r,sh=180*r;x.drawImage(im,(im.width-sw)/2,(im.height-sh)/2,sw,sh,0,0,320,180);URL.revokeObjectURL(u);servers[i].img=c.toDataURL('image/jpeg',.85);st.set('servers',servers);renderServers()};im.onerror=()=>URL.revokeObjectURL(u);im.src=u};f.click()}
 $('#sadd').onclick=()=>{
   let h=$('#sh').value.trim();if(!h)return;let port=25565;
   const m=h.match(/^(.+):(\d+)$/);if(m){h=m[1];port=+m[2]}
@@ -337,7 +342,7 @@ $('#ram').oninput=e=>{$('#ramv').textContent=e.target.value+' GB';st.set('ram',+
 $('#folder').onclick=()=>window.cloudy.openFolder();
 
 function reset(msg){$('#cancel').style.display='none';$('#play').disabled=false;$('#play').textContent='Spielen';$('#bar').style.display='none';$('#dockT').textContent='Bereit';$('#status').textContent=msg||''}
-async function play(server,opt={}){
+async function play(server,opt={}){window.__playSrv=server&&server.host&&!/^(localhost|127\.)/.test(String(server.host))?{host:server.host,port:server.port||25565,name:server.name||server.host}:null;
   if(!version)return go('versions');
   const v=all.find(x=>x.id===bvr(version));
   window.__cancelAt=0;$('#cancel').style.display='';$('#play').disabled=true;$('#play').textContent='Lädt …';$('#bar').style.display='block';$('#fill').style.width='0%';

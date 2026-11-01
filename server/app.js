@@ -100,6 +100,7 @@ const auth = wrap2 => wrap(async (req, res) => {
   await wrap2(req, res, me);
 });
 // ---- Freunde & Chat direkt über den Konto-Server (kein extra Freundesserver nötig) ----
+const PRES = new Map(); // Konto -> { srv, t } (wo jemand gerade spielt/hostet)
 const SEEN = new Map(); // Konto -> letzter Kontakt (für „online“)
 const frPair = (a, b) => [a, b].sort().join('|');
 async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
@@ -109,10 +110,15 @@ async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
   const unread = k => (FR.msgs[frPair(me, k)] || []).filter(m => m.fk !== me && m.id > (u.read[k] || 0)).length;
   if (p === 'state') {
     const out = { ok: true, me: myName, tags: tagsOf(me), friends: [], incoming: [], outgoing: [] };
-    for (const k of u.friends) { const n = await nameOf(k); if (n) out.friends.push({ name: n, tags: tagsOf(k), online: online(k), unread: unread(k), av: (FR.av && FR.av[k]) || '' }); }
+    for (const k of u.friends) { const n = await nameOf(k); const pr = PRES.get(k); if (n) out.friends.push({ name: n, tags: tagsOf(k), online: online(k), unread: unread(k), av: (FR.av && FR.av[k]) || '', ...(pr && online(k) && now - pr.t < 90000 ? { server: pr.srv } : {}) }); }
     for (const k of u.in) { const n = await nameOf(k); if (n) out.incoming.push(n); }
     for (const k of u.out) { const n = await nameOf(k); if (n) out.outgoing.push(n); }
     return [200, out];
+  }
+  if (p === 'presence') { // Wo spielst/hostest du gerade? Nur Freunde sehen das (Play-Knopf neben deinem Namen)
+    const v = b.srv; let srv = null;
+    if (v && typeof v === 'object') { const val = String(v.v || '').trim().slice(0, 90); if ((v.kind === 'code' && /^CLD(-[A-Za-z0-9]{4}){4}$/i.test(val)) || (v.kind === 'addr' && /^[A-Za-z0-9.\-]{3,70}(:\d{2,5})?$/.test(val))) srv = { kind: v.kind, v: val, label: String(v.label || '').slice(0, 30), ver: String(v.ver || '').slice(0, 20) }; }
+    if (srv) PRES.set(me, { srv, t: now }); else PRES.delete(me); return [200, { ok: true }];
   }
   if (p === 'avatar') { const img = String(b.img || ''); if (!/^data:image\/png;base64,[A-Za-z0-9+\/=]{20,6000}$/.test(img)) return [400, { error: 'Ungültiges Bild.' }]; FR.av = FR.av || {}; FR.av[me] = img; await save(); return [200, { ok: true }]; }
   if (p === 'friend/add' || p === 'friend/accept') {

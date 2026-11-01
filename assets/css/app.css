@@ -571,3 +571,29 @@ html[data-theme="glass"]{background:rgba(8,20,40,var(--win-a,0))!important}
 #annBar{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9998;display:flex;gap:12px;align-items:center;max-width:min(720px,92vw);padding:10px 14px;border-radius:14px;background:var(--glass,rgba(20,24,40,.92));border:1px solid var(--accent,#7c6cff);color:var(--text,#fff);box-shadow:0 8px 30px rgba(0,0,0,.4);font-size:13px}#annBar button{background:none;border:0;color:inherit;cursor:pointer;font-size:14px;opacity:.7}#annBar button:hover{opacity:1}
 
 .ctag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.3px;vertical-align:middle;border:1px solid transparent}.ctag.owner{background:rgba(255,30,45,.28);color:#ff3b4a;border-color:#ff2438;box-shadow:0 0 8px rgba(255,36,56,.45);text-transform:uppercase}.ctag.admin{background:rgba(255,80,90,.18);color:#ff7a82;border-color:rgba(255,80,90,.5)}.ctag.mod{background:rgba(70,150,255,.18);color:#7db4ff;border-color:rgba(70,150,255,.5)}.ctag.plus{background:rgba(255,200,60,.18);color:#ffd04a;border-color:rgba(255,200,60,.55)}.ctag.tester{background:rgba(70,210,130,.18);color:#5fe0a0;border-color:rgba(70,210,130,.5)}.btn.tagon{border-color:var(--accent,#7c6cff);color:var(--accent,#7c6cff)}
+
+/* Server-Thumbnails (16:9, anklicken zum Ändern) */
+.sthumb{position:relative;width:128px;height:72px;flex:none;border-radius:14px;overflow:hidden;cursor:pointer;background:linear-gradient(135deg,var(--accent2),var(--accent)) center/cover;display:grid;place-items:center;color:#fff;font-weight:800;font-size:26px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.sthumb em{position:absolute;inset:auto 0 0 0;padding:3px 0;text-align:center;font-style:normal;font-size:10.5px;font-weight:700;background:rgba(10,14,30,.6);opacity:0;transition:opacity .15s}
+.sthumb:hover em{opacity:1}
+/* Chat: erkannter Server unter der Nachricht */
+.msg .svcard{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:6px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2)}
+.msg .svcard small{justify-self:auto;opacity:.9;font-size:11.5px}
+.msg .svcard .rdm{margin:0}
+/* Freunde: Play-Knopf neben dem Namen */
+.frrow .frplay{width:34px;height:34px;padding:0;border-radius:50%;display:grid;place-items:center;font-size:14px;flex:none}
+.frrow .fron{font-size:11.5px;color:var(--accent);font-weight:600}
+/* Nachrichten-Bubble: grosses, durchsichtiges Liquid-Glass im Theme */
+@keyframes bubIn{0%{opacity:0;transform:translateY(18px) scale(.92)}60%{transform:translateY(-3px) scale(1.02)}100%{opacity:1;transform:none}}
+@keyframes bubMorph{0%,100%{border-radius:26px 30px 26px 30px}50%{border-radius:30px 26px 30px 26px}}
+#frBubble{position:fixed;right:22px;bottom:22px;z-index:9999;width:340px;max-width:calc(100vw - 44px);padding:16px 18px 16px 16px;display:flex;gap:12px;align-items:center;cursor:pointer;color:#fff;
+ background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 34%,rgba(255,255,255,.14)),color-mix(in srgb,var(--accent2) 22%,rgba(255,255,255,.06)));
+ backdrop-filter:blur(26px) saturate(190%);-webkit-backdrop-filter:blur(26px) saturate(190%);border:1px solid rgba(255,255,255,.38);
+ box-shadow:0 14px 44px rgba(0,0,0,.38),inset 0 1.5px 1px rgba(255,255,255,.55),inset 0 -10px 22px rgba(255,255,255,.07);animation:bubMorph 5s ease-in-out infinite;text-shadow:0 1px 8px rgba(0,0,0,.35)}
+#frBubble.show{animation:bubIn .5s cubic-bezier(.2,.9,.3,1.2) both,bubMorph 5s ease-in-out .5s infinite}
+#frBubble.hide{opacity:0;transform:translateY(14px) scale(.96);transition:opacity .3s,transform .3s;pointer-events:none}
+#frBubble .bav{width:46px;height:46px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:800;font-size:19px;background:rgba(255,255,255,.28);border:1px solid rgba(255,255,255,.5);overflow:hidden}
+#frBubble .bav img{width:100%;height:100%;object-fit:cover}
+#frBubble b{display:block;font-size:16px;margin-bottom:2px}
+#frBubble span.t{display:block;font-size:15px;line-height:1.3;word-break:break-word;opacity:.96}
+#frBubble small{display:block;margin-top:4px;font-size:11px;opacity:.75}
