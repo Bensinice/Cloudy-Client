@@ -1,5 +1,7 @@
 // Cloudy – zusätzliche englische Texte (werden von i18n.js zu EN dazugemischt). Format: "Deutsch": "English"
 window.CLOUDY_EN_EXTRA = {
+  "Minecraft startet am PC – öffne am Handy Moonlight und tippe auf „Desktop“, um es zu sehen.": "Minecraft is starting on the PC – open Moonlight on your phone and tap “Desktop” to see it.",
+  "Starte am PC … (das Spiel öffnet sich auf dem PC, nicht im Handy-Browser)": "Starting on the PC … (the game opens on the PC, not in the phone browser)",
   "Automatisch nur unter Windows und Mac: Sunshine installieren (Knopf unten), dann Moonlight am Handy.": "Automatic on Windows and Mac only: install Sunshine (button below), then Moonlight on your phone.",
   " Mac: erlaube Sunshine unter Systemeinstellungen > Datenschutz in „Bildschirmaufnahme“ und „Bedienungshilfen“.": " Mac: allow Sunshine under System Settings > Privacy in “Screen Recording” and “Accessibility”.",
   "Sunshine wird installiert … (das kann ein paar Minuten dauern)": "Installing Sunshine … (this can take a few minutes)",

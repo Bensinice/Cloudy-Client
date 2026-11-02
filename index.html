@@ -353,14 +353,14 @@ async function play(server,opt={}){window.__playSrv=server&&server.host&&!/^(loc
   if(!version)return go('versions');
   const v=all.find(x=>x.id===bvr(version));
   window.__cancelAt=0;$('#cancel').style.display='';$('#play').disabled=true;$('#play').textContent='Lädt …';$('#bar').style.display='block';$('#fill').style.width='0%';
-  $('#dockT').textContent='Minecraft '+version;$('#status').textContent='Starte …';
+  $('#dockT').textContent='Minecraft '+version;$('#status').textContent=window.__remote?'Starte am PC … (das Spiel öffnet sich auf dem PC, nicht im Handy-Browser)':'Starte …';
   const r=await window.cloudy.launch({safe:opt.safe||0,hud:st.get('hud',{fps:true,ping:true,armor:true,coords:false}),username:who()||'Cloudy',version,type:v?v.type:'release',ram:cfg(version).ram,server,fabric:opt.vanilla?false:cfg(version).fabric,perf:cfg(version).perf,jvm:st.get('jvm',''),ww:st.get('ww',''),wh:st.get('wh',''),minimize:st.get('min',false),preset:st.get('preset',''),syncOpts:st.get('sync',true),clientMods:clientList(),cheats:st.get('cheats',false),gfx:st.get('gfx','opengl')});
   if(!r.ok&&!window.__cancelAt)reset(r.error);
 }
 $('#cancel').onclick=()=>{window.__cancelAt=Date.now();window.cloudy.launchCancel();reset('Start abgebrochen.')};
 $('#play').onclick=()=>play();
 window.cloudy.on('progress',p=>{$('#fill').style.width=Math.min(100,p.task/p.total*100)+'%';$('#status').textContent=`Lade ${p.type} (${p.task}/${p.total})`});
-window.cloudy.on('log',m=>{if(/Launching|Started|Setting/i.test(m))$('#status').textContent='Minecraft startet …'});
+window.cloudy.on('log',m=>{if(/Launching|Started|Setting/i.test(m))$('#status').textContent=window.__remote?'Minecraft startet am PC – öffne am Handy Moonlight und tippe auf „Desktop“, um es zu sehen.':'Minecraft startet …'});
 window.cloudy.on('status',t=>$('#status').textContent=t);
 window.cloudy.on('closed',({code,log})=>{if(Date.now()-(window.__cancelAt||0)<10000){reset('Start abgebrochen.');return}reset(code?`Minecraft wurde beendet (Code ${code}).`:'Bis bald!');if(code){$('#logtxt').textContent=log||'(kein Log)';$('#modal').style.display='grid'}});
 $('#closelog').onclick=()=>$('#modal').style.display='none';

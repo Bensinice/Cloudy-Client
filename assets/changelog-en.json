@@ -1,4 +1,7 @@
 {
+ "0.9.71": [
+  "Phone remote: pressing Play now says that Minecraft starts on the PC and is seen via Moonlight"
+ ],
  "0.9.70": [
   "One-button streaming setup now also works on Mac (via Homebrew)"
  ],
