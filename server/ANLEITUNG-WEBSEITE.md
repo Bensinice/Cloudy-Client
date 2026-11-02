@@ -7,8 +7,11 @@
 
 ## Admin-Bereich (Login)
 - https://cloudyclient.com/admin: mit deinem Cloudy-Konto anmelden. Es kommen nur Konten mit Admin-Recht **oder Owner-Tag** (so wie in der Datenbank) hinein. Alle anderen werden abgewiesen.
-- Reiter **Versionen**: Versionsnummer eintippen, Dateien hineinziehen, „Hochladen“. Darunter siehst du alle Versionen und kannst sie löschen.
-- Reiter **Webseite**: Titel, Untertitel, Beta-Texte, Kontakt, Fußzeile, die Funktions-Karten und die Beta-Schritte selbst ändern, dazu ein blauer Ankündigungs-Balken oben. Speichern, Seite neu laden. „Alles auf Standard“ setzt zurück. Gespeichert wird in **site-data.json** neben app.js (mitnehmen bei einem Umzug).
+- **Übersicht**: Zahlen (Konten, online, neu, gesperrt …), Ankündigung an alle Spieler senden, Server-Status und neueste Version.
+- **Versionen**: Versionsnummer eintippen, Dateien hineinziehen, „Hochladen“. Große Dateien gehen automatisch in 8-MB-Stücken (Proxys mit Größenlimit sind kein Problem), mit Wiederholung bei Aussetzern. Darunter alle Versionen: Hinweis ändern, einzelne Dateien oder ganze Versionen löschen.
+- **Konten**: suchen, sperren/entsperren (mit Dauer und Grund), pausieren, Coins setzen oder zugeben, Tags (z. B. owner, tester), Passwort auf 12345 zurücksetzen, löschen.
+- **Zugangscodes**: erstellen (Nutzungen, Gültigkeit), löschen, optional mit Entzug des Zugangs.
+- **Webseite**: Titel, Untertitel, Beta-Texte, Kontakt, Fußzeile, Funktions-Karten und Beta-Schritte selbst ändern, dazu ein blauer Ankündigungs-Balken oben. Speichern, Seite neu laden. „Alles auf Standard“ setzt zurück. Gespeichert wird in **site-data.json** neben app.js (mitnehmen bei einem Umzug).
 - Auf der Startseite erscheint nach dem Login im selben Browser-Tab ein gelber Link „Admin“.
 
 ### Neue Version holen

@@ -17,6 +17,7 @@ module.exports = (app, express, isAdmin) => { // isAdmin(req) -> Promise<boolean
     } } catch {}
     return out.filter(r => r.files.length).sort((a, b) => cmp(a.version, b.version));
   };
+  const building = new Set();
   const same = (a, b) => { const x = crypto.createHash('sha256').update(String(a)).digest(), y = crypto.createHash('sha256').update(String(b)).digest(); return crypto.timingSafeEqual(x, y); };
   let bad = 0, badT = 0; // einfache Bremse gegen Raten des Upload-Schlüssels
   const keyOk = req => { if (KEY.length < 12) return 'off'; if (Date.now() - badT > 600e3) bad = 0; if (bad >= 8) return 'wait'; if (same(req.headers['x-upload-key'] || '', KEY)) return 'ok'; bad++; badT = Date.now(); return 'no'; };
@@ -26,6 +27,7 @@ module.exports = (app, express, isAdmin) => { // isAdmin(req) -> Promise<boolean
   };
   const deny = (res, k) => res.status(k === 'off' ? 503 : k === 'wait' ? 429 : 401).json({ error: k === 'off' ? 'Nicht erlaubt: bitte als Admin/Owner anmelden (oder UPLOAD_KEY mit mind. 12 Zeichen setzen).' : k === 'wait' ? 'Zu viele Fehlversuche, bitte in 10 Minuten erneut.' : 'Nicht angemeldet oder Schlüssel falsch.' });
 
+  try { for (const v of fs.readdirSync(ROOT)) { const d = path.join(ROOT, v); if (!fs.statSync(d).isDirectory()) continue; for (const f of fs.readdirSync(d)) if (/^\.(parts-|.*\.(part|join)$)/.test(f)) { const p = path.join(d, f); if (Date.now() - fs.statSync(p).mtimeMs > 24 * 3600e3) fs.rmSync(p, { recursive: true, force: true }); } } } catch {}
   // ---- öffentlich: Webseite, Liste, Downloads ----
   app.get('/api/releases', (_q, res) => res.json({ releases: list().map(r => ({ ...r, files: r.files.map(f => ({ ...f, url: `/download/${r.version}/${encodeURIComponent(f.name)}` })) })) }));
   const send = (res, v, f, name) => { const p = path.join(ROOT, v, f); if (!OK_VER.test(v) || !OK_FILE.test(f) || !fs.existsSync(p)) return res.status(404).send('Nicht gefunden.'); res.download(p, name || f); };
@@ -36,18 +38,34 @@ module.exports = (app, express, isAdmin) => { // isAdmin(req) -> Promise<boolean
   app.get('/update/latest.json', (req, res) => { if (!isClient(req)) return res.status(404).send('Cannot GET /update/latest.json'); const r = list()[0]; if (!r) return res.status(404).json({ error: 'Noch kein Release.' }); res.json({ version: r.version, notes: r.notes, files: r.files.map(f => ({ ...f, url: `/update/file/${r.version}/${encodeURIComponent(f.name)}` })) }); });
   app.get('/update/file/:v/:f', (req, res) => { if (!isClient(req)) return res.status(404).send('Nicht gefunden.'); send(res, req.params.v, req.params.f); });
   // ---- Hochladen: PUT /upload/<version>/<datei> mit Header X-Upload-Key (die Seite /upload macht das für dich) ----
+  // Hochladen in Stücken (?id=<zufall>&off=<Byte-Start>&last=1): so passt jede Datei auch durch Proxys mit Größenlimit (z. B. 100 MB). Ohne ?id= wird die ganze Datei auf einmal gesendet (GitHub-Action).
   app.put('/upload/:v/:f', async (req, res) => {
     const k = await allow(req); if (k !== 'ok') return deny(res, k);
     const { v, f } = req.params; if (!OK_VER.test(v) || !OK_FILE.test(f)) return res.status(400).json({ error: 'Version (z. B. 0.9.72) oder Dateiname/-endung nicht erlaubt.' });
+    const q = new URL(req.url, 'http://x').searchParams, chunked = q.has('id'), id = chunked ? q.get('id') : crypto.randomBytes(6).toString('hex');
+    if (!/^[a-f0-9]{8,32}$/.test(id)) return res.status(400).json({ error: 'Ungültige Upload-ID.' });
     const d = path.join(ROOT, v); fs.mkdirSync(d, { recursive: true });
-    const tmp = path.join(d, '.' + crypto.randomBytes(6).toString('hex') + '.part'), ws = fs.createWriteStream(tmp); let n = 0, dead = false;
-    const fail = (code, msg) => { if (dead) return; dead = true; try { ws.destroy(); } catch {} fs.rm(tmp, { force: true }, () => {}); if (!res.headersSent) res.status(code).json({ error: msg }); };
-    req.on('data', c => { n += c.length; if (n > MAX) { fail(413, 'Datei zu groß (max. 700 MB).'); req.destroy(); } });
+    const tmp = path.join(d, '.up-' + id + '.part'), off = chunked ? Math.max(0, +q.get('off') || 0) : 0, last = !chunked || q.get('last') === '1';
+    let have = 0; try { have = fs.statSync(tmp).size; } catch {}
+    if (chunked && off !== have) return res.status(409).json({ error: 'Stück passt nicht (Server hat ' + have + ' Byte, erwartet ' + off + ').', have });
+    const ws = fs.createWriteStream(tmp, { flags: off ? 'a' : 'w' }); let n = 0, dead = false;
+    const fail = (code, msg) => { if (dead) return; dead = true; try { ws.destroy(); } catch {} fs.truncate(tmp, have, () => { if (!have) fs.rm(tmp, { force: true }, () => {}); }); if (!res.headersSent) res.status(code).json({ error: msg }); };
+    req.on('data', c => { n += c.length; if (have + n > MAX) { fail(413, 'Datei zu groß (max. 700 MB).'); req.destroy(); } });
     req.on('error', () => fail(400, 'Upload abgebrochen.')); req.on('aborted', () => fail(400, 'Upload abgebrochen.')); ws.on('error', () => fail(500, 'Speichern fehlgeschlagen.'));
-    ws.on('finish', () => { if (dead) return; fs.rename(tmp, path.join(d, f), e => e ? fail(500, 'Speichern fehlgeschlagen.') : res.json({ ok: true, size: n })); });
+    ws.on('finish', () => { if (dead) return;
+      if (!last) return res.json({ ok: true, size: have + n });
+      fs.rename(tmp, path.join(d, f), e => e ? fail(500, 'Speichern fehlgeschlagen.') : res.json({ ok: true, size: have + n })); });
     req.pipe(ws);
   });
+  setInterval(() => { try { for (const v of fs.readdirSync(ROOT)) { const d = path.join(ROOT, v); if (!OK_VER.test(v)) continue; for (const f of fs.readdirSync(d)) if (/^\.up-.*\.part$/.test(f) && Date.now() - fs.statSync(path.join(d, f)).mtimeMs > 864e5) fs.rmSync(path.join(d, f), { force: true }); } } catch {} }, 36e5).unref(); // abgebrochene Uploads nach 24 h aufräumen
+  app.delete('/upload/:v/:f', async (req, res) => { const k = await allow(req); if (k !== 'ok') return deny(res, k); if (!OK_VER.test(req.params.v) || !OK_FILE.test(req.params.f)) return res.status(400).json({ error: 'Ungültig.' }); fs.rm(path.join(ROOT, req.params.v, req.params.f), { force: true }, () => res.json({ ok: true })); });
   app.delete('/upload/:v', async (req, res) => { const k = await allow(req); if (k !== 'ok') return deny(res, k); if (!OK_VER.test(req.params.v)) return res.status(400).json({ error: 'Version ungültig.' }); fs.rm(path.join(ROOT, req.params.v), { recursive: true, force: true }, () => res.json({ ok: true })); });
+  app.delete('/upload/:v/:f', async (req, res) => { const k = await allow(req); if (k !== 'ok') return deny(res, k); const { v, f } = req.params; if (!OK_VER.test(v) || !OK_FILE.test(f)) return res.status(400).json({ error: 'Name ungültig.' }); fs.rm(path.join(ROOT, v, f), { force: true }, () => res.json({ ok: true })); });
+  app.get('/api/admin/overview', async (req, res) => { let ok = false; try { ok = !!(isAdmin && await isAdmin(req)); } catch {} if (!ok) return res.status(403).json({ error: 'Nur für Admins/Owner.' });
+    const rel = list(), total = rel.reduce((a, r) => a + r.files.reduce((b, f) => b + f.size, 0), 0), need = ['win', 'win-portable', 'mac-arm', 'mac-intel', 'linux'];
+    let free = null; try { const st = fs.statfsSync(ROOT); free = st.bavail * st.bsize; } catch {}
+    res.json({ dir: ROOT, total, free, uploadKeySet: KEY.length >= 12, autoRestart: process.env.AUTO_RESTART !== '0', respawn: process.env.RESPAWN === '1', node: process.version, uptime: Math.round(process.uptime()),
+      latest: rel[0] ? rel[0].version : null, missing: rel[0] ? need.filter(p => !rel[0].files.some(f => f.platform === p)) : need, releases: rel.map(r => ({ ...r, files: r.files.map(f => ({ ...f, url: `/download/${r.version}/${encodeURIComponent(f.name)}` })) })) }); });
   app.get('/upload', (_q, res) => res.redirect('/admin'));
   app.get('/admin', (_q, res) => res.sendFile(path.join(__dirname, 'site', 'admin.html')));
   // ---- Texte der Webseite: öffentlich lesbar, nur Admin/Owner darf sie ändern (gespeichert in site-data.json) ----

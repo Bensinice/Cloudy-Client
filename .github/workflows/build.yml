@@ -104,5 +104,12 @@ jobs:
           if [ -z "$KEY" ]; then echo "Kein CLOUDY_UPLOAD_KEY gesetzt – Server-Upload übersprungen."; exit 0; fi
           for f in release/*; do
             n=$(basename "$f")
-            curl -sS --fail-with-body --retry 3 -X PUT -H "X-Upload-Key: $KEY" -T "$f" "https://cloudyclient.com/upload/$VER/$n" || echo "::warning::Upload von $n fehlgeschlagen"
+            # in 20-MB-Stücken senden (Proxys wie Cloudflare erlauben pro Anfrage nur ca. 100 MB)
+            rm -rf /tmp/pieces && mkdir /tmp/pieces && split -b 20M -d -a 3 "$f" /tmp/pieces/p
+            total=$(ls /tmp/pieces | wc -l); i=0; okf=1
+            for p in /tmp/pieces/p*; do
+              curl -sS --fail-with-body --retry 4 --retry-all-errors -X PUT -H "X-Upload-Key: $KEY" -T "$p" "https://cloudyclient.com/upload/$VER/$n?chunk=$i&of=$total" >/dev/null || okf=0
+              i=$((i+1))
+            done
+            [ "$okf" = 1 ] || echo "::warning::Upload von $n fehlgeschlagen"
           done

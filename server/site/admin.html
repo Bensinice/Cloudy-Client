@@ -1,25 +1,35 @@
 <!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
-<title>Cloudy – Admin</title><link rel="icon" href="icon.png"><link rel="stylesheet" href="style.css?v=4">
+<title>Cloudy – Admin</title><link rel="icon" href="icon.png"><link rel="stylesheet" href="style.css?v=5">
 <style>main{max-width:760px;margin:40px auto;padding:0 20px}h1{font-size:38px;background:none;color:#fff;margin:0 0 6px}h2{font-size:24px;margin:34px 0 10px}
 label{display:grid;gap:6px;margin:12px 0;color:var(--mu);font-size:14px}input[type=text],input[type=password],textarea{background:var(--card);border:1px solid var(--line);border-radius:12px;color:var(--tx);padding:12px 14px;font:inherit;width:100%}textarea{min-height:76px;resize:vertical}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;margin:12px 0}.drop{border:1.5px dashed rgba(255,255,255,.25);border-radius:18px;padding:30px;text-align:center;color:var(--mu);cursor:pointer;margin:14px 0}.drop.on{border-color:var(--ac);color:#fff}
 .row{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:14px}.bar{height:5px;background:rgba(255,255,255,.1);border-radius:9px;margin-top:8px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--ac)}
 .ok{color:#5ee08a}.er{color:#ff6b6b}.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.two{display:grid;grid-template-columns:70px 1fr;gap:8px}.mini{background:rgba(255,255,255,.08);border:0;color:var(--tx);border-radius:10px;padding:6px 12px;cursor:pointer;font:inherit;font-size:13px}.mini.d{color:#ff8a8a}
-.tabs{display:flex;gap:8px;margin:18px 0}.tabs button{flex:1}.tabs .on{background:var(--ac);color:#001a33}.vrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}</style></head><body>
+.tabs{display:flex;gap:8px;margin:18px 0;flex-wrap:wrap}.kv{display:inline-block;min-width:130px;margin:6px 10px 6px 0}.kv span{display:block;color:var(--mu);font-size:13px}.kv b{font-size:24px}.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.tg{font-style:normal;font-size:11px;background:rgba(74,163,255,.2);border-radius:980px;padding:2px 9px;margin-left:4px}.tg.r{background:rgba(255,80,80,.25)}.tabs button{flex:1;min-width:110px}.tabs .on{background:var(--ac);color:#001a33}.vrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}</style></head><body>
 <main>
 <div class="top"><div><h1>Admin</h1><div style="color:var(--mu)" id="who">Nur für Admins und Konten mit Owner-Tag.</div></div><div><a class="mini" href="/" style="text-decoration:none">Zur Webseite</a> <button class="mini" id="out" hidden>Abmelden</button></div></div>
 
 <div id="login" class="panel"><label>Benutzername<input type="text" id="u" autocomplete="username"></label><label>Passwort<input type="password" id="p" autocomplete="current-password"></label><button class="btn" id="in">Anmelden</button> <span id="lerr" class="er"></span></div>
 
 <div id="app" hidden>
-<div class="tabs"><button class="btn s on" data-t="up">Versionen</button><button class="btn s" data-t="web" style="background:#2a2a30;color:#fff">Webseite</button></div>
-<div id="t-up">
+<div class="tabs" id="tabs"><button class="btn s on" data-t="home">Übersicht</button><button class="btn s" data-t="up">Versionen</button><button class="btn s" data-t="acc">Konten</button><button class="btn s" data-t="gate">Zugangscodes</button><button class="btn s" data-t="web">Webseite</button></div>
+<div id="t-home">
+ <div class="panel" id="stats">…</div>
+ <div class="panel"><b>Ankündigung an alle Spieler (im Launcher)</b><label>Text (leer = entfernen)<input type="text" id="ann" maxlength="300"></label><button class="btn s" id="annSave">Senden</button> <span id="annMsg"></span></div>
+ <div class="panel"><b>Server</b><div id="health" style="color:var(--mu);margin-top:6px">…</div></div>
+</div>
+<div id="t-up" hidden>
  <div class="panel"><b>Neue Version hochladen</b>
  <label>Versionsnummer (z. B. 0.9.72)<input type="text" id="ver" placeholder="0.9.72"></label>
  <label>Hinweise (optional, erscheint bei der Version)<input type="text" id="notes" placeholder="Was ist neu?"></label>
  <div class="drop" id="drop">Dateien hierher ziehen oder klicken<br><small>.exe · .dmg · .AppImage · .ipa</small><input type="file" id="fi" multiple hidden></div>
- <div id="log"></div><button class="btn" id="go">Hochladen</button></div>
- <h2>Vorhandene Versionen</h2><div class="panel" id="vers">…</div>
+ <div id="log"></div><button class="btn" id="go">Hochladen</button> <small style="color:var(--mu)">Große Dateien werden automatisch in Stücken gesendet.</small></div>
+ <h2>Vorhandene Versionen</h2><div id="vers">…</div>
+</div>
+<div id="t-acc" hidden><div class="panel"><input type="text" id="qacc" placeholder="Konto suchen …"></div><div id="accs">…</div></div>
+<div id="t-gate" hidden>
+ <div class="panel"><b>Neuen Zugangscode erstellen</b><div class="two" style="grid-template-columns:1fr 1fr 1fr"><label>Code (leer = zufällig)<input type="text" id="gc"></label><label>Max. Nutzungen (0 = ∞)<input type="text" id="gu" value="1"></label><label>Gültig Tage (0 = ∞)<input type="text" id="gd" value="0"></label></div><button class="btn s" id="gmake">Erstellen</button> <span id="gmsg"></span></div>
+ <div id="gates">…</div>
 </div>
 <div id="t-web" hidden>
  <p style="color:var(--mu)">Ändere hier die Texte der Startseite. Leer lassen = Standardtext. Zeilenumbruch im Titel mit Enter.</p>
@@ -33,29 +43,73 @@ label{display:grid;gap:6px;margin:12px 0;color:var(--mu);font-size:14px}input[ty
 <script>
 const $=i=>document.getElementById(i),D=window.SITE_DEF;let tok='';try{tok=sessionStorage.getItem('cloudyTok')||''}catch{}
 const H=()=>({Authorization:'Bearer '+tok}),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const api=(p,b)=>fetch(p,{method:'POST',headers:{...H(),'Content-Type':'application/json'},body:JSON.stringify(b||{})}).then(async r=>{const j=await r.json().catch(()=>({}));return r.ok?j:{error:j.error||('Fehler '+r.status)}}).catch(()=>({error:'Server nicht erreichbar.'}));
+const date=t=>t?new Date(t).toLocaleString('de-DE'):'–';
 async function enter(){ if(!tok)return; const r=await fetch('/api/me',{headers:H()}).then(r=>r.json()).catch(()=>({})); if(!r.admin){tok='';try{sessionStorage.removeItem('cloudyTok')}catch{}return false}
- $('login').hidden=true;$('app').hidden=false;$('out').hidden=false;loadVers();loadSite();return true}
+ $('login').hidden=true;$('app').hidden=false;$('out').hidden=false;loadHome();loadVers();loadSite();return true}
 $('in').onclick=async()=>{$('lerr').textContent='';const r=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:$('u').value,pass:$('p').value})}).then(async x=>({s:x.status,j:await x.json().catch(()=>({}))})).catch(()=>null);
  if(!r)return $('lerr').textContent='Server nicht erreichbar.';if(!r.j.token)return $('lerr').textContent=r.j.error||'Anmeldung fehlgeschlagen.';
  if(!(r.j.user&&r.j.user.admin))return $('lerr').textContent='Dieses Konto ist kein Admin/Owner.';
  tok=r.j.token;try{sessionStorage.setItem('cloudyTok',tok)}catch{}$('who').textContent='Angemeldet als '+r.j.user.name;enter()};
 $('p').onkeydown=e=>{if(e.key==='Enter')$('in').click()};
 $('out').onclick=()=>{try{sessionStorage.removeItem('cloudyTok')}catch{}location.reload()};
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>{x.classList.toggle('on',x===b);x.style.cssText=x===b?'':'background:#2a2a30;color:#fff'});$('t-up').hidden=b.dataset.t!=='up';$('t-web').hidden=b.dataset.t!=='web'});
-// ---- Versionen
+const TABS=['home','up','acc','gate','web'];
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>{x.classList.toggle('on',x===b);x.style.cssText=x===b?'':'background:#2a2a30;color:#fff'});TABS.forEach(t=>$('t-'+t).hidden=b.dataset.t!==t);
+ if(b.dataset.t==='acc')loadAcc();if(b.dataset.t==='gate')loadGates();if(b.dataset.t==='home')loadHome();if(b.dataset.t==='up')loadVers()});
+// ---- Übersicht
+async function loadHome(){const s=await api('/admin/stats');
+ $('stats').innerHTML=s.error?'<span class="er">'+esc(s.error)+'</span>':[['Konten',s.users],['Online',s.online],['Neu (7 Tage)',s.new7],['Gesperrt',s.banned],['Pausiert',s.paused],['Coins gesamt',s.coins],['Codes',s.codes],['Zugangscodes',s.gate]].map(([k,v])=>`<div class="kv"><span>${k}</span><b>${esc(v)}</b></div>`).join('');
+ if(s.announce&&s.announce.text&&!$('ann').value)$('ann').value=s.announce.text;
+ const h=await fetch('/health').then(r=>r.json()).catch(()=>null);const rel=await fetch('/api/releases').then(r=>r.json()).catch(()=>({releases:[]}));
+ $('health').innerHTML=(h?'Konto-Server läuft ✓ · Backup-Server: '+esc(h.backup||'(keiner)'):'<span class="er">/health antwortet nicht</span>')+'<br>Neueste Version auf dem Server: <b>'+esc((rel.releases[0]||{}).version||'–')+'</b>'}
+$('annSave').onclick=async()=>{const r=await api('/admin/announce',{text:$('ann').value});$('annMsg').className=r.error?'er':'ok';$('annMsg').textContent=r.error||'Gesendet ✓'};
+// ---- Versionen (Upload in Stücken)
 let files=[];const show=()=>{$('log').innerHTML=files.map((f,i)=>`<div class="row" id="r${i}">${esc(f.name)} · ${(f.size/1048576).toFixed(1)} MB<div class="bar"><i></i></div><span></span></div>`).join('')};
 $('drop').onclick=()=>$('fi').click();$('fi').onchange=e=>{files=[...e.target.files];show()};$('drop').ondragover=e=>{e.preventDefault();$('drop').classList.add('on')};$('drop').ondragleave=()=>$('drop').classList.remove('on');$('drop').ondrop=e=>{e.preventDefault();$('drop').classList.remove('on');files=[...e.dataTransfer.files];show()};
-const put=(url,body,type,i)=>new Promise(res=>{const x=new XMLHttpRequest();x.open('PUT',url);x.setRequestHeader('Authorization','Bearer '+tok);x.setRequestHeader('Content-Type',type||'application/octet-stream');
- const row=i==null?null:$('r'+i);x.upload.onprogress=e=>{if(row&&e.lengthComputable)row.querySelector('i').style.width=(e.loaded/e.total*100)+'%'};
- x.onload=()=>{let j={};try{j=JSON.parse(x.responseText)}catch{}const ok=x.status===200;if(row){const s=row.querySelector('span');s.className=ok?'ok':'er';s.textContent=ok?'Fertig ✓':(j.error||'Fehler '+x.status)}res(ok)};
- x.onerror=()=>{if(row){const s=row.querySelector('span');s.className='er';s.textContent='Verbindung fehlgeschlagen'}res(false)};x.send(body)});
+const sleep=ms=>new Promise(r=>setTimeout(r,ms)),rid=()=>[...crypto.getRandomValues(new Uint8Array(12))].map(b=>b.toString(16).padStart(2,'0')).join('');
+const sendPart=(url,blob,onp,type)=>new Promise(res=>{const x=new XMLHttpRequest();x.open('PUT',url);x.timeout=10*60e3;x.setRequestHeader('Authorization','Bearer '+tok);x.setRequestHeader('Content-Type',type||'application/octet-stream');
+ x.upload.onprogress=e=>{if(e.lengthComputable)onp(e.loaded)};x.onload=()=>{let j={};try{j=JSON.parse(x.responseText)}catch{}res({ok:x.status===200,status:x.status,j,raw:x.responseText})};x.onerror=()=>res({ok:false,status:0,j:{}});x.ontimeout=()=>res({ok:false,status:0,j:{error:'Zeitüberschreitung'}});x.send(blob)});
+async function upFile(ver,file,row){const set=(t,c)=>{const s=row&&row.querySelector('span');if(s){s.className=c||'';s.textContent=t}},bar=p=>{if(row)row.querySelector('i').style.width=Math.min(100,p*100)+'%'};
+ const CH=8*1024*1024,id=rid(),url=o=>`/upload/${ver}/${encodeURIComponent(file.name)}?id=${id}&off=${o}`;let off=0,tries=0;
+ if(!file.size){set('Datei ist leer','er');return false}
+ while(off<file.size){const end=Math.min(off+CH,file.size),last=end>=file.size,o=off;
+  const r=await sendPart(url(o)+(last?'&last=1':''),file.slice(o,end),l=>bar((o+l)/file.size));
+  if(r.ok){off=end;tries=0;bar(off/file.size);continue}
+  if(r.status===409&&r.j.have!=null&&r.j.have!==o&&tries<6){off=r.j.have;tries++;continue}
+  if(r.status===401||r.status===403){set('Nicht erlaubt – bitte neu anmelden.','er');return false}
+  if(++tries>4){const hint=r.status===413||/too large|entity/i.test(r.raw||'')?' (Proxy/Hoster erlaubt keine so großen Pakete)':r.status===0?' (Verbindung abgebrochen)':'';set((r.j.error||'Fehler '+r.status)+hint,'er');return false}
+  set('Neuer Versuch '+tries+' …');await sleep(1200*tries)}
+ set('Fertig ✓','ok');return true}
 $('go').onclick=async()=>{const ver=$('ver').value.trim();if(!/^\d+\.\d+\.\d+$/.test(ver)||!files.length)return alert('Versionsnummer (z. B. 0.9.72) und mindestens eine Datei angeben.');
- $('go').disabled=true;show();let all=true;for(let i=0;i<files.length;i++)if(!await put(`/upload/${ver}/${encodeURIComponent(files[i].name)}`,files[i],'',i))all=false;
- if($('notes').value.trim())await put(`/upload/${ver}/notes.txt`,new Blob([$('notes').value.trim()]),'text/plain',null);
+ $('go').disabled=true;show();let all=true;for(let i=0;i<files.length;i++)if(!await upFile(ver,files[i],$('r'+i)))all=false;
+ if($('notes').value.trim())await sendPart(`/upload/${ver}/notes.txt`,new Blob([$('notes').value.trim()]),()=>{},'text/plain');
  $('go').disabled=false;if(all)$('log').insertAdjacentHTML('beforeend','<p class="ok">Alles hochgeladen ✓</p>');loadVers()};
+const mb=n=>n>=1048576?(n/1048576).toFixed(1)+' MB':Math.round(n/1024)+' KB';
 async function loadVers(){const j=await fetch('/api/releases').then(r=>r.json()).catch(()=>({releases:[]}));
- $('vers').innerHTML=j.releases.length?j.releases.map(r=>`<div class="vrow"><span><b>${esc(r.version)}</b> · ${r.files.length} Dateien</span><button class="mini d" data-v="${esc(r.version)}">Löschen</button></div>`).join(''):'Noch nichts hochgeladen.';
- $('vers').querySelectorAll('button').forEach(b=>b.onclick=async()=>{if(!confirm('Version '+b.dataset.v+' mit allen Dateien löschen?'))return;await fetch('/upload/'+b.dataset.v,{method:'DELETE',headers:H()});loadVers()})}
+ $('vers').innerHTML=j.releases.length?j.releases.map(r=>`<div class="panel"><div class="vrow" style="border:0"><span><b>Cloudy ${esc(r.version)}</b> · ${date(r.date)}</span><span><button class="mini" data-nt="${esc(r.version)}">Hinweis ändern</button> <button class="mini d" data-v="${esc(r.version)}">Version löschen</button></span></div>${r.notes?`<div style="color:var(--mu);font-size:14px;white-space:pre-line">${esc(r.notes)}</div>`:''}${r.files.map(f=>`<div class="vrow"><span><a href="${esc(f.url)}">${esc(f.name)}</a> <small style="color:var(--mu)">${mb(f.size)}</small></span><button class="mini d" data-v="${esc(r.version)}" data-f="${esc(f.name)}">Datei löschen</button></div>`).join('')}</div>`).join(''):'<div class="panel">Noch nichts hochgeladen.</div>';
+ $('vers').querySelectorAll('button[data-v]').forEach(b=>b.onclick=async()=>{const f=b.dataset.f;if(!confirm(f?`Datei ${f} löschen?`:`Version ${b.dataset.v} mit allen Dateien löschen?`))return;await fetch('/upload/'+b.dataset.v+(f?'/'+encodeURIComponent(f):''),{method:'DELETE',headers:H()});loadVers()});
+ $('vers').querySelectorAll('button[data-nt]').forEach(b=>b.onclick=async()=>{const t=prompt('Hinweis zur Version '+b.dataset.nt+' (was ist neu?):');if(t==null)return;await sendPart(`/upload/${b.dataset.nt}/notes.txt`,new Blob([t.trim()||' ']),()=>{},'text/plain');loadVers()})}
+// ---- Konten
+let ACC=[];async function loadAcc(){const r=await api('/admin/users');if(r.error){$('accs').innerHTML='<div class="panel er">'+esc(r.error)+'</div>';return}ACC=r.users||[];drawAcc()}
+$('qacc').oninput=()=>drawAcc();
+function drawAcc(){const q=$('qacc').value.trim().toLowerCase(),L=ACC.filter(u=>!q||u.name.toLowerCase().includes(q));
+ $('accs').innerHTML=L.length?L.map(u=>`<div class="panel" data-n="${esc(u.name)}"><div class="vrow" style="border:0"><span><b>${esc(u.name)}</b> ${u.tags.map(t=>`<em class="tg">${esc(t)}</em>`).join('')} ${u.banned?'<em class="tg r">gesperrt</em>':''}${u.paused?'<em class="tg">pausiert</em>':''}</span><span style="color:var(--mu);font-size:13px">${esc(u.coins)} Coins · ${u.owned} Items</span></div>
+ <div style="color:var(--mu);font-size:13px">Erstellt ${date(u.created)}${u.gate?' · Code '+esc(u.gate):''}${u.reason?' · Grund: '+esc(u.reason):''}</div>
+ <div class="acts"><button class="mini" data-a="ban">${u.banned?'Entsperren':'Sperren'}</button><button class="mini" data-a="pause">${u.paused?'Aktivieren':'Pausieren'}</button><button class="mini" data-a="coins">Coins setzen</button><button class="mini" data-a="grant">Coins +/−</button><button class="mini" data-a="tag">Tag</button><button class="mini" data-a="reset">Passwort → 12345</button><button class="mini d" data-a="del">Löschen</button></div></div>`).join(''):'<div class="panel">Keine Konten.</div>';
+ $('accs').querySelectorAll('button[data-a]').forEach(b=>b.onclick=async()=>{const name=b.closest('.panel').dataset.n,u=ACC.find(x=>x.name===name),a=b.dataset.a;let r;
+  if(a==='ban'){if(u.banned)r=await api('/admin/ban',{name,banned:false});else{const days=prompt('Wie viele Tage sperren? (0 = für immer)','0');if(days==null)return;const why=prompt('Grund (optional):','')||'';r=await api('/admin/ban',{name,banned:true,until:+days>0?Date.now()+days*864e5:4e12,reason:why})}}
+  else if(a==='pause')r=await api('/admin/pause',{name,paused:!u.paused});
+  else if(a==='coins'){const v=prompt('Neue Coin-Zahl für '+name+':',u.coins);if(v==null)return;r=await api('/admin/coins',{name,amount:+v})}
+  else if(a==='grant'){const v=prompt('Coins hinzufügen (negativ = abziehen):','100');if(v==null)return;r=await api('/admin/grant',{name,amount:+v})}
+  else if(a==='tag'){const t=prompt('Tag (z. B. owner, tester, mod, plus). Tippe den Namen: bereits vorhanden = entfernen.\nAktuell: '+(u.tags.join(', ')||'keine'),'');if(!t)return;const tg=t.trim().toLowerCase();r=await api('/admin/tag',{name,tag:tg,on:!u.tags.includes(tg)})}
+  else if(a==='reset'){if(!confirm('Passwort von '+name+' auf 12345 setzen? (Muss danach geändert werden)'))return;r=await api('/admin/reset',{name})}
+  else if(a==='del'){if(!confirm(name+' endgültig löschen?'))return;r=await api('/admin/delete',{name})}
+  if(r&&r.error)alert(r.error);loadAcc()})}
+// ---- Zugangscodes
+async function loadGates(){const r=await api('/admin/gatecodes');if(r.error){$('gates').innerHTML='<div class="panel er">'+esc(r.error)+'</div>';return}
+ $('gates').innerHTML=r.codes.length?r.codes.map(c=>`<div class="panel"><div class="vrow" style="border:0"><span><b style="font-family:ui-monospace,monospace">${esc(c.code)}</b> · ${c.used}/${c.uses||'∞'} genutzt · ${c.active} aktiv${c.exp?' · bis '+date(c.exp):''}</span><span><button class="mini" data-c="${esc(c.code)}" data-r="0">Löschen</button> <button class="mini d" data-c="${esc(c.code)}" data-r="1">Löschen + Zugang entziehen</button></span></div></div>`).join(''):'<div class="panel">Keine Zugangscodes.</div>';
+ $('gates').querySelectorAll('button[data-c]').forEach(b=>b.onclick=async()=>{if(!confirm('Code '+b.dataset.c+' löschen?'))return;await api('/admin/gatedelete',{code:b.dataset.c,revoke:b.dataset.r==='1'});loadGates()})}
+$('gmake').onclick=async()=>{const r=await api('/admin/gatecreate',{code:$('gc').value,uses:+$('gu').value||0,days:+$('gd').value||0});$('gmsg').className=r.error?'er':'ok';$('gmsg').textContent=r.error||('Erstellt: '+r.code);if(!r.error){$('gc').value='';loadGates()}};
 // ---- Webseite bearbeiten
 let cur={};const F=[['eyebrow','Kleine Zeile über dem Titel'],['title','Haupttitel (Enter = neue Zeile)',1],['lead','Untertitel',1],['featTitle','Überschrift Funktionen',1],['featLead','Text unter Funktionen',1],['betaTitle','Überschrift Beta'],['betaLead','Text unter Beta',1],['contact','Kontakt für Zugangscodes (z. B. Discord-Name)'],['announce','Ankündigung (blauer Balken ganz oben, leer = keiner)'],['footer','Fußzeile',1]];
 function row(prefix,i,o,withIc){return `<div class="panel" data-i="${i}">${withIc?`<div class="two"><label>Icon<input type="text" class="ic" value="${esc(o.ic)}" maxlength="8"></label><label>Titel<input type="text" class="t" value="${esc(o.t)}"></label></div>`:`<label>Titel<input type="text" class="t" value="${esc(o.t)}"></label>`}<label>Text<textarea class="p">${esc(o.p)}</textarea></label><button class="mini d" data-del>Entfernen</button></div>`}
