@@ -2,18 +2,18 @@
 
 ## Einmalig einrichten
 1. Auf dem Server (Hoster) diese Dateien in den Ordner legen, in dem schon die alte app.js liegt: **app.js** (ersetzt die alte), **site.js** und den ganzen Ordner **site/**.
-2. Eine Umgebungsvariable **UPLOAD_KEY** anlegen: ein langes geheimes Passwort (mind. 12 Zeichen), z. B. 4 zufällige Wörter. Ohne sie ist das Hochladen ausgeschaltet.
+2. Optional: Umgebungsvariable **UPLOAD_KEY** (mind. 12 Zeichen) – nur nötig für das automatische Hochladen durch GitHub. Für dich selbst brauchst du sie nicht mehr, du meldest dich mit deinem Konto an.
 3. Server neu starten. Dann zeigt https://cloudyclient.com die Webseite; der Konto-Server läuft unverändert weiter.
 
-## Eine neue Version auf den Server bringen
-1. Die fertigen Dateien holen: GitHub -> Releases -> die neueste Version -> die 5 Dateien herunterladen
-   (Cloudy-Setup.exe, Cloudy-Portable.exe, Cloudy-arm64.dmg, Cloudy-x64.dmg, Cloudy-Linux.AppImage).
-2. https://cloudyclient.com/upload öffnen.
-3. Upload-Schlüssel eingeben, Versionsnummer (z. B. 0.9.72, wie in package.json) eintippen, optional einen Hinweis „Was ist neu?“.
-4. Die 5 Dateien in das Feld ziehen und auf „Hochladen“ klicken. Warten, bis überall „Fertig ✓“ steht.
-5. Fertig: Die Version steht auf der Download-Seite (mit Knöpfen) und im Update-Feed; Clients melden sie beim nächsten Start.
+## Admin-Bereich (Login)
+- https://cloudyclient.com/admin: mit deinem Cloudy-Konto anmelden. Es kommen nur Konten mit Admin-Recht **oder Owner-Tag** (so wie in der Datenbank) hinein. Alle anderen werden abgewiesen.
+- Reiter **Versionen**: Versionsnummer eintippen, Dateien hineinziehen, „Hochladen“. Darunter siehst du alle Versionen und kannst sie löschen.
+- Reiter **Webseite**: Titel, Untertitel, Beta-Texte, Kontakt, Fußzeile, die Funktions-Karten und die Beta-Schritte selbst ändern, dazu ein blauer Ankündigungs-Balken oben. Speichern, Seite neu laden. „Alles auf Standard“ setzt zurück. Gespeichert wird in **site-data.json** neben app.js (mitnehmen bei einem Umzug).
+- Auf der Startseite erscheint nach dem Login im selben Browser-Tab ein gelber Link „Admin“.
 
-Automatisch statt von Hand: In GitHub unter Settings -> Secrets and variables -> Actions das Secret **CLOUDY_UPLOAD_KEY** (gleicher Wert wie UPLOAD_KEY) anlegen. Dann lädt die Action jede neue Version selbst hoch, und Schritt 1–4 entfallen.
+### Neue Version holen
+Dateien von GitHub (Releases) herunterladen und im Reiter „Versionen“ hochladen. Danach stehen sie auf der Download-Seite und im Update-Feed.
+Automatisch: GitHub -> Settings -> Secrets -> Actions -> **CLOUDY_UPLOAD_KEY** = Wert von UPLOAD_KEY. Dann lädt die Action jede Version selbst hoch.
 
 ## Installieren (für Tester)
 - Windows: Cloudy-Setup.exe doppelklicken (Warnung: Weitere Informationen -> Trotzdem ausführen). Ohne Installation: Cloudy-Portable.exe.

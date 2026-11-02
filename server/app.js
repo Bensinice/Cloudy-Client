@@ -91,7 +91,10 @@ async function init() {
 }
 const app = express(); app.set('trust proxy', true); // hinter nginx/Cloudflare: echte Besucher-IP für die Versuchsbegrenzung
 app.use(cors()); app.use(express.json({ limit: '100kb' }));
-require('./site')(app, express); // Webseite, Downloads, Update-Feed und Upload (siehe site.js)
+require('./site')(app, express, async req => { // Webseite, Downloads, Update-Feed, Upload (site.js); Admin = Konto mit Admin-Recht oder Owner-Tag
+  const m = /^Bearer (.+)$/.exec(req.headers.authorization || ''), key = m && (sessions.get(m[1]) || await tokKey(m[1])), me = key && await get(key);
+  return !!me && !lockMsg(me) && isAdm(me);
+});
 const wrap = f => (req, res) => f(req, res).catch(e => { console.error(e.message); res.status(500).json({ error: 'Serverfehler.' }); });
 app.get('/health', (_q, r) => r.json({ ok: true, backup: BACKUP }));
 // Passwort vergessen: legt eine Nachricht im Chat (Freunde) beim Owner ab; der Owner setzt das Konto im Admin-Bereich zurück. Verraet nicht, ob es das Konto gibt.

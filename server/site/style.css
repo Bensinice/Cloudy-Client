@@ -42,3 +42,5 @@ code{background:rgba(255,255,255,.1);padding:1px 6px;border-radius:6px;font-size
 footer{padding:36px 20px 60px;color:#6e6e73;font-size:13px;text-align:center;border-top:1px solid var(--line)}
 .rv{opacity:0;transform:translateY(24px);transition:opacity .8s,transform .8s}.rv.in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}}
+#banner{background:linear-gradient(90deg,#1d4ed8,#7c3aed);color:#fff;text-align:center;padding:9px 16px;font-size:14px}#banner[hidden]{display:none}
+.adm{color:#ffd60a!important}

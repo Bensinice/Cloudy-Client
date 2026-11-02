@@ -1,35 +1,21 @@
 <!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Cloudy – der Minecraft-Launcher</title><meta name="description" content="Cloudy ist ein Minecraft-Launcher mit eigenem Client, Cosmetics, Freunden, Mods und automatischen Updates. Jetzt Beta-Tester werden.">
-<meta name="theme-color" content="#000000"><link rel="icon" href="icon.png"><link rel="stylesheet" href="style.css?v=3"></head><body>
-<nav><b><img src="icon.png" alt="">Cloudy</b><div class="l"><a href="#features">Funktionen</a><a href="#beta">Beta</a><a href="#install">Installieren</a><a href="#technik">Technik</a><a href="#download" class="keep">Download</a></div></nav>
+<meta name="theme-color" content="#000000"><link rel="icon" href="icon.png"><link rel="stylesheet" href="style.css?v=4"></head><body>
+<div id="banner" hidden></div>
+<nav><b><img src="icon.png" alt="">Cloudy</b><div class="l"><a href="#features">Funktionen</a><a href="#beta">Beta</a><a href="#install">Installieren</a><a href="#technik">Technik</a><a href="#download" class="keep">Download</a><a href="/admin" class="keep adm" id="admLink" hidden>Admin</a></div></nav>
 <header class="hero"><div class="w">
- <p class="eyebrow">Beta</p><h1>Minecraft.<br>Neu gedacht.</h1>
- <p class="lead">Cloudy ist der Launcher mit eigenem Client, 3D-Cosmetics, Freunden, Mods und Updates, die einfach passieren.</p>
+ <p class="eyebrow" id="eyebrow">Beta</p><h1 id="title">Minecraft.<br>Neu gedacht.</h1>
+ <p class="lead" id="lead">Cloudy ist der Launcher mit eigenem Client, 3D-Cosmetics, Freunden, Mods und Updates, die einfach passieren.</p>
  <div class="cta"><a class="btn" id="heroDl" href="#download">Herunterladen</a><a class="btn g" href="#beta">So wirst du Beta-Tester ›</a></div>
  <div class="dev rv"><img style="display:block;width:100%;max-width:100%;height:auto" src="launcher.jpg?v=3" alt="Cloudy Launcher: Startseite mit Spielen-Knopf" width="1600" height="1015" loading="eager"></div>
 </div></header>
 
-<section id="features"><div class="w"><p class="eyebrow">Funktionen</p><h2>Alles, was ein Launcher<br>können sollte. Und mehr.</h2><p class="lead">Von der Installation bis zum Server-Beitritt: Cloudy nimmt dir die Arbeit ab.</p>
-<div class="grid">
- <div class="card big rv"><span class="ic">✨</span><h3>Liquid-Glass-Design</h3><p>Ein ruhiges, gläsernes Interface mit 8 Farbthemen, eigenem Theme, Hintergrund und Tour durch alle Bereiche. Deutsch und Englisch.</p></div>
- <div class="card rv"><span class="ic">⛏️</span><h3>Cloudy Client</h3><p>Eigene Fabric-Mod für Minecraft 1.21.4 mit Anzeigen für FPS, Ping, Rüstung, Koordinaten und über 19 weiteren Overlays. Standardmäßig aus, du entscheidest.</p></div>
- <div class="card rv"><span class="ic">🚀</span><h3>Mehr FPS</h3><p>Performance-Mods wie Sodium und Lithium werden passend installiert und beim Start geprüft. Sicherer Start ohne Mods, falls etwas klemmt.</p></div>
- <div class="card rv"><span class="ic">🧩</span><h3>Mods, Modpacks, Packs</h3><p>Modrinth-Suche mit einem Klick, Modpacks als eigene Instanz, Ressourcenpakete und Shader. Java wird automatisch passend geladen.</p></div>
- <div class="card rv"><span class="ic">🪽</span><h3>3D-Cosmetics</h3><p>Umhänge, Flügel, Hüte und mehr. Mit Anprobe am eigenen Skin, Paketen, Coins, Codes und Limited-Drops. Andere Cloudy-Spieler sehen sie im Spiel.</p></div>
- <div class="card rv"><span class="ic">💬</span><h3>Freunde &amp; Gruppen</h3><p>Chat, Gruppen mit Clan-Tag, Sprachanrufe, Server-Codes mit Verbinden-Knopf und „Play“ neben Freunden, die gerade spielen.</p></div>
- <div class="card rv"><span class="ic">🎵</span><h3>Mini-Player</h3><p>Spotify, YouTube, YouTube Music und SoundCloud – samt Lyrics, direkt im Launcher.</p></div>
- <div class="card rv"><span class="ic">🔄</span><h3>Automatische Updates</h3><p>Cloudy meldet neue Versionen beim Start, lädt sie mit Fortschritt, installiert und startet neu. Deine Daten bleiben unberührt.</p></div>
- <div class="card rv"><span class="ic">📱</span><h3>Aufs Handy streamen</h3><p>Ein Knopf richtet Streaming ein (Windows und Mac): Minecraft läuft am PC, dein Handy zeigt und steuert es per Moonlight. Dazu die Handy-Fernsteuerung für Mods, Shop und Start.</p></div>
- <div class="card rv"><span class="ic">🖥️</span><h3>Windows, Mac, Linux</h3><p>Installer, portable Version, Apple-Silicon- und Intel-Mac sowie AppImage. Ein iOS-Prototyp ist in Arbeit.</p></div>
-</div></div></section>
+<section id="features"><div class="w"><p class="eyebrow">Funktionen</p><h2 id="featTitle">Alles, was ein Launcher<br>können sollte. Und mehr.</h2><p class="lead" id="featLead">Von der Installation bis zum Server-Beitritt: Cloudy nimmt dir die Arbeit ab.</p>
+<div class="grid" id="featGrid"></div></div></div></section>
 
-<section id="beta" class="alt"><div class="w"><p class="eyebrow">Beta-Programm</p><h2>Werde Beta-Tester.</h2><p class="lead">Cloudy ist in der Beta. Du testest früh, meldest Fehler und prägst, was als Nächstes kommt.</p>
-<ol class="steps" style="padding:0">
- <li class="rv"><b>Cloudy herunterladen</b>Lade unten die Version für dein System. Windows zeigt bei neuen Programmen eine Warnung: „Weitere Informationen“ → „Trotzdem ausführen“. Auf dem Mac: Rechtsklick → „Öffnen“.</li>
- <li class="rv"><b>Zugangscode holen</b>Die Beta ist zugangsbeschränkt. Frag den Entwickler nach deinem persönlichen Zugangscode <span id="contact"></span>.</li>
- <li class="rv"><b>Konto erstellen</b>Gib den Code beim Start ein und lege dein Cloudy-Konto an. Du bekommst automatisch den <b style="display:inline;font-size:inherit">Tester</b>-Tag und 100 Coins für den Shop.</li>
- <li class="rv"><b>Testen und melden</b>In der Gruppe „Bugs“ im Freunde-Reiter meldest du Fehler und Wünsche. Je genauer, desto schneller ist es behoben.</li>
-</ol>
+<section id="beta" class="alt"><div class="w"><p class="eyebrow">Beta-Programm</p><h2 id="betaTitle">Werde Beta-Tester.</h2><p class="lead" id="betaLead">Cloudy ist in der Beta. Du testest früh, meldest Fehler und prägst, was als Nächstes kommt.</p>
+<ol class="steps" id="stepList" style="padding:0"></ol>
+<p class="contactline note" id="contactLine" style="display:none"></p>
 <p class="note">Updates installiert Cloudy selbst. Neue Versionen findest du außerdem unten, jede zum Herunterladen.</p></div></section>
 
 <section id="install" class="alt"><div class="w"><p class="eyebrow">Installation</p><h2>In einer Minute startklar.</h2><p class="lead">Wähle unten die Datei für dein System und folge den kurzen Schritten.</p>
@@ -44,5 +30,5 @@
 
 <section id="technik" class="alt"><div class="w"><p class="eyebrow">Technik</p><h2>Die Eckdaten.</h2>
 <div class="spec"><div><span>Systeme</span><b>Windows 10/11 · macOS (Apple Silicon &amp; Intel) · Linux</b></div><div><span>Minecraft</span><b>Alle Versionen · Cloudy Client für 1.21.4</b></div><div><span>Mod-Loader</span><b>Fabric · Modrinth</b></div><div><span>Java</span><b>Wird automatisch passend geladen</b></div><div><span>Updates</span><b>Automatisch, mit Fortschritt</b></div><div><span>Preis</span><b>Kostenlos in der Beta</b></div></div></div></section>
-<footer>Cloudy ist nicht von Mojang oder Microsoft. Minecraft ist eine Marke von Mojang Studios.<br>© <span id="y"></span> Cloudy</footer>
-<script src="site.js?v=3"></script></body></html>
+<footer><span id="footTxt">Cloudy ist nicht von Mojang oder Microsoft. Minecraft ist eine Marke von Mojang Studios.</span><br>© <span id="y"></span> Cloudy</footer>
+<script src="defaults.js?v=4"></script><script src="site.js?v=4"></script></body></html>

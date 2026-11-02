@@ -1,7 +1,7 @@
 // Cloudy-Webseite + Download-/Update-Server. Wird von app.js UND server.js mit einer Zeile eingebunden:  require('./site')(app, express);
 // Dateien liegen in ./releases/<version>/<datei> (oder RELEASE_DIR). Hochladen: https://deine-domain/upload  (nur mit UPLOAD_KEY).
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
-module.exports = (app, express) => {
+module.exports = (app, express, isAdmin) => { // isAdmin(req) -> Promise<boolean>: Konto mit Admin-Recht oder Owner-Tag (kommt von app.js)
   const ROOT = process.env.RELEASE_DIR || path.join(__dirname, 'releases'), KEY = String(process.env.UPLOAD_KEY || '');
   const OK_VER = /^\d{1,3}\.\d{1,3}\.\d{1,3}$/, OK_FILE = /^[\w][\w.-]{0,79}\.(exe|dmg|AppImage|ipa|tipa|zip|txt|jar)$/i, MAX = 700 * 1024 * 1024;
   fs.mkdirSync(ROOT, { recursive: true });
@@ -20,7 +20,11 @@ module.exports = (app, express) => {
   const same = (a, b) => { const x = crypto.createHash('sha256').update(String(a)).digest(), y = crypto.createHash('sha256').update(String(b)).digest(); return crypto.timingSafeEqual(x, y); };
   let bad = 0, badT = 0; // einfache Bremse gegen Raten des Upload-Schlüssels
   const keyOk = req => { if (KEY.length < 12) return 'off'; if (Date.now() - badT > 600e3) bad = 0; if (bad >= 8) return 'wait'; if (same(req.headers['x-upload-key'] || '', KEY)) return 'ok'; bad++; badT = Date.now(); return 'no'; };
-  const deny = (res, k) => res.status(k === 'off' ? 503 : k === 'wait' ? 429 : 401).json({ error: k === 'off' ? 'Upload ist aus: setze auf dem Server die Variable UPLOAD_KEY (mind. 12 Zeichen).' : k === 'wait' ? 'Zu viele Fehlversuche, bitte in 10 Minuten erneut.' : 'Upload-Schlüssel stimmt nicht.' });
+  const allow = async req => { // Hochladen/Löschen: entweder Upload-Schlüssel (für die GitHub-Action) oder Anmeldung als Admin/Owner
+    if (req.headers['x-upload-key']) return keyOk(req);
+    try { return isAdmin && await isAdmin(req) ? 'ok' : 'no'; } catch { return 'no'; }
+  };
+  const deny = (res, k) => res.status(k === 'off' ? 503 : k === 'wait' ? 429 : 401).json({ error: k === 'off' ? 'Nicht erlaubt: bitte als Admin/Owner anmelden (oder UPLOAD_KEY mit mind. 12 Zeichen setzen).' : k === 'wait' ? 'Zu viele Fehlversuche, bitte in 10 Minuten erneut.' : 'Nicht angemeldet oder Schlüssel falsch.' });
 
   // ---- öffentlich: Webseite, Liste, Downloads ----
   app.get('/api/releases', (_q, res) => res.json({ releases: list().map(r => ({ ...r, files: r.files.map(f => ({ ...f, url: `/download/${r.version}/${encodeURIComponent(f.name)}` })) })) }));
@@ -32,8 +36,8 @@ module.exports = (app, express) => {
   app.get('/update/latest.json', (req, res) => { if (!isClient(req)) return res.status(404).send('Cannot GET /update/latest.json'); const r = list()[0]; if (!r) return res.status(404).json({ error: 'Noch kein Release.' }); res.json({ version: r.version, notes: r.notes, files: r.files.map(f => ({ ...f, url: `/update/file/${r.version}/${encodeURIComponent(f.name)}` })) }); });
   app.get('/update/file/:v/:f', (req, res) => { if (!isClient(req)) return res.status(404).send('Nicht gefunden.'); send(res, req.params.v, req.params.f); });
   // ---- Hochladen: PUT /upload/<version>/<datei> mit Header X-Upload-Key (die Seite /upload macht das für dich) ----
-  app.put('/upload/:v/:f', (req, res) => {
-    const k = keyOk(req); if (k !== 'ok') return deny(res, k);
+  app.put('/upload/:v/:f', async (req, res) => {
+    const k = await allow(req); if (k !== 'ok') return deny(res, k);
     const { v, f } = req.params; if (!OK_VER.test(v) || !OK_FILE.test(f)) return res.status(400).json({ error: 'Version (z. B. 0.9.72) oder Dateiname/-endung nicht erlaubt.' });
     const d = path.join(ROOT, v); fs.mkdirSync(d, { recursive: true });
     const tmp = path.join(d, '.' + crypto.randomBytes(6).toString('hex') + '.part'), ws = fs.createWriteStream(tmp); let n = 0, dead = false;
@@ -43,8 +47,21 @@ module.exports = (app, express) => {
     ws.on('finish', () => { if (dead) return; fs.rename(tmp, path.join(d, f), e => e ? fail(500, 'Speichern fehlgeschlagen.') : res.json({ ok: true, size: n })); });
     req.pipe(ws);
   });
-  app.delete('/upload/:v', (req, res) => { const k = keyOk(req); if (k !== 'ok') return deny(res, k); if (!OK_VER.test(req.params.v)) return res.status(400).json({ error: 'Version ungültig.' }); fs.rm(path.join(ROOT, req.params.v), { recursive: true, force: true }, () => res.json({ ok: true })); });
-  app.get('/upload', (_q, res) => res.sendFile(path.join(__dirname, 'site', 'upload.html')));
+  app.delete('/upload/:v', async (req, res) => { const k = await allow(req); if (k !== 'ok') return deny(res, k); if (!OK_VER.test(req.params.v)) return res.status(400).json({ error: 'Version ungültig.' }); fs.rm(path.join(ROOT, req.params.v), { recursive: true, force: true }, () => res.json({ ok: true })); });
+  app.get('/upload', (_q, res) => res.redirect('/admin'));
+  app.get('/admin', (_q, res) => res.sendFile(path.join(__dirname, 'site', 'admin.html')));
+  // ---- Texte der Webseite: öffentlich lesbar, nur Admin/Owner darf sie ändern (gespeichert in site-data.json) ----
+  const DATA = process.env.SITE_DATA || path.join(__dirname, 'site-data.json'), str = (v, n) => typeof v === 'string' ? v.slice(0, n) : '';
+  const readSite = () => { try { return JSON.parse(fs.readFileSync(DATA, 'utf8')); } catch { return {}; } };
+  const clean = b => { const o = {};
+    for (const [k, n] of [['eyebrow', 60], ['title', 120], ['lead', 400], ['featTitle', 120], ['featLead', 300], ['betaTitle', 100], ['betaLead', 400], ['contact', 120], ['announce', 200], ['footer', 300]]) if (typeof b[k] === 'string' && (b[k].trim() || k === 'contact' || k === 'announce')) o[k] = str(b[k], n); // leer = Standardtext
+    if (Array.isArray(b.features)) o.features = b.features.slice(0, 24).map(f => ({ ic: str(f && f.ic, 8), t: str(f && f.t, 80), p: str(f && f.p, 500) })).filter(f => f.t);
+    if (Array.isArray(b.steps)) o.steps = b.steps.slice(0, 10).map(f => ({ t: str(f && f.t, 80), p: str(f && f.p, 500) })).filter(f => f.t);
+    return o; };
+  app.get('/api/site', (_q, res) => { res.set && res.set('Cache-Control', 'no-cache'); res.json(readSite()); });
+  app.put('/api/site', async (req, res) => { let ok = false; try { ok = !!(isAdmin && await isAdmin(req)); } catch {} if (!ok) return res.status(403).json({ error: 'Nur für Admins/Owner.' });
+    try { fs.writeFileSync(DATA, JSON.stringify(clean(req.body || {}))); res.json({ ok: true }); } catch { res.status(500).json({ error: 'Speichern fehlgeschlagen.' }); } });
+  app.get('/api/me', async (req, res) => { let ok = false; try { ok = !!(isAdmin && await isAdmin(req)); } catch {} res.json({ admin: ok }); });
   app.use(express.static(path.join(__dirname, 'site'), { extensions: ['html'], maxAge: 0, etag: true })); // immer prüfen, ob es etwas Neues gibt (kein altes Bild/CSS aus dem Cache)
 
   // ---- Auto-Neustart: wird app.js oder site.js ersetzt, beendet sich der Server kurz danach selbst und startet neu. ----

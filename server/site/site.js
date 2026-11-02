@@ -1,9 +1,22 @@
-// Webseite: Downloads aus /api/releases, Scroll-Effekte
+// Webseite: Texte (Standard + Änderungen aus dem Admin-Bereich), Downloads aus /api/releases, Scroll-Effekte
 (function () {
   const $ = id => document.getElementById(id), esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   $('y').textContent = new Date().getFullYear();
-  // Kontakt für den Zugangscode: hier eintragen (z. B. Discord-Name oder E-Mail), erscheint im Schritt „Zugangscode holen“
-  const CONTACT = ''; if (CONTACT) $('contact').textContent = '(' + CONTACT + ')';
+  const setLines = (el, txt) => { el.textContent = ''; String(txt).split('\n').forEach((l, i) => { if (i) el.appendChild(document.createElement('br')); el.appendChild(document.createTextNode(l)); }); };
+  const mkIo = () => 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); } }), { threshold: .12 }) : null;
+  const io = mkIo(); const watch = el => io ? io.observe(el) : el.classList.add('in');
+  function render(o) { // alle Texte setzen; o = Standard + Änderungen. Es wird nur textContent benutzt (kein HTML aus fremder Hand).
+    [['title', 'title'], ['lead', 'lead'], ['eyebrow', 'eyebrow'], ['featTitle', 'featTitle'], ['featLead', 'featLead'], ['betaTitle', 'betaTitle'], ['betaLead', 'betaLead'], ['footer', 'footTxt']].forEach(([k, id]) => { if (o[k] != null && $(id)) setLines($(id), o[k]); });
+    const g = $('featGrid'); g.textContent = '';
+    (o.features || []).forEach((f, i) => { const c = document.createElement('div'); c.className = 'card rv' + (i === 0 ? ' big' : ''); const ic = document.createElement('span'); ic.className = 'ic'; ic.textContent = f.ic || ''; const h = document.createElement('h3'); h.textContent = f.t; const p = document.createElement('p'); p.textContent = f.p; c.append(ic, h, p); g.appendChild(c); watch(c); });
+    const l = $('stepList'); l.textContent = '';
+    (o.steps || []).forEach(s => { const li = document.createElement('li'); li.className = 'rv'; const b = document.createElement('b'); b.textContent = s.t; li.append(b, document.createTextNode(s.p)); l.appendChild(li); watch(li); });
+    const c = $('contactLine'); if (o.contact) { c.textContent = 'Kontakt für den Zugangscode: ' + o.contact; c.style.display = ''; } else c.style.display = 'none';
+    const bn = $('banner'); if (o.announce) { bn.textContent = o.announce; bn.hidden = false; } else bn.hidden = true;
+  }
+  render(window.SITE_DEF);
+  fetch('/api/site', { cache: 'no-cache' }).then(r => r.json()).then(j => { render({ ...window.SITE_DEF, ...j }); }).catch(() => {});
+  try { const t = sessionStorage.getItem('cloudyTok'); if (t) fetch('/api/me', { headers: { Authorization: 'Bearer ' + t } }).then(r => r.json()).then(j => { if (j.admin) $('admLink').hidden = false; }).catch(() => {}); } catch {}
   const NAMES = { win: 'Windows', 'win-portable': 'Windows portable', 'mac-arm': 'Mac (Apple Silicon)', 'mac-intel': 'Mac (Intel)', linux: 'Linux', ios: 'iOS (Test)', other: 'Datei' };
   const ua = navigator.userAgent, me = /iPhone|iPad/.test(ua) ? 'ios' : /Mac/.test(ua) ? 'mac-arm' : /Linux/.test(ua) && !/Android/.test(ua) ? 'linux' : /Win/.test(ua) ? 'win' : '';
   const mb = n => (n / 1048576 >= 1 ? (n / 1048576).toFixed(0) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB');
@@ -13,6 +26,6 @@
     const mine = releases[0].files.find(f => f.platform === me) || releases[0].files.find(f => f.platform === 'win');
     if (mine) { const b = $('heroDl'); b.href = mine.url; b.textContent = 'Für ' + (NAMES[mine.platform] || 'dein System') + ' laden'; }
   }).catch(() => { $('dl').innerHTML = '<div class="ver"><p>Downloads konnten nicht geladen werden.</p></div>'; });
-  const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .12 }) : null;
-  document.querySelectorAll('.rv').forEach(el => io ? io.observe(el) : el.classList.add('in'));
+  document.querySelectorAll('.rv').forEach(watch);
+  window.addEventListener('scroll', () => {}, { passive: true });
 })();
