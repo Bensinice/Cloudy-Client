@@ -127,9 +127,13 @@ app.post('/gate', wrap(async (req, res) => { // Zugangscode des Launchers prüfe
 }));
 async function bindGrant(g, name) { g = String(g || ''); const v = GRANTS[g]; if (v) { GRANTS[g] = { c: gcode(v), u: String(name).toLowerCase() }; await saveGate(); } } // Zugang einem Konto zuordnen
 // ---- Request Key: Zugang anfragen (ohne Konto), Stand abfragen; der Owner entscheidet im Admin-Bereich ----
+const MAIL = require('./mail');
 const KR = require('./keyreq')({ get: () => REQS, save: () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['keyreqs', JSON.stringify(REQS)]),
   makeGate: async ({ uses, days }) => { let code; do { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; code = ''; for (const b of crypto.randomBytes(8)) code += A[b % A.length]; code = code.slice(0, 4) + '-' + code.slice(4); } while (GATE[code]); GATE[code] = { uses, used: 0, exp: Date.now() + days * 864e5 }; await saveGate(); return code; } });
-app.post('/keyreq', wrap(async (req, res) => { if (limited(req.ip)) return res.status(429).json({ error: 'Zu viele Versuche, warte kurz.' }); const r = await KR.create({ name: req.body.name, note: req.body.note, ip: req.ip }); res.status(r.ok ? 200 : 400).json(r); }));
+app.post('/keyreq', wrap(async (req, res) => { if (limited(req.ip)) return res.status(429).json({ error: 'Zu viele Versuche, warte kurz.' }); const r = await KR.create({ name: req.body.name, note: req.body.note, ip: req.ip });
+  if (r.ok) { const q = KR.list().find(x => x.id === r.id) || {}; // E-Mail an den Owner (nur wenn SMTP eingerichtet ist; Fehler brechen die Anfrage nie ab)
+    if (MAIL.enabled()) MAIL.send({ subject: 'Cloudy: neue Early-Access-Anfrage von ' + q.name, text: 'Neue Early-Access-Anfrage im Cloudy Client\n\nName: ' + q.name + '\nNotiz: ' + (q.note || '-') + '\nZeit: ' + new Date(q.t).toISOString() + '\n\nFreigeben oder ablehnen: Admin-Bereich auf der Webseite > Zugangscodes > Anfragen.' }).catch(e => console.log('[mail] ' + e.message)); }
+  res.status(r.ok ? 200 : 400).json(r); }));
 app.post('/keyreq/status', wrap(async (req, res) => { if (limited(req.ip)) return res.status(429).json({ error: 'Zu viele Versuche, warte kurz.' }); res.json(KR.status(req.body.id, req.body.secret)); }));
 app.post('/gatecheck', wrap(async (req, res) => res.json({ ok: !!GRANTS[String(req.body.grant || '')] }))); // Zugang noch gültig?
 app.post('/login', wrap(async (req, res) => {

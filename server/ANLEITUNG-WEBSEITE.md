@@ -39,3 +39,18 @@ Diese Schritte stehen auch auf der Webseite im Abschnitt „Installation“.
 - **Server-Status**: Öffentlich unter /api/status, auf der Webseite im Abschnitt „Systemstatus“ und im Launcher unter Einstellungen. Geprüft werden Konto-Server + Datenbank (live) und optional ein Minecraft-Server (Adresse im Admin-Bereich > Übersicht > Status-Seite). Dort schaltest du auch den Wartungsmodus. Neue Datei: **status.js**, Einstellungen in **status-config.json**.
 - **Prüfsummen**: Beim Hochladen berechnet der Server SHA-256 (steht im Update-Feed); der Launcher prüft den Download vor dem Installieren. Ältere Uploads ohne Prüfsumme werden einfach ohne Prüfung installiert.
 - Zum Einspielen **alle** Dateien aus diesem Paket (app.js, site.js, keyreq.js, status.js, site/) hochladen.
+
+## E-Mail bei neuen Early-Access-Anfragen (Request Key)
+Sobald jemand im Client „Request Key“ nutzt, schickt der Server eine E-Mail an **ben.haertel29@gmail.com** (andere Adresse: `MAIL_TO`). Neue Datei: **mail.js** (kein Zusatzpaket nötig).
+Damit der Server senden darf, braucht er ein Postfach zum Absenden. Setze diese Umgebungsvariablen (genau wie `DB_PASS`) und starte den Server neu:
+
+| Variable | Beispiel für Gmail |
+|---|---|
+| `SMTP_HOST` | `smtp.gmail.com` |
+| `SMTP_PORT` | `465` (SSL) oder `587` (STARTTLS) |
+| `SMTP_USER` | deine Gmail-Adresse |
+| `SMTP_PASS` | **App-Passwort** (Google-Konto > Sicherheit > Bestätigung in zwei Schritten > App-Passwörter), nicht dein normales Passwort |
+| `SMTP_FROM` | optional, sonst `SMTP_USER` |
+| `MAIL_TO` | optional, Standard `ben.haertel29@gmail.com` |
+
+Ohne `SMTP_HOST` wird keine Mail gesendet (die Anfrage selbst funktioniert trotzdem und steht im Admin-Bereich). Fehler beim Senden stehen im Server-Log mit dem Anfang `[mail]`.
