@@ -1,19 +1,22 @@
 // Cloudy-Webseite + Download-/Update-Server. Wird von app.js UND server.js mit einer Zeile eingebunden:  require('./site')(app, express);
 // Dateien liegen in ./releases/<version>/<datei> (oder RELEASE_DIR). Hochladen: https://deine-domain/upload  (nur mit UPLOAD_KEY).
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
-module.exports = (app, express, isAdmin) => { // isAdmin(req) -> Promise<boolean>: Konto mit Admin-Recht oder Owner-Tag (kommt von app.js)
+module.exports = (app, express, isAdmin, ext = {}) => { // isAdmin(req) -> Promise<boolean>: Konto mit Admin-Recht oder Owner-Tag (kommt von app.js)
   const ROOT = process.env.RELEASE_DIR || path.join(__dirname, 'releases'), KEY = String(process.env.UPLOAD_KEY || '');
   const OK_VER = /^\d{1,3}\.\d{1,3}\.\d{1,3}$/, OK_FILE = /^[\w][\w.-]{0,79}\.(exe|dmg|AppImage|ipa|tipa|zip|txt|jar)$/i, MAX = 700 * 1024 * 1024;
   fs.mkdirSync(ROOT, { recursive: true });
   const vnum = v => v.split('.').map(Number), cmp = (a, b) => { const x = vnum(a), y = vnum(b); for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return y[i] - x[i]; return 0; };
   const platform = n => /portable/i.test(n) ? 'win-portable' : /\.exe$/i.test(n) ? 'win' : /arm64.*\.dmg$/i.test(n) ? 'mac-arm' : /\.dmg$/i.test(n) ? 'mac-intel' : /\.AppImage$/i.test(n) ? 'linux' : /\.(ipa|tipa)$/i.test(n) ? 'ios' : 'other';
+  const metaFile = v => path.join(ROOT, v, '.meta.json'), readMeta = v => { try { return JSON.parse(fs.readFileSync(metaFile(v), 'utf8')); } catch { return {}; } };
+  const hashFile = p => new Promise((ok, bad) => { const h = crypto.createHash('sha256'); fs.createReadStream(p).on('data', c => h.update(c)).on('error', bad).on('end', () => ok(h.digest('hex'))); });
   const list = () => { // alle Versionen mit ihren Dateien (neueste zuerst)
     let out = [];
     try { for (const v of fs.readdirSync(ROOT).filter(v => OK_VER.test(v))) {
       const d = path.join(ROOT, v), files = fs.readdirSync(d).filter(f => OK_FILE.test(f)).map(f => ({ f, s: fs.statSync(path.join(d, f)) })).filter(x => x.s.isFile());
       if (!files.length) continue;
       let notes = ''; try { notes = fs.readFileSync(path.join(d, 'notes.txt'), 'utf8').slice(0, 2000); } catch {}
-      out.push({ version: v, date: Math.max(...files.map(x => +x.s.mtime)), notes, files: files.filter(x => x.f !== 'notes.txt').map(x => ({ name: x.f, size: x.s.size, platform: platform(x.f) })) });
+      const meta = readMeta(v);
+      out.push({ version: v, date: Math.max(...files.map(x => +x.s.mtime)), notes, files: files.filter(x => x.f !== 'notes.txt').map(x => ({ name: x.f, size: x.s.size, platform: platform(x.f), sha256: (meta[x.f] && meta[x.f].size === x.s.size && meta[x.f].sha256) || '' })) });
     } } catch {}
     return out.filter(r => r.files.length).sort((a, b) => cmp(a.version, b.version));
   };
@@ -54,7 +57,9 @@ module.exports = (app, express, isAdmin) => { // isAdmin(req) -> Promise<boolean
     req.on('error', () => fail(400, 'Upload abgebrochen.')); req.on('aborted', () => fail(400, 'Upload abgebrochen.')); ws.on('error', () => fail(500, 'Speichern fehlgeschlagen.'));
     ws.on('finish', () => { if (dead) return;
       if (!last) return res.json({ ok: true, size: have + n });
-      fs.rename(tmp, path.join(d, f), e => e ? fail(500, 'Speichern fehlgeschlagen.') : res.json({ ok: true, size: have + n })); });
+      fs.rename(tmp, path.join(d, f), e => { if (e) return fail(500, 'Speichern fehlgeschlagen.');
+        if (f === 'notes.txt') return res.json({ ok: true, size: have + n });
+        hashFile(path.join(d, f)).then(sha => { const m = readMeta(v); m[f] = { sha256: sha, size: have + n }; try { fs.writeFileSync(metaFile(v), JSON.stringify(m)); } catch {} res.json({ ok: true, size: have + n, sha256: sha }); }).catch(() => res.json({ ok: true, size: have + n })); }); });
     req.pipe(ws);
   });
   setInterval(() => { try { for (const v of fs.readdirSync(ROOT)) { const d = path.join(ROOT, v); if (!OK_VER.test(v)) continue; for (const f of fs.readdirSync(d)) if (/^\.up-.*\.part$/.test(f) && Date.now() - fs.statSync(path.join(d, f)).mtimeMs > 864e5) fs.rmSync(path.join(d, f), { force: true }); } } catch {} }, 36e5).unref(); // abgebrochene Uploads nach 24 h aufräumen
@@ -68,6 +73,12 @@ module.exports = (app, express, isAdmin) => { // isAdmin(req) -> Promise<boolean
       latest: rel[0] ? rel[0].version : null, missing: rel[0] ? need.filter(p => !rel[0].files.some(f => f.platform === p)) : need, releases: rel.map(r => ({ ...r, files: r.files.map(f => ({ ...f, url: `/download/${r.version}/${encodeURIComponent(f.name)}` })) })) }); });
   app.get('/upload', (_q, res) => res.redirect('/admin'));
   app.get('/admin', (_q, res) => res.sendFile(path.join(__dirname, 'site', 'admin.html')));
+  // ---- Öffentlicher Server-Status (Webseite und Launcher nutzen dieselben Daten) ----
+  const STATUS_FILE = process.env.STATUS_FILE || path.join(__dirname, 'status-config.json');
+  const st = require('./status')({ readCfg: () => { try { return JSON.parse(fs.readFileSync(STATUS_FILE, 'utf8')); } catch { return {}; } }, writeCfg: c => fs.writeFileSync(STATUS_FILE, JSON.stringify(c)), checks: ext.checks, version: () => (list()[0] || {}).version || '' });
+  app.get('/api/status', async (_q, res) => { try { res.set && res.set('Cache-Control', 'no-store'); const r = await st.get(); res.json({ ...r, mc: r.mc && { ...r.mc } }); } catch { res.status(500).json({ api: true, status: 'degraded', error: 'Statusprüfung fehlgeschlagen.' }); } });
+  app.get('/api/status/config', async (req, res) => { let ok = false; try { ok = !!(isAdmin && await isAdmin(req)); } catch {} if (!ok) return res.status(403).json({ error: 'Nur für Admins/Owner.' }); res.json(st.cfg()); });
+  app.put('/api/status/config', async (req, res) => { let ok = false; try { ok = !!(isAdmin && await isAdmin(req)); } catch {} if (!ok) return res.status(403).json({ error: 'Nur für Admins/Owner.' }); const r = st.set(req.body || {}); res.status(r.ok ? 200 : 400).json(r); });
   // ---- Texte der Webseite: öffentlich lesbar, nur Admin/Owner darf sie ändern (gespeichert in site-data.json) ----
   const DATA = process.env.SITE_DATA || path.join(__dirname, 'site-data.json'), str = (v, n) => typeof v === 'string' ? v.slice(0, n) : '';
   const readSite = () => { try { return JSON.parse(fs.readFileSync(DATA, 'utf8')); } catch { return {}; } };

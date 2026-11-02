@@ -33,3 +33,9 @@ Diese Schritte stehen auch auf der Webseite im Abschnitt „Installation“.
 - Ersetzt du **app.js** oder **site.js** auf dem Server, beendet sich der Server ~4 Sekunden nach der letzten Änderung selbst und startet neu (nur wenn sich der Inhalt wirklich geändert hat). Neue Installer (Upload) brauchen keinen Neustart.
 - Damit er wieder hochkommt, muss dein Hoster ihn neu starten (pm2, Docker, „Auto-Restart“ im Panel). Geht das bei dir nicht: Umgebungsvariable **RESPAWN=1** setzen, dann startet er sich selbst neu.
 - Abschalten: **AUTO_RESTART=0**.
+
+## Neu in Stufe 1
+- **Anfragen (Request Key)**: Im Launcher gibt es auf dem Zugangscode-Bildschirm „Request key“. Die Anfragen erscheinen im Admin-Bereich (Reiter „Anfragen“) und im Launcher unter Einstellungen > Zugangscodes. „Freigeben“ erzeugt einen einmaligen Code (7 Tage), den der Spieler automatisch sieht. Gespeichert in der Datenbank (Tabelle cloudy_kv, Schlüssel keyreqs). Neue Datei: **keyreq.js**.
+- **Server-Status**: Öffentlich unter /api/status, auf der Webseite im Abschnitt „Systemstatus“ und im Launcher unter Einstellungen. Geprüft werden Konto-Server + Datenbank (live) und optional ein Minecraft-Server (Adresse im Admin-Bereich > Übersicht > Status-Seite). Dort schaltest du auch den Wartungsmodus. Neue Datei: **status.js**, Einstellungen in **status-config.json**.
+- **Prüfsummen**: Beim Hochladen berechnet der Server SHA-256 (steht im Update-Feed); der Launcher prüft den Download vor dem Installieren. Ältere Uploads ohne Prüfsumme werden einfach ohne Prüfung installiert.
+- Zum Einspielen **alle** Dateien aus diesem Paket (app.js, site.js, keyreq.js, status.js, site/) hochladen.

@@ -46,7 +46,7 @@ exports.init = function init({ app, ipcMain, shell, send, defaultRepo, userAgent
       const res = await fetch(base + '/update/latest.json', { headers: { ...H, 'X-Cloudy-Client': '1' }, signal: AbortSignal.timeout(8000) });
       if (!res.ok) return null;
       const j = await res.json(); if (!/^\d+\.\d+\.\d+$/.test(String(j.version))) return null;
-      const assets = (j.files || []).filter(f => f && f.name && f.url).map(f => ({ name: f.name, size: +f.size || 0, browser_download_url: base + f.url, fromServer: true }));
+      const assets = (j.files || []).filter(f => f && f.name && f.url).map(f => ({ name: f.name, size: +f.size || 0, browser_download_url: base + f.url, fromServer: true, sha256: /^[a-f0-9]{64}$/.test(f.sha256 || '') ? f.sha256 : '' }));
       const exe = pick(assets); if (!exe) return null;
       return { ver: j.version, exe, notes: String(j.notes || ''), url: base + '/#download' };
     } catch { return null; }
@@ -111,6 +111,11 @@ exports.init = function init({ app, ipcMain, shell, send, defaultRepo, userAgent
     }
     await new Promise((ok, bad) => { ws.on('error', bad); ws.end(ok); });
     if (asset.size && got !== asset.size) throw new Error('Datei unvollständig – bitte erneut versuchen.');
+    if (asset.sha256) { // Prüfsumme vom Server: beschädigte oder manipulierte Downloads werden nicht installiert
+      send('update-progress', { phase: 'verify', pct: 100, got, total });
+      const sum = await new Promise((ok, bad) => { const h = require('crypto').createHash('sha256'); fs.createReadStream(dest).on('data', c => h.update(c)).on('error', bad).on('end', () => ok(h.digest('hex'))); });
+      if (sum !== asset.sha256) { try { fs.rmSync(dest, { force: true }); } catch {} throw new Error('Prüfsumme stimmt nicht – der Download ist beschädigt. Bitte erneut versuchen.'); }
+    }
     send('update-progress', { phase: 'download', pct: 100, got, total });
     return dest;
   }

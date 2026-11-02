@@ -1,5 +1,16 @@
 [
  {
+  "v": "0.9.73",
+  "date": "2026-11-02",
+  "added": [
+   "Request Key: Auf dem Zugangscode-Bildschirm kannst du Zugang anfragen. Der Owner gibt die Anfrage frei oder lehnt sie ab, der Code erscheint dann automatisch",
+   "Öffentlicher Server-Status (Einstellungen und Webseite) mit echten Server-Prüfungen",
+   "Updates vom eigenen Server werden mit einer Prüfsumme (SHA-256) geprüft, bevor sie installiert werden"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.72",
   "date": "2026-11-02",
   "added": [

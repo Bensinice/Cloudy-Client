@@ -14,6 +14,7 @@ const js = v => typeof v === 'string' ? v : JSON.stringify(v);
 const parse = (v, d) => { try { const j = JSON.parse(v); return j == null ? d : j; } catch { return d; } };
 async function put(u) { const key = u.name.toLowerCase(); await db.query(`REPLACE INTO cloudy_users (name_key,${COLS.join(',')}) VALUES (?${',?'.repeat(COLS.length)})`, [key, ...COLS.map(c => (c === 'owned' || c === 'equip') ? js(u[c] == null ? (c === 'owned' ? [] : {}) : u[c]) : (c === 'daily' ? (u[c] || '') : (c === 'ban_until' || c === 'paused') ? (u[c] || 0) : u[c]))]); }
 async function get(key) { const [r] = await db.query('SELECT * FROM cloudy_users WHERE name_key=?', [key]); return r[0] || null; }
+let REQS = {}; // Request-Key-Anfragen
 let BACKUP = '', TAGS = {}, ANN = { text: '', t: 0 }, NAMES = {}, PRICES = {}, CODES = {}, GATE = {}, GRANTS = {}, FR = { f: {}, msgs: {}, seq: 1 };
 const gcode = v => typeof v === 'string' ? v : (v && v.c) || '';
 const saveGate = async () => { await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['gate', JSON.stringify(GATE)]); await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['gategrants', JSON.stringify(GRANTS)]); };
@@ -84,6 +85,7 @@ async function init() {
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='friends'"); FR = r.length ? parse(r[0].v, FR) : FR; if (!FR.f) FR = { f: {}, msgs: {}, seq: 1 }; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='gategrants'"); GRANTS = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='codes'"); CODES = r.length ? parse(r[0].v, {}) : {}; }
+  { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='keyreqs'"); REQS = r.length ? parse(r[0].v, {}) : {}; if (!REQS || typeof REQS !== 'object' || Array.isArray(REQS)) REQS = {}; }
   for (const [c, def] of [['owned', 'TEXT'], ['equip', 'TEXT'], ['daily', 'VARCHAR(20)']]) { const [r] = await db.query('SHOW COLUMNS FROM cloudy_users LIKE ?', [c]); if (!r.length) await db.query(`ALTER TABLE cloudy_users ADD COLUMN ${c} ${def} NULL`); }
   const a = await get('admin'); if (!a || !okPw(a, ADMIN_PASS)) await put(mk('admin', ADMIN_PASS, { admin: 1, coins: null }));
   await db.query("INSERT IGNORE INTO cloudy_kv (k,v) VALUES ('noInf1','0')"); { const [f] = await db.query("SELECT v FROM cloudy_kv WHERE k='noInf1'"); if (f[0] && f[0].v === '0') { await db.query("UPDATE cloudy_users SET inf_coins=0, coins=100 WHERE name_key='tester' AND inf_coins=1"); await db.query("UPDATE cloudy_kv SET v='1' WHERE k='noInf1'"); } }
@@ -94,7 +96,7 @@ app.use(cors()); app.use(express.json({ limit: '100kb' }));
 require('./site')(app, express, async req => { // Webseite, Downloads, Update-Feed, Upload (site.js); Admin = Konto mit Admin-Recht oder Owner-Tag
   const m = /^Bearer (.+)$/.exec(req.headers.authorization || ''), key = m && (sessions.get(m[1]) || await tokKey(m[1])), me = key && await get(key);
   return !!me && !lockMsg(me) && isAdm(me);
-});
+}, { checks: { db: async () => { await db.query('SELECT 1'); return true; }, online: () => { const n = Date.now(); return [...SEEN.values()].filter(t => n - t < 120000).length; } } });
 const wrap = f => (req, res) => f(req, res).catch(e => { console.error(e.message); res.status(500).json({ error: 'Serverfehler.' }); });
 app.get('/health', (_q, r) => r.json({ ok: true, backup: BACKUP }));
 // Passwort vergessen: legt eine Nachricht im Chat (Freunde) beim Owner ab; der Owner setzt das Konto im Admin-Bereich zurück. Verraet nicht, ob es das Konto gibt.
@@ -124,6 +126,11 @@ app.post('/gate', wrap(async (req, res) => { // Zugangscode des Launchers prüfe
   res.json({ ok: false, legacy, error: c ? (c.exp && c.exp <= Date.now() ? 'Dieser Zugangscode ist abgelaufen.' : 'Dieser Zugangscode ist aufgebraucht.') : '' });
 }));
 async function bindGrant(g, name) { g = String(g || ''); const v = GRANTS[g]; if (v) { GRANTS[g] = { c: gcode(v), u: String(name).toLowerCase() }; await saveGate(); } } // Zugang einem Konto zuordnen
+// ---- Request Key: Zugang anfragen (ohne Konto), Stand abfragen; der Owner entscheidet im Admin-Bereich ----
+const KR = require('./keyreq')({ get: () => REQS, save: () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['keyreqs', JSON.stringify(REQS)]),
+  makeGate: async ({ uses, days }) => { let code; do { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; code = ''; for (const b of crypto.randomBytes(8)) code += A[b % A.length]; code = code.slice(0, 4) + '-' + code.slice(4); } while (GATE[code]); GATE[code] = { uses, used: 0, exp: Date.now() + days * 864e5 }; await saveGate(); return code; } });
+app.post('/keyreq', wrap(async (req, res) => { if (limited(req.ip)) return res.status(429).json({ error: 'Zu viele Versuche, warte kurz.' }); const r = await KR.create({ name: req.body.name, note: req.body.note, ip: req.ip }); res.status(r.ok ? 200 : 400).json(r); }));
+app.post('/keyreq/status', wrap(async (req, res) => { if (limited(req.ip)) return res.status(429).json({ error: 'Zu viele Versuche, warte kurz.' }); res.json(KR.status(req.body.id, req.body.secret)); }));
 app.post('/gatecheck', wrap(async (req, res) => res.json({ ok: !!GRANTS[String(req.body.grant || '')] }))); // Zugang noch gültig?
 app.post('/login', wrap(async (req, res) => {
   if (limited(req.ip)) return res.status(429).json({ error: 'Zu viele Versuche, warte kurz.' });
@@ -330,6 +337,8 @@ app.all('/admin/users', admin(async (_q, res) => { const [r] = await db.query('S
 const target = f => admin(async (req, res) => { const t = await get(String(req.body.name || '').toLowerCase()); if (!t || t.admin) return res.status(404).json({ error: 'Konto nicht gefunden.' }); await f(req, res, t); });
 app.all('/announce', auth(async (_q, res) => res.json(ANN)));
 app.post('/admin/backup', admin(async (req, res) => { const u = String(req.body.url || '').trim().replace(/\/+$/, '').slice(0, 200); if (u && !/^https?:\/\//i.test(u)) return res.status(400).json({ error: 'Adresse muss mit http:// oder https:// beginnen.' }); BACKUP = u; await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['backup', u]); res.json({ ok: true, backup: u }); }));
+app.post('/admin/keyreqs', admin(async (_q, res) => { await KR.purge(30); res.json({ requests: KR.list() }); }));
+app.post('/admin/keyreq', admin(async (req, res) => { const r = await KR.decide(req.body.id, req.body.action, req.body.note); res.status(r.ok ? 200 : 400).json(r); }));
 app.post('/admin/announce', admin(async (req, res) => { ANN = { text: String(req.body.text || '').trim().slice(0, 300), t: req.body.text ? Date.now() : 0 }; await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['announce', JSON.stringify(ANN)]); res.json({ ok: true, ...ANN }); }));
 app.all('/admin/stats', admin(async (_q, res) => { const [[a]] = await db.query('SELECT COUNT(*) n, SUM(banned=1) b, SUM(paused=1) p, SUM(CASE WHEN inf_coins=0 AND coins IS NOT NULL THEN coins ELSE 0 END) c, SUM(created > ?) n7 FROM cloudy_users WHERE admin=0', [Date.now() - 7 * 864e5]); const now = Date.now(); res.json({ users: +a.n || 0, online: [...SEEN.values()].filter(t => now - t < 120000).length, banned: +a.b || 0, paused: +a.p || 0, coins: +a.c || 0, items: 0, codes: Object.keys(CODES).length, gate: Object.keys(GATE).length, new7: +a.n7 || 0, announce: ANN }); }));
 app.all('/admin/codes', admin(async (_q, res) => res.json({ codes: Object.entries(CODES).map(([code, c]) => ({ code, coins: c.coins || 0, items: c.items || [], uses: c.uses || 0, used: (c.used || []).length, exp: c.exp || 0 })) })));

@@ -1,4 +1,9 @@
 {
+ "0.9.73": [
+  "Request Key: ask for access on the access code screen. The owner approves or rejects it and the code appears automatically",
+  "Public server status (Settings and website) with real server checks",
+  "Updates from our own server are verified with a SHA-256 checksum before they are installed"
+ ],
  "0.9.72": [
   "Updates now come from cloudyclient.com first (only visible to the client); GitHub stays as a fallback"
  ],

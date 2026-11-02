@@ -5,17 +5,22 @@ label{display:grid;gap:6px;margin:12px 0;color:var(--mu);font-size:14px}input[ty
 .panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;margin:12px 0}.drop{border:1.5px dashed rgba(255,255,255,.25);border-radius:18px;padding:30px;text-align:center;color:var(--mu);cursor:pointer;margin:14px 0}.drop.on{border-color:var(--ac);color:#fff}
 .row{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:14px}.bar{height:5px;background:rgba(255,255,255,.1);border-radius:9px;margin-top:8px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--ac)}
 .ok{color:#5ee08a}.er{color:#ff6b6b}.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.two{display:grid;grid-template-columns:70px 1fr;gap:8px}.mini{background:rgba(255,255,255,.08);border:0;color:var(--tx);border-radius:10px;padding:6px 12px;cursor:pointer;font:inherit;font-size:13px}.mini.d{color:#ff8a8a}
-.tabs{display:flex;gap:8px;margin:18px 0;flex-wrap:wrap}.kv{display:inline-block;min-width:130px;margin:6px 10px 6px 0}.kv span{display:block;color:var(--mu);font-size:13px}.kv b{font-size:24px}.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.tg{font-style:normal;font-size:11px;background:rgba(74,163,255,.2);border-radius:980px;padding:2px 9px;margin-left:4px}.tg.r{background:rgba(255,80,80,.25)}.tabs button{flex:1;min-width:110px}.tabs .on{background:var(--ac);color:#001a33}.vrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}</style></head><body>
+.tabs{display:flex;gap:8px;margin:18px 0;flex-wrap:wrap}.kv{display:inline-block;min-width:130px;margin:6px 10px 6px 0}.kv span{display:block;color:var(--mu);font-size:13px}.kv b{font-size:24px}.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.tg{font-style:normal;font-size:11px;background:rgba(74,163,255,.2);border-radius:980px;padding:2px 9px;margin-left:4px}.tg.r{background:rgba(255,80,80,.25)}.tabs button{flex:1;min-width:100px}.tabs .on{background:var(--ac);color:#001a33}.vrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}</style></head><body>
 <main>
 <div class="top"><div><h1>Admin</h1><div style="color:var(--mu)" id="who">Nur für Admins und Konten mit Owner-Tag.</div></div><div><a class="mini" href="/" style="text-decoration:none">Zur Webseite</a> <button class="mini" id="out" hidden>Abmelden</button></div></div>
 
 <div id="login" class="panel"><label>Benutzername<input type="text" id="u" autocomplete="username"></label><label>Passwort<input type="password" id="p" autocomplete="current-password"></label><button class="btn" id="in">Anmelden</button> <span id="lerr" class="er"></span></div>
 
 <div id="app" hidden>
-<div class="tabs" id="tabs"><button class="btn s on" data-t="home">Übersicht</button><button class="btn s" data-t="up">Versionen</button><button class="btn s" data-t="acc">Konten</button><button class="btn s" data-t="gate">Zugangscodes</button><button class="btn s" data-t="web">Webseite</button></div>
+<div class="tabs" id="tabs"><button class="btn s on" data-t="home">Übersicht</button><button class="btn s" data-t="up">Versionen</button><button class="btn s" data-t="acc">Konten</button><button class="btn s" data-t="req">Anfragen <span id="reqN"></span></button><button class="btn s" data-t="gate">Zugangscodes</button><button class="btn s" data-t="web">Webseite</button></div>
 <div id="t-home">
  <div class="panel" id="stats">…</div>
  <div class="panel"><b>Ankündigung an alle Spieler (im Launcher)</b><label>Text (leer = entfernen)<input type="text" id="ann" maxlength="300"></label><button class="btn s" id="annSave">Senden</button> <span id="annMsg"></span></div>
+ <div class="panel"><b>Status-Seite</b><div style="color:var(--mu);font-size:14px;margin:4px 0 8px">Erscheint öffentlich auf der Webseite und im Launcher. Konto-Server und Datenbank werden live geprüft.</div>
+ <label style="display:flex;gap:10px;align-items:center;color:var(--tx)"><input type="checkbox" id="mOn"> Wartungsmodus anzeigen</label>
+ <label>Text zur Wartung<input type="text" id="mTx" maxlength="200" placeholder="z. B. Update läuft, in 10 Minuten wieder da"></label>
+ <div class="two" style="grid-template-columns:2fr 1fr"><label>Minecraft-Server (Adresse, leer = keiner)<input type="text" id="mcH" placeholder="play.beispiel.de"></label><label>Port<input type="text" id="mcP" value="25565"></label></div>
+ <button class="btn s" id="stSave">Speichern</button> <span id="stMsg"></span></div>
  <div class="panel"><b>Server</b><div id="health" style="color:var(--mu);margin-top:6px">…</div></div>
 </div>
 <div id="t-up" hidden>
@@ -27,6 +32,7 @@ label{display:grid;gap:6px;margin:12px 0;color:var(--mu);font-size:14px}input[ty
  <h2>Vorhandene Versionen</h2><div id="vers">…</div>
 </div>
 <div id="t-acc" hidden><div class="panel"><input type="text" id="qacc" placeholder="Konto suchen …"></div><div id="accs">…</div></div>
+<div id="t-req" hidden><p style="color:var(--mu)">Anfragen für den Zugang (Request Key). Bei „Freigeben“ entsteht ein einmaliger Zugangscode (7 Tage gültig), den der Spieler im Launcher automatisch bekommt.</p><div id="reqs">…</div></div>
 <div id="t-gate" hidden>
  <div class="panel"><b>Neuen Zugangscode erstellen</b><div class="two" style="grid-template-columns:1fr 1fr 1fr"><label>Code (leer = zufällig)<input type="text" id="gc"></label><label>Max. Nutzungen (0 = ∞)<input type="text" id="gu" value="1"></label><label>Gültig Tage (0 = ∞)<input type="text" id="gd" value="0"></label></div><button class="btn s" id="gmake">Erstellen</button> <span id="gmsg"></span></div>
  <div id="gates">…</div>
@@ -46,16 +52,16 @@ const H=()=>({Authorization:'Bearer '+tok}),esc=s=>String(s??'').replace(/[&<>"]
 const api=(p,b)=>fetch(p,{method:'POST',headers:{...H(),'Content-Type':'application/json'},body:JSON.stringify(b||{})}).then(async r=>{const j=await r.json().catch(()=>({}));return r.ok?j:{error:j.error||('Fehler '+r.status)}}).catch(()=>({error:'Server nicht erreichbar.'}));
 const date=t=>t?new Date(t).toLocaleString('de-DE'):'–';
 async function enter(){ if(!tok)return; const r=await fetch('/api/me',{headers:H()}).then(r=>r.json()).catch(()=>({})); if(!r.admin){tok='';try{sessionStorage.removeItem('cloudyTok')}catch{}return false}
- $('login').hidden=true;$('app').hidden=false;$('out').hidden=false;loadHome();loadVers();loadSite();return true}
+ $('login').hidden=true;$('app').hidden=false;$('out').hidden=false;loadHome();loadVers();loadSite();loadStatusCfg();loadReqs();return true}
 $('in').onclick=async()=>{$('lerr').textContent='';const r=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:$('u').value,pass:$('p').value})}).then(async x=>({s:x.status,j:await x.json().catch(()=>({}))})).catch(()=>null);
  if(!r)return $('lerr').textContent='Server nicht erreichbar.';if(!r.j.token)return $('lerr').textContent=r.j.error||'Anmeldung fehlgeschlagen.';
  if(!(r.j.user&&r.j.user.admin))return $('lerr').textContent='Dieses Konto ist kein Admin/Owner.';
  tok=r.j.token;try{sessionStorage.setItem('cloudyTok',tok)}catch{}$('who').textContent='Angemeldet als '+r.j.user.name;enter()};
 $('p').onkeydown=e=>{if(e.key==='Enter')$('in').click()};
 $('out').onclick=()=>{try{sessionStorage.removeItem('cloudyTok')}catch{}location.reload()};
-const TABS=['home','up','acc','gate','web'];
+const TABS=['home','up','acc','req','gate','web'];
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>{x.classList.toggle('on',x===b);x.style.cssText=x===b?'':'background:#2a2a30;color:#fff'});TABS.forEach(t=>$('t-'+t).hidden=b.dataset.t!==t);
- if(b.dataset.t==='acc')loadAcc();if(b.dataset.t==='gate')loadGates();if(b.dataset.t==='home')loadHome();if(b.dataset.t==='up')loadVers()});
+ if(b.dataset.t==='acc')loadAcc();if(b.dataset.t==='req')loadReqs();if(b.dataset.t==='gate')loadGates();if(b.dataset.t==='home')loadHome();if(b.dataset.t==='up')loadVers()});
 // ---- Übersicht
 async function loadHome(){const s=await api('/admin/stats');
  $('stats').innerHTML=s.error?'<span class="er">'+esc(s.error)+'</span>':[['Konten',s.users],['Online',s.online],['Neu (7 Tage)',s.new7],['Gesperrt',s.banned],['Pausiert',s.paused],['Coins gesamt',s.coins],['Codes',s.codes],['Zugangscodes',s.gate]].map(([k,v])=>`<div class="kv"><span>${k}</span><b>${esc(v)}</b></div>`).join('');
@@ -105,6 +111,13 @@ function drawAcc(){const q=$('qacc').value.trim().toLowerCase(),L=ACC.filter(u=>
   else if(a==='reset'){if(!confirm('Passwort von '+name+' auf 12345 setzen? (Muss danach geändert werden)'))return;r=await api('/admin/reset',{name})}
   else if(a==='del'){if(!confirm(name+' endgültig löschen?'))return;r=await api('/admin/delete',{name})}
   if(r&&r.error)alert(r.error);loadAcc()})}
+// ---- Anfragen (Request Key)
+async function loadReqs(){const r=await api('/admin/keyreqs');if(r.error){$('reqs').innerHTML='<div class="panel er">'+esc(r.error)+'</div>';return}
+ const L=r.requests||[],p=L.filter(x=>x.status==='pending').length;$('reqN').textContent=p?'('+p+')':'';
+ $('reqs').innerHTML=L.length?L.map(x=>`<div class="panel"><div class="vrow" style="border:0"><span><b>${esc(x.name)}</b> <em class="tg${x.status==='rejected'?' r':''}">${x.status==='pending'?'offen':x.status==='approved'?'freigegeben':'abgelehnt'}</em></span><span style="color:var(--mu);font-size:13px">${date(x.t)}</span></div>${x.note?`<div style="color:var(--mu);font-size:14px">„${esc(x.note)}“</div>`:''}${x.status==='approved'?`<div style="font-size:14px;margin-top:6px">Code: <b style="font-family:ui-monospace,monospace">${esc(x.code)}</b></div>`:''}${x.status==='pending'?`<div class="acts"><button class="mini" data-k="${x.id}" data-a="approve">Freigeben</button><button class="mini d" data-k="${x.id}" data-a="reject">Ablehnen</button></div>`:''}</div>`).join(''):'<div class="panel">Keine Anfragen.</div>';
+ $('reqs').querySelectorAll('button[data-k]').forEach(b=>b.onclick=async()=>{const note=prompt(b.dataset.a==='approve'?'Nachricht an den Spieler (optional):':'Grund (optional):','');if(note==null)return;const r2=await api('/admin/keyreq',{id:b.dataset.k,action:b.dataset.a,note});if(r2.error)alert(r2.error);loadReqs()})}
+async function loadStatusCfg(){const c=await fetch('/api/status/config',{headers:H()}).then(r=>r.json()).catch(()=>null);if(!c||c.error)return;$('mOn').checked=!!c.maintenance.on;$('mTx').value=c.maintenance.text||'';$('mcH').value=c.mc?c.mc.host:'';$('mcP').value=c.mc?c.mc.port:25565}
+$('stSave').onclick=async()=>{const r=await fetch('/api/status/config',{method:'PUT',headers:{...H(),'Content-Type':'application/json'},body:JSON.stringify({maintenance:{on:$('mOn').checked,text:$('mTx').value},mc:{host:$('mcH').value,port:+$('mcP').value||25565}})}).then(x=>x.json()).catch(()=>({error:'Server nicht erreichbar.'}));$('stMsg').className=r.ok?'ok':'er';$('stMsg').textContent=r.ok?'Gespeichert ✓':(r.error||'Fehler')};
 // ---- Zugangscodes
 async function loadGates(){const r=await api('/admin/gatecodes');if(r.error){$('gates').innerHTML='<div class="panel er">'+esc(r.error)+'</div>';return}
  $('gates').innerHTML=r.codes.length?r.codes.map(c=>`<div class="panel"><div class="vrow" style="border:0"><span><b style="font-family:ui-monospace,monospace">${esc(c.code)}</b> · ${c.used}/${c.uses||'∞'} genutzt · ${c.active} aktiv${c.exp?' · bis '+date(c.exp):''}</span><span><button class="mini" data-c="${esc(c.code)}" data-r="0">Löschen</button> <button class="mini d" data-c="${esc(c.code)}" data-r="1">Löschen + Zugang entziehen</button></span></div></div>`).join(''):'<div class="panel">Keine Zugangscodes.</div>';

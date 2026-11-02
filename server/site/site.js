@@ -17,6 +17,22 @@
   render(window.SITE_DEF);
   fetch('/api/site', { cache: 'no-cache' }).then(r => r.json()).then(j => { render({ ...window.SITE_DEF, ...j }); }).catch(() => {});
   try { const t = sessionStorage.getItem('cloudyTok'); if (t) fetch('/api/me', { headers: { Authorization: 'Bearer ' + t } }).then(r => r.json()).then(j => { if (j.admin) $('admLink').hidden = false; }).catch(() => {}); } catch {}
+  // ---- Server-Status (echte Prüfung auf dem Server; nicht erreichbar = offline) ----
+  const dot = c => `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${c};margin-right:10px;box-shadow:0 0 12px ${c}"></span>`;
+  const rowS = (name, c, txt, sub) => `<div class="ver"><h3 style="font-size:19px">${dot(c)}${esc(name)} <time style="margin-left:auto">${esc(txt)}</time></h3>${sub ? `<p>${esc(sub)}</p>` : ''}</div>`;
+  const ago = t => { if (!t) return 'noch nie'; const s = Math.round((Date.now() - t) / 1000); return s < 60 ? 'vor ' + s + ' s' : s < 3600 ? 'vor ' + Math.round(s / 60) + ' min' : 'vor ' + Math.round(s / 3600) + ' h'; };
+  async function status() {
+    let j = null; try { const r = await fetch('/api/status', { cache: 'no-store' }); if (r.ok) j = await r.json(); } catch {}
+    const G = '#30d158', Y = '#ffd60a', R = '#ff453a';
+    if (!j) { $('stBox').innerHTML = rowS('Cloudy-Konto-Server', R, 'Offline', 'Der Server antwortet gerade nicht.'); $('stDot').style.background = R; $('stTime').textContent = 'Zuletzt geprüft ' + new Date().toLocaleTimeString('de-DE'); return; }
+    let h = '';
+    if (j.maintenance && j.maintenance.on) h += rowS('Wartung', Y, 'Aktiv', j.maintenance.text || 'Wir arbeiten gerade an Cloudy.');
+    h += rowS('Cloudy-Konto-Server', j.db ? G : Y, j.db ? 'Online' : 'Eingeschränkt', j.accounts ? j.accounts.online + ' Spieler online' : '');
+    if (j.mc) h += rowS('Cloudy-Minecraft-Server', j.mc.online ? G : R, j.mc.online ? 'Online' : 'Offline', j.mc.online ? j.mc.players + ' / ' + j.mc.max + ' Spieler · ' + j.mc.ms + ' ms' + (j.mc.version ? ' · ' + j.mc.version : '') : 'Zuletzt online ' + ago(j.mc.lastOkAt));
+    if (j.version) h += rowS('Neueste Version', G, j.version, '');
+    $('stBox').innerHTML = h; $('stDot').style.background = j.status === 'online' ? G : Y; $('stTime').textContent = 'Zuletzt erfolgreich geprüft ' + new Date(j.checkedAt).toLocaleTimeString('de-DE');
+  }
+  status(); setInterval(status, 30000);
   const NAMES = { win: 'Windows', 'win-portable': 'Windows portable', 'mac-arm': 'Mac (Apple Silicon)', 'mac-intel': 'Mac (Intel)', linux: 'Linux', ios: 'iOS (Test)', other: 'Datei' };
   const ua = navigator.userAgent, me = /iPhone|iPad/.test(ua) ? 'ios' : /Mac/.test(ua) ? 'mac-arm' : /Linux/.test(ua) && !/Android/.test(ua) ? 'linux' : /Win/.test(ua) ? 'win' : '';
   const mb = n => (n / 1048576 >= 1 ? (n / 1048576).toFixed(0) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB');

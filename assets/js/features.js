@@ -509,6 +509,14 @@ window.cloudy.on('acctLocked', async msg => { try { await window.cloudy.authLogo
     $$('#gcList [data-gcr]').forEach(b => b.onclick = async () => { if (confirm(b.dataset.gcr + ' – ' + L('Code löschen und allen den Zugang entziehen, die ihn benutzt haben?'))) { await window.cloudy.gateDelete(b.dataset.gcr, true); paintGate(); } });
     if (window.setLang) window.setLang(document.documentElement.lang || 'de');
   }
+  async function paintReq() {
+    const box = $('#krList'); if (!box) return; const L2 = await window.cloudy.krList().catch(() => []);
+    box.innerHTML = L2.length ? L2.map(x => `<div class="arow"><b>${esc(x.name)} <small class="muted">${x.status === 'pending' ? L('offen') : x.status === 'approved' ? L('freigegeben') : L('abgelehnt')}${x.note ? ' · „' + esc(x.note) + '“' : ''}${x.code ? ' · <code>' + esc(x.code) + '</code>' : ''}</small></b>${x.status === 'pending' ? `<span><button class="btn ghost" data-kra="${x.id}">${L('Freigeben')}</button><button class="btn ghost" data-krr="${x.id}">${L('Ablehnen')}</button></span>` : ''}</div>`).join('') : `<span class="muted">${L('Keine Anfragen.')}</span>`;
+    const dec = async (id, action) => { const r = await window.cloudy.krDecide({ id, action, note: '' }); if (r && !r.ok) alert(r.error || 'Error'); paintReq(); };
+    $$('#krList [data-kra]').forEach(b => b.onclick = () => dec(b.dataset.kra, 'approve')); $$('#krList [data-krr]').forEach(b => b.onclick = () => dec(b.dataset.krr, 'reject'));
+    if (window.setLang) window.setLang(document.documentElement.lang || 'de');
+  }
+  window.paintReq = paintReq; setTimeout(() => { try { paintReq(); } catch {} }, 1800);
   window.paintGate = paintGate;
   go.onclick = async () => {
     msg(''); const r = await window.cloudy.gateCreate({ code: $('#gcName').value, uses: $('#gcUses').value, days: $('#gcDays').value }).catch(() => ({ ok: false, error: 'Der Konto-Server ist nicht erreichbar.' }));
@@ -721,3 +729,21 @@ window.rewardAnim = function (o) {
 
 // Tags (Tester, Cloudy+, Moderator, Admin) als kleine Abzeichen
 window.cloudyTags = tags => (tags || []).map(k => { const m = /^clan:([A-Z0-9]{1,4})(?::([0-9a-f]{6}))?$/i.exec(String(k)); if (m) return [m[1], 'clan', m[2] ? '#' + m[2] : '']; const t = ({ owner: ['Owner', 'owner'], admin: ['Admin', 'admin'], manager: ['Manager', 'manager'], mod: ['Moderator', 'mod'], plus: ['Cloudy+', 'plus'], tester: ['Tester', 'tester'] })[k]; return t ? [t[0], t[1], ''] : null; }).filter(Boolean).map(([l, c, col]) => `<span class="ctag ${c}"${col ? ` style="background:${col}40;border-color:${col};color:#fff"` : ''}>${l}</span>`).join('');
+
+// ---------- Server-Status (öffentlich, für alle) ----------
+(function () {
+  const box = document.getElementById('srvStatBox'); if (!box) return;
+  const dot = c => `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${c};margin-right:8px;box-shadow:0 0 8px ${c}"></span>`, T = (x) => (window.t ? window.t(x) : x);
+  const row = (n, c, txt, sub) => `<div class="arow"><b>${dot(c)}${T(n)}${sub ? ` <small class="muted">${sub}</small>` : ''}</b><span>${T(txt)}</span></div>`;
+  async function paint() {
+    let j = null; try { j = await window.cloudy.serverStatus(); } catch {}
+    if (!j || j.offline || !j.ok) { box.innerHTML = row('Cloudy-Konto-Server', '#ff453a', 'Offline', '') + `<small class="muted">${T('Zuletzt geprüft')} ${new Date().toLocaleTimeString()}</small>`; return; }
+    let h = '';
+    if (j.maintenance && j.maintenance.on) h += row('Wartung', '#ffd60a', 'Aktiv', j.maintenance.text ? j.maintenance.text.replace(/</g, '&lt;') : '');
+    h += row('Cloudy-Konto-Server', j.db ? '#30d158' : '#ffd60a', j.via === 'backup' ? 'Backup-Server' : j.db ? 'Online' : 'Eingeschränkt', j.accounts && j.via !== 'backup' ? j.accounts.online + ' ' + T('Spieler online') : '');
+    if (j.mc) h += row('Cloudy-Minecraft-Server', j.mc.online ? '#30d158' : '#ff453a', j.mc.online ? 'Online' : 'Offline', j.mc.online ? j.mc.players + ' / ' + j.mc.max + ' · ' + j.mc.ms + ' ms' : '');
+    box.innerHTML = h + `<small class="muted">${T('Zuletzt erfolgreich geprüft')} ${new Date(j.checkedAt || j.t).toLocaleTimeString()}</small>`;
+    if (window.setLang && document.documentElement.lang === 'en') window.setLang('en');
+  }
+  paint(); setInterval(() => { if (document.hidden) return; paint(); }, 30000);
+})();

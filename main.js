@@ -164,6 +164,34 @@ ipcMain.handle('gateAdmin', async (_e, { user, pass } = {}) => { // Admin-Anmeld
   return { ok: true, user: r.user.name, admin: true };
 });
 const gateNeedsSrv = { ok: false, error: 'Zugangscodes brauchen den Konto-Server.' };
+// ---- Request Key: Zugang anfragen (ohne Konto). Die Anfrage-ID bleibt lokal gespeichert, damit der Stand beim nächsten Start noch da ist. ----
+const krFile = path.join(app.getPath('userData'), 'keyreq.json'), krRead = () => { try { const j = JSON.parse(fs.readFileSync(krFile, 'utf8')); return j && j.id && j.secret ? j : null; } catch { return null; } };
+ipcMain.handle('keyReq', async (_e, { name, note } = {}) => {
+  if (!srvCfg()) return { ok: false, error: 'No account server configured.' };
+  const r = await srvCall('/keyreq', { name: String(name || ''), note: String(note || '') }).catch(() => null);
+  if (!r) return { ok: false, error: 'The account server is not reachable.' };
+  if (r.ok) { try { fs.writeFileSync(krFile, JSON.stringify({ id: r.id, secret: r.secret, name: String(name).trim() })); } catch {} }
+  return { ok: !!r.ok, error: r.error || '' };
+});
+ipcMain.handle('keyReqStatus', async () => {
+  const k = krRead(); if (!k) return { none: true };
+  if (!srvCfg()) return { error: 'No account server configured.', name: k.name };
+  const r = await srvCall('/keyreq/status', { id: k.id, secret: k.secret }).catch(() => null);
+  if (!r) return { error: 'The account server is not reachable.', name: k.name };
+  if (!r.ok) { if (r.status === 200) { try { fs.rmSync(krFile, { force: true }); } catch {} return { none: true }; } return { error: r.error || 'Error', name: k.name }; }
+  return { ok: true, name: r.name, status: r.status, code: r.code || '', adminNote: r.adminNote || '', t: r.t };
+});
+ipcMain.handle('keyReqClear', () => { try { fs.rmSync(krFile, { force: true }); } catch {} return true; });
+ipcMain.handle('krList', async () => (srvCfg() && adminOnly()) ? ((await srvCall('/admin/keyreqs', {}, srvTok).catch(() => ({}))).requests || []) : []);
+ipcMain.handle('krDecide', async (_e, { id, action, note } = {}) => { if (!adminOnly()) return { ok: false, error: 'Admins only.' }; const r = await srvCall('/admin/keyreq', { id, action, note }, srvTok).catch(() => null); return r ? { ok: !!r.ok, code: r.code, error: r.error } : { ok: false, error: 'The account server is not reachable.' }; });
+// ---- Server-Status (öffentlich, echte Prüfung auf dem Server): Haupt-Server, sonst Backup ----
+ipcMain.handle('serverStatus', async () => {
+  const c = srvCfg(), t = Date.now(); if (!c) return { ok: false, offline: true, t };
+  const get = async u => { const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 6000); try { const r = await fetch(u, { signal: ctl.signal }); return r.ok ? await r.json() : null; } catch { return null; } finally { clearTimeout(to); } };
+  const j = await get(c.url + '/api/status'); if (j && j.api) return { ok: true, via: 'main', ...j, t };
+  const b = backupUrl(); if (b && b !== c.url) { const h = await get(b + '/health'); if (h && h.ok) return { ok: true, via: 'backup', api: true, db: true, status: 'degraded', maintenance: { on: false, text: '' }, mc: null, accounts: { online: 0 }, checkedAt: t, t }; }
+  return { ok: false, offline: true, t };
+});
 ipcMain.handle('gateList', async () => (srvCfg() && adminOnly()) ? ((await srvCall('/admin/gatecodes', {}, srvTok).catch(() => ({}))).codes || []) : []);
 ipcMain.handle('gateCreate', async (_e, o) => { if (!adminOnly()) return { ok: false, error: 'Nur für Admins.' }; if (!srvCfg()) return gateNeedsSrv; const r = await srvCall('/admin/gatecreate', o || {}, srvTok).catch(() => null); return r ? { ok: !!r.ok, code: r.code, error: r.error } : { ...SRV_DOWN, ok: false }; });
 ipcMain.handle('admTag', async (_e, { name, tag, on }) => (srvCfg() && adminOnly()) ? !!(await srvCall('/admin/tag', { name, tag, on: !!on }, srvTok).catch(() => ({}))).ok : false);
@@ -810,7 +838,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.72'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.73'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
