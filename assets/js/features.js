@@ -555,7 +555,20 @@ $('#lgForgot').onclick = async e => {
   }
   if (confirm(L('Das Tester-Konto auf Tester / 12345 zurücksetzen? Andere Konten (auch Admin) bleiben erhalten. Das Passwort muss danach sofort neu gesetzt werden.'))) { await window.cloudy.authReset(); lgFresh = true; lgSet('in', FRESH_HINT); }
 };
-$('#authOut').onclick = async () => { await window.cloudy.authLogout(); const s = await window.cloudy.authState(); lgFresh = s.fresh; $('#login').classList.remove('off'); lgSet('in', s.fresh ? FRESH_HINT : ''); $('#lgPass').value = ''; paintAdmin(false); };
+// ---------- Offline-Modus ----------
+function setOffline(on) {
+  window.__offline = !!on; document.body.classList.toggle('offline', !!on);
+  let b = $('#offBar');
+  if (on && !b) { b = document.createElement('div'); b.id = 'offBar'; b.innerHTML = '<span></span><button type="button" class="chip">' + L('Anmelden') + '</button>'; document.body.appendChild(b); b.querySelector('button').onclick = () => $('#authOut').click(); }
+  if (b) { b.style.display = on ? '' : 'none'; if (on) b.querySelector('span').textContent = L('Offline-Modus: nur Einzelspieler. Kein Server, keine Freunde, kein Shop, keine Cosmetics, keine Cheats.'); }
+}
+$('#lgOffline').onclick = async () => {
+  if (!confirm(L('Offline spielen: Du kannst Minecraft ohne Cloudy-Konto starten, aber nur im Einzelspieler. Nicht verfügbar: Server, Freunde & Chat, Shop, Cosmetics, Coins, Cheats und Cloud-Sync. Fortfahren?'))) return;
+  const r = await window.cloudy.offlineEnter().catch(() => ({ ok: false, error: 'Fehlgeschlagen.' }));
+  if (!r || !r.ok) { $('#lgMsg').textContent = L((r && r.error) || 'Fehlgeschlagen.'); return; }
+  $('#login').classList.add('off'); $('#lgPass').value = $('#lgPass2').value = ''; paintAdmin(false); setOffline(true);
+};
+$('#authOut').onclick = async () => { setOffline(false); await window.cloudy.authLogout(); const s = await window.cloudy.authState(); lgFresh = s.fresh; $('#login').classList.remove('off'); lgSet('in', s.fresh ? FRESH_HINT : ''); $('#lgPass').value = ''; paintAdmin(false); };
 window.cloudy.authState().then(s => { lgFresh = s.fresh; if (s.user) lgDone(s.user, false, s.admin); else lgSet('in', s.fresh ? FRESH_HINT : ''); });
 
 // ---------- Notfall: Neu laden / Update erzwingen (auch per F5 bzw. Strg+Umschalt+U) ----------

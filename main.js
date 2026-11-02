@@ -838,7 +838,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.75'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.76'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1041,6 +1041,7 @@ const readAuth = () => {
   return a;
 };
 let currentUser = null, pendingKey = null, pendingRemember = true;
+let offlineMode = false; // Offline-Modus: ohne Cloudy-Konto spielen, mit Einschraenkungen (kein Server, keine Cosmetics/Cheats/Sync)
 const curRec = () => { const a = readAuth(); return currentUser ? a.users[currentUser.toLowerCase()] : null; };
 function openSession(key, remember) {
   const a = readAuth(), u = a.users[key];
@@ -1231,7 +1232,8 @@ ipcMain.handle('authChangePass', async (_e, { pass }) => {
   saveAuth(a); openSession(pendingKey, pendingRemember);
   return { ok: true, ...info(u) };
 });
-ipcMain.handle('authLogout', () => { srvTok = null; currentUser = null; pendingKey = null; fs.rmSync(sessFile, { force: true }); });
+ipcMain.handle('offlineEnter', () => { if (currentUser) return { ok: false, error: 'Du bist angemeldet.' }; if (cfgPatch({}).gateOk !== true) return { ok: false, error: 'Access code required.' }; offlineMode = true; return { ok: true }; });
+ipcMain.handle('authLogout', () => { offlineMode = false; srvTok = null; currentUser = null; pendingKey = null; fs.rmSync(sessFile, { force: true }); });
 ipcMain.handle('authReset', () => {
   if (srvCfg()) return; // „Passwort vergessen?“: setzt NUR das Tester-Konto auf Tester / 12345 zurück (muss danach neu gesetzt werden); Admin bleibt unberührt
   currentUser = null; pendingKey = null; fs.rmSync(sessFile, { force: true });
@@ -2405,10 +2407,12 @@ ipcMain.handle('launchCancel', () => { launchCancelled = true; try { if (mcProc)
 const modernQP = v => { const m = /^1\.(\d+)/.exec(String(v)); return (m && +m[1] >= 20) || /^\d{2}\./.test(String(v)) || /^2\d/.test(String(v)); };
 ipcMain.handle('launch', async (_e, { username, version, type, ram, server, fabric, perf, jvm, ww, wh, minimize, clientMods = [], cheats, syncOpts, preset, safe = 0, hud, gfx }) => {
   if (cfgPatch({}).gateOk !== true) throw new Error('Access code required.');
-  if (!currentUser) return { ok: false, error: 'Bitte zuerst bei Cloudy anmelden.' };
+  if (!currentUser && !offlineMode) return { ok: false, error: 'Bitte zuerst bei Cloudy anmelden.' };
+  const off = !currentUser; // Offline-Modus: nur Einzelspieler, ohne Konto-Funktionen
+  if (off) { server = null; cheats = false; syncOpts = false; username = /^[A-Za-z0-9_]{3,16}$/.test(String(username || '')) ? username : 'Player'; }
   if (safe >= 1) { fabric = false; perf = false; clientMods = []; cheats = false; } // Sicherer Start: reines Vanilla, ohne Mods und ohne Client
   if (safe >= 2) { syncOpts = false; preset = ''; ram = Math.min(+ram || 4, 4); jvm = (jvm || '').split(/\s+/).filter(a => a && !/ZGC|Shenandoah|Parallel/.test(a)).concat('-XX:+UseG1GC').join(' '); }
-  const cosEq = safe ? {} : equipNow(); // gekaufte Cosmetics, die im Spiel gezeigt werden sollen
+  const cosEq = (safe || off) ? {} : equipNow(); // gekaufte Cosmetics, die im Spiel gezeigt werden sollen
   if (cosEq.cape && !clientMods.includes('cape')) clientMods = [...clientMods, 'cape'];
   const snd = safe ? { enabled: false } : sndWriteActive(); const sndOn = !!(snd.enabled && snd.ingame); // Creamkeys
   launchCancelled = false;
@@ -2445,7 +2449,7 @@ ipcMain.handle('launch', async (_e, { username, version, type, ram, server, fabr
   try {
     // Anmeldung läuft gleichzeitig mit Java- und Fabric-Prüfung (spart Wartezeit)
     let authP;
-    if (readAcc()) {
+    if (readAcc() && !off) {
       send('status', 'Melde bei Microsoft an …');
       authP = msAuth().catch(() => { throw new Error('Microsoft-Anmeldung abgelaufen. Melde dich in den Einstellungen neu an.'); });
     } else authP = Promise.resolve(Authenticator.getAuth(username || 'Cloudy'));

@@ -203,6 +203,8 @@ html.win .wc{display:flex}.wc button{width:34px;height:28px;border:0;border-radi
 /* Anmeldeseite */
 #login{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:linear-gradient(160deg,var(--bg1),var(--bg2) 45%,var(--bg3))}
 #login.off{display:none}
+body.offline [data-p="friends"],body.offline [data-p="shop"],body.offline [data-p="servers"],body.offline [data-go="friends"],body.offline [data-go="shop"],body.offline [data-go="servers"]{display:none!important}
+#offBar{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:40;display:flex;gap:12px;align-items:center;padding:8px 14px;border-radius:14px;background:rgba(20,28,52,.92);color:#fff;font-size:12px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.35)}
 .lg{width:min(420px,92%);padding:30px 32px 24px;display:grid;gap:16px;animation:in .6s var(--ease)}
 .lgbrand{display:flex;align-items:center;justify-content:center;gap:10px;font-size:34px;font-weight:800;letter-spacing:-.03em;color:#fff;text-shadow:0 2px 18px var(--accent)}
 .lg label{display:grid;gap:6px;font-size:13px;font-weight:600;color:var(--ink2)}.lg form{display:grid;gap:12px}.lg .cb{display:flex;flex-direction:row;align-items:center;gap:8px}

@@ -278,6 +278,7 @@
     <p class="muted" id="lgMsg" style="min-height:18px;color:var(--accent)"></p>
     <button class="btn" id="lgGo" type="submit" style="height:48px;width:100%">Anmelden</button>
   </form>
+  <button class="chip" id="lgOffline" type="button" style="width:100%;justify-content:center;margin-top:8px">Offline spielen (eingeschränkt)</button>
   <p class="muted" style="font-size:12px;text-align:center"><span id="lgNote">Dein Cloudy-Konto gilt nur auf diesem Computer (kein Online-Konto).</span> <a href="#" id="lgForgot" style="color:var(--accent);font-weight:600">Passwort vergessen?</a></p>
 </div></div>
 <div id="onb"><div class="glass ob" id="obBox"></div></div>
@@ -350,7 +351,7 @@ $('#ram').oninput=e=>{$('#ramv').textContent=e.target.value+' GB';st.set('ram',+
 $('#folder').onclick=()=>window.cloudy.openFolder();
 
 function reset(msg){$('#cancel').style.display='none';$('#play').disabled=false;$('#play').textContent='Spielen';$('#bar').style.display='none';$('#dockT').textContent='Bereit';$('#status').textContent=msg||''}
-async function play(server,opt={}){window.__playSrv=server&&server.host&&!/^(localhost|127\.)/.test(String(server.host))?{host:server.host,port:server.port||25565,name:server.name||server.host}:null;
+async function play(server,opt={}){if(window.__offline)server=null;window.__playSrv=server&&server.host&&!/^(localhost|127\.)/.test(String(server.host))?{host:server.host,port:server.port||25565,name:server.name||server.host}:null;
   if(!version)return go('versions');
   const v=all.find(x=>x.id===bvr(version));
   window.__cancelAt=0;$('#cancel').style.display='';$('#play').disabled=true;$('#play').textContent='Lädt …';$('#bar').style.display='block';$('#fill').style.width='0%';

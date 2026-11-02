@@ -1,4 +1,7 @@
 {
+ "0.9.76": [
+  "Offline mode: play without a Cloudy account from the login screen. Limits: singleplayer only, no servers, friends/chat, shop, cosmetics, cheats or cloud sync"
+ ],
  "0.9.75": [
   "The Timer mod and new hearts HUD from 0.9.74 are now really included in the client (0.9.74 failed to build completely)"
  ],

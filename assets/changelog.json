@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.76",
+  "date": "2026-11-02",
+  "added": [
+   "Offline-Modus: Auf dem Anmelde-Bildschirm kannst du ohne Cloudy-Konto spielen. Einschränkungen: nur Einzelspieler, keine Server, keine Freunde/Chat, kein Shop, keine Cosmetics, keine Cheats, kein Cloud-Sync"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.75",
   "date": "2026-11-02",
   "added": [],

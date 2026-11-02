@@ -49,6 +49,7 @@ contextBridge.exposeInMainWorld('cloudy', {
   serverStatus: () => inv('serverStatus'), serverStart: o => inv('serverStart', o), serverStop: () => inv('serverStop'), serverCmd: c => inv('serverCmd', c), serverFolder: (v, t) => inv('serverFolder', v, t),
   frHostStatus: () => inv('frHostStatus'), frHost: on => inv('frHost', on), frConn: () => inv('frConn'), frConnect: o => inv('frConnect', o), frDisconnect: () => inv('frDisconnect'), frApi: o => inv('frApi', o),
   authLogout: () => inv('authLogout'),
+  offlineEnter: () => inv('offlineEnter'),
   authReset: () => inv('authReset'),
   localUpdateRun: () => inv('localUpdateRun'),
   localUpdateFolder: () => inv('localUpdateFolder'),

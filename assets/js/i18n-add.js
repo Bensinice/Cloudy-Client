@@ -1,5 +1,9 @@
 // Cloudy – zusätzliche englische Texte (werden von i18n.js zu EN dazugemischt). Format: "Deutsch": "English"
 window.CLOUDY_EN_EXTRA = {
+  "Offline spielen (eingeschränkt)": "Play offline (limited)",
+  "Offline-Modus: nur Einzelspieler. Kein Server, keine Freunde, kein Shop, keine Cosmetics, keine Cheats.": "Offline mode: singleplayer only. No servers, friends, shop, cosmetics or cheats.",
+  "Offline spielen: Du kannst Minecraft ohne Cloudy-Konto starten, aber nur im Einzelspieler. Nicht verfügbar: Server, Freunde & Chat, Shop, Cosmetics, Coins, Cheats und Cloud-Sync. Fortfahren?": "Play offline: you can start Minecraft without a Cloudy account, but singleplayer only. Not available: servers, friends & chat, shop, cosmetics, coins, cheats and cloud sync. Continue?",
+  "Du bist angemeldet.": "You are signed in.",
   "Server-Status": "Server status",
   "Live vom Cloudy-Server. Der Status wird auf dem Server geprüft, nicht geschätzt.": "Live from the Cloudy server. The status is checked on the server, not guessed.",
   "Cloudy-Konto-Server": "Cloudy account server",
