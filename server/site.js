@@ -45,5 +45,22 @@ module.exports = (app, express) => {
   });
   app.delete('/upload/:v', (req, res) => { const k = keyOk(req); if (k !== 'ok') return deny(res, k); if (!OK_VER.test(req.params.v)) return res.status(400).json({ error: 'Version ungültig.' }); fs.rm(path.join(ROOT, req.params.v), { recursive: true, force: true }, () => res.json({ ok: true })); });
   app.get('/upload', (_q, res) => res.sendFile(path.join(__dirname, 'site', 'upload.html')));
-  app.use(express.static(path.join(__dirname, 'site'), { extensions: ['html'], maxAge: '5m' }));
+  app.use(express.static(path.join(__dirname, 'site'), { extensions: ['html'], maxAge: 0, etag: true })); // immer prüfen, ob es etwas Neues gibt (kein altes Bild/CSS aus dem Cache)
+
+  // ---- Auto-Neustart: wird app.js oder site.js ersetzt, beendet sich der Server kurz danach selbst und startet neu. ----
+  // Neue Release-Dateien (Upload) brauchen keinen Neustart. Ausschalten: Variable AUTO_RESTART=0.
+  // Der Neustart braucht, dass dein Hoster den Server wieder startet (pm2, Docker, Panel „Auto-Restart“). Ohne so etwas: RESPAWN=1 setzen, dann startet er sich selbst neu.
+  if (process.env.AUTO_RESTART !== '0') {
+    const watch = ['app.js', 'site.js'], sig = f => { try { return crypto.createHash('sha1').update(fs.readFileSync(path.join(__dirname, f))).digest('hex'); } catch { return ''; } };
+    const base = Object.fromEntries(watch.map(f => [f, sig(f)])); let t = null;
+    try { fs.watch(__dirname, (_e, name) => {
+      if (!watch.includes(name)) return; clearTimeout(t);
+      t = setTimeout(() => { // erst 4 s nach der letzten Änderung (Upload kann dauern) und nur, wenn sich der Inhalt wirklich geändert hat
+        if (!watch.some(f => sig(f) && sig(f) !== base[f])) return;
+        console.log('Neue Server-Dateien erkannt – starte neu …');
+        if (process.env.RESPAWN === '1') { try { require('child_process').spawn('/bin/sh', ['-c', 'sleep 3; exec "$0" "$@"', process.argv[0], ...process.argv.slice(1)], { detached: true, stdio: 'ignore', env: process.env }).unref(); } catch {} }
+        setTimeout(() => process.exit(0), 300);
+      }, 4000);
+    }); } catch (e) { console.log('Auto-Neustart nicht möglich: ' + e.message); }
+  }
 };

@@ -25,3 +25,8 @@ Diese Schritte stehen auch auf der Webseite im Abschnitt „Installation“.
 - /update/latest.json ist nur für den Cloudy-Client sichtbar (Browser bekommen 404). Sichtschutz, kein Passwort.
 - Hochgeladene Dateien liegen im Ordner **releases/** neben app.js (oder wo RELEASE_DIR hinzeigt). Nicht löschen, bei einem Umzug mitnehmen.
 - Kontakt für den Zugangscode: oben in site/site.js bei `CONTACT` eintragen.
+
+## Automatischer Neustart
+- Ersetzt du **app.js** oder **site.js** auf dem Server, beendet sich der Server ~4 Sekunden nach der letzten Änderung selbst und startet neu (nur wenn sich der Inhalt wirklich geändert hat). Neue Installer (Upload) brauchen keinen Neustart.
+- Damit er wieder hochkommt, muss dein Hoster ihn neu starten (pm2, Docker, „Auto-Restart“ im Panel). Geht das bei dir nicht: Umgebungsvariable **RESPAWN=1** setzen, dann startet er sich selbst neu.
+- Abschalten: **AUTO_RESTART=0**.
