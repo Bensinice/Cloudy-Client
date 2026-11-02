@@ -35,7 +35,7 @@ public final class Hud {
 	}
 
 	/** Widget-IDs, die frei verschoben werden koennen (HUD-Eintraege aus Cloudy Mods). */
-	public static final String[] MOVABLE = {"fps", "ping", "coords", "dir", "cps", "speed", "clock", "memory", "totem", "keys", "armor", "lyricscard", "biome", "light", "nether", "day", "durability", "arrows", "potions", "held", "server", "session", "effects", "death", "food", "health", "target"};
+	public static final String[] MOVABLE = {"fps", "ping", "coords", "dir", "cps", "speed", "clock", "memory", "totem", "keys", "armor", "lyricscard", "biome", "light", "nether", "day", "durability", "arrows", "potions", "held", "server", "session", "effects", "death", "food", "health", "target", "timer"};
 
 	/** Beispieltext fuer den Editor (ohne Welt). */
 	public static String sample(String id) {

@@ -20,7 +20,7 @@ public class CloudyModsScreen extends Screen {
 	private boolean focus, wasDown;
 	private float uiF = 1f;
 	private String bindId = null, bindMsg = "";
-	private int sliding, scroll, maxScroll, pickT = -1;
+	private int sliding, scroll, maxScroll, pickT = -1, hbPage;
 	private float ph0, ps0, pv0;
 	private int px, py, pw, ph;
 
@@ -250,6 +250,7 @@ public class CloudyModsScreen extends Screen {
 		if (optId.equals("hotbar")) { hotbarModal(c, mx, my); return; }
 		if (optId.equals("crosshair")) { crossModal(c, mx, my); return; }
 		if (optId.equals("wingadj")) { wingModal(c, mx, my); return; }
+		if (optId.equals("timer")) { timerModal(c, mx, my); return; }
 		ModConfig.Def d = null;
 		for (ModConfig.Def q : ModConfig.DEFS) if (q.id().equals(optId)) d = q;
 		float[] p = ModConfig.pos.get(optId);
@@ -372,25 +373,46 @@ public class CloudyModsScreen extends Screen {
 
 	/** Optionen der eigenen Hotbar und Herzen. */
 	private void hotbarModal(DrawContext c, int mx, int my) {
-		int w = 300, rows = 7, h = 34 + rows * 23 + 28 + 34;
+		int w = 300, rows = hbPage == 0 ? 7 : 5, h = 34 + rows * 23 + (hbPage == 0 ? 28 : 34) + 34;
 		int x = (int) (this.width / uiF) / 2 - w / 2, y = Math.max(4, (int) (this.height / uiF) / 2 - h / 2);
 		shadow(c, x, y, w, h);
 		c.fill(x, y, x + w, y + h, 0xFF0A1226);
 		c.fill(x, y, x + w, y + 2, Theme.accent);
-		Ui.txt(c, "Custom hotbar options", x + 12, y + 12, 0xFFFFFFFF);
+		Ui.txt(c, "Hotbar & hearts", x + 12, y + 12, 0xFFFFFFFF);
+		String[] tabs = {"COLORS", "HEARTS"};
+		for (int i = 0; i < 2; i++) {
+			int tx = x + w - 10 - (2 - i) * 62 - (1 - i) * 4 + 0, ty = y + 8, tw = 62;
+			boolean hv = Ui.in(mx, my, tx, ty, tw, 16), sel = hbPage == i;
+			c.fill(tx, ty, tx + tw, ty + 16, sel ? Theme.accent : hv ? 0xFF2A3558 : 0xFF1A2342);
+			Ui.sp(c, tabs[i], tx + tw / 2, ty + 4, sel ? 0xFF0B1226 : 0xFFFFFFFF);
+			final int pg = i;
+			mhits.add(new Hit(tx, ty, tw, 16, () -> hbPage = pg));
+		}
 		int rx = x + 10, rw = w - 20, ry = y + 30;
-		mrow(c, mx, my, rx, ry, rw, "Hotbar style", ModConfig.HB_STYLE[ModConfig.hbStyle], 0, () -> { ModConfig.hbStyle = (ModConfig.hbStyle + 1) % ModConfig.HB_STYLE.length; ModConfig.save(); }); ry += 23;
-		mrow(c, mx, my, rx, ry, rw, "Hotbar color (custom style)", ModConfig.colName(ModConfig.hbCol, 5), ModConfig.lcol(ModConfig.hbCol, 5), () -> openPick(5)); ry += 23;
-		mrow(c, mx, my, rx, ry, rw, "Selected slot color", ModConfig.colName(ModConfig.hbSel, 6), ModConfig.lcol(ModConfig.hbSel, 6), () -> openPick(6)); ry += 23;
-		mrow(c, mx, my, rx, ry, rw, "Hearts", ModConfig.HEART_MODE[ModConfig.heartMode], 0, () -> { ModConfig.heartMode = (ModConfig.heartMode + 1) % ModConfig.HEART_MODE.length; ModConfig.save(); }); ry += 23;
-		mrow(c, mx, my, rx, ry, rw, "Heart color (custom)", ModConfig.colName(ModConfig.heartCol, 7), ModConfig.lcol(ModConfig.heartCol, 7), () -> openPick(7)); ry += 23;
-		mrow(c, mx, my, rx, ry, rw, "Armor bar color", ModConfig.colName(ModConfig.armCol, 8), ModConfig.lcol(ModConfig.armCol, 8), () -> openPick(8)); ry += 23;
-		mrow(c, mx, my, rx, ry, rw, "Food bar color", ModConfig.colName(ModConfig.foodCol, 9), ModConfig.lcol(ModConfig.foodCol, 9), () -> openPick(9)); ry += 23;
-		c.fill(rx, ry + 2, rx + rw, ry + 24, 0xFF0E1630);
-		Ui.txt(c, "Hearts, armor, food and air are redrawn. Vanilla with absorption or >20 HP.", rx + 8, ry + 9, 0xFF8794B8);
+		if (hbPage == 0) {
+			mrow(c, mx, my, rx, ry, rw, "Hotbar style", ModConfig.HB_STYLE[ModConfig.hbStyle], 0, () -> { ModConfig.hbStyle = (ModConfig.hbStyle + 1) % ModConfig.HB_STYLE.length; ModConfig.save(); }); ry += 23;
+			mrow(c, mx, my, rx, ry, rw, "Hotbar color (custom style)", ModConfig.colName(ModConfig.hbCol, 5), ModConfig.lcol(ModConfig.hbCol, 5), () -> openPick(5)); ry += 23;
+			mrow(c, mx, my, rx, ry, rw, "Selected slot color", ModConfig.colName(ModConfig.hbSel, 6), ModConfig.lcol(ModConfig.hbSel, 6), () -> openPick(6)); ry += 23;
+			mrow(c, mx, my, rx, ry, rw, "Hearts", ModConfig.HEART_MODE[ModConfig.heartMode], 0, () -> { ModConfig.heartMode = (ModConfig.heartMode + 1) % ModConfig.HEART_MODE.length; ModConfig.save(); }); ry += 23;
+			mrow(c, mx, my, rx, ry, rw, "Heart color (custom)", ModConfig.colName(ModConfig.heartCol, 7), ModConfig.lcol(ModConfig.heartCol, 7), () -> openPick(7)); ry += 23;
+			mrow(c, mx, my, rx, ry, rw, "Armor bar color", ModConfig.colName(ModConfig.armCol, 8), ModConfig.lcol(ModConfig.armCol, 8), () -> openPick(8)); ry += 23;
+			mrow(c, mx, my, rx, ry, rw, "Food bar color", ModConfig.colName(ModConfig.foodCol, 9), ModConfig.lcol(ModConfig.foodCol, 9), () -> openPick(9)); ry += 23;
+			c.fill(rx, ry + 2, rx + rw, ry + 24, 0xFF0E1630);
+			Ui.txt(c, "Hearts, armor, food and air are redrawn. Vanilla with absorption or >20 HP.", rx + 8, ry + 9, 0xFF8794B8);
+		} else {
+			mrow(c, mx, my, rx, ry, rw, "Heart style", ModConfig.HEART_STYLE[ModConfig.heartStyle], 0, () -> { ModConfig.heartStyle = (ModConfig.heartStyle + 1) % ModConfig.HEART_STYLE.length; ModConfig.save(); }); ry += 23;
+			mrow(c, mx, my, rx, ry, rw, "Animation", ModConfig.HEART_ANIM[ModConfig.heartAnim], 0, () -> { ModConfig.heartAnim = (ModConfig.heartAnim + 1) % ModConfig.HEART_ANIM.length; ModConfig.save(); }); ry += 23;
+			stepRow(c, mx, my, rx, ry, rw, "Size", ModConfig.heartScale + "%", () -> { ModConfig.heartScale = Math.max(50, ModConfig.heartScale - 10); ModConfig.save(); }, () -> { ModConfig.heartScale = Math.min(200, ModConfig.heartScale + 10); ModConfig.save(); }); ry += 23;
+			stepRow(c, mx, my, rx, ry, rw, "Offset left / right", String.valueOf(ModConfig.heartDx), () -> { ModConfig.heartDx = Math.max(-60, ModConfig.heartDx - 2); ModConfig.save(); }, () -> { ModConfig.heartDx = Math.min(60, ModConfig.heartDx + 2); ModConfig.save(); }); ry += 23;
+			stepRow(c, mx, my, rx, ry, rw, "Offset up / down", String.valueOf(-ModConfig.heartDy), () -> { ModConfig.heartDy = Math.min(60, ModConfig.heartDy + 2); ModConfig.save(); }, () -> { ModConfig.heartDy = Math.max(-60, ModConfig.heartDy - 2); ModConfig.save(); }); ry += 23;
+			c.fill(rx, ry + 2, rx + rw, ry + 30, 0xFF0E1630);
+			Ui.txt(c, "Preview (size and offset apply in game)", rx + 8, ry + 5, 0xFF8794B8);
+			int pc = ModConfig.heartMode == 2 ? 0xFF000000 | ModConfig.lcol(ModConfig.heartCol, 7) : ModConfig.heartMode == 1 ? (Theme.accent | 0xFF000000) : 0xFFE0334A;
+			Hotbar.hearts(c, rx + 8, ry + 27, 1f, 15f, 20f, pc, false);
+		}
 		int by = y + h - 28, bw = (w - 20 - 6) / 2;
 		String[] labels = {"RESET", "CLOSE"};
-		Runnable[] runs = {() -> ModConfig.hotbarReset(), () -> { optId = null; ModConfig.save(); }};
+		Runnable[] runs = {() -> ModConfig.hotbarReset(), () -> { optId = null; hbPage = 0; ModConfig.save(); }};
 		for (int i = 0; i < 2; i++) {
 			int bx = x + 10 + i * (bw + 6);
 			boolean hv = Ui.in(mx, my, bx, by, bw, 20);
@@ -400,15 +422,37 @@ public class CloudyModsScreen extends Screen {
 		}
 	}
 
-	private void stepRow(DrawContext c, int mx, int my, int x, int y, int w, String name, String val, Runnable minus, Runnable plus) {
-		c.fill(x, y, x + w, y + 20, 0xFF141D3A);
-		Ui.txt(c, name, x + 8, y + 6, 0xFFFFFFFF);
-		int bw = 22, px = x + w - bw - 4, mxp = px - 62 - bw;
-		boolean h1 = Ui.in(mx, my, mxp, y + 2, bw, 16), h2 = Ui.in(mx, my, px, y + 2, bw, 16);
-		c.fill(mxp, y + 2, mxp + bw, y + 18, h1 ? 0xFF2A3558 : 0xFF1A2342); Ui.sp(c, "-", mxp + bw / 2, y + 6, 0xFFFFFFFF);
-		c.fill(px, y + 2, px + bw, y + 18, h2 ? 0xFF2A3558 : 0xFF1A2342); Ui.sp(c, "+", px + bw / 2, y + 6, 0xFFFFFFFF);
-		Ui.sp(c, val, mxp + bw + 31, y + 6, Theme.accent);
-		mhits.add(new Hit(mxp, y + 2, bw, 16, minus)); mhits.add(new Hit(px, y + 2, bw, 16, plus));
+	private static String keyLabel(String id) { Integer k = ModConfig.keys.get(id); return k == null ? "none" : ModConfig.keyName(k); }
+
+	private void timerModal(DrawContext c, int mx, int my) {
+		int w = 300, rows = 6, h = 34 + rows * 23 + 26 + 34;
+		int x = (int) (this.width / uiF) / 2 - w / 2, y = Math.max(4, (int) (this.height / uiF) / 2 - h / 2);
+		shadow(c, x, y, w, h);
+		c.fill(x, y, x + w, y + h, 0xFF0A1226);
+		c.fill(x, y, x + w, y + 2, Theme.accent);
+		Ui.txt(c, "Timer options", x + 12, y + 12, 0xFFFFFFFF);
+		String live = Timer.text();
+		Ui.txt(c, live, x + w - 12 - Ui.w(live), y + 12, Theme.accent);
+		int rx = x + 10, rw = w - 20, ry = y + 30;
+		float[] p = ModConfig.pos.get("timer");
+		mrow(c, mx, my, rx, ry, rw, "Mode", ModConfig.TIMER_MODE[ModConfig.timerMode], 0, () -> { ModConfig.timerMode = (ModConfig.timerMode + 1) % 2; Timer.reset(); }); ry += 23;
+		stepRow(c, mx, my, rx, ry, rw, "Countdown length", Timer.fmt(ModConfig.timerCount * 1000L, false), () -> { ModConfig.timerCount = Math.max(10, ModConfig.timerCount - (ModConfig.timerCount > 300 ? 60 : 10)); ModConfig.save(); }, () -> { ModConfig.timerCount = Math.min(36000, ModConfig.timerCount + (ModConfig.timerCount >= 300 ? 60 : 10)); ModConfig.save(); }); ry += 23;
+		mrow(c, mx, my, rx, ry, rw, "Show tenths of a second", ModConfig.timerTenths ? "ON" : "OFF", 0, () -> { ModConfig.timerTenths = !ModConfig.timerTenths; ModConfig.save(); }); ry += 23;
+		stepRow(c, mx, my, rx, ry, rw, "Size", p == null ? "-" : Math.round(p[2] * 100) + "%", () -> { if (p != null) { p[2] = Math.max(0.5f, Math.round((p[2] - 0.1f) * 10) / 10f); ModConfig.save(); } }, () -> { if (p != null) { p[2] = Math.min(3f, Math.round((p[2] + 0.1f) * 10) / 10f); ModConfig.save(); } }); ry += 23;
+		mrow(c, mx, my, rx, ry, rw, "Start / Stop key", bindId != null && bindId.equals("timer") ? "press a key..." : keyLabel("timer"), 0, () -> { bindId = "timer"; bindMsg = ""; }); ry += 23;
+		mrow(c, mx, my, rx, ry, rw, "Reset key", bindId != null && bindId.equals("timer.reset") ? "press a key..." : keyLabel("timer.reset"), 0, () -> { bindId = "timer.reset"; bindMsg = ""; }); ry += 23;
+		c.fill(rx, ry + 2, rx + rw, ry + 22, 0xFF0E1630);
+		Ui.txt(c, bindMsg.isEmpty() ? "Keys work in game. Delete clears a key, Esc cancels." : bindMsg, rx + 8, ry + 8, bindMsg.isEmpty() ? 0xFF8794B8 : 0xFFFF8A8A);
+		int by = y + h - 28, bw = (w - 20 - 18) / 4;
+		String[] labels = {Timer.running ? "STOP" : "START", "RESET", "MOVE", "CLOSE"};
+		Runnable[] runs = {() -> Timer.toggle(), () -> Timer.reset(), () -> { optId = null; ModConfig.save(); if (this.client != null) this.client.setScreen(new HudEditorScreen(this)); }, () -> { optId = null; bindId = null; ModConfig.save(); }};
+		for (int i = 0; i < 4; i++) {
+			int bx = x + 10 + i * (bw + 6);
+			boolean hv = Ui.in(mx, my, bx, by, bw, 20);
+			c.fill(bx, by, bx + bw, by + 20, i == 3 ? (hv ? Ui.mix(Theme.accent, 0xFFFFFFFF, 0.2f) : Theme.accent) : hv ? 0xFF2A3558 : 0xFF1A2342);
+			Ui.sp(c, labels[i], bx + bw / 2, by + 6, i == 3 ? 0xFF0B1226 : 0xFFFFFFFF);
+			mhits.add(new Hit(bx, by, bw, 20, runs[i]));
+		}
 	}
 
 	private void crossModal(DrawContext c, int mx, int my) {

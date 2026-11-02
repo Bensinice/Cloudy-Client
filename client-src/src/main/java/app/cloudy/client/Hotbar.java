@@ -104,6 +104,45 @@ public final class Hotbar {
 		}
 	}
 
+	private static final String[] ROUND7 = {".XX.XX.", "XXXXXXX", "XXXXXXX", "XXXXXXX", ".XXXXX.", "..XXX..", "...X..."};
+	private static final String[] PIXEL5 = {".X.X.", "XXXXX", "XXXXX", ".XXX.", "..X.."};
+	private static final String[][] HEART_BITMAPS = {HEART8, ROUND7, PIXEL5};
+
+	/** Die Herzleiste. (x, y) = linke untere Ecke der Leiste, s = Groesse. Wird fuer das Spiel und die Vorschau im Menue benutzt. */
+	public static void hearts(DrawContext c, int x, int y, float s, float hp, float max, int col, boolean hit) {
+		int style = Math.max(0, Math.min(ModConfig.HEART_STYLE.length - 1, ModConfig.heartStyle)), anim = ModConfig.heartAnim;
+		long now = System.currentTimeMillis();
+		float urgency = hp <= 4 ? 2.2f : hp <= 8 ? 1.4f : 1f; // je weniger Leben, desto schneller der Puls
+		float pulse = anim == 2 ? (float) (Math.sin(now / 1000.0 * 5.0 * urgency) * 0.5 + 0.5) : 0f;
+		var ms = c.getMatrices();
+		ms.push();
+		ms.translate(x, y, 0);
+		ms.scale(s, s, 1f);
+		int n = (int) Math.ceil(max / 2f);
+		if (style == 3) { // Leiste statt Herzen
+			int bw = Math.max(20, n * 9 - 1), bh = 7;
+			c.fill(-1, -bh - 1, bw + 1, 1, 0xCC0A0A12);
+			c.fill(0, -bh, bw, 0, 0x66202030);
+			int fw = Math.round(bw * Math.max(0f, Math.min(1f, hp / Math.max(1f, max))));
+			int fc = hit ? 0xFFFFFFFF : Ui.mix(col, 0xFFFFFFFF, pulse * 0.22f);
+			c.fill(0, -bh, fw, -bh + 3, Ui.mix(fc, 0xFFFFFFFF, 0.22f));
+			c.fill(0, -bh + 3, fw, 0, Ui.mix(fc, 0xFF000000, 0.25f));
+			for (int i = 1; i < n; i++) { int tx = Math.round(i * bw / (float) n); if (tx < fw) c.fill(tx, -bh, tx + 1, 0, 0x33000000); }
+		} else {
+			String[] bm = HEART_BITMAPS[style];
+			int bwid = bm[0].length(), full = bwid, half = (bwid + 1) / 2, step = bwid >= 8 ? 9 : bwid + 2;
+			for (int i = 0; i < n; i++) {
+				int dy = 0;
+				if (anim == 1) dy = (int) Math.round(Math.sin(now / 1000.0 * 6.0 - i * 0.7) * 0.9);
+				else if (anim == 3 && hp <= 4 && (now / 100 + i) % 12 == 0) dy = -1;
+				float v = hp - i * 2f;
+				int cc = hit ? 0xFFFFFFFF : pulse > 0 && v >= 1f ? Ui.mix(col, 0xFFFFFFFF, pulse * 0.22f) : col;
+				icon(c, i * step, -bm.length + dy, bm, cc, v >= 2f ? full : v >= 1f ? half : 0, 0);
+			}
+		}
+		ms.pop();
+	}
+
 	/** Herzen, Ruestung, Hunger und Luft in eigenem, sauberem Stil. true = Vanilla ueberspringen. Bei Absorption, ueber 20 Leben oder Reittier bleibt Vanilla. */
 	public static boolean status(DrawContext c) {
 		MinecraftClient mc = MinecraftClient.getInstance();
@@ -112,17 +151,13 @@ public final class Hotbar {
 		int w = c.getScaledWindowWidth(), h = c.getScaledWindowHeight();
 		int x0 = w / 2 - 91, y0 = h - 39, col = heartColor();
 		float hp = Math.max(0f, p.getHealth()), max = p.getMaxHealth();
-		int n = (int) Math.ceil(max / 2f);
 		boolean hit = p.hurtTime > 0 && p.hurtTime % 4 < 2;
-		for (int i = 0; i < n; i++) {
-			int x = x0 + i * 9, y = y0 + 1 - (hp <= 4 && mc.world != null && (mc.world.getTime() / 2 + i) % 12 == 0 ? 1 : 0);
-			float v = hp - i * 2f;
-			icon(c, x, y, HEART8, hit ? 0xFFFFFFFF : col, v >= 2f ? 8 : v >= 1f ? 4 : 0, 0);
-		}
+		int lift = ModConfig.heartScale > 100 ? Math.round((ModConfig.heartScale / 100f - 1f) * 9f) : 0; // groessere Herzen schieben die Ruestung nach oben
+		hearts(c, x0 + ModConfig.heartDx, y0 + 8 + ModConfig.heartDy, ModConfig.heartScale / 100f, hp, max, col, hit);
 		int armor = p.getArmor();
 		if (armor > 0) {
 			int ac = 0xFF000000 | ModConfig.lcol(ModConfig.armCol, 8);
-			for (int i = 0; i < 10; i++) icon(c, x0 + i * 9, y0 - 10, SHIELD8, ac, armor >= i * 2 + 2 ? 8 : armor == i * 2 + 1 ? 4 : 0, 0);
+			for (int i = 0; i < 10; i++) icon(c, x0 + i * 9, y0 - 10 - lift, SHIELD8, ac, armor >= i * 2 + 2 ? 8 : armor == i * 2 + 1 ? 4 : 0, 0);
 		}
 		int food = p.getHungerManager().getFoodLevel();
 		int fc = 0xFF000000 | ModConfig.lcol(ModConfig.foodCol, 9);

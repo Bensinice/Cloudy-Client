@@ -37,6 +37,7 @@ public final class ModConfig {
 		new Def("mousefx", "Mouse effects", "QoL", "Master switch for the click animation and the cursor trail in menus"),
 		new Def("mousefx_click", "  Click animation", "QoL", "Ring and sparkles on every click (needs Mouse effects)"),
 		new Def("mousefx_trail", "  Cursor trail", "QoL", "Soft trail behind the cursor (needs Mouse effects)"),
+		new Def("timer", "Timer", "HUD", "Stopwatch or countdown on your HUD, with Start/Stop and Reset keys (set them in Options)"),
 		new Def("totem", "Totem counter", "HUD", "Shows how many Totems of Undying you carry (turns red at zero)"),
 		new Def("hotbar", "Custom hotbar", "QoL", "Dark, theme or custom-color hotbar and hearts (set colors in Options)"),
 				new Def("playerhead", "Player head", "HUD", "Your face in the top-left corner (on by default)"),
@@ -87,9 +88,13 @@ public final class ModConfig {
 	public static int hbStyle = 1, hbCol = 9, hbSel = 1, heartMode = 1, heartCol = 9, armCol = 1, foodCol = 9, lyricsMotion = 0, lyricsAlpha = 100, lyricsSize = 100, skyBeat = 0;
 	public static boolean lyricsCard = true, crossOutline = true, crossDyn = true;
 	public static int crossStyle = 0, crossSize = 5, crossThick = 1, crossGap = 2, crossCol = 1;
+	/** Herzen: Stil, Animation, Groesse in %, Versatz in Pixeln. Timer: Modus, Countdown-Sekunden, Zehntel anzeigen. */
+	public static int heartStyle = 0, heartAnim = 3, heartScale = 100, heartDx = 0, heartDy = 0, timerMode = 0, timerCount = 300;
+	public static boolean timerTenths = true;
+	public static final String[] HEART_STYLE = {"Classic", "Round", "Pixel", "Bar"}, HEART_ANIM = {"Off", "Wave", "Pulse", "Low HP shake"}, TIMER_MODE = {"Stopwatch", "Countdown"};
 	public static int wingSize = 100, wingY = 0; // Prozent / Schritte zu 0,02 Bloecken (positiv = hoeher)
 	public static final String[] HB_STYLE = {"Dark", "Theme", "Custom color"}, HEART_MODE = {"Vanilla", "Theme", "Custom color"}, LMOTION = {"Float", "Fall", "Rise", "Drift", "Pop", "Wave", "Shake", "Slam"}, BEAT = {"Off", "Subtle", "Strong"};
-	public static void hotbarReset() { hbStyle = 1; hbCol = 9; hbSel = 1; heartMode = 1; heartCol = 9; armCol = 1; foodCol = 9; pick[5] = 0x1B2236; pick[6] = 0x9FD3FF; pick[7] = 0xFF4D6D; pick[8] = 0x9FD3FF; pick[9] = 0xF2A24B; save(); }
+	public static void hotbarReset() { hbStyle = 1; hbCol = 9; hbSel = 1; heartMode = 1; heartCol = 9; heartStyle = 0; heartAnim = 3; heartScale = 100; heartDx = 0; heartDy = 0; armCol = 1; foodCol = 9; pick[5] = 0x1B2236; pick[6] = 0x9FD3FF; pick[7] = 0xFF4D6D; pick[8] = 0x9FD3FF; pick[9] = 0xF2A24B; save(); }
 	/** Tastenkuerzel je Mod (GLFW-Code, fehlt = keins). */
 	public static final java.util.Map<String, Integer> keys = new java.util.LinkedHashMap<>();
 	public static String keyName(int code) {
@@ -146,6 +151,15 @@ public final class ModConfig {
 				if (o.has("crossDyn")) crossDyn = o.get("crossDyn").getAsBoolean();
 				if (o.has("wingSize")) wingSize = Math.max(40, Math.min(200, o.get("wingSize").getAsInt()));
 				if (o.has("wingY")) wingY = Math.max(-25, Math.min(25, o.get("wingY").getAsInt()));
+				if (o.has("heartStyle")) heartStyle = Math.max(0, Math.min(HEART_STYLE.length - 1, o.get("heartStyle").getAsInt()));
+				if (o.has("heartAnim")) heartAnim = Math.max(0, Math.min(HEART_ANIM.length - 1, o.get("heartAnim").getAsInt()));
+				if (o.has("heartScale")) heartScale = Math.max(50, Math.min(200, o.get("heartScale").getAsInt()));
+				if (o.has("heartDx")) heartDx = Math.max(-60, Math.min(60, o.get("heartDx").getAsInt()));
+				if (o.has("heartDy")) heartDy = Math.max(-60, Math.min(60, o.get("heartDy").getAsInt()));
+				if (o.has("timerMode")) timerMode = Math.max(0, Math.min(1, o.get("timerMode").getAsInt()));
+				if (o.has("timerCount")) timerCount = Math.max(10, Math.min(36000, o.get("timerCount").getAsInt()));
+				if (o.has("timerTenths")) timerTenths = o.get("timerTenths").getAsBoolean();
+				if (o.has("timerMs") && !Timer.running) Timer.acc = Math.max(0L, o.get("timerMs").getAsLong());
 				if (o.has("armCol")) armCol = o.get("armCol").getAsInt();
 				if (o.has("foodCol")) foodCol = o.get("foodCol").getAsInt();
 				if (o.has("keys")) for (var e : o.getAsJsonObject("keys").entrySet()) keys.put(e.getKey(), e.getValue().getAsInt());
@@ -175,7 +189,7 @@ public final class ModConfig {
 			JsonObject pp = new JsonObject();
 			for (var e : pos.entrySet()) { var a = new com.google.gson.JsonArray(); for (float v : e.getValue()) a.add(v); pp.add(e.getKey(), a); }
 			o.add("pos", pp);
-			o.add("on", m); o.addProperty("scale", scale); o.addProperty("top", top); o.addProperty("menu", menu); o.addProperty("lyricsMode", lyricsMode); o.addProperty("lyricsOffset", lyricsOffset); { var pa = new com.google.gson.JsonArray(); for (int v : pick) pa.add(v); o.add("pickCols", pa); } o.addProperty("bgStyle", bgStyle); { var ko = new com.google.gson.JsonObject(); for (var e : keys.entrySet()) ko.addProperty(e.getKey(), e.getValue()); o.add("keys", ko); } o.addProperty("hbStyle", hbStyle); o.addProperty("hbCol", hbCol); o.addProperty("hbSel", hbSel); o.addProperty("heartMode", heartMode); o.addProperty("heartCol", heartCol); o.addProperty("lyricsMotion", lyricsMotion); o.addProperty("lyricsAlpha", lyricsAlpha); o.addProperty("lyricsSize", lyricsSize); o.addProperty("lyricsCard", lyricsCard); o.addProperty("skyBeat", skyBeat); o.addProperty("armCol", armCol); o.addProperty("wingSize", wingSize); o.addProperty("crossStyle", crossStyle); o.addProperty("crossSize", crossSize); o.addProperty("crossThick", crossThick); o.addProperty("crossGap", crossGap); o.addProperty("crossCol", crossCol); o.addProperty("crossOutline", crossOutline); o.addProperty("crossDyn", crossDyn); o.addProperty("wingY", wingY); o.addProperty("foodCol", foodCol); o.addProperty("fogMode", fogMode); o.addProperty("fogCol", fogCol); o.addProperty("fogDist", fogDist); { var fa = new com.google.gson.JsonArray(); for (String s : favs) fa.add(s); o.add("favs", fa); } o.addProperty("cloudMode", cloudMode); o.addProperty("cloudCol", cloudCol); o.addProperty("skySrc", skySrc); o.addProperty("skyCol", skyCol); o.addProperty("skyStr", skyStr); o.addProperty("lyricsLife", lyricsLife); o.addProperty("lyricsFont", lyricsFont); o.addProperty("lyricsFx", lyricsFx); o.addProperty("lyricsCur", lyricsCur); o.addProperty("lyricsOld", lyricsOld);
+			o.add("on", m); o.addProperty("scale", scale); o.addProperty("top", top); o.addProperty("menu", menu); o.addProperty("lyricsMode", lyricsMode); o.addProperty("lyricsOffset", lyricsOffset); { var pa = new com.google.gson.JsonArray(); for (int v : pick) pa.add(v); o.add("pickCols", pa); } o.addProperty("bgStyle", bgStyle); { var ko = new com.google.gson.JsonObject(); for (var e : keys.entrySet()) ko.addProperty(e.getKey(), e.getValue()); o.add("keys", ko); } o.addProperty("hbStyle", hbStyle); o.addProperty("hbCol", hbCol); o.addProperty("hbSel", hbSel); o.addProperty("heartMode", heartMode); o.addProperty("heartCol", heartCol); o.addProperty("lyricsMotion", lyricsMotion); o.addProperty("lyricsAlpha", lyricsAlpha); o.addProperty("lyricsSize", lyricsSize); o.addProperty("lyricsCard", lyricsCard); o.addProperty("skyBeat", skyBeat); o.addProperty("armCol", armCol); o.addProperty("wingSize", wingSize); o.addProperty("crossStyle", crossStyle); o.addProperty("crossSize", crossSize); o.addProperty("crossThick", crossThick); o.addProperty("crossGap", crossGap); o.addProperty("crossCol", crossCol); o.addProperty("crossOutline", crossOutline); o.addProperty("crossDyn", crossDyn); o.addProperty("wingY", wingY); o.addProperty("heartStyle", heartStyle); o.addProperty("heartAnim", heartAnim); o.addProperty("heartScale", heartScale); o.addProperty("heartDx", heartDx); o.addProperty("heartDy", heartDy); o.addProperty("timerMode", timerMode); o.addProperty("timerCount", timerCount); o.addProperty("timerTenths", timerTenths); o.addProperty("timerMs", Timer.elapsed()); o.addProperty("foodCol", foodCol); o.addProperty("fogMode", fogMode); o.addProperty("fogCol", fogCol); o.addProperty("fogDist", fogDist); { var fa = new com.google.gson.JsonArray(); for (String s : favs) fa.add(s); o.add("favs", fa); } o.addProperty("cloudMode", cloudMode); o.addProperty("cloudCol", cloudCol); o.addProperty("skySrc", skySrc); o.addProperty("skyCol", skyCol); o.addProperty("skyStr", skyStr); o.addProperty("lyricsLife", lyricsLife); o.addProperty("lyricsFont", lyricsFont); o.addProperty("lyricsFx", lyricsFx); o.addProperty("lyricsCur", lyricsCur); o.addProperty("lyricsOld", lyricsOld);
 			Files.createDirectories(file().getParent());
 			Files.writeString(file(), o.toString());
 		} catch (Exception e) { CloudyClient.LOG.warn("cloudy-mods.json konnte nicht gespeichert werden", e); }

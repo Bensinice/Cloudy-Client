@@ -1,4 +1,8 @@
 {
+ "0.9.74": [
+  "New Timer mod: stopwatch or countdown on your HUD, Start/Stop and Reset by key or in the menu, adjustable size and position, saved between sessions",
+  "Hearts HUD reworked: 4 styles (Classic, Round, Pixel, Bar), animations (wave, pulse, low-HP shake), adjustable size and position, live preview in the menu"
+ ],
  "0.9.73": [
   "Request Key: ask for access on the access code screen. The owner approves or rejects it and the code appears automatically",
   "Public server status (Settings and website) with real server checks",

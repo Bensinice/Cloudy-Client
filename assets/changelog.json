@@ -1,5 +1,15 @@
 [
  {
+  "v": "0.9.74",
+  "date": "2026-11-02",
+  "added": [
+   "Neuer Timer-Mod: Stoppuhr oder Countdown im HUD, Start/Stop und Reset per Taste oder im Menü, Größe und Position einstellbar, Stand bleibt gespeichert",
+   "Herzen-HUD überarbeitet: 4 Stile (Classic, Round, Pixel, Leiste), Animationen (Welle, Puls, Zittern bei wenig Leben), Größe und Position einstellbar, Vorschau im Menü"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.73",
   "date": "2026-11-02",
   "added": [

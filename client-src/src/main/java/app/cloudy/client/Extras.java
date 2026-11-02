@@ -105,6 +105,7 @@ public final class Extras {
 					for (StatusEffectInstance e : p.getStatusEffects()) { if (l.size() >= 3) break; l.add(e.getEffectType().value().getName().getString() + (e.getAmplifier() > 0 ? " " + (e.getAmplifier() + 1) : "") + " " + (e.isInfinite() ? "∞" : time(e.getDuration()))); }
 					return l.isEmpty() ? null : String.join("  ·  ", l);
 				}
+				case "timer": return Timer.text();
 				case "death": return death == null ? null : "Death: " + death;
 				case "food": return String.format("Food %d  Sat %.1f", p.getHungerManager().getFoodLevel(), p.getHungerManager().getSaturationLevel());
 				case "health": return String.format("HP %.1f", p.getHealth() + p.getAbsorptionAmount());
@@ -120,13 +121,13 @@ public final class Extras {
 
 	private static String pretty(String s) { String[] a = s.split("_"); StringBuilder b = new StringBuilder(); for (String x : a) { if (x.isEmpty()) continue; if (b.length() > 0) b.append(' '); b.append(Character.toUpperCase(x.charAt(0))).append(x.substring(1)); } return b.toString(); }
 
-	public static final String[] IDS = {"biome", "light", "nether", "day", "durability", "arrows", "potions", "held", "server", "session", "effects", "death", "food", "health", "target"};
+	public static final String[] IDS = {"biome", "light", "nether", "day", "durability", "arrows", "potions", "held", "server", "session", "effects", "death", "food", "health", "target", "timer"};
 	public static boolean is(String id) { for (String s : IDS) if (s.equals(id)) return true; return false; }
 	public static String sample(String id) {
 		return switch (id) {
 			case "biome" -> "Biome: Plains"; case "light" -> "Light: 15"; case "nether" -> "Nether 16 / -4"; case "day" -> "Day 12  06:30"; case "durability" -> "Durability: 231/250";
 			case "arrows" -> "Arrows: 64"; case "potions" -> "Potions: 6"; case "held" -> "Cobblestone: 128"; case "server" -> "play.example.net"; case "session" -> "Session 0:42:10";
-			case "effects" -> "Speed 2 1:42"; case "death" -> "Death: 128 / 64 / -32"; case "food" -> "Food 20  Sat 5.0"; case "health" -> "HP 20.0"; case "target" -> "Looking at: Stone"; default -> id;
+			case "effects" -> "Speed 2 1:42"; case "death" -> "Death: 128 / 64 / -32"; case "food" -> "Food 20  Sat 5.0"; case "health" -> "HP 20.0"; case "target" -> "Looking at: Stone"; case "timer" -> Timer.sample(); default -> id;
 		};
 	}
 }
