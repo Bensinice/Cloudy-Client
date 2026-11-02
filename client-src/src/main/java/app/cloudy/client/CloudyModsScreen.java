@@ -455,6 +455,17 @@ public class CloudyModsScreen extends Screen {
 		}
 	}
 
+	private void stepRow(DrawContext c, int mx, int my, int x, int y, int w, String name, String val, Runnable minus, Runnable plus) {
+		c.fill(x, y, x + w, y + 20, 0xFF141D3A);
+		Ui.txt(c, name, x + 8, y + 6, 0xFFFFFFFF);
+		int bw = 22, px = x + w - bw - 4, mxp = px - 62 - bw;
+		boolean h1 = Ui.in(mx, my, mxp, y + 2, bw, 16), h2 = Ui.in(mx, my, px, y + 2, bw, 16);
+		c.fill(mxp, y + 2, mxp + bw, y + 18, h1 ? 0xFF2A3558 : 0xFF1A2342); Ui.sp(c, "-", mxp + bw / 2, y + 6, 0xFFFFFFFF);
+		c.fill(px, y + 2, px + bw, y + 18, h2 ? 0xFF2A3558 : 0xFF1A2342); Ui.sp(c, "+", px + bw / 2, y + 6, 0xFFFFFFFF);
+		Ui.sp(c, val, mxp + bw + 31, y + 6, Theme.accent);
+		mhits.add(new Hit(mxp, y + 2, bw, 16, minus)); mhits.add(new Hit(px, y + 2, bw, 16, plus));
+	}
+
 	private void crossModal(DrawContext c, int mx, int my) {
 		int w = 300, rows = 7, h = 34 + rows * 23 + 40 + 34;
 		int x = (int) (this.width / uiF) / 2 - w / 2, y = Math.max(4, (int) (this.height / uiF) / 2 - h / 2);

@@ -1,4 +1,7 @@
 {
+ "0.9.75": [
+  "The Timer mod and new hearts HUD from 0.9.74 are now really included in the client (0.9.74 failed to build completely)"
+ ],
  "0.9.74": [
   "New Timer mod: stopwatch or countdown on your HUD, Start/Stop and Reset by key or in the menu, adjustable size and position, saved between sessions",
   "Hearts HUD reworked: 4 styles (Classic, Round, Pixel, Bar), animations (wave, pulse, low-HP shake), adjustable size and position, live preview in the menu"
