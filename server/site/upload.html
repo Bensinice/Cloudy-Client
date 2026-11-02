@@ -1,0 +1,27 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Cloudy – Hochladen</title><link rel="icon" href="icon.png"><link rel="stylesheet" href="style.css">
+<style>main{max-width:640px;margin:60px auto;padding:0 20px}label{display:grid;gap:6px;margin:16px 0;color:var(--mu);font-size:14px}input[type=text],input[type=password]{background:var(--card);border:1px solid var(--line);border-radius:12px;color:var(--tx);padding:13px 14px;font:inherit}
+.drop{border:1.5px dashed rgba(255,255,255,.25);border-radius:20px;padding:34px;text-align:center;color:var(--mu);cursor:pointer;margin:16px 0}.drop.on{border-color:var(--ac);color:#fff}
+.row{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:8px 0;font-size:14px}.bar{height:5px;background:rgba(255,255,255,.1);border-radius:9px;margin-top:8px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--ac)}
+.ok{color:#5ee08a}.er{color:#ff6b6b}</style></head><body>
+<main><h1 style="font-size:42px;background:none;color:#fff">Version hochladen</h1><p style="color:var(--mu)">Die Dateien landen direkt auf diesem Server und erscheinen sofort auf der Download-Seite und im Update-Feed des Clients.</p>
+<label>Upload-Schlüssel<input type="password" id="key" autocomplete="off"></label>
+<label>Versionsnummer (z. B. 0.9.72)<input type="text" id="ver" placeholder="0.9.72"></label>
+<label>Hinweise zur Version (optional, wird bei der Version angezeigt)<input type="text" id="notes" placeholder="Was ist neu?"></label>
+<div class="drop" id="drop">Dateien hierher ziehen oder klicken<br><small>.exe · .dmg · .AppImage · .ipa</small><input type="file" id="fi" multiple hidden></div>
+<div id="log"></div><button class="btn" id="go" style="margin-top:10px">Hochladen</button></main>
+<script>
+const $=i=>document.getElementById(i);let files=[];try{$('key').value=localStorage.getItem('ck')||''}catch{}
+const show=()=>{$('log').innerHTML=files.map((f,i)=>`<div class="row" id="r${i}">${f.name} · ${(f.size/1048576).toFixed(1)} MB<div class="bar"><i></i></div><span></span></div>`).join('')};
+const add=l=>{files=[...l];show()};$('drop').onclick=()=>$('fi').click();$('fi').onchange=e=>add(e.target.files);
+$('drop').ondragover=e=>{e.preventDefault();$('drop').classList.add('on')};$('drop').ondragleave=()=>$('drop').classList.remove('on');$('drop').ondrop=e=>{e.preventDefault();$('drop').classList.remove('on');add(e.dataTransfer.files)};
+const put=(url,body,type,key,i)=>new Promise(res=>{const x=new XMLHttpRequest();x.open('PUT',url);x.setRequestHeader('X-Upload-Key',key);x.setRequestHeader('Content-Type',type||'application/octet-stream');
+ const row=i==null?null:$('r'+i);x.upload.onprogress=e=>{if(row&&e.lengthComputable)row.querySelector('i').style.width=(e.loaded/e.total*100)+'%'};
+ x.onload=()=>{let j={};try{j=JSON.parse(x.responseText)}catch{}const ok=x.status===200;if(row){row.querySelector('span').className=ok?'ok':'er';row.querySelector('span').textContent=ok?'Fertig ✓':(j.error||'Fehler '+x.status)}res(ok)};
+ x.onerror=()=>{if(row){row.querySelector('span').className='er';row.querySelector('span').textContent='Verbindung fehlgeschlagen'}res(false)};x.send(body)});
+$('go').onclick=async()=>{const key=$('key').value,ver=$('ver').value.trim();if(!key||!/^\d+\.\d+\.\d+$/.test(ver)||!files.length)return alert('Schlüssel, Version (z. B. 0.9.72) und mindestens eine Datei angeben.');
+ try{localStorage.setItem('ck',key)}catch{}$('go').disabled=true;show();let all=true;
+ for(let i=0;i<files.length;i++)if(!await put(`/upload/${ver}/${encodeURIComponent(files[i].name)}`,files[i],'',key,i))all=false;
+ if($('notes').value.trim())await put(`/upload/${ver}/notes.txt`,new Blob([$('notes').value.trim()]),'text/plain',key,null);
+ $('go').disabled=false;if(all)$('log').insertAdjacentHTML('beforeend','<p class="ok">Alles hochgeladen. <a href="/#download">Download-Seite ansehen</a></p>')};
+</script></body></html>

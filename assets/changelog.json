@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.72",
+  "date": "2026-11-02",
+  "added": [
+   "Updates kommen jetzt zuerst direkt von cloudyclient.com (nur für den Client sichtbar); GitHub bleibt als Ausweich-Weg"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.71",
   "date": "2026-11-02",
   "added": [],

@@ -91,8 +91,8 @@ async function init() {
 }
 const app = express(); app.set('trust proxy', true); // hinter nginx/Cloudflare: echte Besucher-IP für die Versuchsbegrenzung
 app.use(cors()); app.use(express.json({ limit: '100kb' }));
+require('./site')(app, express); // Webseite, Downloads, Update-Feed und Upload (siehe site.js)
 const wrap = f => (req, res) => f(req, res).catch(e => { console.error(e.message); res.status(500).json({ error: 'Serverfehler.' }); });
-app.get('/', (_q, r) => r.send('Cloudy-Server läuft.'));
 app.get('/health', (_q, r) => r.json({ ok: true, backup: BACKUP }));
 // Passwort vergessen: legt eine Nachricht im Chat (Freunde) beim Owner ab; der Owner setzt das Konto im Admin-Bereich zurück. Verraet nicht, ob es das Konto gibt.
 app.post('/forgot', wrap(async (req, res) => {

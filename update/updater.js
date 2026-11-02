@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path');
 const { spawn } = require('child_process');
 
-exports.init = function init({ app, ipcMain, shell, send, defaultRepo, userAgent, gameRunning }) {
+exports.init = function init({ app, ipcMain, shell, send, defaultRepo, userAgent, gameRunning, serverUrl }) {
   const IS_MAC = process.platform === 'darwin', IS_WIN = process.platform === 'win32';
   const PORTABLE = IS_WIN && process.env.PORTABLE_EXECUTABLE_FILE;
   const H = { 'User-Agent': userAgent || 'Cloudy-Updater' };
@@ -38,7 +38,27 @@ exports.init = function init({ app, ipcMain, shell, send, defaultRepo, userAgent
     return null;
   }
 
+  // Zuerst beim eigenen Cloudy-Server nachsehen (nur der Client darf den Feed sehen); klappt das nicht, bleibt GitHub als Ausweich-Weg
+  async function fromServer() {
+    let base = ''; try { base = String((serverUrl && serverUrl()) || '').replace(/\/+$/, ''); } catch {}
+    if (!/^https?:\/\//i.test(base)) return null;
+    try {
+      const res = await fetch(base + '/update/latest.json', { headers: { ...H, 'X-Cloudy-Client': '1' }, signal: AbortSignal.timeout(8000) });
+      if (!res.ok) return null;
+      const j = await res.json(); if (!/^\d+\.\d+\.\d+$/.test(String(j.version))) return null;
+      const assets = (j.files || []).filter(f => f && f.name && f.url).map(f => ({ name: f.name, size: +f.size || 0, browser_download_url: base + f.url, fromServer: true }));
+      const exe = pick(assets); if (!exe) return null;
+      return { ver: j.version, exe, notes: String(j.notes || ''), url: base + '/#download' };
+    } catch { return null; }
+  }
+
   ipcMain.handle('checkUpdate', async (_e, repo) => {
+    const sv = await fromServer();
+    if (sv) {
+      found = { asset: sv.exe, isZip: false, url: sv.url, ver: sv.ver };
+      const nw = newer(sv.ver, app.getVersion());
+      return { ok: true, current: app.getVersion(), latest: sv.ver, newer: nw, mandatory: nw && seen(sv.ver), url: sv.url, canInstall: app.isPackaged, size: sv.exe.size, notes: sv.notes.slice(0, 600) };
+    }
     repo = defaultRepo || repo;
     if (!/^[\w.-]+\/[\w.-]+$/.test(repo || '')) return { ok: false, error: 'Trage deine GitHub-Quelle ein (z. B. name/cloudy) oder setze sie in config/app.json.' };
     try {
@@ -79,7 +99,7 @@ exports.init = function init({ app, ipcMain, shell, send, defaultRepo, userAgent
     const dir = path.join(app.getPath('temp'), 'cloudy-update');
     fs.rmSync(dir, { recursive: true, force: true }); fs.mkdirSync(dir, { recursive: true });
     const dest = path.join(dir, asset.name);
-    const res = await fetch(asset.browser_download_url, { headers: H });
+    const res = await fetch(asset.browser_download_url, { headers: asset.fromServer ? { ...H, 'X-Cloudy-Client': '1' } : H });
     if (!res.ok || !res.body) throw new Error('Download fehlgeschlagen (' + res.status + ')');
     const total = +res.headers.get('content-length') || asset.size, ws = fs.createWriteStream(dest);
     let got = 0, last = 0;

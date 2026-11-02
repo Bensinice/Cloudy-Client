@@ -1,4 +1,7 @@
 {
+ "0.9.72": [
+  "Updates now come from cloudyclient.com first (only visible to the client); GitHub stays as a fallback"
+ ],
  "0.9.71": [
   "Phone remote: pressing Play now says that Minecraft starts on the PC and is seen via Moonlight"
  ],

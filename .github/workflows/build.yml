@@ -94,3 +94,15 @@ jobs:
           name: Cloudy ${{ steps.v.outputs.version }}
           target_commitish: ${{ github.sha }}
           files: release/*
+      # Optional: dieselben Dateien auch auf den eigenen Cloudy-Server legen (Download-Seite + Update-Feed).
+      # Aktiv, sobald im Repo unter Settings > Secrets > Actions das Secret CLOUDY_UPLOAD_KEY gesetzt ist (derselbe Wert wie UPLOAD_KEY auf dem Server).
+      - name: Auf cloudyclient.com hochladen
+        env:
+          KEY: ${{ secrets.CLOUDY_UPLOAD_KEY }}
+          VER: ${{ steps.v.outputs.version }}
+        run: |
+          if [ -z "$KEY" ]; then echo "Kein CLOUDY_UPLOAD_KEY gesetzt – Server-Upload übersprungen."; exit 0; fi
+          for f in release/*; do
+            n=$(basename "$f")
+            curl -sS --fail-with-body --retry 3 -X PUT -H "X-Upload-Key: $KEY" -T "$f" "https://cloudyclient.com/upload/$VER/$n" || echo "::warning::Upload von $n fehlgeschlagen"
+          done

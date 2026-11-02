@@ -761,7 +761,7 @@ setInterval(() => { try {
   if (autoUpdOn()) { localUpdate.applyOnStart(); return; }
   if (uiReady && !announced.has(name)) { announced.add(name); send('updateFound', { name }); }
 } catch {} }, 4000);
-require('./update/updater').init({ app, ipcMain, shell, send, gameRunning: () => !!mcProc, defaultRepo: DEFAULT_REPO, userAgent: HDR.headers['User-Agent'] });
+require('./update/updater').init({ app, ipcMain, shell, send, gameRunning: () => !!mcProc, serverUrl: () => srvCfg().url, defaultRepo: DEFAULT_REPO, userAgent: HDR.headers['User-Agent'] });
 
 // ---- Microsoft-Konto ----
 const accFile = path.join(app.getPath('userData'), 'account.json');
@@ -810,7 +810,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.71'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.72'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
