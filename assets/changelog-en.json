@@ -1,4 +1,7 @@
 {
+ "0.9.70": [
+  "One-button streaming setup now also works on Mac (via Homebrew)"
+ ],
  "0.9.69": [
   "Phone streaming: one button sets up Sunshine on your PC automatically (Windows), and you enter the Moonlight PIN from your phone right in Cloudy"
  ],

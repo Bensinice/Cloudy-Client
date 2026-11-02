@@ -810,7 +810,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.69'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.70'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1823,7 +1823,9 @@ ipcMain.handle('remoteGet', () => remoteView());
 ipcMain.handle('lanInfo', () => ({ ips: lanIps() }));
 // ---- Streaming aufs Handy: Sunshine (Server am PC) einrichten; Moonlight (Handy) koppelt per PIN, die hier eingegeben wird. Nur Windows automatisch. ----
 const streamFile = path.join(app.getPath('userData'), 'cloudy-stream.json');
-const SUN_EXE = path.join(process.env.ProgramFiles || 'C:\\Program Files', 'Sunshine', 'sunshine.exe');
+const SUN_WIN = path.join(process.env.ProgramFiles || 'C:\\Program Files', 'Sunshine', 'sunshine.exe');
+const BREW = ['/opt/homebrew/bin/brew', '/usr/local/bin/brew'].find(p => fs.existsSync(p));
+const sunExe = () => process.platform === 'win32' ? (fs.existsSync(SUN_WIN) ? SUN_WIN : '') : process.platform === 'darwin' ? (['/opt/homebrew/bin/sunshine', '/usr/local/bin/sunshine'].find(p => fs.existsSync(p)) || '') : '';
 const streamCreds = () => { try { const j = JSON.parse(fs.readFileSync(streamFile, 'utf8')); return j.user && j.pass ? j : null; } catch { return null; } };
 function sunReq(method, p, body, c) { // Sunshine hat ein selbst signiertes Zertifikat auf localhost
   return new Promise(res => {
@@ -1836,27 +1838,36 @@ function sunReq(method, p, body, c) { // Sunshine hat ein selbst signiertes Zert
 }
 const sunUp = async () => { const r = await sunReq('GET', '/api/config', null, streamCreds()); return !!(r && r.status === 200); };
 const runWait = (cmd, args, ms) => new Promise(res => { let done = false; const f = c => { if (!done) { done = true; res(c); } }; try { const p = spawn(cmd, args, { windowsHide: true, stdio: 'ignore' }); p.on('error', () => f(-1)); p.on('exit', c => f(c)); setTimeout(() => { try { p.kill(); } catch {} f(-2); }, ms); } catch { f(-1); } });
-ipcMain.handle('streamStatus', async () => ({ win: process.platform === 'win32', installed: fs.existsSync(SUN_EXE), ready: !!streamCreds() && await sunUp() }));
+ipcMain.handle('streamStatus', async () => ({ win: process.platform === 'win32' || process.platform === 'darwin', installed: !!sunExe(), ready: !!streamCreds() && await sunUp() }));
 ipcMain.handle('streamSetup', async () => {
-  if (process.platform !== 'win32') return { ok: false, error: 'Die automatische Einrichtung gibt es nur unter Windows. Installiere Sunshine von der Projektseite und folge den Schritten.' };
+  const win = process.platform === 'win32', mac = process.platform === 'darwin';
+  if (!win && !mac) return { ok: false, error: 'Die automatische Einrichtung gibt es nur unter Windows und macOS. Installiere Sunshine von der Projektseite und folge den Schritten.' };
   try {
-    if (!fs.existsSync(SUN_EXE)) {
-      send('streamProgress', 'Sunshine wird installiert … (Windows fragt evtl. nach Administrator-Rechten: bitte „Ja“)');
-      const c = await runWait('winget', ['install', '-e', '--id', 'LizardByte.Sunshine', '--silent', '--accept-package-agreements', '--accept-source-agreements'], 15 * 60 * 1000);
-      if (c === -1) return { ok: false, error: 'winget wurde nicht gefunden. Lade Sunshine über den Knopf unten herunter und installiere es von Hand.' };
-      if (!fs.existsSync(SUN_EXE)) return { ok: false, error: 'Die Installation von Sunshine hat nicht geklappt (Code ' + c + '). Lade Sunshine über den Knopf unten herunter.' };
+    let exe = sunExe();
+    if (!exe) {
+      send('streamProgress', win ? 'Sunshine wird installiert … (Windows fragt evtl. nach Administrator-Rechten: bitte „Ja“)' : 'Sunshine wird installiert … (das kann ein paar Minuten dauern)');
+      if (win) {
+        const c = await runWait('winget', ['install', '-e', '--id', 'LizardByte.Sunshine', '--silent', '--accept-package-agreements', '--accept-source-agreements'], 15 * 60 * 1000);
+        if (c === -1) return { ok: false, error: 'winget wurde nicht gefunden. Lade Sunshine über den Knopf unten herunter und installiere es von Hand.' };
+        if (!sunExe()) return { ok: false, error: 'Die Installation von Sunshine hat nicht geklappt (Code ' + c + '). Lade Sunshine über den Knopf unten herunter.' };
+      } else {
+        if (!BREW) return { ok: false, error: 'Dafür braucht der Mac „Homebrew“ (brew.sh). Installiere es einmal von dort und drücke den Knopf dann nochmal.' };
+        const c = await runWait(BREW, ['install', 'lizardbyte/homebrew/sunshine'], 25 * 60 * 1000);
+        if (!sunExe()) return { ok: false, error: 'Die Installation von Sunshine über Homebrew hat nicht geklappt (Code ' + c + ').' };
+      }
+      exe = sunExe();
     }
     send('streamProgress', 'Zugangsdaten werden angelegt …');
-    let c = streamCreds(); if (!c) { c = { user: 'cloudy', pass: crypto.randomBytes(9).toString('hex') }; fs.writeFileSync(streamFile, JSON.stringify(c)); }
-    await runWait(SUN_EXE, ['--creds', c.user, c.pass], 30000);
+    let c = streamCreds(); if (!c) { c = { user: 'cloudy', pass: crypto.randomBytes(9).toString('hex') }; fs.writeFileSync(streamFile, JSON.stringify(c), { mode: 0o600 }); }
+    await runWait(exe, ['--creds', c.user, c.pass], 30000);
     if (!(await sunUp())) {
       send('streamProgress', 'Sunshine wird gestartet …');
-      await runWait('taskkill', ['/IM', 'sunshine.exe', '/F'], 10000);
-      try { spawn(SUN_EXE, [], { detached: true, stdio: 'ignore', windowsHide: true, cwd: path.dirname(SUN_EXE) }).unref(); } catch {}
+      await (win ? runWait('taskkill', ['/IM', 'sunshine.exe', '/F'], 10000) : runWait('pkill', ['-x', 'sunshine'], 10000));
+      try { spawn(exe, [], { detached: true, stdio: 'ignore', windowsHide: true, cwd: path.dirname(exe) }).unref(); } catch {}
       for (let i = 0; i < 25 && !(await sunUp()); i++) await wait(1000);
     }
     if (!(await sunUp())) return { ok: false, error: 'Sunshine läuft, aber Cloudy kommt nicht hinein. Öffne unten die Sunshine-Oberfläche und lege dort selbst einen Benutzer an.' };
-    return { ok: true };
+    return { ok: true, mac };
   } catch (e) { return { ok: false, error: 'Fehler: ' + String(e && e.message || e).slice(0, 120) }; }
 });
 ipcMain.handle('streamPair', async (_e, pin) => { // PIN aus Moonlight (Handy) an Sunshine geben

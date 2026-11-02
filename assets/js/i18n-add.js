@@ -1,5 +1,11 @@
 // Cloudy – zusätzliche englische Texte (werden von i18n.js zu EN dazugemischt). Format: "Deutsch": "English"
 window.CLOUDY_EN_EXTRA = {
+  "Automatisch nur unter Windows und Mac: Sunshine installieren (Knopf unten), dann Moonlight am Handy.": "Automatic on Windows and Mac only: install Sunshine (button below), then Moonlight on your phone.",
+  " Mac: erlaube Sunshine unter Systemeinstellungen > Datenschutz in „Bildschirmaufnahme“ und „Bedienungshilfen“.": " Mac: allow Sunshine under System Settings > Privacy in “Screen Recording” and “Accessibility”.",
+  "Sunshine wird installiert … (das kann ein paar Minuten dauern)": "Installing Sunshine … (this can take a few minutes)",
+  "Dafür braucht der Mac „Homebrew“ (brew.sh). Installiere es einmal von dort und drücke den Knopf dann nochmal.": "The Mac needs “Homebrew” (brew.sh) for this. Install it once from there, then press the button again.",
+  "Die Installation von Sunshine über Homebrew hat nicht geklappt (Code ": "Installing Sunshine via Homebrew didn't work (code ",
+  "Die automatische Einrichtung gibt es nur unter Windows und macOS. Installiere Sunshine von der Projektseite und folge den Schritten.": "Automatic setup only exists on Windows and macOS. Install Sunshine from the project page and follow the steps.",
   "Streaming automatisch einrichten": "Set up streaming automatically",
   "Das war der PC-Teil. Jetzt am Handy: ": "That was the PC part. Now on your phone: ",
   "Einrichtung läuft …": "Setting up …",
