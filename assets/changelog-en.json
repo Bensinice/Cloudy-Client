@@ -1,4 +1,9 @@
 {
+ "0.9.81": [
+  "Cloudy Pass: 30 levels with a free and a premium track. You level up with Cloudy Stars earned from quests. The premium track comes with Cloudy+ (server update required)",
+  "Quests are now a sub-tab of the Cloudy Pass (tabs “Pass” and “Quests”)",
+  "Quests: the error message now shows the exact cause"
+ ],
  "0.9.80": [
   "Less stutter in game: hearts, armor, hunger and air bars are drawn more efficiently",
   "Quests: clear message when the server does not know quests yet",

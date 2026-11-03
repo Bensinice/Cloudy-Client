@@ -1,5 +1,17 @@
 [
  {
+  "v": "0.9.81",
+  "date": "2026-11-04",
+  "added": [
+   "Cloudy Pass: 30 Level mit Gratis- und Premium-Reihe. Du steigst mit Cloudy Stars auf, die du bei Quests verdienst. Die Premium-Reihe gibt es mit Cloudy+ (Server-Update nötig)",
+   "Quests sind jetzt ein Unterreiter im Cloudy Pass (Reiter „Pass“ und „Quests“)"
+  ],
+  "fixed": [
+   "Quests: Fehlermeldung zeigt jetzt die genaue Ursache"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.80",
   "date": "2026-11-04",
   "added": [],
