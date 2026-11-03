@@ -52,13 +52,18 @@ exports.init = function init({ app, ipcMain, shell, send, defaultRepo, userAgent
     } catch { return null; }
   }
 
+  // Server-Feed UND GitHub pruefen und die hoehere Version nehmen (der Server-Feed kann veraltet sein, wenn dort noch nichts Neues liegt)
   ipcMain.handle('checkUpdate', async (_e, repo) => {
     const sv = await fromServer();
-    if (sv) {
-      found = { asset: sv.exe, isZip: false, url: sv.url, ver: sv.ver };
-      const nw = newer(sv.ver, app.getVersion());
-      return { ok: true, current: app.getVersion(), latest: sv.ver, newer: nw, mandatory: nw && seen(sv.ver), url: sv.url, canInstall: app.isPackaged, size: sv.exe.size, notes: sv.notes.slice(0, 600) };
-    }
+    const svRes = sv ? { ok: true, current: app.getVersion(), latest: sv.ver, newer: newer(sv.ver, app.getVersion()), url: sv.url, canInstall: app.isPackaged, size: sv.exe.size, notes: sv.notes.slice(0, 600), _found: { asset: sv.exe, isZip: false, url: sv.url, ver: sv.ver } } : null;
+    if (svRes && svRes.newer) { found = svRes._found; delete svRes._found; svRes.mandatory = seen(svRes.latest); return svRes; }
+    const gh = await fromGithub(repo);
+    if (gh.ok && (!svRes || newer(gh.latest, svRes.latest))) { found = gh._found; delete gh._found; return gh; }
+    if (svRes) { found = svRes._found; delete svRes._found; svRes.mandatory = false; return svRes; }
+    return gh;
+  });
+
+  async function fromGithub(repo) {
     repo = defaultRepo || repo;
     if (!/^[\w.-]+\/[\w.-]+$/.test(repo || '')) return { ok: false, error: 'Trage deine GitHub-Quelle ein (z. B. name/cloudy) oder setze sie in config/app.json.' };
     try {
@@ -88,12 +93,11 @@ exports.init = function init({ app, ipcMain, shell, send, defaultRepo, userAgent
       }).filter(c => c.v && (c.exe || c.zip)); // GitHub liefert die neueste Veröffentlichung zuerst
       if (!cands.length) throw new Error('Kein Release mit Versionsnummer (z. B. cloudy-0.8.13-voll.zip) gefunden.');
       const c = cands[0], latest = c.v, cur = app.getVersion(), asset = c.exe || c.zip, isZip = !c.exe;
-      found = { asset, isZip, url: c.r.html_url, ver: latest };
       const nw = newer(latest, cur);
-      return { ok: true, current: cur, latest, newer: nw, mandatory: nw && seen(latest), url: c.r.html_url, canInstall: !!asset && app.isPackaged,
+      return { ok: true, current: cur, latest, newer: nw, mandatory: nw && seen(latest), url: c.r.html_url, _found: { asset, isZip, url: c.r.html_url, ver: latest }, canInstall: !!asset && app.isPackaged,
         size: asset ? asset.size : 0, notes: String(c.r.body || '').slice(0, 600) };
     } catch (e) { return { ok: false, none: true, error: 'Update-Suche fehlgeschlagen: ' + String((e && e.message) || e) }; }
-  });
+  }
 
   async function download(asset) {
     const dir = path.join(app.getPath('temp'), 'cloudy-update');

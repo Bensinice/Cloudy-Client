@@ -1,4 +1,8 @@
 {
+ "0.9.79": [
+  "News now has two tabs: “Updates” (all versions) and “Newly added” (only what is new in the latest versions)",
+  "Update check: the launcher said “up to date” although GitHub had a newer version when your own server still offered the old one. Server and GitHub are now compared and the higher version is used"
+ ],
  "0.9.78": [
   "Quests: new page with daily and weekly tasks, progress, rewards to claim, reset time and history (needs the Cloudy account; server update required)",
   "Cloudy Stars: second currency for the upcoming Cloudy Pass. You earn them with quests; they cannot be spent in the shop"

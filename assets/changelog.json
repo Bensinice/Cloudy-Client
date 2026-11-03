@@ -1,5 +1,16 @@
 [
  {
+  "v": "0.9.79",
+  "date": "2026-11-03",
+  "added": [
+   "Neuigkeiten haben jetzt zwei Reiter: „Updates“ (alle Versionen) und „Neu hinzugefügt“ (nur das Neue der letzten Versionen)"
+  ],
+  "fixed": [
+   "Update-Suche: Der Launcher zeigte „aktuell“, obwohl auf GitHub eine neuere Version lag, wenn der eigene Server noch die alte Version anbot. Jetzt werden Server und GitHub verglichen und die höhere Version genommen"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.78",
   "date": "2026-11-03",
   "added": [

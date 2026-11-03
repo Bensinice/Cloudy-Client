@@ -5,11 +5,14 @@
   const part = (title, arr) => arr && arr.length ? `<h4>${title}</h4><ul>${arr.map(x => `<li>${esc(L(x))}</li>`).join('')}</ul>` : '';
   const fmtD = d => { if (!d) return ''; try { return new Date(d).toLocaleDateString(document.documentElement.lang === 'de' ? 'de-DE' : document.documentElement.lang || 'en', { day: 'numeric', month: 'long', year: 'numeric' }); } catch { return d; } };
   const entry = e => `<div class="news-ver"><b style="font-size:16px">${esc(e.v)}</b><span class="muted" style="font-size:12px">${esc(fmtD(e.date))}</span></div>` + part('Neu', e.added) + part('Behoben', e.fixed) + part('Entfernt', e.removed);
+  // Zwei Reiter: "Updates" (alle Versionen) und "Neu hinzugefügt" (nur das Neue der letzten Versionen, nach Version sortiert)
+  const fresh = list => { const top = list.slice(0, 3).filter(e => e.added && e.added.length); return top.length ? top.map(e => `<div class="news-ver"><b style="font-size:16px">${esc(e.v)}</b><span class="muted" style="font-size:12px">${esc(fmtD(e.date))}</span></div><ul>${e.added.map(x => `<li>${esc(L(x))}</li>`).join('')}</ul>`).join('') : `<p class="muted">${esc(L('Noch nichts Neues.'))}</p>`; };
   function show(list, title) {
     if (document.querySelector('.news-ov')) return;
     const d = document.createElement('div'); d.className = 'news-ov';
-    d.innerHTML = `<div class="glass set news-box"><h3>${esc(L(title))}</h3>${list.map(entry).join('')}<div class="tools" style="margin:16px 0 0"><button class="btn" data-x>${esc(L('Schließen'))}</button></div></div>`;
+    d.innerHTML = `<div class="glass set news-box"><h3>${esc(L(title))}</h3><div class="tools" style="margin:0 0 10px"><button class="btn" data-tab="u">${esc(L('Updates'))}</button><button class="btn ghost" data-tab="n">${esc(L('Neu hinzugefügt'))}</button></div><div data-pane="u">${list.map(entry).join('')}</div><div data-pane="n" style="display:none">${fresh(list)}</div><div class="tools" style="margin:16px 0 0"><button class="btn" data-x>${esc(L('Schließen'))}</button></div></div>`;
     document.body.appendChild(d); d.onclick = e => { if (e.target === d) d.remove(); }; d.querySelector('[data-x]').onclick = () => d.remove();
+    d.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { d.querySelectorAll('[data-tab]').forEach(x => x.classList.toggle('ghost', x !== b)); d.querySelectorAll('[data-pane]').forEach(p => p.style.display = p.dataset.pane === b.dataset.tab ? '' : 'none'); });
     if (window.setLang) window.setLang(document.documentElement.lang || 'de');
   }
   const isEn = () => (document.documentElement.lang || 'de') !== 'de';
