@@ -54,3 +54,11 @@ Damit der Server senden darf, braucht er ein Postfach zum Absenden. Setze diese 
 | `MAIL_TO` | optional, Standard `ben.haertel29@gmail.com` |
 
 Ohne `SMTP_HOST` wird keine Mail gesendet (die Anfrage selbst funktioniert trotzdem und steht im Admin-Bereich). Fehler beim Senden stehen im Server-Log mit dem Anfang `[mail]`.
+
+## Quests & Cloudy Stars (neu)
+Neue Datei: **quests.js** (neben `app.js`). Es ist **keine Datenbank-Änderung nötig**: der Stand wird automatisch in der vorhandenen Tabelle `cloudy_kv` unter dem Schlüssel `quests` gespeichert.
+- Aufgaben, Ziele und Belohnungen stehen nur im Server (`quests.js`) – der Launcher kann nichts selbst vergeben. Rücksetzung: täglich um 00:00 und wöchentlich Montag 00:00 (Zeit Europe/Berlin).
+- Spielzeit wird nur so schnell gezählt wie die echte Zeit (höchstens 90 s je Meldung, eine Meldung je 20 s).
+- Belohnungen (Cloudy Coins) werden beim Abholen auf dem Server gutgeschrieben; Stars liegen nur auf dem Server.
+- Neue Wege: `/quests/state`, `/quests/event`, `/quests/beat`, `/quests/claim` (alle nur mit Anmeldung).
+Zum Anpassen der Aufgaben oder Belohnungen ändere die Listen `DAILY` und `WEEKLY` oben in `quests.js` und starte den Server neu.

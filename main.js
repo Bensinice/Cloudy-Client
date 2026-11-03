@@ -838,7 +838,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.77'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.78'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1232,6 +1232,21 @@ ipcMain.handle('authChangePass', async (_e, { pass }) => {
   saveAuth(a); openSession(pendingKey, pendingRemember);
   return { ok: true, ...info(u) };
 });
+// ---- Quests & Cloudy Stars: Fortschritt und Belohnungen gehören dem Konto-Server; der Launcher meldet nur Ereignisse ----
+const qOnline = () => !!(srvCfg() && srvTok && currentUser);
+const qSend = (p, body) => { try { if (qOnline()) srvCall(p, body || {}, srvTok).catch(() => {}); } catch {} };
+ipcMain.handle('questState', async () => {
+  if (!currentUser) return { ok: false, error: 'Quests brauchen ein Cloudy-Konto. Melde dich an (im Offline-Modus gibt es keine Quests).' };
+  if (!srvCfg()) return { ok: false, error: 'Quests gibt es nur mit dem Cloudy-Konto-Server.' };
+  const r = await srvCall('/quests/state', {}, srvTok).catch(() => null); return r || { ...SRV_DOWN, ok: false };
+});
+ipcMain.handle('questClaim', async (_e, id) => {
+  if (!qOnline()) return { ok: false, error: 'Nicht angemeldet.' };
+  const r = await srvCall('/quests/claim', { id: String(id || '').slice(0, 20) }, srvTok).catch(() => null); if (!r) return { ...SRV_DOWN, ok: false };
+  if (r.ok) { try { await srvPull(); const u = readAuth().users[currentUser.toLowerCase()]; if (u) send('coins', { gain: r.coins || 0, state: shopOf(u) }); } catch {} }
+  return r;
+});
+ipcMain.handle('questEvent', (_e, o) => { const type = o && o.type === 'launch' ? 'launch' : 'use'; qSend('/quests/event', { type, what: String((o && o.what) || '').slice(0, 20) }); return true; });
 ipcMain.handle('offlineEnter', () => { if (currentUser) return { ok: false, error: 'Du bist angemeldet.' }; if (cfgPatch({}).gateOk !== true) return { ok: false, error: 'Access code required.' }; offlineMode = true; return { ok: true }; });
 ipcMain.handle('authLogout', () => { offlineMode = false; srvTok = null; currentUser = null; pendingKey = null; fs.rmSync(sessFile, { force: true }); });
 ipcMain.handle('authReset', () => {
@@ -1760,7 +1775,8 @@ function playTick(final) {
   if (min >= 1 && playSess.who && playSess.earned < 600) { playSess.coinMs -= min * 60000; const gain = Math.min(min * 5, 600 - playSess.earned); playSess.earned += gain; earnPlay(playSess.who, gain); }
   if (final) playSess = null;
 }
-setInterval(() => { if (mcProc) { if (!playSess) playSess = { who: currentUser, t: Date.now(), coinMs: 0, earned: 0 }; if (!playSess.who) playSess.who = currentUser; playTick(false); } }, 15000);
+let qBeatN = 0;
+setInterval(() => { if (mcProc) { if (++qBeatN % 4 === 0) qSend('/quests/beat'); if (!playSess) playSess = { who: currentUser, t: Date.now(), coinMs: 0, earned: 0 }; if (!playSess.who) playSess.who = currentUser; playTick(false); } }, 15000);
 function earnPlay(who, gain) { // gain = fertige CC (max. 600 pro Sitzung)
   try {
     if (!who || gain < 1) return;
@@ -2527,7 +2543,7 @@ ipcMain.handle('launch', async (_e, { username, version, type, ram, server, fabr
     });
     if (!proc) throw new Error('Start fehlgeschlagen.');
     if (launchCancelled) { try { proc.kill(); } catch {} throw new Error('Start abgebrochen.'); }
-    mcProc = proc; playSess = { who: currentUser, t: Date.now(), coinMs: 0, earned: 0 }; try { send('gameStart', {}); } catch {} try { if (win && !win.isDestroyed()) win.webContents.setFrameRate(15); } catch {} try { dcGame = { version: bv(version), server: server && server.host ? String(server.name || server.host).slice(0, 30) : '' }; dcStart = Date.now(); dcUpdate(); } catch {} try { cosNetStart(auth && auth.name); } catch {} proc.on('close', () => { playTick(true); if (mcProc === proc) { mcProc = null; cosNetStop(); dcGame = null; dcStart = Date.now(); dcUpdate(); } });
+    mcProc = proc; qSend('/quests/event', { type: 'launch' }); playSess = { who: currentUser, t: Date.now(), coinMs: 0, earned: 0 }; try { send('gameStart', {}); } catch {} try { if (win && !win.isDestroyed()) win.webContents.setFrameRate(15); } catch {} try { dcGame = { version: bv(version), server: server && server.host ? String(server.name || server.host).slice(0, 30) : '' }; dcStart = Date.now(); dcUpdate(); } catch {} try { cosNetStart(auth && auth.name); } catch {} proc.on('close', () => { playTick(true); if (mcProc === proc) { mcProc = null; cosNetStop(); dcGame = null; dcStart = Date.now(); dcUpdate(); } });
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err.message };

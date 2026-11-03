@@ -1,4 +1,8 @@
 {
+ "0.9.78": [
+  "Quests: new page with daily and weekly tasks, progress, rewards to claim, reset time and history (needs the Cloudy account; server update required)",
+  "Cloudy Stars: second currency for the upcoming Cloudy Pass. You earn them with quests; they cannot be spent in the shop"
+ ],
  "0.9.77": [
   "Fixed the startup error \"Attempted to register a second handler for serverStatus\": the launcher starts normally again (the public Cloudy status now uses its own channel)"
  ],

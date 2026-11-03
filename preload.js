@@ -50,6 +50,7 @@ contextBridge.exposeInMainWorld('cloudy', {
   frHostStatus: () => inv('frHostStatus'), frHost: on => inv('frHost', on), frConn: () => inv('frConn'), frConnect: o => inv('frConnect', o), frDisconnect: () => inv('frDisconnect'), frApi: o => inv('frApi', o),
   authLogout: () => inv('authLogout'),
   offlineEnter: () => inv('offlineEnter'),
+  questState: () => inv('questState'), questClaim: id => inv('questClaim', id), questEvent: o => inv('questEvent', o),
   authReset: () => inv('authReset'),
   localUpdateRun: () => inv('localUpdateRun'),
   localUpdateFolder: () => inv('localUpdateFolder'),

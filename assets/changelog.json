@@ -1,5 +1,15 @@
 [
  {
+  "v": "0.9.78",
+  "date": "2026-11-03",
+  "added": [
+   "Quests: neue Seite mit täglichen und wöchentlichen Aufgaben, Fortschritt, Belohnungen zum Abholen, Reset-Zeit und Verlauf (braucht das Cloudy-Konto; Server-Update nötig)",
+   "Cloudy Stars: zweite Währung für den kommenden Cloudy Pass. Du verdienst sie mit Quests; im Shop kannst du sie nicht ausgeben"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.77",
   "date": "2026-11-03",
   "added": [],

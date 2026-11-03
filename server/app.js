@@ -15,6 +15,7 @@ const parse = (v, d) => { try { const j = JSON.parse(v); return j == null ? d : 
 async function put(u) { const key = u.name.toLowerCase(); await db.query(`REPLACE INTO cloudy_users (name_key,${COLS.join(',')}) VALUES (?${',?'.repeat(COLS.length)})`, [key, ...COLS.map(c => (c === 'owned' || c === 'equip') ? js(u[c] == null ? (c === 'owned' ? [] : {}) : u[c]) : (c === 'daily' ? (u[c] || '') : (c === 'ban_until' || c === 'paused') ? (u[c] || 0) : u[c]))]); }
 async function get(key) { const [r] = await db.query('SELECT * FROM cloudy_users WHERE name_key=?', [key]); return r[0] || null; }
 let REQS = {}; // Request-Key-Anfragen
+let QDATA = {}; const QS = require('./quests')(); // Quests & Cloudy Stars (Stand je Konto)
 let BACKUP = '', TAGS = {}, ANN = { text: '', t: 0 }, NAMES = {}, PRICES = {}, CODES = {}, GATE = {}, GRANTS = {}, FR = { f: {}, msgs: {}, seq: 1 };
 const gcode = v => typeof v === 'string' ? v : (v && v.c) || '';
 const saveGate = async () => { await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['gate', JSON.stringify(GATE)]); await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['gategrants', JSON.stringify(GRANTS)]); };
@@ -86,6 +87,7 @@ async function init() {
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='gategrants'"); GRANTS = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='codes'"); CODES = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='keyreqs'"); REQS = r.length ? parse(r[0].v, {}) : {}; if (!REQS || typeof REQS !== 'object' || Array.isArray(REQS)) REQS = {}; }
+  { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='quests'"); QDATA = r.length ? parse(r[0].v, {}) : {}; if (!QDATA || typeof QDATA !== 'object' || Array.isArray(QDATA)) QDATA = {}; }
   for (const [c, def] of [['owned', 'TEXT'], ['equip', 'TEXT'], ['daily', 'VARCHAR(20)']]) { const [r] = await db.query('SHOW COLUMNS FROM cloudy_users LIKE ?', [c]); if (!r.length) await db.query(`ALTER TABLE cloudy_users ADD COLUMN ${c} ${def} NULL`); }
   const a = await get('admin'); if (!a || !okPw(a, ADMIN_PASS)) await put(mk('admin', ADMIN_PASS, { admin: 1, coins: null }));
   await db.query("INSERT IGNORE INTO cloudy_kv (k,v) VALUES ('noInf1','0')"); { const [f] = await db.query("SELECT v FROM cloudy_kv WHERE k='noInf1'"); if (f[0] && f[0].v === '0') { await db.query("UPDATE cloudy_users SET inf_coins=0, coins=100 WHERE name_key='tester' AND inf_coins=1"); await db.query("UPDATE cloudy_kv SET v='1' WHERE k='noInf1'"); } }
@@ -319,6 +321,17 @@ app.post('/cos/reg', auth(async (req, res, me) => {
 app.post('/cos/get', auth(async (req, res) => {
   const out = {}; for (const n of (Array.isArray((req.body || {}).names) ? req.body.names : []).slice(0, 80)) { const k = String(n).toLowerCase(), e = COS[k]; if (!e) continue; const tg = tagsOf(e.u).concat(TAGLIVE(e.u)); if (Object.keys(e.equip).length || tg.length) out[k] = { ...e.equip, tg }; }
   res.json({ ok: true, players: out });
+}));
+// ---- Quests & Cloudy Stars: Fortschritt, Ziele und Belohnungen entscheidet nur der Server ----
+let qT = null; const saveQ = (now) => { clearTimeout(qT); const run = () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['quests', JSON.stringify(QDATA)]); if (now) return run(); qT = setTimeout(() => run().catch(e => console.log('[quests] ' + e.message)), 1500); };
+app.post('/quests/state', auth(async (_req, res, me) => { const v = QS.view(QDATA, me.name_key); saveQ(); res.json({ ok: true, ...v }); }));
+app.post('/quests/event', auth(async (req, res, me) => { const r = QS.event(QDATA, me.name_key, req.body && req.body.type, req.body && req.body.what); if (!r.ignored) saveQ(); res.status(r.ok ? 200 : 400).json(r); }));
+app.post('/quests/beat', auth(async (_req, res, me) => { const r = QS.beat(QDATA, me.name_key); if (!r.ignored) saveQ(); res.json(r); }));
+app.post('/quests/claim', auth(async (req, res, me) => {
+  const r = QS.claim(QDATA, me.name_key, req.body && req.body.id); if (!r.ok) return res.status(400).json(r);
+  let coins = null; // Münzen gutschreiben (Admins und Konten mit unendlich Coins brauchen keine)
+  if (!me.admin && !me.inf_coins) { const u = { ...me }; u.coins = Math.min(1e9, (me.coins == null ? 100 : me.coins) + r.coins); await put(u); coins = u.coins; }
+  await saveQ(true); res.json({ ...r, balanceCoins: coins });
 }));
 app.post('/state', auth(async (req, res, me) => { // Shop-Stand des Kontos speichern (Coins, gekaufte Items, Auswahl)
   if (me.admin) return res.json({ ok: true });
