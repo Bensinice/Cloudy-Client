@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.83",
+  "date": "2026-11-04",
+  "added": [
+   "Admin-Reiter: neue Karte „E-Mail & Stripe“. Hier stellst du das Postfach für den E-Mail-Versand ein (mit Test-E-Mail) und die Stripe-Schlüssel für Cloudy+. Passwörter und Schlüssel werden nie angezeigt (Server-Update nötig)"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.82",
   "date": "2026-11-04",
   "added": [

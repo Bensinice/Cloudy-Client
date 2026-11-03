@@ -4,7 +4,10 @@
 // Ohne SMTP_HOST wird nichts gesendet; ein Fehler beim Senden bricht nie die Anfrage ab.
 const net = require('net'), tls = require('tls');
 
-const cfg = () => ({ host: process.env.SMTP_HOST || '', port: +process.env.SMTP_PORT || 465, user: process.env.SMTP_USER || '', pass: process.env.SMTP_PASS || '', from: process.env.SMTP_FROM || process.env.SMTP_USER || '', to: process.env.MAIL_TO || 'ben.haertel29@gmail.com', secure: process.env.SMTP_SECURE || '' });
+let over = {}; // im Admin-Bereich gespeicherte Einstellungen (haben Vorrang vor den Umgebungsvariablen)
+const setOverride = o => { over = o && typeof o === 'object' ? o : {}; };
+const base = () => ({ host: process.env.SMTP_HOST || '', port: +process.env.SMTP_PORT || 465, user: process.env.SMTP_USER || '', pass: process.env.SMTP_PASS || '', from: process.env.SMTP_FROM || process.env.SMTP_USER || '', to: process.env.MAIL_TO || 'ben.haertel29@gmail.com', secure: process.env.SMTP_SECURE || '' });
+const cfg = () => { const b = base(), o = over, pick = (k, d) => (o[k] !== undefined && o[k] !== '' ? o[k] : d); return { host: pick('host', b.host), port: +pick('port', b.port) || 465, user: pick('user', b.user), pass: pick('pass', b.pass), from: pick('from', b.from), to: pick('to', b.to), secure: pick('secure', b.secure) }; };
 const enabled = () => !!cfg().host;
 
 function send({ subject, text, to }) {
@@ -50,4 +53,4 @@ function send({ subject, text, to }) {
   });
 }
 
-module.exports = { send, enabled };
+module.exports = { send, enabled, setOverride, cfg };

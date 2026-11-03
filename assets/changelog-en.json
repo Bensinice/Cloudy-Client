@@ -1,4 +1,7 @@
 {
+ "0.9.83": [
+  "Admin tab: new “Email & Stripe” card. Set the mailbox used for sending emails (with a test email) and the Stripe keys for Cloudy+. Passwords and keys are never shown (server update required)"
+ ],
  "0.9.82": [
   "Get Cloudy+: the Cloudy Pass now has “Get Cloudy+ · €5.99/month” (payment via Stripe, once the server owner has set it up) and “Manage subscription”",
   "Cloudy Pass: more rewards, 4 items in the free track and 8 in the premium track",

@@ -838,7 +838,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.82'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.83'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1264,6 +1264,10 @@ ipcMain.handle('plusBuy', async (_e, manage) => {
   if (r.ok && /^https:\/\/(checkout|billing)\.stripe\.com\//.test(String(r.url || ''))) { shell.openExternal(r.url); return { ok: true }; } // nur echte Stripe-Seiten öffnen
   return { ok: false, error: r.status === 404 ? 'Dein Cloudy-Server kennt die Bezahlung noch nicht (neue app.js, stripe.js und pass.js einspielen).' : (r.error || 'Fehlgeschlagen.') };
 });
+const admSet = async (path, body) => { if (!adminOnly() || !srvCfg()) return { ok: false, error: 'Nur für Admins.' }; const r = await srvCall(path, body || {}, srvTok).catch(() => null); if (!r) return { ...SRV_DOWN, ok: false }; return r.ok ? r : { ok: false, error: r.status === 404 ? 'Der Server kennt das noch nicht (neue app.js und mail.js einspielen, neu starten).' : (r.error || 'Fehlgeschlagen.') }; };
+ipcMain.handle('admSettingsGet', () => admSet('/admin/settings/get'));
+ipcMain.handle('admSettingsSet', (_e, o) => admSet('/admin/settings/set', { mail: (o && o.mail) || {}, stripe: (o && o.stripe) || {}, clear: Array.isArray(o && o.clear) ? o.clear.slice(0, 5) : [] }));
+ipcMain.handle('admMailTest', () => admSet('/admin/settings/testmail'));
 ipcMain.handle('passClaim', async (_e, o) => {
   if (!qOnline()) return { ok: false, error: 'Nicht angemeldet.' };
   const r = await srvCall('/pass/claim', { level: Math.floor(+(o && o.level)) || 0, track: String((o && o.track) || '').slice(0, 10) }, srvTok).catch(() => null); if (!r) return { ...SRV_DOWN, ok: false };

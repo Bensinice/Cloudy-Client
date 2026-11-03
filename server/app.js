@@ -15,7 +15,7 @@ const parse = (v, d) => { try { const j = JSON.parse(v); return j == null ? d : 
 async function put(u) { const key = u.name.toLowerCase(); await db.query(`REPLACE INTO cloudy_users (name_key,${COLS.join(',')}) VALUES (?${',?'.repeat(COLS.length)})`, [key, ...COLS.map(c => (c === 'owned' || c === 'equip') ? js(u[c] == null ? (c === 'owned' ? [] : {}) : u[c]) : (c === 'daily' ? (u[c] || '') : (c === 'ban_until' || c === 'paused') ? (u[c] || 0) : u[c]))]); }
 async function get(key) { const [r] = await db.query('SELECT * FROM cloudy_users WHERE name_key=?', [key]); return r[0] || null; }
 let REQS = {}; // Request-Key-Anfragen
-let QDATA = {}, PDATA = {}; const QS = require('./quests')(), PS = require('./pass')(); // Quests & Cloudy Stars (Stand je Konto)
+let QDATA = {}, PDATA = {}, SETS = {}; /* SETS: im Admin-Bereich gespeicherte Einstellungen (E-Mail, Stripe) */ const QS = require('./quests')(), PS = require('./pass')(); // Quests & Cloudy Stars (Stand je Konto)
 let BACKUP = '', TAGS = {}, ANN = { text: '', t: 0 }, NAMES = {}, PRICES = {}, CODES = {}, GATE = {}, GRANTS = {}, FR = { f: {}, msgs: {}, seq: 1 };
 const gcode = v => typeof v === 'string' ? v : (v && v.c) || '';
 const saveGate = async () => { await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['gate', JSON.stringify(GATE)]); await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['gategrants', JSON.stringify(GRANTS)]); };
@@ -87,6 +87,7 @@ async function init() {
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='gategrants'"); GRANTS = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='codes'"); CODES = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='keyreqs'"); REQS = r.length ? parse(r[0].v, {}) : {}; if (!REQS || typeof REQS !== 'object' || Array.isArray(REQS)) REQS = {}; }
+  { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='settings'"); SETS = r.length ? parse(r[0].v, {}) : {}; if (!SETS || typeof SETS !== 'object' || Array.isArray(SETS)) SETS = {}; require('./mail').setOverride(SETS.mail); }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='pass'"); PDATA = r.length ? parse(r[0].v, {}) : {}; if (!PDATA || typeof PDATA !== 'object' || Array.isArray(PDATA)) PDATA = {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='quests'"); QDATA = r.length ? parse(r[0].v, {}) : {}; if (!QDATA || typeof QDATA !== 'object' || Array.isArray(QDATA)) QDATA = {}; }
   for (const [c, def] of [['owned', 'TEXT'], ['equip', 'TEXT'], ['daily', 'VARCHAR(20)']]) { const [r] = await db.query('SHOW COLUMNS FROM cloudy_users LIKE ?', [c]); if (!r.length) await db.query(`ALTER TABLE cloudy_users ADD COLUMN ${c} ${def} NULL`); }
@@ -394,8 +395,32 @@ app.post('/pass/claim', auth(async (req, res, me) => {
 }));
 app.post('/admin/stars', target(async (req, res, t) => { const r = QS.grant(QDATA, t.name_key, req.body && req.body.amount); if (!r.ok) return res.status(400).json(r); await saveQ(true); res.json(r); })); // Admin: Stars (= Pass-XP) geben
 app.post('/admin/plus', target(async (req, res, t) => { const r = PS.grantPlus(PDATA, t.name_key, req.body && req.body.days); await savePass(); res.json(r); })); // Cloudy+ vergeben/entziehen (days: 0 = beenden); die Zahlung (Stripe) kommt später hier an
+// ---- Einstellungen im Admin-Bereich: E-Mail (SMTP) und Stripe. Geheimnisse werden nie zurückgegeben (nur "gesetzt: ja/nein"). Sie liegen in der Server-Datenbank (cloudy_kv, Schlüssel settings). ----
+const M = require('./mail'), saveSets = () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['settings', JSON.stringify(SETS)]);
+const hint = v => v ? '…' + String(v).slice(-4) : '';
+app.post('/admin/settings/get', admin(async (_req, res) => {
+  const m = M.cfg(), st = SETS.stripe || {};
+  res.json({ ok: true, mail: { host: m.host, port: m.port, user: m.user, from: m.from, to: m.to, secure: m.secure, passSet: !!m.pass, enabled: M.enabled() }, stripe: { skSet: !!SK(), skHint: hint(SK()), whSet: !!WH(), whHint: hint(WH()), url: PUB(), ready: !!(SK() && WH()) }, webhook: PUB() + '/stripe/webhook' });
+}));
+app.post('/admin/settings/set', admin(async (req, res) => {
+  const b = req.body || {}, mi = b.mail || {}, si = b.stripe || {}, S = x => (typeof x === 'string' ? x.trim() : undefined), cur = { ...(SETS.mail || {}) }, st = { ...(SETS.stripe || {}) };
+  /* leeres Feld = unverändert (so löscht ein Ladefehler nie etwas) */ const setStr = (obj, k, v, max, re, allowEmpty) => { v = S(v); if (v === undefined || (v === '' && !allowEmpty)) return null; if (v.length > max) return k + ' ist zu lang.'; if (v && re && !re.test(v)) return k + ' hat ein ungültiges Format.'; obj[k] = v; return null; };
+  const errs = [setStr(cur, 'host', mi.host, 120, /^[\w.-]+$/), setStr(cur, 'user', mi.user, 160), setStr(cur, 'from', mi.from, 200), setStr(cur, 'to', mi.to, 160, /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/), setStr(cur, 'secure', mi.secure, 10, /^(ssl|starttls|none)?$/, true)].filter(Boolean);
+  if (mi.port !== undefined && mi.port !== '') { const n = Math.floor(+mi.port); if (!(n >= 1 && n <= 65535)) errs.push('port ist ungültig.'); else cur.port = n; }
+  if (typeof mi.pass === 'string' && mi.pass.trim()) cur.pass = mi.pass.trim().slice(0, 200); // leer = altes Passwort behalten
+  if (typeof si.sk === 'string' && si.sk.trim()) { const v = si.sk.trim(); if (!/^(sk|rk)_(live|test)_[\w]{10,}$/.test(v)) errs.push('Stripe-Schlüssel: muss mit sk_live_ oder sk_test_ beginnen.'); else st.sk = v; }
+  if (typeof si.wh === 'string' && si.wh.trim()) { const v = si.wh.trim(); if (!/^whsec_[\w]{10,}$/.test(v)) errs.push('Webhook-Secret: muss mit whsec_ beginnen.'); else st.wh = v; }
+  if (si.url !== undefined) { const v = S(si.url); if (v && !/^https:\/\/[\w.-]+(:\d+)?$/.test(v.replace(/\/+$/, ''))) errs.push('Webseiten-Adresse: bitte https://… ohne Pfad.'); else st.url = (v || '').replace(/\/+$/, ''); }
+  for (const k of Array.isArray(b.clear) ? b.clear : []) { if (k === 'mailPass') delete cur.pass; if (k === 'stripeKey') delete st.sk; if (k === 'stripeWebhook') delete st.wh; }
+  if (errs.length) return res.status(400).json({ ok: false, error: errs.join(' ') });
+  SETS = { ...SETS, mail: cur, stripe: st }; M.setOverride(cur); await saveSets(); res.json({ ok: true });
+}));
+app.post('/admin/settings/testmail', admin(async (_req, res) => {
+  if (!M.enabled()) return res.status(400).json({ ok: false, error: 'Es ist noch kein SMTP-Server eingetragen.' });
+  try { await M.send({ subject: 'Cloudy: Test-E-Mail', text: 'Das ist eine Test-E-Mail vom Cloudy-Server. Wenn du das liest, funktioniert der Versand.' }); res.json({ ok: true, to: M.cfg().to }); } catch (e) { res.status(502).json({ ok: false, error: 'Senden fehlgeschlagen: ' + String(e.message || e).slice(0, 160) }); }
+}));
 // ---- Cloudy+ kaufen (Stripe). Ohne STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET ist die Bezahlung aus – Admins können Cloudy+ weiter per /admin/plus vergeben ----
-const STRIPE = require('./stripe'), SK = () => process.env.STRIPE_SECRET_KEY || '', WH = () => process.env.STRIPE_WEBHOOK_SECRET || '', PUB = () => String(process.env.PUBLIC_URL || 'https://cloudyclient.com').replace(/\/+$/, '');
+const STRIPE = require('./stripe'), SK = () => (SETS.stripe && SETS.stripe.sk) || process.env.STRIPE_SECRET_KEY || '', WH = () => (SETS.stripe && SETS.stripe.wh) || process.env.STRIPE_WEBHOOK_SECRET || '', PUB = () => String((SETS.stripe && SETS.stripe.url) || process.env.PUBLIC_URL || 'https://cloudyclient.com').replace(/\/+$/, '');
 app.post('/plus/checkout', auth(async (_req, res, me) => {
   if (!SK() || !WH()) return res.status(503).json({ error: 'Die Bezahlung ist noch nicht eingerichtet.' });
   const p = PS.view(PDATA, QDATA, me.name_key);

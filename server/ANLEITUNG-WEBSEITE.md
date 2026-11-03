@@ -80,3 +80,6 @@ Preis: 5,99 € im Monat (steht in `stripe.js`). Cloudy+ gilt immer bis Ende des
 ## News auf der Webseite (GitHub)
 Der Server liest `assets/changelog.json` aus dem GitHub-Repo (Standard `Bensinice/Cloudy-Client`, änderbar mit der Umgebungsvariable `GITHUB_REPO`), speichert es 10 Minuten zwischen und zeigt es im Abschnitt „News“. Neue Dateien: `site.js` und `site/` (Ordner ersetzen).
 Releases auf den Server laden: In GitHub unter *Settings → Secrets → Actions* das Secret `CLOUDY_UPLOAD_KEY` setzen (gleicher Wert wie `UPLOAD_KEY` auf dem Server). Dann liegen neue Versionen nach jedem Build auch auf cloudyclient.com.
+
+## E-Mail und Stripe im Launcher einstellen (neu)
+Statt Umgebungsvariablen kannst du alles im Launcher eintragen: **Einstellungen → Admin → „E-Mail & Stripe“**. Dort stehen SMTP-Server, Port, Benutzer, Passwort, Absender, Empfänger (mit „Test-E-Mail senden“) und die Stripe-Schlüssel (`sk_…`, `whsec_…`). Gespeichertes wird nie wieder angezeigt; ein leeres Feld lässt den alten Wert stehen. Die Werte liegen in der Server-Datenbank (`cloudy_kv`, Schlüssel `settings`) und haben Vorrang vor Umgebungsvariablen. Neue Datei: **mail.js** (zusammen mit `app.js` ersetzen).
