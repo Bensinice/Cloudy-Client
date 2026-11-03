@@ -67,3 +67,16 @@ Zum Anpassen der Aufgaben oder Belohnungen ändere die Listen `DAILY` und `WEEKL
 Neue Datei: **pass.js** (neben `app.js` und `quests.js`). Keine Datenbank-Änderung nötig (Schlüssel `pass` in `cloudy_kv`).
 - 30 Level, Stufe L braucht insgesamt L × 8 Sterne. Belohnungen (Coins, Items) stehen in `pass.js` ganz oben und lassen sich dort ändern. Season-Daten: `SEASON` ebenfalls dort.
 - Premium-Reihe: nur mit Cloudy+. Bezahlen ist noch nicht eingebaut; bis dahin vergibst du Cloudy+ per Admin: `POST /admin/plus` mit `{ "name": "...", "days": 30 }` (days 0 = beenden).
+
+## Cloudy+ kaufen (Stripe) – Einrichtung durch dich
+Neue Datei: **stripe.js**. Ohne die Schlüssel unten bleibt die Bezahlung aus („noch nicht eingerichtet“); Admin-Vergabe per `/admin/plus` geht weiter.
+1. Stripe-Konto öffnen, im Dashboard unter *Entwickler → API-Schlüssel* den **geheimen Schlüssel** (`sk_live_…`, zum Testen `sk_test_…`) kopieren.
+2. Unter *Entwickler → Webhooks* einen Endpunkt anlegen: Adresse `https://cloudyclient.com/stripe/webhook`, Ereignisse: `checkout.session.completed` und `invoice.paid`. Das **Signing-Secret** (`whsec_…`) kopieren.
+3. Beim Starten des Servers als Umgebungsvariablen setzen (nie in eine Datei im Repo schreiben):
+   `STRIPE_SECRET_KEY=sk_…`  `STRIPE_WEBHOOK_SECRET=whsec_…`  (optional `PUBLIC_URL=https://cloudyclient.com`)
+4. Für „Abo verwalten“: im Stripe-Dashboard unter *Einstellungen → Billing → Kundenportal* das Portal aktivieren.
+Preis: 5,99 € im Monat (steht in `stripe.js`). Cloudy+ gilt immer bis Ende des bezahlten Zeitraums (+1 Tag Puffer). Der Server prüft jede Webhook-Nachricht mit der Stripe-Signatur und nimmt nichts ohne gültige Signatur an.
+
+## News auf der Webseite (GitHub)
+Der Server liest `assets/changelog.json` aus dem GitHub-Repo (Standard `Bensinice/Cloudy-Client`, änderbar mit der Umgebungsvariable `GITHUB_REPO`), speichert es 10 Minuten zwischen und zeigt es im Abschnitt „News“. Neue Dateien: `site.js` und `site/` (Ordner ersetzen).
+Releases auf den Server laden: In GitHub unter *Settings → Secrets → Actions* das Secret `CLOUDY_UPLOAD_KEY` setzen (gleicher Wert wie `UPLOAD_KEY` auf dem Server). Dann liegen neue Versionen nach jedem Build auch auf cloudyclient.com.

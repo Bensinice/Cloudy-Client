@@ -82,5 +82,10 @@ module.exports = ({ now = () => Date.now() } = {}) => {
     S.stars.bal -= n; S.stars.spent += n; return { ok: true, balance: S.stars.bal };
   }
 
-  return { view, event, beat, claim, spend, dayOf, weekOf, DAILY, WEEKLY, FEATURES };
+  function grant(Q, key, n) { // Admin: Sterne geben (negativ = abziehen). Sterne zählen auch für den Pass-Fortschritt.
+    const S = ensure(Q, key); n = Math.trunc(+n); if (!Number.isFinite(n) || n === 0 || Math.abs(n) > 5000) return { ok: false, code: 'bad_amount' };
+    S.stars.bal = Math.max(0, S.stars.bal + n); S.stars.earned = Math.max(0, S.stars.earned + n); return { ok: true, balance: S.stars.bal, earned: S.stars.earned };
+  }
+
+  return { view, event, beat, claim, spend, grant, dayOf, weekOf, DAILY, WEEKLY, FEATURES };
 };

@@ -92,9 +92,14 @@ exports.init = function init({ app, ipcMain, shell, send, defaultRepo, userAgent
         return { r, exe, zip, v: ver(zip && zip.name) || ver(r.tag_name) };
       }).filter(c => c.v && (c.exe || c.zip)); // GitHub liefert die neueste Veröffentlichung zuerst
       if (!cands.length) throw new Error('Kein Release mit Versionsnummer (z. B. cloudy-0.8.13-voll.zip) gefunden.');
-      const c = cands[0], latest = c.v, cur = app.getVersion(), asset = c.exe || c.zip, isZip = !c.exe;
+      const c = cands[0], latest = c.v, cur = app.getVersion();
+      // Kleines Update (nur Cloudy-Dateien, ca. 10 MB) statt des ganzen Installers: nur Windows (installiert, nicht portable) und nur, wenn die Laufzeit (Electron + Pakete) gleich geblieben ist.
+      // Datei: Cloudy-Update-<Version>-r<Laufzeit>.zip. Mac (signierte App) und Linux (AppImage) brauchen immer den vollen Installer.
+      const small = (c.r.assets || []).find(x => { const m = /^Cloudy-Update-\d+\.\d+\.\d+-r(\d+)\.zip$/i.exec(x.name); return m && +m[1] === (+require('../package.json').runtimeRev || 0); });
+      const useSmall = !!small && process.platform === 'win32' && app.isPackaged && !process.env.PORTABLE_EXECUTABLE_DIR;
+      const asset = useSmall ? small : (c.exe || c.zip), isZip = useSmall || !c.exe;
       const nw = newer(latest, cur);
-      return { ok: true, current: cur, latest, newer: nw, mandatory: nw && seen(latest), url: c.r.html_url, _found: { asset, isZip, url: c.r.html_url, ver: latest }, canInstall: !!asset && app.isPackaged,
+      return { ok: true, current: cur, latest, newer: nw, mandatory: nw && seen(latest), url: c.r.html_url, _found: { asset, isZip, url: c.r.html_url, ver: latest, alt: useSmall ? c.exe : null }, canInstall: !!asset && app.isPackaged,
         size: asset ? asset.size : 0, notes: String(c.r.body || '').slice(0, 600) };
     } catch (e) { return { ok: false, none: true, error: 'Update-Suche fehlgeschlagen: ' + String((e && e.message) || e) }; }
   }
@@ -172,11 +177,15 @@ else hdiutil detach -quiet "$M"; open "$DMG"; fi
       if (found.isZip) { // ZIP-Update: in den Update-Ordner legen und wie ein lokales Update anwenden (Cloudy startet danach neu)
         const dir = path.join(app.getPath('userData'), 'update'); fs.mkdirSync(dir, { recursive: true });
         fs.copyFileSync(file, path.join(dir, 'cloudy-update-' + Date.now() + '.zip'));
-        const r = force ? require('./localupdate').applyForce() : require('./localupdate').applyNow(); busy = false;
-        return r.ok ? { ok: true } : { ok: false, error: r.msg || 'Update fehlgeschlagen.' };
+        const r = force ? require('./localupdate').applyForce() : require('./localupdate').applyNow(); if (r.ok) busy = false;
+        if (!r.ok) { if (found.alt) throw new Error(r.msg || 'Update fehlgeschlagen.'); return { ok: false, error: r.msg || 'Update fehlgeschlagen.' }; }
+        return { ok: true };
       }
       install(file); return { ok: true };
     }
-    catch (e) { busy = false; return { ok: false, error: String((e && e.message) || e) }; }
+    catch (e) {
+      if (found && found.isZip && found.alt) { try { const f2 = await download(found.alt); install(f2); return { ok: true }; } catch (e2) { e = e2; } } // kleines Update ging nicht: ganzen Installer nehmen
+      busy = false; return { ok: false, error: String((e && e.message) || e) };
+    }
   });
 };

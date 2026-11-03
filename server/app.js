@@ -95,7 +95,7 @@ async function init() {
   if (!(await get('tester'))) await put(mk('Tester', '12345', { must_change: 1, coins: 100 }));
 }
 const app = express(); app.set('trust proxy', true); // hinter nginx/Cloudflare: echte Besucher-IP für die Versuchsbegrenzung
-app.use(cors()); app.use(express.json({ limit: '100kb' }));
+app.use(cors()); app.use(express.json({ limit: '100kb', verify: (req, _res, buf) => { if (req.originalUrl === '/stripe/webhook') req.rawBody = buf; } })); // rawBody: Stripe prüft die Signatur über den unveränderten Text
 require('./site')(app, express, async req => { // Webseite, Downloads, Update-Feed, Upload (site.js); Admin = Konto mit Admin-Recht oder Owner-Tag
   const m = /^Bearer (.+)$/.exec(req.headers.authorization || ''), key = m && (sessions.get(m[1]) || await tokKey(m[1])), me = key && await get(key);
   return !!me && !lockMsg(me) && isAdm(me);
@@ -392,7 +392,35 @@ app.post('/pass/claim', auth(async (req, res, me) => {
     res.json({ ...r, balanceCoins: coins });
   } catch (e) { const i = list.indexOf(lvl); if (i >= 0) list.splice(i, 1); console.log('[pass] ' + e.message); res.status(500).json({ error: 'Serverfehler.' }); } // bei einem Fehler nichts verlieren: Markierung zurücknehmen
 }));
+app.post('/admin/stars', target(async (req, res, t) => { const r = QS.grant(QDATA, t.name_key, req.body && req.body.amount); if (!r.ok) return res.status(400).json(r); await saveQ(true); res.json(r); })); // Admin: Stars (= Pass-XP) geben
 app.post('/admin/plus', target(async (req, res, t) => { const r = PS.grantPlus(PDATA, t.name_key, req.body && req.body.days); await savePass(); res.json(r); })); // Cloudy+ vergeben/entziehen (days: 0 = beenden); die Zahlung (Stripe) kommt später hier an
+// ---- Cloudy+ kaufen (Stripe). Ohne STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET ist die Bezahlung aus – Admins können Cloudy+ weiter per /admin/plus vergeben ----
+const STRIPE = require('./stripe'), SK = () => process.env.STRIPE_SECRET_KEY || '', WH = () => process.env.STRIPE_WEBHOOK_SECRET || '', PUB = () => String(process.env.PUBLIC_URL || 'https://cloudyclient.com').replace(/\/+$/, '');
+app.post('/plus/checkout', auth(async (_req, res, me) => {
+  if (!SK() || !WH()) return res.status(503).json({ error: 'Die Bezahlung ist noch nicht eingerichtet.' });
+  const p = PS.view(PDATA, QDATA, me.name_key);
+  if (p.plus && p.plusUntil - Date.now() > 3 * 864e5) return res.status(400).json({ error: 'Du hast Cloudy+ schon.' });
+  try { const s = await STRIPE.checkout(SK(), me.name_key, PUB(), (PDATA[me.name_key] || {}).cust); res.json({ ok: true, url: s.url }); } catch (e) { console.log('[stripe] ' + e.message); res.status(502).json({ error: 'Die Bezahlseite konnte nicht erstellt werden.' }); }
+}));
+app.post('/plus/portal', auth(async (_req, res, me) => { // Abo verwalten/kündigen (Stripe-Kundenportal)
+  const cust = (PDATA[me.name_key] || {}).cust; if (!SK() || !cust) return res.status(400).json({ error: 'Kein Abo gefunden.' });
+  try { const s = await STRIPE.portal(SK(), cust, PUB()); res.json({ ok: true, url: s.url }); } catch (e) { console.log('[stripe] ' + e.message); res.status(502).json({ error: 'Das Kundenportal ist nicht erreichbar.' }); }
+}));
+app.post('/stripe/webhook', async (req, res) => { // nur mit gültiger Stripe-Signatur
+  try {
+    if (!WH() || !STRIPE.verify(req.rawBody, req.headers['stripe-signature'], WH())) return res.status(400).json({ error: 'Signatur ungültig.' });
+    const ev = req.body || {}, o = (ev.data && ev.data.object) || {};
+    if (ev.type === 'checkout.session.completed') {
+      const k = String((o.metadata && o.metadata.name_key) || o.client_reference_id || ''); if (k && await get(k)) { PS.view(PDATA, QDATA, k); PDATA[k].cust = String(o.customer || ''); PDATA[k].sub = String(o.subscription || ''); await savePass(); }
+    } else if (ev.type === 'invoice.paid') {
+      const sub = String(o.subscription || ''), meta = (o.subscription_details && o.subscription_details.metadata) || (o.parent && o.parent.subscription_details && o.parent.subscription_details.metadata) || {};
+      let k = String(meta.name_key || ''); if (!k && sub) k = Object.keys(PDATA).find(x => PDATA[x] && PDATA[x].sub === sub) || '';
+      const line = o.lines && o.lines.data && o.lines.data[0], end = line && line.period && line.period.end ? line.period.end * 1000 + 864e5 : 0; // bezahlter Zeitraum + 1 Tag Puffer
+      if (k && end && await get(k)) { PS.view(PDATA, QDATA, k); PS.plusUntil(PDATA, k, end); if (o.customer) PDATA[k].cust = String(o.customer); await savePass(); }
+    }
+    res.json({ received: true });
+  } catch (e) { console.log('[stripe webhook] ' + e.message); res.status(500).json({ error: 'Serverfehler.' }); }
+});
 app.post('/admin/additem', target(async (req, res, t) => { const id = String(req.body.id || ''); if (!id) return res.status(400).json({ error: 'id fehlt' }); const o = parse(t.owned, []); if (!o.includes(id)) o.push(id); await put({ ...t, owned: o }); res.json({ ok: true }); }));
 app.post('/admin/inf', target(async (req, res, t) => { await put({ ...t, inf_coins: req.body.on ? 1 : 0, coins: req.body.on ? null : 100 }); res.json({ ok: true }); }));
 app.post('/admin/pause', target(async (req, res, t) => { await put({ ...t, paused: req.body.paused ? 1 : 0 }); res.json({ ok: true }); }));

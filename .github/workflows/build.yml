@@ -86,6 +86,15 @@ jobs:
         run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
       - uses: actions/download-artifact@v4
         with: { path: release, merge-multiple: true, pattern: "{windows,mac-*,linux}" }
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with: { name: cloudy-client, path: client }
+      # Kleines Update (ca. 10 MB) für Windows: nur die Cloudy-Dateien ohne Electron und Pakete. Cloudy nimmt es automatisch, solange die Laufzeit (runtimeRev in package.json) gleich bleibt.
+      - name: Kleines Update bauen
+        run: |
+          REV=$(node -p "require('./package.json').runtimeRev||0")
+          zip -qr "release/Cloudy-Update-${{ steps.v.outputs.version }}-r$REV.zip" . -x '.git/*' '.github/*' 'scripts/*' 'ios/*' '*.md' 'dist/*' '*.bat' '*.command' 'server/*' '*.zip' 'release/*' 'node_modules/*' 'client-src/build/*' 'client-src/.gradle/*'
+          ls -l release/Cloudy-Update-*.zip
       # Der Update-Knopf in Cloudy vergleicht diese Version (Tag v<Version>) mit der installierten.
       # Für ein neues Update: "version" in package.json erhöhen und hochladen.
       - uses: softprops/action-gh-release@v2

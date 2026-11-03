@@ -1,4 +1,11 @@
 {
+ "0.9.82": [
+  "Get Cloudy+: the Cloudy Pass now has “Get Cloudy+ · €5.99/month” (payment via Stripe, once the server owner has set it up) and “Manage subscription”",
+  "Cloudy Pass: more rewards, 4 items in the free track and 8 in the premium track",
+  "Admin: new “Pass & Stars” card to give Stars (pass XP) and Cloudy+. The debug menu is now in the admin tab",
+  "Small updates on Windows: only about 10 MB instead of the full installer (when Electron does not change)",
+  "The website shows the news from this changelog (from GitHub)"
+ ],
  "0.9.81": [
   "Cloudy Pass: 30 levels with a free and a premium track. You level up with Cloudy Stars earned from quests. The premium track comes with Cloudy+ (server update required)",
   "Quests are now a sub-tab of the Cloudy Pass (tabs “Pass” and “Quests”)",

@@ -1,5 +1,18 @@
 [
  {
+  "v": "0.9.82",
+  "date": "2026-11-04",
+  "added": [
+   "Cloudy+ kaufen: im Cloudy Pass gibt es jetzt „Cloudy+ kaufen · 5,99 €/Monat“ (Bezahlung über Stripe, nach Einrichtung durch den Server-Betreiber) und „Abo verwalten“",
+   "Cloudy Pass: mehr Belohnungen, 4 Items in der Gratis-Reihe und 8 in der Premium-Reihe",
+   "Admin: neue Karte „Pass & Stars“ zum Vergeben von Stars (Pass-XP) und Cloudy+. Das Debug-Menü ist jetzt im Admin-Reiter",
+   "Kleine Updates unter Windows: nur ca. 10 MB statt des ganzen Installers (wenn sich Electron nicht ändert)",
+   "Die Webseite zeigt die Neuigkeiten aus diesem Changelog (von GitHub)"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.81",
   "date": "2026-11-04",
   "added": [

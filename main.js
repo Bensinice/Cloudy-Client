@@ -838,7 +838,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.81'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.82'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1255,6 +1255,14 @@ ipcMain.handle('passState', async () => {
   if (!srvCfg()) return { ok: false, error: 'Der Cloudy Pass braucht den Cloudy-Konto-Server.' };
   const r = await srvCall('/pass/state', {}, srvTok).catch(() => null); if (!r) return { ...SRV_DOWN, ok: false };
   return r.ok ? r : { ok: false, error: passErr(r) };
+});
+ipcMain.handle('admStars', async (_e, o) => { if (!adminOnly() || !srvCfg()) return { ok: false, error: 'Nur für Admins.' }; const r = await srvCall('/admin/stars', { name: String((o && o.name) || ''), amount: Math.trunc(+(o && o.amount)) || 0 }, srvTok).catch(() => null); return r ? (r.ok ? r : { ok: false, error: r.status === 404 && !r.code ? 'Der Server kennt das noch nicht (neue app.js einspielen).' : (r.error || r.code === 'bad_amount' ? 'Menge muss zwischen -5000 und 5000 liegen (nicht 0).' : 'Fehlgeschlagen.') }) : { ...SRV_DOWN, ok: false }; });
+ipcMain.handle('admPlus', async (_e, o) => { if (!adminOnly() || !srvCfg()) return { ok: false, error: 'Nur für Admins.' }; const r = await srvCall('/admin/plus', { name: String((o && o.name) || ''), days: Math.max(0, Math.trunc(+(o && o.days)) || 0) }, srvTok).catch(() => null); return r ? (r.ok ? r : { ok: false, error: r.error || (r.status === 404 ? 'Der Server kennt das noch nicht (neue app.js einspielen).' : 'Fehlgeschlagen.') }) : { ...SRV_DOWN, ok: false }; });
+ipcMain.handle('plusBuy', async (_e, manage) => {
+  if (!qOnline()) return { ok: false, error: 'Nicht angemeldet.' };
+  const r = await srvCall(manage ? '/plus/portal' : '/plus/checkout', {}, srvTok).catch(() => null); if (!r) return { ...SRV_DOWN, ok: false };
+  if (r.ok && /^https:\/\/(checkout|billing)\.stripe\.com\//.test(String(r.url || ''))) { shell.openExternal(r.url); return { ok: true }; } // nur echte Stripe-Seiten öffnen
+  return { ok: false, error: r.status === 404 ? 'Dein Cloudy-Server kennt die Bezahlung noch nicht (neue app.js, stripe.js und pass.js einspielen).' : (r.error || 'Fehlgeschlagen.') };
 });
 ipcMain.handle('passClaim', async (_e, o) => {
   if (!qOnline()) return { ok: false, error: 'Nicht angemeldet.' };

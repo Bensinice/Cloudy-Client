@@ -3,8 +3,8 @@
 // Level, Belohnungen und wer die Premium-Reihe abholen darf (nur mit aktivem Cloudy+).
 const SEASON = { id: 's1', name: 'Season 1', start: '2026-11-01', end: '2027-01-31' }; // Ende: 31.01. 23:59 Berlin
 const LEVELS = 30, PER_LEVEL = 8; // Stufe L braucht insgesamt L * 8 Sterne (Stufe 30 = 240 Sterne)
-const FREE_ITEMS = { 5: 'shield-forest', 15: 'hat-top', 25: 'cape-sunset' };
-const PREM_ITEMS = { 1: 'hat-wizard', 10: 'cape-galaxy', 20: 'wings-fire', 30: 'wings-bat' };
+const FREE_ITEMS = { 5: 'shield-forest', 12: 'hat-top', 20: 'cape-sunset', 27: 'hat-party' }; // 4 Items in der Gratis-Reihe
+const PREM_ITEMS = { 1: 'hat-wizard', 6: 'cape-galaxy', 10: 'wings-fire', 14: 'hat-halo', 18: 'cape-nebula', 22: 'wings-crystal', 26: 'hat-crown', 30: 'wings-shadow' }; // 8 Items in der Premium-Reihe
 const reward = (L, track) => {
   const item = (track === 'free' ? FREE_ITEMS : PREM_ITEMS)[L] || null;
   const coins = track === 'free' ? 20 + 5 * L + (L === LEVELS ? 300 : 0) : 40 + 10 * L + (L === LEVELS ? 600 : 0);
@@ -46,5 +46,8 @@ module.exports = ({ now = () => Date.now() } = {}) => {
     const p = P(PD, key); days = Math.max(0, Math.min(3650, Math.floor(+days) || 0));
     p.plus = days ? Math.max(now(), p.plus || 0) + days * 864e5 : 0; return { ok: true, plus: p.plus };
   }
-  return { view, claim, grantPlus, levelOf, reward, SEASON, LEVELS, PER_LEVEL };
+  function plusUntil(PD, key, ms) { // Cloudy+ bis zu einem Zeitpunkt (nur verlängern, nie kürzen) – für bezahlte Zeiträume von Stripe
+    const p = P(PD, key); ms = Math.floor(+ms); if (!Number.isFinite(ms) || ms <= 0 || ms > now() + 400 * 864e5) return { ok: false }; if (ms > (p.plus || 0)) p.plus = ms; return { ok: true, plus: p.plus };
+  }
+  return { view, claim, grantPlus, plusUntil, levelOf, reward, SEASON, LEVELS, PER_LEVEL };
 };

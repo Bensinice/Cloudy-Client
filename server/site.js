@@ -32,6 +32,18 @@ module.exports = (app, express, isAdmin, ext = {}) => { // isAdmin(req) -> Promi
 
   try { for (const v of fs.readdirSync(ROOT)) { const d = path.join(ROOT, v); if (!fs.statSync(d).isDirectory()) continue; for (const f of fs.readdirSync(d)) if (/^\.(parts-|.*\.(part|join)$)/.test(f)) { const p = path.join(d, f); if (Date.now() - fs.statSync(p).mtimeMs > 24 * 3600e3) fs.rmSync(p, { recursive: true, force: true }); } } } catch {}
   // ---- öffentlich: Webseite, Liste, Downloads ----
+  // ---- News von GitHub: die Änderungsliste des Launchers (assets/changelog.json) wird vom Repo gelesen und kurz zwischengespeichert ----
+  const GH = String(process.env.GITHUB_REPO || 'Bensinice/Cloudy-Client'), NEWS = { t: 0, list: [] };
+  app.get('/api/news', async (_q, res) => {
+    if (/^[\w.-]+\/[\w.-]+$/.test(GH) && Date.now() - NEWS.t > 10 * 60e3) {
+      try {
+        const r = await fetch(`https://raw.githubusercontent.com/${GH}/main/assets/changelog.json`, { signal: AbortSignal.timeout(8000), headers: { 'User-Agent': 'Cloudy-Site' } });
+        if (r.ok) { const j = await r.json(), arr = x => (Array.isArray(x) ? x.slice(0, 20).map(t => String(t).slice(0, 300)) : []); if (Array.isArray(j)) NEWS.list = j.slice(0, 15).map(e => ({ v: String(e.v || '').slice(0, 20), date: String(e.date || '').slice(0, 20), added: arr(e.added), fixed: arr(e.fixed), removed: arr(e.removed) })); }
+      } catch {}
+      NEWS.t = Date.now() - (NEWS.list.length ? 0 : 9 * 60e3); // bei Fehler nach 1 Minute erneut versuchen
+    }
+    res.set && res.set('Cache-Control', 'public, max-age=300'); res.json({ repo: GH, news: NEWS.list });
+  });
   app.get('/api/releases', (_q, res) => res.json({ releases: list().map(r => ({ ...r, files: r.files.map(f => ({ ...f, url: `/download/${r.version}/${encodeURIComponent(f.name)}` })) })) }));
   const send = (res, v, f, name) => { const p = path.join(ROOT, v, f); if (!OK_VER.test(v) || !OK_FILE.test(f) || !fs.existsSync(p)) return res.status(404).send('Nicht gefunden.'); res.download(p, name || f); };
   app.get('/download/latest/:plat', (req, res) => { const r = list()[0], f = r && r.files.find(x => x.platform === req.params.plat); if (!f) return res.status(404).send('Noch keine Datei hochgeladen.'); res.redirect(`/download/${r.version}/${encodeURIComponent(f.name)}`); });

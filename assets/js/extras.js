@@ -347,9 +347,9 @@
     let card = $('#dbgCard');
     if (!d) { if (card) card.remove(); clearInterval(dbgT); dbgT = 0; return; }
     if (!card) {
-      card = document.createElement('div'); card.id = 'dbgCard'; card.className = 'glass set';
+      card = document.createElement('div'); card.id = 'dbgCard'; card.className = 'glass set wide'; card.setAttribute('data-adm', '');
       card.innerHTML = '<h3>Debug <small class="muted">Admin</small></h3><div class="tools" style="margin:0 0 8px"><button class="btn" data-da="devtools">DevTools</button><button class="btn ghost" data-da="reload">UI neu laden</button><button class="btn ghost" data-da="openData">Datenordner</button><button class="btn ghost" data-da="openRoot">Spielordner</button><button class="btn ghost" data-da="clearCache">Cache leeren</button><button class="btn ghost" data-da="openInstances">Instanzen</button><button class="btn ghost" data-da="repairLibs">Bibliotheken prüfen</button><button class="btn ghost" data-da="resetBuild">Client-Bau freigeben</button><button class="btn ghost" data-da="killMc">Minecraft beenden</button><button class="btn ghost" data-da="killServer">Server beenden</button><button class="btn ghost" data-da="resetNames">Shop-Namen zurücksetzen</button><button class="btn ghost" data-da="clearLog">Log leeren</button><button class="btn ghost" data-da="copy">Bericht kopieren</button></div><div id="dbgBody"></div>';
-      const g = page.querySelector('.sgrid') || page; g.appendChild(card);
+      const g = page.querySelector('.sgrid') || page, an = $('#passAdm'); if (an) an.after(card); else g.appendChild(card); // Debug gehört in den Admin-Bereich
       card.querySelectorAll('[data-da]').forEach(b => { const lab = b.textContent; b.onclick = async () => { try {
         if (b.dataset.da === 'copy') { const t = [...card.querySelectorAll('.dr')].map(r => r.children[0].textContent + ': ' + r.children[1].textContent).join('\n') + '\n\n' + (card.querySelector('.dlog') || {}).textContent; try { await navigator.clipboard.writeText(t); } catch {} b.textContent = '✓ kopiert'; }
         else { const r = await window.cloudy.debugAction(b.dataset.da); b.textContent = typeof r === 'string' ? '✓ ' + r : r ? '✓' : '✗'; if (b.dataset.da === 'clearLog' || b.dataset.da === 'repairLibs') paintDebug(); }

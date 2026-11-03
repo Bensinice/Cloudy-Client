@@ -679,3 +679,5 @@ html.gaming .blob,html.gaming .sky{display:none!important}
 #p-pass .pcell b{display:block}#p-pass .pitem{display:block;font-size:12px}
 #p-pass .pl{font-size:18px}
 @media (max-width:760px){#p-pass .pinfo{grid-template-columns:1fr}}
+#p-pass .pbuy{display:grid;gap:8px;justify-items:end}
+@media (max-width:760px){#p-pass .pbuy{justify-items:start}}

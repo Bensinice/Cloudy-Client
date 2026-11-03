@@ -55,6 +55,15 @@
     const mine = releases[0].files.find(f => f.platform === me) || releases[0].files.find(f => f.platform === 'win');
     if (mine) { const b = $('heroDl'); b.href = mine.url; b.textContent = 'Für ' + (NAMES[mine.platform] || 'dein System') + ' laden'; }
   }).catch(() => { $('dl').innerHTML = '<div class="ver"><p>Downloads konnten nicht geladen werden.</p></div>'; });
+  fetch('/api/news').then(r => r.json()).then(({ news }) => { // Neuigkeiten (nur Text, nichts wird als HTML eingesetzt)
+    const box = $('newsBox'); if (!box) return; box.textContent = '';
+    if (!news || !news.length) { const d = document.createElement('div'); d.className = 'ver'; d.innerHTML = '<p>Noch keine Neuigkeiten.</p>'; box.appendChild(d); return; }
+    news.slice(0, 8).forEach((e, i) => {
+      const d = document.createElement('div'); d.className = 'ver' + (i ? '' : ' new'); const h = document.createElement('h3'); h.textContent = 'Cloudy ' + e.v + ' '; const tm = document.createElement('time'); tm.textContent = e.date ? new Date(e.date).toLocaleDateString('de-DE') : ''; h.appendChild(tm); d.appendChild(h);
+      [['Neu', e.added], ['Behoben', e.fixed], ['Entfernt', e.removed]].forEach(([t, a]) => { if (!a || !a.length) return; const b = document.createElement('b'); b.textContent = t; d.appendChild(b); const ul = document.createElement('ul'); a.forEach(x => { const li = document.createElement('li'); li.textContent = x; ul.appendChild(li); }); d.appendChild(ul); });
+      box.appendChild(d);
+    });
+  }).catch(() => { const b = $('newsBox'); if (b) b.textContent = 'Neuigkeiten konnten nicht geladen werden.'; });
   document.querySelectorAll('.rv').forEach(watch);
   window.addEventListener('scroll', () => {}, { passive: true });
 })();
