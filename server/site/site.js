@@ -2,15 +2,28 @@
 (function () {
   const $ = id => document.getElementById(id), esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   $('y').textContent = new Date().getFullYear();
-  const setLines = (el, txt) => { el.textContent = ''; String(txt).split('\n').forEach((l, i) => { if (i) el.appendChild(document.createElement('br')); el.appendChild(document.createTextNode(l)); }); };
+  // Sicherer Mini-Formatierer: erlaubt nur <b>, <code>, <i> und <br> (sowie Zeilenumbrüche); alles andere bleibt sichtbarer Text. Es wird nie innerHTML benutzt.
+  const rich = (el, txt) => {
+    el.textContent = ''; const st = [el];
+    String(txt == null ? '' : txt).split(/(<\/?(?:b|code|i|br)\s*\/?>|\n)/i).forEach(part => {
+      if (!part) return;
+      const top = st[st.length - 1], m = /^<(\/?)(b|code|i|br)\s*\/?>$/i.exec(part);
+      if (part === '\n' || (m && m[2].toLowerCase() === 'br')) { top.appendChild(document.createElement('br')); return; }
+      if (!m) { top.appendChild(document.createTextNode(part)); return; }
+      const tag = m[2].toLowerCase();
+      if (m[1]) { for (let i = st.length - 1; i > 0; i--) if (st[i].nodeName.toLowerCase() === tag) { st.length = i; break; } return; }
+      const n = document.createElement(tag); top.appendChild(n); st.push(n);
+    });
+  };
+  const setLines = rich;
   const mkIo = () => 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); } }), { threshold: .12 }) : null;
   const io = mkIo(); const watch = el => io ? io.observe(el) : el.classList.add('in');
   function render(o) { // alle Texte setzen; o = Standard + Änderungen. Es wird nur textContent benutzt (kein HTML aus fremder Hand).
     [['title', 'title'], ['lead', 'lead'], ['eyebrow', 'eyebrow'], ['featTitle', 'featTitle'], ['featLead', 'featLead'], ['betaTitle', 'betaTitle'], ['betaLead', 'betaLead'], ['footer', 'footTxt']].forEach(([k, id]) => { if (o[k] != null && $(id)) setLines($(id), o[k]); });
     const g = $('featGrid'); g.textContent = '';
-    (o.features || []).forEach((f, i) => { const c = document.createElement('div'); c.className = 'card rv' + (i === 0 ? ' big' : ''); const ic = document.createElement('span'); ic.className = 'ic'; ic.textContent = f.ic || ''; const h = document.createElement('h3'); h.textContent = f.t; const p = document.createElement('p'); p.textContent = f.p; c.append(ic, h, p); g.appendChild(c); watch(c); });
+    (o.features || []).forEach((f, i) => { const c = document.createElement('div'); c.className = 'card rv' + (i === 0 ? ' big' : ''); const ic = document.createElement('span'); ic.className = 'ic'; ic.textContent = f.ic || ''; const h = document.createElement('h3'); h.textContent = f.t; const p = document.createElement('p'); rich(p, f.p); c.append(ic, h, p); g.appendChild(c); watch(c); });
     const l = $('stepList'); l.textContent = '';
-    (o.steps || []).forEach(s => { const li = document.createElement('li'); li.className = 'rv'; const b = document.createElement('b'); b.textContent = s.t; li.append(b, document.createTextNode(s.p)); l.appendChild(li); watch(li); });
+    (o.steps || []).forEach(s => { const li = document.createElement('li'); li.className = 'rv'; const b = document.createElement('b'); b.textContent = s.t; const sp = document.createElement('span'); rich(sp, s.p); li.append(b, sp); l.appendChild(li); watch(li); });
     const c = $('contactLine'); if (o.contact) { c.textContent = 'Kontakt für den Zugangscode: ' + o.contact; c.style.display = ''; } else c.style.display = 'none';
     const bn = $('banner'); if (o.announce) { bn.textContent = o.announce; bn.hidden = false; } else bn.hidden = true;
   }
