@@ -1,4 +1,7 @@
 {
+ "0.9.77": [
+  "Fixed the startup error \"Attempted to register a second handler for serverStatus\": the launcher starts normally again (the public Cloudy status now uses its own channel)"
+ ],
  "0.9.76": [
   "Offline mode: play without a Cloudy account from the login screen. Limits: singleplayer only, no servers, friends/chat, shop, cosmetics, cheats or cloud sync"
  ],

@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.77",
+  "date": "2026-11-03",
+  "added": [],
+  "fixed": [
+   "Startfehler „Attempted to register a second handler for serverStatus“ behoben: Der Launcher startet wieder normal (der öffentliche Cloudy-Status nutzt jetzt einen eigenen Kanal)"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.76",
   "date": "2026-11-02",
   "added": [

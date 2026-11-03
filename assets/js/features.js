@@ -749,7 +749,7 @@ window.cloudyTags = tags => (tags || []).map(k => { const m = /^clan:([A-Z0-9]{1
   const dot = c => `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${c};margin-right:8px;box-shadow:0 0 8px ${c}"></span>`, T = (x) => (window.t ? window.t(x) : x);
   const row = (n, c, txt, sub) => `<div class="arow"><b>${dot(c)}${T(n)}${sub ? ` <small class="muted">${sub}</small>` : ''}</b><span>${T(txt)}</span></div>`;
   async function paint() {
-    let j = null; try { j = await window.cloudy.serverStatus(); } catch {}
+    let j = null; try { j = await window.cloudy.cloudStatus(); } catch {}
     if (!j || j.offline || !j.ok) { box.innerHTML = row('Cloudy-Konto-Server', '#ff453a', 'Offline', '') + `<small class="muted">${T('Zuletzt geprüft')} ${new Date().toLocaleTimeString()}</small>`; return; }
     let h = '';
     if (j.maintenance && j.maintenance.on) h += row('Wartung', '#ffd60a', 'Aktiv', j.maintenance.text ? j.maintenance.text.replace(/</g, '&lt;') : '');

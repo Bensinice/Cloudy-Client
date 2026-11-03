@@ -185,7 +185,7 @@ ipcMain.handle('keyReqClear', () => { try { fs.rmSync(krFile, { force: true }); 
 ipcMain.handle('krList', async () => (srvCfg() && adminOnly()) ? ((await srvCall('/admin/keyreqs', {}, srvTok).catch(() => ({}))).requests || []) : []);
 ipcMain.handle('krDecide', async (_e, { id, action, note } = {}) => { if (!adminOnly()) return { ok: false, error: 'Admins only.' }; const r = await srvCall('/admin/keyreq', { id, action, note }, srvTok).catch(() => null); return r ? { ok: !!r.ok, code: r.code, error: r.error } : { ok: false, error: 'The account server is not reachable.' }; });
 // ---- Server-Status (öffentlich, echte Prüfung auf dem Server): Haupt-Server, sonst Backup ----
-ipcMain.handle('serverStatus', async () => {
+ipcMain.handle('cloudStatus', async () => {
   const c = srvCfg(), t = Date.now(); if (!c) return { ok: false, offline: true, t };
   const get = async u => { const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 6000); try { const r = await fetch(u, { signal: ctl.signal }); return r.ok ? await r.json() : null; } catch { return null; } finally { clearTimeout(to); } };
   const j = await get(c.url + '/api/status'); if (j && j.api) return { ok: true, via: 'main', ...j, t };
@@ -838,7 +838,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.76'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.77'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
