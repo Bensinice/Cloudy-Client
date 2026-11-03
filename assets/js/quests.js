@@ -25,8 +25,8 @@
     return `<div class="glass qrow${q.claimed ? ' qdone' : ''}"><div class="qmain"><b>${esc2(title)}</b><span class="muted">${esc2(desc)}</span><div class="bar"><i style="width:${pct}%"></i></div><small class="muted">${prog(q)}</small></div><div class="qrew"><span class="qchip">+${q.coins} CC</span><span class="qchip qs">★ ${q.stars}</span></div><div class="qbtn">${btn}</div></div>`;
   }
   function paint() {
-    const head = `<h2>Quests</h2><p class="muted">${T('Erledige Aufgaben und hole dir Belohnungen. <b>Cloudy Coins (CC)</b> gibst du im Shop aus. <b>Cloudy Stars (★)</b> bringen dich später im Cloudy Pass weiter und lassen sich nicht im Shop ausgeben.', 'Complete tasks and claim rewards. You spend <b>Cloudy Coins (CC)</b> in the shop. <b>Cloudy Stars (★)</b> will move you up in the Cloudy Pass and cannot be spent in the shop.')}</p>`;
-    if (err) { root.innerHTML = head + `<div class="glass set"><p>${esc2(err)}</p><button class="btn ghost" id="qRetry">${T('Erneut versuchen', 'Try again')}</button></div>`; const r = root.querySelector('#qRetry'); if (r) r.onclick = refresh; return; }
+    const head = (window.passTabs ? window.passTabs('quests') : '') + `<h2>Quests</h2><p class="muted">${T('Erledige Aufgaben und hole dir Belohnungen. <b>Cloudy Coins (CC)</b> gibst du im Shop aus. <b>Cloudy Stars (★)</b> bringen dich später im Cloudy Pass weiter und lassen sich nicht im Shop ausgeben.', 'Complete tasks and claim rewards. You spend <b>Cloudy Coins (CC)</b> in the shop. <b>Cloudy Stars (★)</b> will move you up in the Cloudy Pass and cannot be spent in the shop.')}</p>`;
+    if (err) { root.innerHTML = head + `<div class="glass set"><p>${esc2(err)}</p><button class="btn ghost" id="qRetry">${T('Erneut versuchen', 'Try again')}</button></div>`; if (window.passTabsBind) window.passTabsBind(root); const r = root.querySelector('#qRetry'); if (r) r.onclick = refresh; return; }
     if (!data) { root.innerHTML = head + `<p class="muted">${T('Lädt …', 'Loading …')}</p>`; return; }
     const hist = (data.hist || []).map(h => { const [t] = Q[h.id] ? Q[h.id]({ feat: '' }) : [h.id]; return `<div class="qh"><span>${esc2(t.replace(/: $/, ''))}</span><span class="muted">${new Date(h.t).toLocaleDateString(en() ? 'en-GB' : 'de-DE')} · +${h.coins} CC · ★ ${h.stars}</span></div>`; }).join('');
     root.innerHTML = head +
@@ -35,11 +35,11 @@
       `<div class="qsec"><h3>${T('Wöchentliche Quests', 'Weekly quests')}</h3><small class="muted">${T('Neu in ', 'Resets in ')}${left(data.resets.weekly)}</small></div>${data.weekly.map(row).join('')}` +
       `<p class="muted" style="min-height:20px;color:var(--accent)" id="qMsg">${esc2(msg)}</p>` +
       `<div class="qsec"><h3>${T('Verlauf', 'History')}</h3></div><div class="glass qhist">${hist || `<span class="muted">${T('Noch nichts abgeholt.', 'Nothing claimed yet.')}</span>`}</div>`;
-    root.querySelectorAll('[data-qc]').forEach(b => b.onclick = () => claim(b.dataset.qc, b));
+    root.querySelectorAll('[data-qc]').forEach(b => b.onclick = () => claim(b.dataset.qc, b)); if (window.passTabsBind) window.passTabsBind(root);
   }
   async function refresh() {
     if (loading) return; loading = true;
-    try { const r = await window.cloudy.questState(); if (r && r.ok) { data = r; err = ''; } else err = (r && r.error) || T('Quests konnten nicht geladen werden.', 'Could not load quests.'); } catch { err = T('Quests konnten nicht geladen werden.', 'Could not load quests.'); }
+    try { const r = await window.cloudy.questState(); if (r && r.ok) { data = r; err = ''; } else err = (r && r.error) || T('Quests konnten nicht geladen werden.', 'Could not load quests.'); } catch (e) { err = T('Quests konnten nicht geladen werden: ', 'Could not load quests: ') + String((e && e.message) || e).slice(0, 120); }
     loading = false; if (root.classList.contains('on')) paint();
   }
   async function claim(id, b) {

@@ -203,7 +203,7 @@ html.win .wc{display:flex}.wc button{width:34px;height:28px;border:0;border-radi
 /* Anmeldeseite */
 #login{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:linear-gradient(160deg,var(--bg1),var(--bg2) 45%,var(--bg3))}
 #login.off{display:none}
-body.offline [data-p="friends"],body.offline [data-p="shop"],body.offline [data-p="quests"],body.offline [data-p="servers"],body.offline [data-go="friends"],body.offline [data-go="shop"],body.offline [data-go="servers"]{display:none!important}
+body.offline [data-p="friends"],body.offline [data-p="shop"],body.offline [data-p="pass"],body.offline [data-p="servers"],body.offline [data-go="friends"],body.offline [data-go="shop"],body.offline [data-go="servers"]{display:none!important}
 #offBar{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:40;display:flex;gap:12px;align-items:center;padding:8px 14px;border-radius:14px;background:rgba(20,28,52,.92);color:#fff;font-size:12px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.35)}
 .lg{width:min(420px,92%);padding:30px 32px 24px;display:grid;gap:16px;animation:in .6s var(--ease)}
 .lgbrand{display:flex;align-items:center;justify-content:center;gap:10px;font-size:34px;font-weight:800;letter-spacing:-.03em;color:#fff;text-shadow:0 2px 18px var(--accent)}
@@ -663,3 +663,19 @@ html.gaming .blob,html.gaming .sky{display:none!important}
 #p-quests .qbtn .btn{min-width:104px}
 #p-quests .qhist{display:grid;gap:4px;padding:12px 16px}#p-quests .qh{display:flex;justify-content:space-between;gap:12px;font-size:13px}
 @media (max-width:760px){#p-quests .qrow{grid-template-columns:1fr}#p-quests .qsub{text-align:left}}
+
+.ptabs{display:flex;gap:8px;margin:0 0 12px}
+#p-pass .qbig{display:block;font-size:30px;font-weight:800;color:var(--accent)}
+#p-pass .pinfo{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:18px;padding:16px 20px;margin:10px 0 6px}
+#p-pass .pbarw{display:grid;gap:4px;min-width:140px}
+#p-pass .bar{height:10px;border-radius:99px;background:var(--field);overflow:hidden}#p-pass .bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+#p-pass .pplus{font-size:13px;font-weight:700;padding:6px 12px;border-radius:99px;background:var(--field)}#p-pass .pplus.on{color:#ffd34d}
+#p-pass .phead,#p-pass .prow{display:grid;grid-template-columns:54px 1fr 1fr;gap:8px;align-items:stretch}
+#p-pass .phead{font-size:12px;font-weight:700;margin:0 4px 4px;opacity:.7}
+#p-pass .prow{margin:6px 0}#p-pass .prow.cur .plv{background:var(--accent);color:#fff}
+#p-pass .plv{display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--field);font-weight:800}
+#p-pass .pcell{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-radius:12px;background:var(--glass,rgba(255,255,255,.06));border:1px solid var(--line,rgba(255,255,255,.1))}
+#p-pass .pcell.prem{border-color:#ffd34d66}#p-pass .pcell.lock{opacity:.55}#p-pass .pcell.got{opacity:.5}
+#p-pass .pcell b{display:block}#p-pass .pitem{display:block;font-size:12px}
+#p-pass .pl{font-size:18px}
+@media (max-width:760px){#p-pass .pinfo{grid-template-columns:1fr}}

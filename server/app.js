@@ -15,7 +15,7 @@ const parse = (v, d) => { try { const j = JSON.parse(v); return j == null ? d : 
 async function put(u) { const key = u.name.toLowerCase(); await db.query(`REPLACE INTO cloudy_users (name_key,${COLS.join(',')}) VALUES (?${',?'.repeat(COLS.length)})`, [key, ...COLS.map(c => (c === 'owned' || c === 'equip') ? js(u[c] == null ? (c === 'owned' ? [] : {}) : u[c]) : (c === 'daily' ? (u[c] || '') : (c === 'ban_until' || c === 'paused') ? (u[c] || 0) : u[c]))]); }
 async function get(key) { const [r] = await db.query('SELECT * FROM cloudy_users WHERE name_key=?', [key]); return r[0] || null; }
 let REQS = {}; // Request-Key-Anfragen
-let QDATA = {}; const QS = require('./quests')(); // Quests & Cloudy Stars (Stand je Konto)
+let QDATA = {}, PDATA = {}; const QS = require('./quests')(), PS = require('./pass')(); // Quests & Cloudy Stars (Stand je Konto)
 let BACKUP = '', TAGS = {}, ANN = { text: '', t: 0 }, NAMES = {}, PRICES = {}, CODES = {}, GATE = {}, GRANTS = {}, FR = { f: {}, msgs: {}, seq: 1 };
 const gcode = v => typeof v === 'string' ? v : (v && v.c) || '';
 const saveGate = async () => { await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['gate', JSON.stringify(GATE)]); await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['gategrants', JSON.stringify(GRANTS)]); };
@@ -87,6 +87,7 @@ async function init() {
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='gategrants'"); GRANTS = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='codes'"); CODES = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='keyreqs'"); REQS = r.length ? parse(r[0].v, {}) : {}; if (!REQS || typeof REQS !== 'object' || Array.isArray(REQS)) REQS = {}; }
+  { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='pass'"); PDATA = r.length ? parse(r[0].v, {}) : {}; if (!PDATA || typeof PDATA !== 'object' || Array.isArray(PDATA)) PDATA = {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='quests'"); QDATA = r.length ? parse(r[0].v, {}) : {}; if (!QDATA || typeof QDATA !== 'object' || Array.isArray(QDATA)) QDATA = {}; }
   for (const [c, def] of [['owned', 'TEXT'], ['equip', 'TEXT'], ['daily', 'VARCHAR(20)']]) { const [r] = await db.query('SHOW COLUMNS FROM cloudy_users LIKE ?', [c]); if (!r.length) await db.query(`ALTER TABLE cloudy_users ADD COLUMN ${c} ${def} NULL`); }
   const a = await get('admin'); if (!a || !okPw(a, ADMIN_PASS)) await put(mk('admin', ADMIN_PASS, { admin: 1, coins: null }));
@@ -377,6 +378,21 @@ app.post('/admin/gatecreate', admin(async (req, res) => {
 app.post('/admin/gaterevokeuser', admin(async (req, res) => { const k = String(req.body.name || '').trim().toLowerCase(); let n = 0; for (const g in GRANTS) if (GRANTS[g] && GRANTS[g].u === k) { delete GRANTS[g]; n++; } await saveGate(); res.json({ ok: true, revoked: n }); }));
 app.post('/admin/gatedelete', admin(async (req, res) => { const gc = fk(GATE, req.body.code); delete GATE[gc]; let n = 0; if (req.body.revoke) for (const g in GRANTS) if (gcode(GRANTS[g]) === gc) { delete GRANTS[g]; n++; } await saveGate(); res.json({ ok: true, revoked: n }); }));
 app.post('/admin/codedelete', admin(async (req, res) => { delete CODES[fk(CODES, req.body.code)]; await saveCodes(); res.json({ ok: true }); }));
+// ---- Cloudy Pass: Level aus Stars, Belohnungen abholen (Premium nur mit Cloudy+) ----
+const savePass = () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['pass', JSON.stringify(PDATA)]);
+app.post('/pass/state', auth(async (_req, res, me) => { const v = PS.view(PDATA, QDATA, me.name_key); const q = QS.view(QDATA, me.name_key); res.json({ ok: true, ...v, balance: q.stars.bal }); }));
+app.post('/pass/claim', auth(async (req, res, me) => {
+  const lvl = Math.floor(+(req.body && req.body.level)), track = String((req.body && req.body.track) || '');
+  const r = PS.claim(PDATA, QDATA, me.name_key, lvl, track); if (!r.ok) return res.status(400).json(r);
+  const list = track === 'free' ? PDATA[me.name_key].free : PDATA[me.name_key].prem;
+  try {
+    let coins = null;
+    if (!me.admin) { const u = { ...me }; const o = parse(me.owned, []); if (r.item && !o.includes(r.item)) o.push(r.item); u.owned = o; if (!me.inf_coins) { u.coins = Math.min(1e9, (me.coins == null ? 100 : me.coins) + r.coins); coins = u.coins; } await put(u); }
+    await savePass();
+    res.json({ ...r, balanceCoins: coins });
+  } catch (e) { const i = list.indexOf(lvl); if (i >= 0) list.splice(i, 1); console.log('[pass] ' + e.message); res.status(500).json({ error: 'Serverfehler.' }); } // bei einem Fehler nichts verlieren: Markierung zurücknehmen
+}));
+app.post('/admin/plus', target(async (req, res, t) => { const r = PS.grantPlus(PDATA, t.name_key, req.body && req.body.days); await savePass(); res.json(r); })); // Cloudy+ vergeben/entziehen (days: 0 = beenden); die Zahlung (Stripe) kommt später hier an
 app.post('/admin/additem', target(async (req, res, t) => { const id = String(req.body.id || ''); if (!id) return res.status(400).json({ error: 'id fehlt' }); const o = parse(t.owned, []); if (!o.includes(id)) o.push(id); await put({ ...t, owned: o }); res.json({ ok: true }); }));
 app.post('/admin/inf', target(async (req, res, t) => { await put({ ...t, inf_coins: req.body.on ? 1 : 0, coins: req.body.on ? null : 100 }); res.json({ ok: true }); }));
 app.post('/admin/pause', target(async (req, res, t) => { await put({ ...t, paused: req.body.paused ? 1 : 0 }); res.json({ ok: true }); }));

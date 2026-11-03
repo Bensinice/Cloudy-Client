@@ -1235,18 +1235,32 @@ ipcMain.handle('authChangePass', async (_e, { pass }) => {
 // ---- Quests & Cloudy Stars: Fortschritt und Belohnungen gehören dem Konto-Server; der Launcher meldet nur Ereignisse ----
 const qOnline = () => !!(srvCfg() && srvTok && currentUser);
 const qSend = (p, body) => { try { if (qOnline()) srvCall(p, body || {}, srvTok).catch(() => {}); } catch {} };
-ipcMain.handle('questState', async () => {
+ipcMain.handle('questState', async () => { try {
   if (!currentUser) return { ok: false, error: 'Quests brauchen ein Cloudy-Konto. Melde dich an (im Offline-Modus gibt es keine Quests).' };
   if (!srvCfg()) return { ok: false, error: 'Quests gibt es nur mit dem Cloudy-Konto-Server.' };
   const r = await srvCall('/quests/state', {}, srvTok).catch(() => null); if (!r) return { ...SRV_DOWN, ok: false };
   if (!r.ok && !r.error) return { ok: false, error: r.status === 404 ? 'Dein Cloudy-Server kennt Quests noch nicht (Fehler 404). Der Server braucht das neue app.js und die neue quests.js und muss danach neu gestartet werden.' : 'Der Server hat unerwartet geantwortet (Fehler ' + (r.status || '?') + ').' };
   return r;
+  } catch (e) { return { ok: false, error: 'Fehler beim Laden der Quests: ' + String((e && e.message) || e).slice(0, 160) }; }
 });
 ipcMain.handle('questClaim', async (_e, id) => {
   if (!qOnline()) return { ok: false, error: 'Nicht angemeldet.' };
   const r = await srvCall('/quests/claim', { id: String(id || '').slice(0, 20) }, srvTok).catch(() => null); if (!r) return { ...SRV_DOWN, ok: false };
   if (r.ok) { try { await srvPull(); const u = readAuth().users[currentUser.toLowerCase()]; if (u) send('coins', { gain: r.coins || 0, state: shopOf(u) }); } catch {} }
   return r;
+});
+const passErr = r => r.status === 404 ? 'Dein Cloudy-Server kennt den Cloudy Pass noch nicht (Fehler 404). Der Server braucht das neue app.js sowie pass.js und quests.js und muss danach neu gestartet werden.' : (r.error || 'Der Server hat unerwartet geantwortet (Fehler ' + (r.status || '?') + ').');
+ipcMain.handle('passState', async () => {
+  if (!currentUser) return { ok: false, error: 'Der Cloudy Pass braucht ein Cloudy-Konto. Melde dich an (im Offline-Modus gibt es ihn nicht).' };
+  if (!srvCfg()) return { ok: false, error: 'Der Cloudy Pass braucht den Cloudy-Konto-Server.' };
+  const r = await srvCall('/pass/state', {}, srvTok).catch(() => null); if (!r) return { ...SRV_DOWN, ok: false };
+  return r.ok ? r : { ok: false, error: passErr(r) };
+});
+ipcMain.handle('passClaim', async (_e, o) => {
+  if (!qOnline()) return { ok: false, error: 'Nicht angemeldet.' };
+  const r = await srvCall('/pass/claim', { level: Math.floor(+(o && o.level)) || 0, track: String((o && o.track) || '').slice(0, 10) }, srvTok).catch(() => null); if (!r) return { ...SRV_DOWN, ok: false };
+  if (r.ok) { try { await srvPull(); const u = readAuth().users[currentUser.toLowerCase()]; if (u) send('coins', { gain: r.coins || 0, state: shopOf(u) }); } catch {} return r; }
+  return { ok: false, code: r.code, error: r.code === 'need_plus' ? 'Die Premium-Reihe gibt es nur mit Cloudy+.' : r.code === 'locked' ? 'Dieses Level hast du noch nicht erreicht.' : r.code === 'claimed' ? 'Schon abgeholt.' : r.code === 'season_over' ? 'Die Season ist vorbei.' : passErr(r) };
 });
 ipcMain.handle('questEvent', (_e, o) => { const type = o && o.type === 'launch' ? 'launch' : 'use'; qSend('/quests/event', { type, what: String((o && o.what) || '').slice(0, 20) }); return true; });
 ipcMain.handle('offlineEnter', () => { if (currentUser) return { ok: false, error: 'Du bist angemeldet.' }; if (cfgPatch({}).gateOk !== true) return { ok: false, error: 'Access code required.' }; offlineMode = true; return { ok: true }; });

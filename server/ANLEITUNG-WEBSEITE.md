@@ -62,3 +62,8 @@ Neue Datei: **quests.js** (neben `app.js`). Es ist **keine Datenbank-Änderung n
 - Belohnungen (Cloudy Coins) werden beim Abholen auf dem Server gutgeschrieben; Stars liegen nur auf dem Server.
 - Neue Wege: `/quests/state`, `/quests/event`, `/quests/beat`, `/quests/claim` (alle nur mit Anmeldung).
 Zum Anpassen der Aufgaben oder Belohnungen ändere die Listen `DAILY` und `WEEKLY` oben in `quests.js` und starte den Server neu.
+
+## Cloudy Pass (neu)
+Neue Datei: **pass.js** (neben `app.js` und `quests.js`). Keine Datenbank-Änderung nötig (Schlüssel `pass` in `cloudy_kv`).
+- 30 Level, Stufe L braucht insgesamt L × 8 Sterne. Belohnungen (Coins, Items) stehen in `pass.js` ganz oben und lassen sich dort ändern. Season-Daten: `SEASON` ebenfalls dort.
+- Premium-Reihe: nur mit Cloudy+. Bezahlen ist noch nicht eingebaut; bis dahin vergibst du Cloudy+ per Admin: `POST /admin/plus` mit `{ "name": "...", "days": 30 }` (days 0 = beenden).
