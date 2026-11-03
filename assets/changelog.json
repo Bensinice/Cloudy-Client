@@ -1,5 +1,16 @@
 [
  {
+  "v": "0.9.80",
+  "date": "2026-11-04",
+  "added": [],
+  "fixed": [
+   "Weniger Ruckeln im Spiel: Herz-, Rüstungs-, Hunger- und Luftleiste werden effizienter gezeichnet",
+   "Quests: klare Meldung, wenn der Server die Quests noch nicht kennt",
+   "Kleinerer Installer: nicht benötigte Dateien (alte ZIP, Server-Dateien, ungenutzte Chromium-Sprachen) sind nicht mehr enthalten, stärkere Kompression"
+  ],
+  "removed": []
+ },
+ {
   "v": "0.9.79",
   "date": "2026-11-03",
   "added": [

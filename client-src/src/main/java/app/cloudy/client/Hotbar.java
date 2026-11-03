@@ -87,20 +87,26 @@ public final class Hotbar {
 
 	/** Ein sauberes Symbol: dunkle Kontur, sanfter Farbverlauf oben hell / unten dunkel, optional nur links gefuellt (halb). cols = Anzahl gefuellter Spalten. */
 	private static void icon(DrawContext c, int x, int y, String[] b, int col, int cols, int bone) {
-		int out = 0xCC0A0A12;
-		for (int r = 0; r < b.length; r++) for (int q = 0; q < b[r].length(); q++) {
-			if (px(b, q, r)) continue;
-			if (px(b, q - 1, r) || px(b, q + 1, r) || px(b, q, r - 1) || px(b, q, r + 1)) c.fill(x + q, y + r, x + q + 1, y + r + 1, out);
+		// Zeilenweise zu Streifen zusammengefasst: wenige fill()-Aufrufe statt eines pro Pixel (weniger Last pro Bild)
+		int out = 0xCC0A0A12, empty = 0x66202030;
+		for (int r = 0; r < b.length; r++) {
+			int w = b[r].length(), run = -1;
+			for (int q = 0; q <= w; q++) {
+				boolean o = q < w && !px(b, q, r) && (px(b, q - 1, r) || px(b, q + 1, r) || px(b, q, r - 1) || px(b, q, r + 1));
+				if (o && run < 0) run = q;
+				else if (!o && run >= 0) { c.fill(x + run, y + r, x + q, y + r + 1, out); run = -1; }
+			}
 		}
-		int empty = 0x66202030;
-		for (int r = 0; r < b.length; r++) for (int q = 0; q < b[r].length(); q++) {
-			char ch = b[r].charAt(q);
-			if (ch == '.') continue;
-			int cc;
-			if (q >= cols) cc = empty;
-			else if (ch == 'B') cc = bone;
-			else { float t = r / (float) Math.max(1, b.length - 1); cc = t < 0.3f ? Ui.mix(col, 0xFFFFFFFF, 0.28f - t * 0.6f) : Ui.mix(col, 0xFF000000, (t - 0.3f) * 0.45f); }
-			c.fill(x + q, y + r, x + q + 1, y + r + 1, cc);
+		for (int r = 0; r < b.length; r++) {
+			int w = b[r].length(), run = -1, rc = 0;
+			float t = r / (float) Math.max(1, b.length - 1);
+			int body = t < 0.3f ? Ui.mix(col, 0xFFFFFFFF, 0.28f - t * 0.6f) : Ui.mix(col, 0xFF000000, (t - 0.3f) * 0.45f);
+			for (int q = 0; q <= w; q++) {
+				int cc = 0;
+				if (q < w && b[r].charAt(q) != '.') cc = q >= cols ? empty : b[r].charAt(q) == 'B' ? bone : body;
+				if (run >= 0 && cc != rc) { c.fill(x + run, y + r, x + q, y + r + 1, rc); run = -1; }
+				if (cc != 0 && run < 0) { run = q; rc = cc; }
+			}
 		}
 	}
 

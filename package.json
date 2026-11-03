@@ -1,7 +1,7 @@
 {
   "name": "cloudy",
   "productName": "Cloudy",
-  "version": "0.9.79",
+  "version": "0.9.80",
   "versionEpoch": 1,
   "description": "Cloudy – ein Minecraft-Launcher in Babyblau und Liquid Glass",
   "main": "main.js",
@@ -48,7 +48,9 @@
       "!*.md",
       "!dist/**",
       "!*.bat",
-      "!*.command"
+      "!*.command",
+      "!server/**",
+      "!*.zip"
     ],
     "win": {
       "icon": "build/icon.ico",
@@ -99,7 +101,20 @@
       "icon": "build/icon.png",
       "artifactName": "Cloudy-Linux.${ext}",
       "synopsis": "Minecraft-Launcher"
-    }
+    },
+    "compression": "maximum",
+    "electronLanguages": [
+      "de",
+      "en-US",
+      "en-GB",
+      "es",
+      "fr",
+      "pt-BR",
+      "ru",
+      "tr",
+      "pl",
+      "it"
+    ]
   },
   "allowScripts": {
     "electron@31.7.7": true

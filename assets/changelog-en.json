@@ -1,4 +1,9 @@
 {
+ "0.9.80": [
+  "Less stutter in game: hearts, armor, hunger and air bars are drawn more efficiently",
+  "Quests: clear message when the server does not know quests yet",
+  "Smaller installer: unneeded files (old ZIP, server files, unused Chromium languages) are no longer included, stronger compression"
+ ],
  "0.9.79": [
   "News now has two tabs: “Updates” (all versions) and “Newly added” (only what is new in the latest versions)",
   "Update check: the launcher said “up to date” although GitHub had a newer version when your own server still offered the old one. Server and GitHub are now compared and the higher version is used"
