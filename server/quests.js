@@ -118,5 +118,11 @@ module.exports = ({ now = () => Date.now() } = {}) => {
     return { ok: true, balance: S.stars.bal, earned: S.stars.earned, xp: S.xp };
   }
 
-  return { view, event, beat, mc, claim, spend, grant, dayOf, weekOf, DEFS, CATS, RATE, FEATURES };
+  function reset(Q, key, withClaimed) { // Admin: Fortschritt zuruecksetzen. Bereits abgeholte Quests bleiben abgeholt (keine doppelte Auszahlung), ausser withClaimed ist gesetzt.
+    const S = ensure(Q, key); let n = 0;
+    for (const id of Object.keys(S.q)) { const s = S.q[id]; if (s.c && !withClaimed) continue; if (s.p || s.c) n++; s.p = 0; s.c = false; }
+    S.mcAt = 0; S.mcDay = {}; S.ev = {}; S.beat = 0; return { ok: true, reset: n };
+  }
+
+  return { view, event, beat, mc, claim, spend, grant, reset, dayOf, weekOf, DEFS, CATS, RATE, FEATURES };
 };

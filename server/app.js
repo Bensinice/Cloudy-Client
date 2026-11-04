@@ -394,6 +394,13 @@ app.post('/pass/claim', auth(async (req, res, me) => {
     res.json({ ...r, balanceCoins: coins });
   } catch (e) { const i = list.indexOf(lvl); if (i >= 0) list.splice(i, 1); console.log('[pass] ' + e.message); res.status(500).json({ error: 'Serverfehler.' }); } // bei einem Fehler nichts verlieren: Markierung zurücknehmen
 }));
+app.post('/admin/quests/reset', admin(async (req, res, me) => { // Admin: Quests sofort zuruecksetzen (eigenes Konto, ein Konto oder alle), ohne auf den Reset-Timer zu warten
+  const b = req.body || {}, wc = b.claimed === true; let keys;
+  if (b.all === true) keys = Object.keys(QDATA);
+  else { const nm = String(b.name || '').trim().toLowerCase() || me.name_key, t = await get(nm); if (!t) return res.status(404).json({ error: 'Konto nicht gefunden.' }); keys = [t.name_key]; }
+  let n = 0; for (const k of keys) n += QS.reset(QDATA, k, wc).reset;
+  await saveQ(true); res.json({ ok: true, accounts: keys.length, reset: n });
+}));
 app.post('/admin/stars', target(async (req, res, t) => { const r = QS.grant(QDATA, t.name_key, req.body && req.body.amount, req.body && req.body.xp); if (!r.ok) return res.status(400).json(r); await saveQ(true); res.json(r); })); // Admin: Stars (= Pass-XP) geben
 app.post('/admin/plus', target(async (req, res, t) => { const r = PS.grantPlus(PDATA, t.name_key, req.body && req.body.days); await savePass(); res.json(r); })); // Cloudy+ vergeben/entziehen (days: 0 = beenden); die Zahlung (Stripe) kommt später hier an
 // ---- Einstellungen im Admin-Bereich: E-Mail (SMTP) und Stripe. Geheimnisse werden nie zurückgegeben (nur "gesetzt: ja/nein"). Sie liegen in der Server-Datenbank (cloudy_kv, Schlüssel settings). ----

@@ -1,5 +1,15 @@
 [
  {
+  "v": "0.9.86",
+  "date": "2026-11-05",
+  "added": [
+   "Admin: Quests sofort zurücksetzen (eigenes Konto, ein Konto oder alle), ohne auf den Reset-Timer zu warten. Bereits abgeholte Quests bleiben abgeholt, außer man wählt es extra aus"
+  ],
+  "fixed": [
+   "Admin-Einstellungen E-Mail/Stripe: Eingetragene Werte werden beim Wechseln der Seite nicht mehr überschrieben, und „Test-E-Mail senden“ speichert zuerst. Hinweis, wenn noch kein SMTP-Server eingetragen ist"
+  ]
+ },
+ {
   "v": "0.9.85",
   "date": "2026-11-04",
   "added": [],

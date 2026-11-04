@@ -13,4 +13,11 @@
     plus.disabled = true; let r = null; try { r = await window.cloudy.admPlus({ name, days: d }); } catch {} plus.disabled = false;
     msg(r && r.ok ? (r.plus ? name + ': Cloudy+ aktiv bis ' + new Date(r.plus).toLocaleDateString('de-DE') : name + ': Cloudy+ beendet') : (r && r.error) || 'Fehlgeschlagen.', !!(r && r.ok));
   };
+  const qr = async all => {
+    const name = $('#paName').value.trim(), claimed = !!$('#paQClaimed').checked;
+    if (all && !confirm('Quests ALLER Konten zurücksetzen?' + (claimed ? ' Auch abgeholte – Belohnungen können doppelt geholt werden!' : ''))) return;
+    msg('Setze zurück …'); let r = null; try { r = await window.cloudy.admQuestReset({ name, all, claimed }); } catch {}
+    msg(r && r.ok ? 'Zurückgesetzt: ' + r.reset + ' Quest(s) bei ' + r.accounts + ' Konto/Konten ✓' : (r && r.error) || 'Fehlgeschlagen.', !!(r && r.ok));
+  };
+  $('#paQReset').onclick = () => qr(false); $('#paQResetAll').onclick = () => qr(true);
 })();

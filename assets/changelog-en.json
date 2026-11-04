@@ -1,4 +1,8 @@
 {
+ "0.9.86": [
+  "Admin: reset quests instantly (your own account, one account or all) without waiting for the reset timer. Already claimed quests stay claimed unless you choose otherwise",
+  "Admin settings for e-mail/Stripe: entered values are no longer overwritten when you switch pages, and “Send test e-mail” saves first. Clear hint when no SMTP server is set"
+ ],
  "0.9.85": [
   "Mobile app: Stay logged in now works reliably. The session renews automatically while you use it (90 days without use, 1 year at most), survives restarting the app and the PC, and the iOS app also backs it up in the Keychain. Passwords are never stored"
  ],

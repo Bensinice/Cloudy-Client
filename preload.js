@@ -52,6 +52,7 @@ contextBridge.exposeInMainWorld('cloudy', {
   offlineEnter: () => inv('offlineEnter'),
   admStars: o => inv('admStars', o),
   admPlus: o => inv('admPlus', o),
+  admQuestReset: o => inv('admQuestReset', o),
   plusBuy: m => inv('plusBuy', !!m),
   admSettingsGet: () => inv('admSettingsGet'),
   admSettingsSet: o => inv('admSettingsSet', o),
