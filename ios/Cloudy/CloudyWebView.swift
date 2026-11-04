@@ -23,8 +23,10 @@ struct CloudyWebView: UIViewRepresentable {
         w.isOpaque = false
         w.backgroundColor = UIColor(red: 0.71, green: 0.85, blue: 1.0, alpha: 1)
         w.allowsBackForwardNavigationGestures = false
-        w.load(URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 12))
+        context.coordinator.web = w
+        context.coordinator.load(url)
         context.coordinator.lastToken = reloadToken
+        NotificationCenter.default.addObserver(context.coordinator, selector: #selector(Coordinator.backup), name: UIApplication.willResignActiveNotification, object: nil)
         return w
     }
 
@@ -32,16 +34,29 @@ struct CloudyWebView: UIViewRepresentable {
         context.coordinator.parent = self
         if context.coordinator.lastToken != reloadToken {
             context.coordinator.lastToken = reloadToken
-            w.load(URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 12))
+            context.coordinator.load(url)
         }
     }
 
     final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
         var parent: CloudyWebView
         var lastToken = 0
+        weak var web: WKWebView?
         init(_ p: CloudyWebView) { parent = p }
 
-        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { parent.onOK() }
+        /// Erst Anmeldung aus dem Schluesselbund wiederherstellen (falls iOS das Cookie verloren hat), dann laden.
+        func load(_ url: URL) {
+            guard let w = web, let host = url.host else { return }
+            SessionStore.restore(w.configuration.websiteDataStore.httpCookieStore, host: host) {
+                w.load(URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 12))
+            }
+        }
+        @objc func backup() {
+            guard let w = web, let host = parent.url.host else { return }
+            SessionStore.backup(w.configuration.websiteDataStore.httpCookieStore, host: host)
+        }
+
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { backup(); parent.onOK() }
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { parent.onFail() }
         func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { parent.onFail() }
 

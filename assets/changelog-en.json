@@ -1,4 +1,7 @@
 {
+ "0.9.85": [
+  "Mobile app: Stay logged in now works reliably. The session renews automatically while you use it (90 days without use, 1 year at most), survives restarting the app and the PC, and the iOS app also backs it up in the Keychain. Passwords are never stored"
+ ],
  "0.9.84": [
   "Quests straight from Minecraft: mining wood and stone, defeating zombies and skeletons, walking blocks, crafting items, catching fish, mining ores and time on servers count automatically (singleplayer and servers). The server limits values by time and day",
   "New quest types: beginner, daily (3 of 6 Minecraft tasks rotate each day), weekly, special and event quests with status, progress and reset countdown",

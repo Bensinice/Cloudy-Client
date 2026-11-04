@@ -1,5 +1,13 @@
 [
  {
+  "v": "0.9.85",
+  "date": "2026-11-04",
+  "added": [],
+  "fixed": [
+   "Handy-App: Angemeldet bleiben funktioniert jetzt zuverlässig. Die Sitzung wird bei Benutzung automatisch verlängert (90 Tage ohne Nutzung, höchstens 1 Jahr), überlebt Neustart von App und PC und wird in der iOS-App zusätzlich im Schlüsselbund gesichert. Passwörter werden nie gespeichert"
+  ]
+ },
+ {
   "v": "0.9.84",
   "date": "2026-11-04",
   "added": [
