@@ -1,8 +1,8 @@
 // Cloudy Pass: 30 Level, Gratis- und Premium-Reihe. Reines Modul (ohne Express/MySQL), damit es sich testen lässt.
-// Der Fortschritt kommt aus den Cloudy Stars, die man mit Quests verdient (Quest-Modul). Der Server entscheidet alles:
+// Der Fortschritt kommt aus der Pass-XP, die man mit Quests verdient (Quest-Modul). Der Server entscheidet alles:
 // Level, Belohnungen und wer die Premium-Reihe abholen darf (nur mit aktivem Cloudy+).
 const SEASON = { id: 's1', name: 'Season 1', start: '2026-11-01', end: '2027-01-31' }; // Ende: 31.01. 23:59 Berlin
-const LEVELS = 30, PER_LEVEL = 8; // Stufe L braucht insgesamt L * 8 Sterne (Stufe 30 = 240 Sterne)
+const LEVELS = 30, PER_LEVEL = 100; // Stufe L braucht insgesamt L * 100 Pass-XP (Stufe 30 = 3000 XP); XP gibt es für abgeholte Quests
 const FREE_ITEMS = { 5: 'shield-forest', 12: 'hat-top', 20: 'cape-sunset', 27: 'hat-party' }; // 4 Items in der Gratis-Reihe
 const PREM_ITEMS = { 1: 'hat-wizard', 6: 'cape-galaxy', 10: 'wings-fire', 14: 'hat-halo', 18: 'cape-nebula', 22: 'wings-crystal', 26: 'hat-crown', 30: 'wings-shadow' }; // 8 Items in der Premium-Reihe
 const reward = (L, track) => {
@@ -21,13 +21,13 @@ module.exports = ({ now = () => Date.now() } = {}) => {
     if (!o || o.season !== SEASON.id) PD[key] = { season: SEASON.id, base: o ? (earned || 0) : 0, free: [], prem: [], plus: (o && o.plus) || 0 };
     return PD[key];
   }
-  const earnedOf = (QD, key) => ((QD[key] && QD[key].stars && QD[key].stars.earned) || 0);
+  const earnedOf = (QD, key) => ((QD[key] && QD[key].xp) || 0);
   const plusOn = p => (p.plus || 0) > now();
   function view(PD, QD, key) {
     const earned = earnedOf(QD, key), p = P(PD, key, earned), lv = levelOf(earned - p.base);
     const rows = []; for (let L = 1; L <= LEVELS; L++) rows.push({ level: L, need: L * PER_LEVEL, free: { ...reward(L, 'free'), claimed: p.free.includes(L) }, premium: { ...reward(L, 'premium'), claimed: p.prem.includes(L) } });
     const into = Math.max(0, earned - p.base) - lv * PER_LEVEL;
-    return { season: { ...SEASON, endsIn: Math.max(0, endMs() - now()), over: now() > endMs() }, level: lv, max: LEVELS, stars: earned - p.base, intoLevel: lv >= LEVELS ? 0 : into, perLevel: PER_LEVEL, plus: plusOn(p), plusUntil: p.plus || 0, rows };
+    return { season: { ...SEASON, endsIn: Math.max(0, endMs() - now()), over: now() > endMs() }, level: lv, max: LEVELS, xp: earned - p.base, stars: earned - p.base, intoLevel: lv >= LEVELS ? 0 : into, perLevel: PER_LEVEL, plus: plusOn(p), plusUntil: p.plus || 0, rows };
   }
   // Prüft einen Abhol-Wunsch. Gibt { ok, coins, item } zurück; das Gutschreiben (Coins, Item) macht der Aufrufer.
   function claim(PD, QD, key, level, track) {

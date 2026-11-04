@@ -1,5 +1,18 @@
 [
  {
+  "v": "0.9.84",
+  "date": "2026-11-04",
+  "added": [
+   "Quests direkt aus Minecraft: Holz und Stein abbauen, Zombies und Skelette besiegen, Blöcke laufen, Items herstellen, Fische fangen, Erze abbauen und Zeit auf Servern zählen automatisch (Einzelspieler und Server). Der Server begrenzt die Werte nach Zeit und Tag",
+   "Neue Quest-Arten: Anfänger-, Tägliche (3 von 6 Minecraft-Aufgaben wechseln jeden Tag), Wöchentliche, Spezial- und Event-Quests mit Status, Fortschritt und Reset-Countdown",
+   "Quest-Belohnungen: Cloudy Coins, Cloudy Stars und Pass-XP. Der Cloudy Pass steigt jetzt mit Pass-XP auf",
+   "Resets laufen serverseitig in UTC (täglich 00:00, wöchentlich Montag 00:00), die PC-Uhr spielt keine Rolle",
+   "Admin: Pass-XP vergeben (Server-Update nötig)"
+  ],
+  "fixed": [],
+  "removed": []
+ },
+ {
   "v": "0.9.83",
   "date": "2026-11-04",
   "added": [

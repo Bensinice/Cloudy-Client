@@ -1,4 +1,11 @@
 {
+ "0.9.84": [
+  "Quests straight from Minecraft: mining wood and stone, defeating zombies and skeletons, walking blocks, crafting items, catching fish, mining ores and time on servers count automatically (singleplayer and servers). The server limits values by time and day",
+  "New quest types: beginner, daily (3 of 6 Minecraft tasks rotate each day), weekly, special and event quests with status, progress and reset countdown",
+  "Quest rewards: Cloudy Coins, Cloudy Stars and pass XP. The Cloudy Pass now levels up with pass XP",
+  "Resets run on the server in UTC (daily 00:00, weekly Monday 00:00); your PC clock does not matter",
+  "Admin: give pass XP (server update required)"
+ ],
  "0.9.83": [
   "Admin tab: new “Email & Stripe” card. Set the mailbox used for sending emails (with a test email) and the Stripe keys for Cloudy+. Passwords and keys are never shown (server update required)"
  ],

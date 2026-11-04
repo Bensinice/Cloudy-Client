@@ -83,3 +83,6 @@ Releases auf den Server laden: In GitHub unter *Settings → Secrets → Actions
 
 ## E-Mail und Stripe im Launcher einstellen (neu)
 Statt Umgebungsvariablen kannst du alles im Launcher eintragen: **Einstellungen → Admin → „E-Mail & Stripe“**. Dort stehen SMTP-Server, Port, Benutzer, Passwort, Absender, Empfänger (mit „Test-E-Mail senden“) und die Stripe-Schlüssel (`sk_…`, `whsec_…`). Gespeichertes wird nie wieder angezeigt; ein leeres Feld lässt den alten Wert stehen. Die Werte liegen in der Server-Datenbank (`cloudy_kv`, Schlüssel `settings`) und haben Vorrang vor Umgebungsvariablen. Neue Datei: **mail.js** (zusammen mit `app.js` ersetzen).
+
+## Quests 2.0 (Update)
+`quests.js`, `pass.js` und `app.js` ersetzen, Server neu starten. Keine Datenbank-Änderung (alter Quest-Stand wird automatisch übernommen: bisherige Stars zählen als Pass-XP, 1 Star = 12 XP). Resets laufen in UTC. Neuer Weg: `/quests/mc` (Zählerstände aus Minecraft, nach Zeit und Tag begrenzt). Aufgaben, Ziele, Belohnungen und Grenzen stehen oben in `quests.js` (`DEFS`, `RATE`, `DAILY_CAP`). Der Pass braucht jetzt 100 XP je Level (`PER_LEVEL` in `pass.js`).

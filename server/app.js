@@ -328,7 +328,8 @@ app.post('/cos/get', auth(async (req, res) => {
 let qT = null; const saveQ = (now) => { clearTimeout(qT); const run = () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['quests', JSON.stringify(QDATA)]); if (now) return run(); qT = setTimeout(() => run().catch(e => console.log('[quests] ' + e.message)), 1500); };
 app.post('/quests/state', auth(async (_req, res, me) => { const v = QS.view(QDATA, me.name_key); saveQ(); res.json({ ok: true, ...v }); }));
 app.post('/quests/event', auth(async (req, res, me) => { const r = QS.event(QDATA, me.name_key, req.body && req.body.type, req.body && req.body.what); if (!r.ignored) saveQ(); res.status(r.ok ? 200 : 400).json(r); }));
-app.post('/quests/beat', auth(async (_req, res, me) => { const r = QS.beat(QDATA, me.name_key); if (!r.ignored) saveQ(); res.json(r); }));
+app.post('/quests/beat', auth(async (req, res, me) => { const r = QS.beat(QDATA, me.name_key, !!(req.body && req.body.srv)); if (!r.ignored) saveQ(); res.json(r); }));
+app.post('/quests/mc', auth(async (req, res, me) => { const r = QS.mc(QDATA, me.name_key, req.body && req.body.d); if (!r.ignored && r.ok) saveQ(); res.status(r.ok ? 200 : 400).json(r); })); // Zählerstände aus Minecraft (vom Server begrenzt)
 app.post('/quests/claim', auth(async (req, res, me) => {
   const r = QS.claim(QDATA, me.name_key, req.body && req.body.id); if (!r.ok) return res.status(400).json(r);
   let coins = null; // Münzen gutschreiben (Admins und Konten mit unendlich Coins brauchen keine)
@@ -393,7 +394,7 @@ app.post('/pass/claim', auth(async (req, res, me) => {
     res.json({ ...r, balanceCoins: coins });
   } catch (e) { const i = list.indexOf(lvl); if (i >= 0) list.splice(i, 1); console.log('[pass] ' + e.message); res.status(500).json({ error: 'Serverfehler.' }); } // bei einem Fehler nichts verlieren: Markierung zurücknehmen
 }));
-app.post('/admin/stars', target(async (req, res, t) => { const r = QS.grant(QDATA, t.name_key, req.body && req.body.amount); if (!r.ok) return res.status(400).json(r); await saveQ(true); res.json(r); })); // Admin: Stars (= Pass-XP) geben
+app.post('/admin/stars', target(async (req, res, t) => { const r = QS.grant(QDATA, t.name_key, req.body && req.body.amount, req.body && req.body.xp); if (!r.ok) return res.status(400).json(r); await saveQ(true); res.json(r); })); // Admin: Stars (= Pass-XP) geben
 app.post('/admin/plus', target(async (req, res, t) => { const r = PS.grantPlus(PDATA, t.name_key, req.body && req.body.days); await savePass(); res.json(r); })); // Cloudy+ vergeben/entziehen (days: 0 = beenden); die Zahlung (Stripe) kommt später hier an
 // ---- Einstellungen im Admin-Bereich: E-Mail (SMTP) und Stripe. Geheimnisse werden nie zurückgegeben (nur "gesetzt: ja/nein"). Sie liegen in der Server-Datenbank (cloudy_kv, Schlüssel settings). ----
 const M = require('./mail'), saveSets = () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['settings', JSON.stringify(SETS)]);

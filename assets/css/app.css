@@ -681,3 +681,4 @@ html.gaming .blob,html.gaming .sky{display:none!important}
 @media (max-width:760px){#p-pass .pinfo{grid-template-columns:1fr}}
 #p-pass .pbuy{display:grid;gap:8px;justify-items:end}
 @media (max-width:760px){#p-pass .pbuy{justify-items:start}}
+#p-quests .qchip.qx{color:#8fd3ff}#p-quests .qst.active{color:var(--muted)}#p-quests .qst.done{color:var(--accent);font-weight:700}#p-quests .qst.claimed{color:#5fd08a}

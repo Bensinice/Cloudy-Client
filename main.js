@@ -838,7 +838,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.83'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.84'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1235,6 +1235,19 @@ ipcMain.handle('authChangePass', async (_e, { pass }) => {
 // ---- Quests & Cloudy Stars: Fortschritt und Belohnungen gehören dem Konto-Server; der Launcher meldet nur Ereignisse ----
 const qOnline = () => !!(srvCfg() && srvTok && currentUser);
 const qSend = (p, body) => { try { if (qOnline()) srvCall(p, body || {}, srvTok).catch(() => {}); } catch {} };
+// Quest-Zähler aus Minecraft: der Fabric-Client schreibt die Zuwächse (Bloecke, Mobs, Strecke, Items, Fische) in eine Datei; hier werden sie an den Server weitergegeben
+const qstatFile = path.join(app.getPath('userData'), 'quest-stats.json'); let qsLast = { sid: '', d: {} }, qsMp = false, qsBusy = false;
+const QKEYS = ['logs', 'stone', 'iron', 'diamond', 'zombie', 'skeleton', 'walk', 'craft', 'fish'];
+async function qMcTick() {
+  if (qsBusy || !mcProc || !qOnline()) return;
+  let j; try { j = JSON.parse(fs.readFileSync(qstatFile, 'utf8')); } catch { return; }
+  if (!j || typeof j.d !== 'object' || Date.now() - (+j.t || 0) > 120000) return; // nur frische Werte
+  qsMp = !!j.mp; if (j.sid !== qsLast.sid) qsLast = { sid: String(j.sid || ''), d: {} };
+  const inc = {}, now = {}; let any = false;
+  for (const k of QKEYS) { const n = Math.max(0, Math.floor(+j.d[k] || 0)), prev = qsLast.d[k] || 0; now[k] = Math.max(prev, n); if (n > prev) { inc[k] = n - prev; any = true; } }
+  if (!any) return;
+  qsBusy = true; try { const r = await srvCall('/quests/mc', { d: inc }, srvTok).catch(() => null); if (r && r.ok && !r.ignored) qsLast.d = now; } finally { qsBusy = false; } // erst nach Erfolg als gesendet merken
+}
 ipcMain.handle('questState', async () => { try {
   if (!currentUser) return { ok: false, error: 'Quests brauchen ein Cloudy-Konto. Melde dich an (im Offline-Modus gibt es keine Quests).' };
   if (!srvCfg()) return { ok: false, error: 'Quests gibt es nur mit dem Cloudy-Konto-Server.' };
@@ -1256,7 +1269,7 @@ ipcMain.handle('passState', async () => {
   const r = await srvCall('/pass/state', {}, srvTok).catch(() => null); if (!r) return { ...SRV_DOWN, ok: false };
   return r.ok ? r : { ok: false, error: passErr(r) };
 });
-ipcMain.handle('admStars', async (_e, o) => { if (!adminOnly() || !srvCfg()) return { ok: false, error: 'Nur für Admins.' }; const r = await srvCall('/admin/stars', { name: String((o && o.name) || ''), amount: Math.trunc(+(o && o.amount)) || 0 }, srvTok).catch(() => null); return r ? (r.ok ? r : { ok: false, error: r.status === 404 && !r.code ? 'Der Server kennt das noch nicht (neue app.js einspielen).' : (r.error || r.code === 'bad_amount' ? 'Menge muss zwischen -5000 und 5000 liegen (nicht 0).' : 'Fehlgeschlagen.') }) : { ...SRV_DOWN, ok: false }; });
+ipcMain.handle('admStars', async (_e, o) => { if (!adminOnly() || !srvCfg()) return { ok: false, error: 'Nur für Admins.' }; const r = await srvCall('/admin/stars', { name: String((o && o.name) || ''), amount: Math.trunc(+(o && o.amount)) || 0, xp: Math.trunc(+(o && o.xp)) || 0 }, srvTok).catch(() => null); return r ? (r.ok ? r : { ok: false, error: r.status === 404 && !r.code ? 'Der Server kennt das noch nicht (neue app.js einspielen).' : (r.error || r.code === 'bad_amount' ? 'Menge muss zwischen -5000 und 5000 liegen (nicht 0).' : 'Fehlgeschlagen.') }) : { ...SRV_DOWN, ok: false }; });
 ipcMain.handle('admPlus', async (_e, o) => { if (!adminOnly() || !srvCfg()) return { ok: false, error: 'Nur für Admins.' }; const r = await srvCall('/admin/plus', { name: String((o && o.name) || ''), days: Math.max(0, Math.trunc(+(o && o.days)) || 0) }, srvTok).catch(() => null); return r ? (r.ok ? r : { ok: false, error: r.error || (r.status === 404 ? 'Der Server kennt das noch nicht (neue app.js einspielen).' : 'Fehlgeschlagen.') }) : { ...SRV_DOWN, ok: false }; });
 ipcMain.handle('plusBuy', async (_e, manage) => {
   if (!qOnline()) return { ok: false, error: 'Nicht angemeldet.' };
@@ -1804,7 +1817,7 @@ function playTick(final) {
   if (final) playSess = null;
 }
 let qBeatN = 0;
-setInterval(() => { if (mcProc) { if (++qBeatN % 4 === 0) qSend('/quests/beat'); if (!playSess) playSess = { who: currentUser, t: Date.now(), coinMs: 0, earned: 0 }; if (!playSess.who) playSess.who = currentUser; playTick(false); } }, 15000);
+setInterval(() => { if (mcProc) { if (++qBeatN % 4 === 0) qSend('/quests/beat', { srv: qsMp }); qMcTick(); if (!playSess) playSess = { who: currentUser, t: Date.now(), coinMs: 0, earned: 0 }; if (!playSess.who) playSess.who = currentUser; playTick(false); } }, 15000);
 function earnPlay(who, gain) { // gain = fertige CC (max. 600 pro Sitzung)
   try {
     if (!who || gain < 1) return;
@@ -2564,14 +2577,14 @@ ipcMain.handle('launch', async (_e, { username, version, type, ram, server, fabr
       overrides: { gameDirectory: gameDir(version), ...(newClasses ? { classes: newClasses } : {}) },
       memory: { max: `${ram}G`, min: '1G' },
       customArgs: [...(IS_MAC ? ['-XstartOnFirstThread'] : []), ...cdsFlags(version, safe), ...(/UseZGC|UseG1GC|UseShenandoah|UseParallelGC|UseSerialGC|UseConcMarkSweep/.test(jvm || '') || safe ? [] : GC_FLAGS), ...(jvm ? jvm.split(/\s+/).filter(Boolean) : []),
-        `-Dcloudy.mods=${clientMods.join(',')}`, ...(hasCape() ? [`-Dcloudy.cape=${capeFile}`] : []), ...(!safe && fs.existsSync(cosFile) ? [`-Dcloudy.cosmetics=${cosFile}`] : []), `-Dcloudy.cfg=${cfgFile}`, `-Dcloudy.coswant=${cosWant}`, `-Dcloudy.cosoth=${cosOth}`, `-Dcloudy.lyrics=${lyricsFile}`, `-Dcloudy.cmd=${cmdFile}`, `-Dcloudy.ver=${CLIENT_BUILD}`, ...(hud && !safe ? [`-Dcloudy.hud=${Object.entries(hud).filter(([, v]) => v).map(([k]) => k).join(',')}`] : []), ...(sndOn ? [`-Dcloudy.sounds=${sndActive}`] : []), ...(cheats && unlocked() ? ['-Dcloudy.cheats=1'] : [])],
+        `-Dcloudy.mods=${clientMods.join(',')}`, ...(hasCape() ? [`-Dcloudy.cape=${capeFile}`] : []), ...(!safe && fs.existsSync(cosFile) ? [`-Dcloudy.cosmetics=${cosFile}`] : []), `-Dcloudy.cfg=${cfgFile}`, `-Dcloudy.coswant=${cosWant}`, `-Dcloudy.cosoth=${cosOth}`, `-Dcloudy.lyrics=${lyricsFile}`, `-Dcloudy.cmd=${cmdFile}`, `-Dcloudy.qstat=${qstatFile}`, `-Dcloudy.ver=${CLIENT_BUILD}`, ...(hud && !safe ? [`-Dcloudy.hud=${Object.entries(hud).filter(([, v]) => v).map(([k]) => k).join(',')}`] : []), ...(sndOn ? [`-Dcloudy.sounds=${sndActive}`] : []), ...(cheats && unlocked() ? ['-Dcloudy.cheats=1'] : [])],
       ...(ww && wh ? { window: { width: +ww, height: +wh } } : {}),
       ...(server && !modernQP(bv(version)) ? { server: { host: server.host, port: String(server.port || 25565) } } : {}),
       ...(server && modernQP(bv(version)) ? { customLaunchArgs: ['--quickPlayMultiplayer', `${server.host === 'localhost' ? '127.0.0.1' : server.host}:${server.port || 25565}`] } : {})
     });
     if (!proc) throw new Error('Start fehlgeschlagen.');
     if (launchCancelled) { try { proc.kill(); } catch {} throw new Error('Start abgebrochen.'); }
-    mcProc = proc; qSend('/quests/event', { type: 'launch' }); playSess = { who: currentUser, t: Date.now(), coinMs: 0, earned: 0 }; try { send('gameStart', {}); } catch {} try { if (win && !win.isDestroyed()) win.webContents.setFrameRate(15); } catch {} try { dcGame = { version: bv(version), server: server && server.host ? String(server.name || server.host).slice(0, 30) : '' }; dcStart = Date.now(); dcUpdate(); } catch {} try { cosNetStart(auth && auth.name); } catch {} proc.on('close', () => { playTick(true); if (mcProc === proc) { mcProc = null; cosNetStop(); dcGame = null; dcStart = Date.now(); dcUpdate(); } });
+    mcProc = proc; try { fs.rmSync(qstatFile, { force: true }); } catch {} qsLast = { sid: '', d: {} }; qsMp = false; qSend('/quests/event', { type: 'launch' }); playSess = { who: currentUser, t: Date.now(), coinMs: 0, earned: 0 }; try { send('gameStart', {}); } catch {} try { if (win && !win.isDestroyed()) win.webContents.setFrameRate(15); } catch {} try { dcGame = { version: bv(version), server: server && server.host ? String(server.name || server.host).slice(0, 30) : '' }; dcStart = Date.now(); dcUpdate(); } catch {} try { cosNetStart(auth && auth.name); } catch {} proc.on('close', () => { playTick(true); if (mcProc === proc) { mcProc = null; cosNetStop(); dcGame = null; dcStart = Date.now(); dcUpdate(); } });
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err.message };

@@ -16,6 +16,7 @@ public final class Hotkeys {
 
 	public static void tick(MinecraftClient mc) {
 		try { Timer.tick(mc); } catch (Throwable ignored) {}
+		try { QuestStats.tick(mc); } catch (Throwable ignored) {}
 		if (mc.player == null || mc.currentScreen != null) { down.clear(); return; }
 		long w = mc.getWindow().getHandle();
 		for (var e : ModConfig.keys.entrySet()) {
