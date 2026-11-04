@@ -8,3 +8,7 @@ server/mac-backup.env
 server/node_modules/
 server/package.json
 server/package-lock.json
+server/cloudy.env
+server/node_modules/
+server/package-lock.json
+server/status-config.json
