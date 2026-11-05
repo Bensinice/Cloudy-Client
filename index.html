@@ -15,6 +15,7 @@
   <button class="nav" data-p="mods"><svg viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7zM12 12l9-5M12 12v10M12 12L3 7"/></svg>Mods</button>
   <button class="nav" data-p="shop"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9.5c0-1 1-1.8 3-1.8s3 .8 3 1.8-1 1.6-3 2-3 1-3 2 1 1.8 3 1.8 3-.8 3-1.8"/></svg>Shop</button>
   <button class="nav" data-p="pass"><svg viewBox="0 0 24 24"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/></svg>Cloudy Pass</button>
+  <button class="nav" data-p="spotify"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="7" cy="18" r="2.5"/><circle cx="17" cy="16" r="2.5"/></svg>Spotify</button>
   <button class="nav" data-p="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Einstellungen</button>
   <div class="sp"></div>
   <button class="nav" id="musicBtn"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span>Musik an</span></button>
@@ -131,6 +132,7 @@
           <small class="muted" id="ciMsg">Umhang: Nach „Item erstellen“ wählst du die PNG-Datei. Namen kannst du später direkt auf der Karte ändern.</small></div><div id="shopItems"></div></div></div>
   </div>
   <div class="page" id="p-pass"></div>
+  <div class="page" id="p-spotify"></div>
   <div class="page" id="p-quests"></div>
   <div class="page" id="p-client">
     <h2>Client</h2><p class="muted">Eigene Client-Mods für Cloudy: bau dir deinen Umhang, schalte Anzeigen ein und löse Codes ein.</p>
@@ -618,6 +620,7 @@ window.cloudy.versions(true).then(l=>{all=l;if(!version||!all.find(v=>v.id===bvr
 <script src="assets/js/shop.js"></script>
 <script src="assets/js/quests.js"></script>
 <script src="assets/js/pass.js"></script>
+<script src="assets/js/spotify.js"></script>
 <script src="assets/js/admpass.js"></script>
 <script src="assets/js/admcfg.js"></script>
 <script src="assets/js/tour.js"></script>

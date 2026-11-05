@@ -1,5 +1,15 @@
 [
  {
+  "v": "0.9.87",
+  "date": "2026-11-05",
+  "added": [
+   "Neue Seite „Spotify“: deine Playlists mit Cover und Songanzahl, Songliste, Klick zum Abspielen, Lieblingssongs, Favoriten (★) und zuletzt gehörte Songs/Playlists. Player mit Play/Pause, Weiter, Zurück und Lautstärke",
+   "Lyrics im Launcher im Stil des Spiel-Overlays: Wörter erscheinen einzeln im Takt mit Schein, Song-Karte mit Cover und Fortschritt, ruhige Anzeige bei Pause, klare Meldung ohne Lyrics",
+   "Spotify braucht dafür neue Berechtigungen: einmal neu verbinden (Einstellungen → Spotify). Abspielen aus Cloudy braucht Spotify Premium"
+  ],
+  "fixed": []
+ },
+ {
   "v": "0.9.86",
   "date": "2026-11-05",
   "added": [

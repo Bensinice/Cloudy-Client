@@ -1,4 +1,9 @@
 {
+ "0.9.87": [
+  "New “Spotify” page: your playlists with cover and song count, song list, click to play, liked songs, favorites (★) and recently played songs/playlists. Player with play/pause, next, previous and volume",
+  "Lyrics in the launcher in the style of the in-game overlay: words appear one by one in time with a glow, song card with cover and progress, calm display when paused, clear message when there are no lyrics",
+  "This needs new Spotify permissions: reconnect once (Settings → Spotify). Playing from Cloudy needs Spotify Premium"
+ ],
  "0.9.86": [
   "Admin: reset quests instantly (your own account, one account or all) without waiting for the reset timer. Already claimed quests stay claimed unless you choose otherwise",
   "Admin settings for e-mail/Stripe: entered values are no longer overwritten when you switch pages, and “Send test e-mail” saves first. Clear hint when no SMTP server is set"

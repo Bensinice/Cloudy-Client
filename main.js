@@ -838,7 +838,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.86'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.87'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -2163,13 +2163,14 @@ const mediaNowLocal = () => new Promise(res => {
 });
 
 // ---- Spotify-Anmeldung (PKCE, kein Geheimnis nötig): liest den laufenden Song samt genauer Position direkt von Spotify – für Lyrics ----
+const SP_SCOPES = ['user-read-currently-playing', 'user-read-playback-state', 'user-modify-playback-state', 'playlist-read-private', 'playlist-read-collaborative', 'user-library-read', 'user-read-recently-played'];
 const spFile = path.join(app.getPath('userData'), 'spotify.json'), SP_REDIRECT = 'http://127.0.0.1:8898/callback';
 const spLoad = () => { try { return JSON.parse(fs.readFileSync(spFile, 'utf8')); } catch { return {}; } };
 const spSave = o => { try { fs.writeFileSync(spFile, JSON.stringify(o)); } catch {} };
 let spCache = { t: 0, v: null }, spSrv = null, spLast = { ok: null, msg: '' };
-async function spToken() {
+async function spToken(force) {
   const j = spLoad(); if (!j.refresh || !j.clientId) return null;
-  if (j.access && Date.now() < (j.exp || 0) - 30000) return j.access;
+  if (!force && j.access && Date.now() < (j.exp || 0) - 30000) return j.access;
   const r = await fetch('https://accounts.spotify.com/api/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: j.refresh, client_id: j.clientId }) });
   if (!r.ok) { if (r.status === 400 || r.status === 401) spSave({ clientId: j.clientId }); return null; }
   const d = await r.json(); spSave({ ...j, access: d.access_token, exp: Date.now() + d.expires_in * 1000, refresh: d.refresh_token || j.refresh }); return d.access_token;
@@ -2228,7 +2229,7 @@ const mediaNowP = async () => {
 };
 // Eingebaute Spotify-Client-ID (assets/spotify.json): damit melden sich alle mit einem Klick an, ohne eigene Spotify-App
 const SP_CID = (() => { try { const c = String(JSON.parse(fs.readFileSync(path.join(__dirname, 'assets', 'spotify.json'), 'utf8')).clientId || '').trim(); return /^[a-f0-9]{32}$/i.test(c) ? c : ''; } catch { return ''; } })();
-ipcMain.handle('spotifyState', () => { const j = spLoad(); return { connected: !!j.refresh, clientId: j.clientId || SP_CID, builtin: !!SP_CID, redirect: SP_REDIRECT, last: spLast }; });
+ipcMain.handle('spotifyState', () => { const j = spLoad(); return { connected: !!j.refresh, scopeOk: !!j.refresh && SP_SCOPES.every(x => String(j.scope || '').split(' ').includes(x)), clientId: j.clientId || SP_CID, builtin: !!SP_CID, redirect: SP_REDIRECT, last: spLast }; });
 ipcMain.handle('spotifyTest', async () => { spCache = { t: 0, v: null }; try { await spotifyNow(); } catch (e) { spLast = { ok: false, msg: String(e && e.message || e) }; } return spLast; });
 ipcMain.handle('spotifyDisconnect', () => { const j = spLoad(); spSave({ clientId: j.clientId || '' }); spCache = { t: 0, v: null }; return true; });
 ipcMain.handle('spotifyConnect', async (_e, clientId) => {
@@ -2245,17 +2246,36 @@ ipcMain.handle('spotifyConnect', async (_e, clientId) => {
       try {
         const r = await fetch('https://accounts.spotify.com/api/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: SP_REDIRECT, client_id: clientId, code_verifier: verifier }) });
         const d = await r.json(); if (!r.ok) throw new Error(d.error_description || d.error || r.status);
-        spSave({ clientId, refresh: d.refresh_token, access: d.access_token, exp: Date.now() + d.expires_in * 1000 }); spCache = { t: 0, v: null }; finish({ ok: true });
+        spSave({ clientId, refresh: d.refresh_token, access: d.access_token, exp: Date.now() + d.expires_in * 1000, scope: String(d.scope || '') }); spCache = { t: 0, v: null }; finish({ ok: true });
       } catch (e) { finish({ ok: false, error: 'Spotify hat die Anmeldung abgelehnt: ' + String((e && e.message) || e) }); }
     });
     spSrv = srv; srv.on('error', () => finish({ ok: false, error: 'Port 8898 ist belegt – bitte Cloudy neu starten und erneut versuchen.' }));
     srv.listen(8898, '127.0.0.1', () => {
-      shell.openExternal('https://accounts.spotify.com/authorize?' + new URLSearchParams({ client_id: clientId, response_type: 'code', redirect_uri: SP_REDIRECT, code_challenge_method: 'S256', code_challenge: challenge, state, scope: 'user-read-currently-playing user-read-playback-state user-modify-playback-state' }));
+      shell.openExternal('https://accounts.spotify.com/authorize?' + new URLSearchParams({ client_id: clientId, response_type: 'code', redirect_uri: SP_REDIRECT, code_challenge_method: 'S256', code_challenge: challenge, state, scope: SP_SCOPES.join(' ') }));
       setTimeout(() => finish({ ok: false, error: 'Zeit abgelaufen – bitte erneut versuchen.' }), 180000);
     });
   });
 });
 ipcMain.handle('mediaNow', mediaNowP);
+
+// ---- Spotify-Seite im Launcher: Playlists, Songs, Favoriten, Zuletzt, Abspielen, Lautstärke (offizielle Web-API, lib/spotapi.js) ----
+const spApi = require('./lib/spotapi')({ tok: spToken });
+const spNeed = async () => { const j = spLoad(); if (!j.refresh) return { ok: false, code: 'not_connected', error: 'Spotify ist noch nicht verbunden. Einstellungen → Spotify → „Mit Spotify verbinden“.' }; if (!SP_SCOPES.every(x => String(j.scope || '').split(' ').includes(x))) return { ok: false, code: 'scopes', error: 'Für Playlists braucht Cloudy neue Berechtigungen. Bitte Spotify einmal neu verbinden (Einstellungen → Spotify).' }; return null; };
+const spWrap = fn => async (_e, a) => { const n = await spNeed(); if (n) return n; try { const r = await fn(a); if (r && r.ok === false && /abgelaufen/.test(r.error || '')) spLast = { ok: false, msg: r.error }; return r; } catch (e) { return { ok: false, error: 'Fehler: ' + String((e && e.message) || e) }; } };
+ipcMain.handle('spPlaylists', spWrap(() => spApi.playlists()));
+ipcMain.handle('spTracks', spWrap(id => /^(liked|[A-Za-z0-9]{10,40})$/.test(String(id)) ? spApi.tracks(String(id)) : { ok: false, error: 'Ungültige Playlist.' }));
+ipcMain.handle('spRecent', spWrap(() => spApi.recent()));
+ipcMain.handle('spPlay', spWrap(o => { const r = spApi.play(o && typeof o === 'object' ? { context: o.context, uri: o.uri, uris: o.uris } : {}); spCache = { t: 0, v: null }; return r; }));
+ipcMain.handle('spVolume', spWrap(v => spApi.volume(v)));
+ipcMain.handle('spPlayer', spWrap(() => spApi.player()));
+const spFavFile = path.join(app.getPath('userData'), 'spotify-favs.json');
+const spFavs = () => { try { const a = JSON.parse(fs.readFileSync(spFavFile, 'utf8')); return Array.isArray(a) ? a.filter(x => typeof x === 'string').slice(0, 200) : []; } catch { return []; } };
+ipcMain.handle('spFavs', () => spFavs());
+ipcMain.handle('spFavToggle', (_e, id) => { id = String(id || ''); if (!/^(liked|[A-Za-z0-9]{10,40})$/.test(id)) return spFavs(); let a = spFavs(); a = a.includes(id) ? a.filter(x => x !== id) : [id, ...a]; try { fs.writeFileSync(spFavFile, JSON.stringify(a)); } catch {} return a; });
+// Lyrics für die Launcher-Seite: läuft nur, solange die Seite offen ist (sonst nur während Minecraft läuft)
+let lyUi = 0;
+ipcMain.handle('lyricsUi', (_e, on) => { lyUi = on ? Date.now() : 0; return true; });
+ipcMain.handle('lyricsNow', () => { const o = lyricsLast || null; return o ? { ...o, art: (lyr && lyr.art) || '', dur: (lyr && lyr.dur) || 0 } : null; });
 
 // ---- Lyrics: aktueller Spotify-Song -> Textzeilen mit Zeitstempeln (LRCLIB) -> Datei, die die Client-Mod im Spiel anzeigt ----
 const lyricsFile = path.join(app.getPath('userData'), 'cloudy-lyrics.json');
@@ -2337,7 +2357,7 @@ ipcMain.handle('censorSet', (_e, on) => { censorOn = !!on; try { fs.writeFileSyn
 ipcMain.handle('censorGet', () => censorOn);
 ipcMain.on('censorText', (e, t) => { e.returnValue = censorOn ? censorTxt(t) : String(t == null ? '' : t); });
 let lyricsLast = null;
-function lyricsWrite(o) { try { if (censorOn && o.lines && o.lines.length) o = { ...o, lines: o.lines.map(l => [l[0], censorTxt(l[1])]) }; fs.writeFileSync(lyricsFile, JSON.stringify({ ts: Date.now(), ...o })); } catch {} }
+function lyricsWrite(o) { try { if (censorOn && o.lines && o.lines.length) o = { ...o, lines: o.lines.map(l => [l[0], censorTxt(l[1])]) }; lyricsLast = { ts: Date.now(), ...o }; fs.writeFileSync(lyricsFile, JSON.stringify({ ts: Date.now(), ...o })); } catch {} }
 const lyricsCoverFile = path.join(app.getPath('userData'), 'cloudy-cover.png');
 async function lyricsCover(url, key) { // Albumcover als kleines PNG fuer die Karte im Spiel
   try {
@@ -2350,10 +2370,10 @@ async function lyricsCover(url, key) { // Albumcover als kleines PNG fuer die Ka
 async function lyricsTick() {
   const m = await mediaNowP(), now = Date.now();
   if (!m.running) { if (++lyr.miss >= 4) lyricsWrite({ title: '', artist: '', lines: [], playing: false, posMs: 0 }); return; }
-  lyr.miss = 0; lyr.dur = m.durMs || lyr.dur || 0;
+  lyr.miss = 0; lyr.dur = m.durMs || lyr.dur || 0; if (m.art) lyr.art = m.art;
   if (m.title) {
     const key = m.artist + '|' + m.title;
-    if (key !== lyr.key) { lyr = { key, lines: lyCache.get(key) || [], start: now - 1500, pausedAt: 0, miss: 0, cover: '', tries: 0, next: 0, busy: false }; if (m.art) lyricsCover(m.art, key); }
+    if (key !== lyr.key) { lyr = { key, lines: lyCache.get(key) || [], start: now - 1500, pausedAt: 0, miss: 0, cover: '', art: m.art || '', tries: 0, next: 0, busy: false }; if (m.art) lyricsCover(m.art, key); }
     if (!lyr.lines.length && !lyr.busy && lyr.tries < 8 && now >= lyr.next) { // nichts gefunden oder Netzwerk-Fehler: später erneut versuchen (nicht nur einmal pro Lied)
       const k = key; lyr.busy = true; lyr.tries++; lyr.next = now + 8000 * lyr.tries;
       lyricsFetch(m.artist, m.title).then(l => { lyr.err = lyErr; lyErr = ''; if (l.length) { lyCache.set(k, l); if (lyCache.size > 40) lyCache.delete(lyCache.keys().next().value); } if (lyr.key === k) { lyr.lines = l; lyr.busy = false; } }).catch(() => { if (lyr.key === k) lyr.busy = false; });
@@ -2364,7 +2384,7 @@ async function lyricsTick() {
   const sep = lyr.key.indexOf('|'), artist = lyr.key.slice(0, sep < 0 ? 0 : sep), title = lyr.key.slice(sep + 1);
   lyricsWrite({ ts: m.at || now, title: title || '', artist: artist || '', lines: lyr.lines, status: lyr.lines.length ? '' : (lyr.busy || lyr.tries === 0 ? 'searching lyrics ...' : lyr.tries >= 8 ? 'no lyrics found' : 'not found yet, retrying ...') + (lyr.err ? ' (' + lyr.err + ')' : ''), playing: !!m.playing, posMs: pos, exact: m.posMs != null, dur: m.durMs || 0, cover: lyr.cover || '' });
 }
-setInterval(() => { if (!mcProc || lyBusy) return; lyBusy = true; lyricsTick().catch(() => {}).finally(() => { lyBusy = false; }); }, 1500);
+setInterval(() => { if ((!mcProc && !(lyUi && Date.now() - lyUi < 20000)) || lyBusy) return; lyBusy = true; lyricsTick().catch(() => {}).finally(() => { lyBusy = false; }); }, 1500);
 const mediaKeyRun = k => new Promise(res => {
   const code = { playpause: 0xB3, next: 0xB0, prev: 0xB1, volup: 0xAF, voldown: 0xAE }[k]; if (!code) return res(false);
   try {
