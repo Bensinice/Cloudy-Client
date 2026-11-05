@@ -75,7 +75,6 @@ async function init() {
   for (const [c, def] of [['ban_until', 'BIGINT'], ['paused', 'TINYINT']]) { const [r] = await db.query('SHOW COLUMNS FROM cloudy_users LIKE ?', [c]); if (!r.length) await db.query(`ALTER TABLE cloudy_users ADD COLUMN ${c} ${def} NULL`); }
   await db.query('CREATE TABLE IF NOT EXISTS cloudy_kv (k VARCHAR(40) PRIMARY KEY, v MEDIUMTEXT)');
   try { await db.query('ALTER TABLE cloudy_kv MODIFY v MEDIUMTEXT'); } catch {}
-  await NREPO.init(); // Cloudy Notes: Tabellen anlegen
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='names'"); NAMES = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='prices'"); PRICES = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='tags'"); TAGS = r.length ? parse(r[0].v, {}) : {}; }
@@ -103,7 +102,7 @@ async function init() {
   if (!(await get('tester'))) await put(mk('Tester', '12345', { must_change: 1, coins: 100 }));
 }
 const app = express(); app.set('trust proxy', true); // hinter nginx/Cloudflare: echte Besucher-IP für die Versuchsbegrenzung
-app.use(cors()); app.use(express.json({ limit: '400kb', verify: (req, _res, buf) => { if (req.originalUrl === '/stripe/webhook') req.rawBody = buf; } })); // rawBody: Stripe prüft die Signatur über den unveränderten Text
+app.use(cors()); app.use(express.json({ limit: '100kb', verify: (req, _res, buf) => { if (req.originalUrl === '/stripe/webhook') req.rawBody = buf; } })); // rawBody: Stripe prüft die Signatur über den unveränderten Text
 require('./site')(app, express, async req => { // Webseite, Downloads, Update-Feed, Upload (site.js); Admin = Konto mit Admin-Recht oder Owner-Tag
   const m = /^Bearer (.+)$/.exec(req.headers.authorization || ''), key = m && (sessions.get(m[1]) || await tokKey(m[1])), me = key && await get(key);
   return !!me && !lockMsg(me) && isAdm(me);
@@ -160,8 +159,6 @@ const auth = wrap2 => wrap(async (req, res) => {
   { const lm = lockMsg(me); if (lm) return res.status(403).json({ error: lm }); }
   await wrap2(req, res, me);
 });
-// ---- Cloudy Notes: Notizen, Prompt-Erstellung (OpenAI), verschlüsselter Key, Entwicklungsstatus (siehe notes.js) ----
-const NOTESM = require('./notes'), NREPO = NOTESM.sqlRepo(db); NOTESM.mount(app, auth, NOTESM.create({ repo: NREPO, getSecret: () => SECRET }));
 // ---- Freunde & Chat direkt über den Konto-Server (kein extra Freundesserver nötig) ----
 let TAGLIVE = () => []; // Clan-Tags (wird von frHandle gesetzt) – für die Namens-Tags im Spiel
 const PRES = new Map(); // Konto -> { srv, t } (wo jemand gerade spielt/hostet)

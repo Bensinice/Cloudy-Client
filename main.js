@@ -854,7 +854,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.99'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.98'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1293,61 +1293,6 @@ ipcMain.handle('passState', async () => {
 });
 ipcMain.handle('admStars', async (_e, o) => { if (!adminOnly() || !srvCfg()) return { ok: false, error: 'Nur für Admins.' }; const r = await srvCall('/admin/stars', { name: String((o && o.name) || ''), amount: Math.trunc(+(o && o.amount)) || 0, xp: Math.trunc(+(o && o.xp)) || 0 }, srvTok).catch(() => null); return r ? (r.ok ? r : { ok: false, error: r.status === 404 && !r.code ? 'Der Server kennt das noch nicht (neue app.js einspielen).' : (r.error || r.code === 'bad_amount' ? 'Menge muss zwischen -5000 und 5000 liegen (nicht 0).' : 'Fehlgeschlagen.') }) : { ...SRV_DOWN, ok: false }; });
 ipcMain.handle('newsList', async () => { if (!srvCfg() || !srvTok) return { ok: false, error: 'Nicht angemeldet.' }; const r = await srvCall('/news', {}, srvTok).catch(() => null); return r && r.ok ? r : { ok: false, error: r && r.error ? r.error : 'Der Cloudy-Server ist nicht erreichbar.' }; });
-// ---- Cloudy Notes: Notizen (Server), ChatGPT-Prompts (Server ruft OpenAI), Claude Code (lokal) ----
-const NR = require('./lib/claudeRun'); const notesRun = NR.createRunner(); const notesCfgFile = path.join(app.getPath('userData'), 'cloudy-notes.json');
-const nCfg = () => { try { return JSON.parse(fs.readFileSync(notesCfgFile, 'utf8')); } catch { return {}; } };
-const nCfgSave = c => fs.writeFileSync(notesCfgFile, JSON.stringify(c));
-const nSrv = async (p, body) => { // alle Notes-Aufrufe laufen ueber den Konto-Server (angemeldet, mit Backup-Server-Umschaltung)
-  if (!srvCfg() || !srvTok) return { ok: false, error: 'Nicht angemeldet.' };
-  const r = await srvCall(p, body || {}, srvTok).catch(() => null);
-  if (!r) return { ok: false, offline: true, error: 'Der Cloudy-Server ist nicht erreichbar. Deine Notizen bleiben lokal erhalten und werden später synchronisiert.' };
-  if (r.status === 404 && !r.error) return { ok: false, error: 'Dein Cloudy-Server kennt Cloudy Notes noch nicht. Spiele die neue Server-Version ein (notes.js + app.js).' };
-  return r.ok ? r : { ...r, ok: false, error: r.error || 'Fehlgeschlagen (' + r.status + ').' };
-};
-const NOTES_PATHS = new Set(['/notes/list', '/notes/save', '/notes/delete', '/notes/history', '/notes/restore', '/notes/export', '/notes/prompt', '/notes/prompt-save', '/notes/build-status', '/notes/settings', '/notes/openai/test']);
-ipcMain.handle('notesApi', (_e, p, body) => NOTES_PATHS.has(p) ? nSrv(p, body) : { ok: false, error: 'Unbekannt.' });
-const nPub = () => { const c = nCfg(); let k = ''; try { if (c.anthropic) k = dec(c.anthropic); } catch {} return { projectDir: c.projectDir || '', confirm: c.confirm !== false, anthropic: { set: !!k, last4: k ? '…' + k.slice(-4) : '' }, claudeBin: NR.findClaude(c.claudePath) ? true : false, platform: process.platform, perms: NR.PERMS }; };
-ipcMain.handle('notesCfgGet', () => nPub());
-ipcMain.handle('notesCfgSet', (_e, o) => {
-  o = o || {}; const c = nCfg();
-  if (typeof o.projectDir === 'string') c.projectDir = o.projectDir;
-  if (typeof o.confirm === 'boolean') c.confirm = o.confirm;
-  if (o.clearAnthropic) delete c.anthropic;
-  if (typeof o.anthropicKey === 'string' && o.anthropicKey.trim()) { const k = o.anthropicKey.trim(); if (!/^sk-ant-[A-Za-z0-9_\-]{20,}$/.test(k)) return { ok: false, error: 'Das sieht nicht wie ein Anthropic API Key aus (beginnt mit „sk-ant-“).' }; c.anthropic = enc(k); }
-  nCfgSave(c); return { ok: true, ...nPub() };
-});
-ipcMain.handle('notesPickProject', async () => { const w = BrowserWindow.getFocusedWindow() || win; const r = await dialog.showOpenDialog(w, { properties: ['openDirectory'], title: 'Cloudy-Projektordner wählen' }); if (r.canceled || !r.filePaths[0]) return { ok: false }; const chk = NR.checkProject(r.filePaths[0]); if (chk.ok) { const c = nCfg(); c.projectDir = r.filePaths[0]; nCfgSave(c); } return { ok: chk.ok, ...chk }; });
-const nEnv = () => { const c = nCfg(); try { return c.anthropic ? { ANTHROPIC_API_KEY: dec(c.anthropic) } : {}; } catch { return {}; } };
-ipcMain.handle('notesCheck', async (_e, what) => {
-  const c = nCfg();
-  if (what === 'project') { const r = NR.checkProject(c.projectDir); return { ...r, perms: NR.PERMS }; }
-  if (what === 'claude') { const bin = NR.findClaude(c.claudePath); const r = await NR.testClaude({ bin, cwd: NR.checkProject(c.projectDir).ok ? c.projectDir : app.getPath('temp'), env: nEnv() }); return { ...r, bin: !!bin, viaKey: !!nEnv().ANTHROPIC_API_KEY }; }
-  if (what === 'backend') { const r = await nSrv('/notes/settings', {}); return r.ok ? { ok: true } : { ok: false, error: r.error }; }
-  if (what === 'openai') { const r = await nSrv('/notes/openai/test', {}); return r.ok ? { ok: true, models: r.models } : { ok: false, error: r.error }; }
-  return { ok: false, error: 'Unbekannt.' };
-});
-let nBuild = { id: '', snap: null, prompt: '', plan: '' }, nPushAt = 0, nPushState = '';
-function nPush(id, st, force) { // Status auch auf den Server schreiben (andere Geraete sehen ihn, nichts geht beim Neustart verloren)
-  const now = Date.now(); if (!force && st.state === nPushState && now - nPushAt < 6000) return; nPushState = st.state; nPushAt = now;
-  nSrv('/notes/build-status', { id, build: { state: st.state, phase: st.phase, progress: st.progress, task: st.task, files: st.files, error: st.error, summary: st.summary, log: st.log } }).catch(() => {});
-}
-async function nRun(o) { // o: { id, prompt, phase, plan, resume }
-  const c = nCfg(), chk = NR.checkProject(c.projectDir); if (!chk.ok) return { ok: false, error: chk.reasons[0], setup: 'project' };
-  const bin = NR.findClaude(c.claudePath); if (!bin) return { ok: false, error: 'Claude Code ist nicht installiert. Installiere es von https://claude.com/claude-code, melde dich einmal an und teste die Verbindung unter AI Connections.', setup: 'claude' };
-  if (notesRun.busy()) return { ok: false, error: 'Es läuft bereits eine Entwicklungsaufgabe.' };
-  if (!String(o.prompt || '').trim()) return { ok: false, error: 'Kein Prompt vorhanden.' };
-  if (o.phase === 'impl' || !nBuild.snap || nBuild.id !== o.id) nBuild.snap = await NR.gitSnap(c.projectDir); nBuild.id = o.id; nBuild.prompt = o.prompt;
-  const ui = st => { st = { ...st }; st.id = o.id; try { send('notesBuild', st); } catch {} nPush(o.id, st, ['done', 'error', 'cancelled', 'awaiting'].includes(st.state)); };
-  notesRun.start({ bin, cwd: c.projectDir, prompt: o.prompt, phase: o.phase, plan: o.plan, resume: o.resume, env: nEnv(), onUpdate: ui }).then(async r => {
-    if (r && (r.state === 'done' || r.state === 'error') && o.phase === 'impl') { const after = await NR.gitSnap(c.projectDir), ch = NR.gitDiffFiles(nBuild.snap, after); if (ch) r.files = [...new Set([...(ch || []), ...r.files])].slice(0, 100); }
-    ui(r);
-  }).catch(e => ui({ state: 'error', error: String(e.message || e), files: [], log: [], progress: 0, task: '' }));
-  return { ok: true };
-}
-ipcMain.handle('notesBuildStart', (_e, o) => { o = o || {}; const c = nCfg(); const resume = o.resume ? (notesRun.state() || {}).session : ''; return nRun({ id: String(o.id || ''), prompt: String(o.prompt || ''), phase: o.resume ? 'impl' : (c.confirm === false ? 'impl' : 'plan'), resume }); });
-ipcMain.handle('notesBuildGo', (_e, o) => { o = o || {}; return nRun({ id: String(o.id || ''), prompt: String(o.prompt || ''), phase: 'impl', plan: String(o.plan || '').slice(0, 20000) }); });
-ipcMain.handle('notesBuildCancel', () => ({ ok: notesRun.cancel() }));
-ipcMain.handle('notesBuildState', () => ({ id: nBuild.id, state: notesRun.state(), busy: notesRun.busy() }));
 ipcMain.handle('admNews', async (_e, o) => { if (!adminOnly() || !srvCfg()) return { ok: false, error: 'Nur für Admins.' }; o = o || {}; const p_ = { list: '/admin/news', save: '/admin/news/save', del: '/admin/news/delete' }[o.a]; if (!p_) return { ok: false, error: 'Unbekannt.' }; const r = await srvCall(p_, { id: o.id, title: o.title, body: o.body, aud: o.aud }, srvTok).catch(() => null); return r ? (r.ok ? r : { ok: false, error: r.error || (r.status === 404 ? 'Der Server kennt das noch nicht – bitte die neue Server-Version einspielen.' : 'Fehlgeschlagen.') }) : { ok: false, error: 'Server nicht erreichbar.' }; });
 ipcMain.handle('admCq', async (_e, o) => { if (!adminOnly() || !srvCfg()) return { ok: false, error: 'Nur für Admins.' }; o = o || {}; const path_ = { list: '/admin/cquests', save: '/admin/cquests/save', del: '/admin/cquests/delete', prog: '/admin/cquests/progress' }[o.a]; if (!path_) return { ok: false, error: 'Unbekannt.' }; const r = await srvCall(path_, { quest: o.quest, id: o.id }, srvTok).catch(() => null); return r ? (r.ok ? r : { ok: false, error: r.error || (r.status === 404 ? 'Der Server kennt das noch nicht – bitte die neue Server-Version einspielen.' : 'Fehlgeschlagen.') }) : { ok: false, error: 'Server nicht erreichbar.' }; });
 ipcMain.handle('admQuestReset', async (_e, o) => { if (!adminOnly() || !srvCfg()) return { ok: false, error: 'Nur für Admins.' }; const r = await srvCall('/admin/quests/reset', { name: String((o && o.name) || ''), all: !!(o && o.all), claimed: !!(o && o.claimed) }, srvTok).catch(() => null); return r ? (r.ok ? r : { ok: false, error: r.status === 404 && !r.error ? 'Der Server kennt das noch nicht (neue app.js einspielen).' : (r.error || 'Fehlgeschlagen.') }) : { ...SRV_DOWN, ok: false }; });
