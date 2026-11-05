@@ -1,4 +1,10 @@
 {
+  "0.9.95": [
+    "News with audiences: admins write news for everyone, testers only or admins only; the server checks who may see them. Find them in the news window under “Cloudy-News”",
+    "Admins can edit and delete news (Settings → Admin)",
+    "Automatic maintenance mode: if the main server stays unreachable over several checks, Cloudy shows a notice and hides it again on its own. Short network hiccups do not trigger it",
+    "Admin account list, chat header (call, clear chat, manage) and chips are now consistent and no longer cut off"
+  ],
   "0.9.94": [
     "The plus in the Cloudy logo is now centred in the cloud"
   ],

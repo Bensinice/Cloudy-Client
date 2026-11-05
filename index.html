@@ -196,6 +196,10 @@
         <div class="tools" style="margin:0 0 8px;gap:8px;flex-wrap:wrap"><input id="paDays" class="field" type="number" min="0" placeholder="Cloudy+ Tage (0 = beenden)" style="max-width:220px"><button class="btn ghost" id="paPlus" type="button">Cloudy+ setzen</button></div>
         <div class="tools" style="margin:0 0 8px;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn ghost" id="paQReset" type="button">Quests zurücksetzen (Name oben, leer = mein Konto)</button><button class="btn ghost" id="paQResetAll" type="button">Quests ALLER Konten zurücksetzen</button><label class="muted" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="paQClaimed"> auch bereits abgeholte (Belohnung kann dann nochmal geholt werden)</label></div>
         <p class="muted" id="paMsg" style="min-height:18px;margin:0"></p></div>
+      <div class="glass set wide" data-adm id="newsAdm"><h3>News schreiben (Admin)</h3><p class="muted">Wer eine News sehen darf, prüft der Server: „Alle“ sehen alle Nutzer, „Tester“ nur Tester und Admins, „Admin“ nur Admins.</p>
+        <div class="tools" style="margin:0 0 8px;gap:8px;flex-wrap:wrap"><input id="nwTitle" class="field" placeholder="Titel" maxlength="120" style="max-width:320px"><select id="nwAud" class="field" style="max-width:200px"><option value="all">Alle Nutzer</option><option value="tester">Nur Tester</option><option value="admin">Nur Admins</option></select></div>
+        <textarea id="nwBody" class="field" rows="4" maxlength="4000" placeholder="Text" style="width:100%;margin-bottom:8px"></textarea>
+        <div class="tools" style="margin:0 0 8px;gap:8px"><button class="btn" id="nwSave">Veröffentlichen</button><button class="btn ghost" id="nwNew">Neu</button><span class="muted" id="nwMsg"></span></div><div id="nwList"></div></div>
       <div class="glass set wide" data-adm id="cqAdm"><h3>Eigene Quests (Admin)</h3><p class="muted">Erstelle Quests mit Belohnung, Schwierigkeit und Zeitraum. Minecraft-Quests werden vom Client gemessen und vom Server begrenzt und geprüft; Belohnungen zahlt nur der Server aus. „Spieler“ leer = alle Konten.</p>
         <div class="tools" style="margin:0 0 8px;gap:8px;flex-wrap:wrap"><input id="cqTitle" class="field" placeholder="Titel" maxlength="60" style="max-width:220px"><input id="cqDesc" class="field" placeholder="Beschreibung" maxlength="200" style="max-width:300px"><select id="cqMetric" class="field" style="max-width:230px"></select><input id="cqTarget" class="field" type="number" min="1" placeholder="Ziel (Anzahl / Minuten)" style="max-width:170px"></div>
         <div class="tools" style="margin:0 0 8px;gap:8px;flex-wrap:wrap"><input id="cqCoins" class="field" type="number" min="0" placeholder="Coins" style="max-width:100px"><input id="cqStars" class="field" type="number" min="0" placeholder="Stars" style="max-width:100px"><input id="cqXp" class="field" type="number" min="0" placeholder="XP" style="max-width:100px"><select id="cqDiff" class="field" style="max-width:150px"><option value="easy">Leicht</option><option value="medium">Mittel</option><option value="hard">Schwer</option><option value="extreme">Extrem</option></select></div>
@@ -629,6 +633,8 @@ window.cloudy.versions(true).then(l=>{all=l;if(!version||!all.find(v=>v.id===bvr
 <script src="assets/js/spotify.js"></script>
 <script src="assets/js/admpass.js"></script>
 <script src="assets/js/admcq.js"></script>
+<script src="assets/js/admnews.js"></script>
+<script src="assets/js/maint.js"></script>
 <script src="assets/js/admcfg.js"></script>
 <script src="assets/js/tour.js"></script>
 <script src="assets/js/gate.js"></script>

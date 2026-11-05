@@ -10,10 +10,18 @@
   function show(list, title) {
     if (document.querySelector('.news-ov')) return;
     const d = document.createElement('div'); d.className = 'news-ov';
-    d.innerHTML = `<div class="glass set news-box"><h3>${esc(L(title))}</h3><div class="tools" style="margin:0 0 10px"><button class="btn" data-tab="u">${esc(L('Updates'))}</button><button class="btn ghost" data-tab="n">${esc(L('Neu hinzugefügt'))}</button></div><div data-pane="u">${list.map(entry).join('')}</div><div data-pane="n" style="display:none">${fresh(list)}</div><div class="tools" style="margin:16px 0 0"><button class="btn" data-x>${esc(L('Schließen'))}</button></div></div>`;
+    d.innerHTML = `<div class="glass set news-box"><h3>${esc(L(title))}</h3><div class="tools" style="margin:0 0 10px"><button class="btn" data-tab="u">${esc(L('Updates'))}</button><button class="btn ghost" data-tab="n">${esc(L('Neu hinzugefügt'))}</button><button class="btn ghost" data-tab="s">${esc(L('Cloudy-News'))}</button></div><div data-pane="u">${list.map(entry).join('')}</div><div data-pane="n" style="display:none">${fresh(list)}</div><div data-pane="s" style="display:none"><p class="muted">${esc(L('Lade …'))}</p></div><div class="tools" style="margin:16px 0 0"><button class="btn" data-x>${esc(L('Schließen'))}</button></div></div>`;
     document.body.appendChild(d); d.onclick = e => { if (e.target === d) d.remove(); }; d.querySelector('[data-x]').onclick = () => d.remove();
     d.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { d.querySelectorAll('[data-tab]').forEach(x => x.classList.toggle('ghost', x !== b)); d.querySelectorAll('[data-pane]').forEach(p => p.style.display = p.dataset.pane === b.dataset.tab ? '' : 'none'); });
+    loadSrv(d.querySelector('[data-pane="s"]'));
     if (window.setLang) window.setLang(document.documentElement.lang || 'de');
+  }
+  // Nachrichten vom Cloudy-Team. Der Server liefert nur, was dieses Konto sehen darf (alle / Tester / Admin); hier wird nichts gefiltert.
+  const AUD = { all: '', tester: 'Tester', admin: 'Admin' };
+  async function loadSrv(box) {
+    let r = null; try { r = await window.cloudy.newsList(); } catch {}
+    if (!r || !r.ok) { box.innerHTML = `<p class="muted">${esc(L(r && r.error ? r.error : 'Keine Verbindung zum Cloudy-Server.'))}</p>`; return; }
+    box.innerHTML = r.news.length ? r.news.map(n => `<div class="news-ver"><b style="font-size:16px">${esc(n.title)}</b>${AUD[n.aud] ? `<span class="ctag ${n.aud === 'admin' ? 'owner' : 'tester'}">${esc(L(AUD[n.aud]))}</span>` : ''}<span class="muted" style="font-size:12px">${esc(fmtD(n.ts))}${n.edited ? ' · ' + esc(L('bearbeitet')) : ''}</span></div><p style="white-space:pre-wrap;margin:4px 0 12px">${esc(n.body)}</p>`).join('') : `<p class="muted">${esc(L('Keine Nachrichten.'))}</p>`;
   }
   const isEn = () => (document.documentElement.lang || 'de') !== 'de';
   let enLog = null;

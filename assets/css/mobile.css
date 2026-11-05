@@ -26,3 +26,6 @@
   .dock { padding: 8px 10px; }
   .dock .play { min-width: 0; flex: 1; }
 }
+/* Handy: Chips scrollen waagerecht und werden nie abgeschnitten */
+.tools{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:wrap}
+.chip{height:auto;min-height:36px;padding:8px 16px;line-height:1.2}

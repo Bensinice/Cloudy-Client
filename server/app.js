@@ -39,6 +39,8 @@ const limClaim = (key, b) => { const l = LIM[String(b.id || '')]; if (!l) return
   let cd = null; if (l.mode === 'code') { const want = String(b.code || '').trim().toLowerCase(); cd = (l.codes || []).find(x => x.c.toLowerCase() === want); if (!want || !cd) return { error: 'Falscher Code.' }; if (cd.by) return { error: 'Dieser Code wurde schon eingeloest.' }; }
   if (cd) cd.by = key; l.sold++; l.claimed.push(key); return { ok: true, price: l.mode === 'coins' ? l.price : 0 }; };
 const TAGS_OK = ['owner', 'manager', 'tester', 'plus', 'gold', 'mod'];
+let NEWS = []; // Admin-News: [{id,title,body,aud:'all'|'tester'|'admin',ts,by,edited}]
+const NEWS_AUD = ['all', 'tester', 'admin'];
 const AUTO_TAGS = { thepa1: ['manager'] }; // feste Rollen
 const tagsOf = k => { const t = [...new Set([...(TAGS[k] || []), ...(AUTO_TAGS[k] || []), 'tester'])].filter(x => TAGS_OK.includes(x)); return k === 'admin' ? ['owner', ...t.filter(x => x !== 'owner')] : t; }; // das Admin-Konto ist automatisch Owner (rot)
 // Pakete: sichtbare Daten (ohne Käuferliste), Verstecken, Limited (Menge/Zeit) – wie bei Limited-Items zählt der Server
@@ -82,6 +84,7 @@ async function init() {
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='secret'"); SECRET = r.length ? String(r[0].v) : ''; if (SECRET.length < 32) { SECRET = crypto.randomBytes(32).toString('hex'); await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['secret', SECRET]); } }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='backup'"); BACKUP = r.length ? String(r[0].v || '') : ''; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='announce'"); ANN = r.length ? parse(r[0].v, ANN) : ANN; }
+  { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='news'"); NEWS = r.length ? parse(r[0].v, []) : []; if (!Array.isArray(NEWS)) NEWS = []; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='gate'"); GATE = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='friends'"); FR = r.length ? parse(r[0].v, FR) : FR; if (!FR.f) FR = { f: {}, msgs: {}, seq: 1 }; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='gategrants'"); GRANTS = r.length ? parse(r[0].v, {}) : {}; }
@@ -356,6 +359,22 @@ app.post('/admin/hide', admin(async (req, res) => { const id = String(req.body.i
 app.post('/admin/tag', admin(async (req, res) => { const k = String(req.body.name || '').trim().toLowerCase(), tg = String(req.body.tag || ''); const t = await get(k); if (!t || t.admin) return res.status(404).json({ error: 'Konto nicht gefunden.' }); if (!TAGS_OK.includes(tg)) return res.status(400).json({ error: 'Unbekannter Tag.' }); const a = (TAGS[k] || []).filter(x => x !== tg); if (req.body.on) a.push(tg); if (a.length) TAGS[k] = a; else delete TAGS[k]; await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['tags', JSON.stringify(TAGS)]); res.json({ ok: true, tags: a }); }));
 app.all('/admin/users', admin(async (_q, res) => { const [r] = await db.query('SELECT * FROM cloudy_users WHERE admin=0 ORDER BY created'); res.json({ users: r.map(u => ({ name: u.name, tags: TAGS[String(u.name).toLowerCase()] || [], coins: u.inf_coins ? '∞' : (u.coins == null ? 100 : u.coins), owned: parse(u.owned, []).length, inf: !!u.inf_coins, banned: !!u.banned && (!Number(u.ban_until) || Number(u.ban_until) > Date.now()), until: Number(u.ban_until) || 0, paused: !!u.paused, items: parse(u.owned, []), reason: u.ban_reason || '', created: Number(u.created), gate: (Object.values(GRANTS).find(v => v && v.u === u.name.toLowerCase()) || {}).c || '' })) }); }));
 const target = f => admin(async (req, res) => { const t = await get(String(req.body.name || '').toLowerCase()); if (!t || t.admin) return res.status(404).json({ error: 'Konto nicht gefunden.' }); await f(req, res, t); });
+
+// ---- News mit Zielgruppen. Die Zielgruppe wird immer hier auf dem Server geprueft, nie im Client. all = jeder, tester = Tester (explizit vergeben) und Admins, admin = nur Admins ----
+const newsSeesAud = (me, aud) => aud === 'all' || isAdm(me) || (aud === 'tester' && (TAGS[String(me.name).toLowerCase()] || []).includes('tester'));
+const newsPub = (n, adm) => ({ id: n.id, title: n.title, body: n.body, aud: n.aud, ts: n.ts, edited: n.edited || 0, ...(adm ? { by: n.by } : {}) });
+const saveNews = () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['news', JSON.stringify(NEWS)]);
+app.all('/news', auth(async (_q, res, me) => res.json({ ok: true, news: NEWS.filter(n => newsSeesAud(me, n.aud)).sort((a, b) => b.ts - a.ts).slice(0, 50).map(n => newsPub(n, isAdm(me))) })));
+app.all('/admin/news', admin(async (_q, res) => res.json({ ok: true, news: [...NEWS].sort((a, b) => b.ts - a.ts).map(n => newsPub(n, true)) })));
+app.post('/admin/news/save', admin(async (req, res, me) => {
+  const b = req.body || {}, title = String(b.title || '').trim().slice(0, 120), body = String(b.body || '').trim().slice(0, 4000), aud = String(b.aud || 'all');
+  if (!title || !body) return res.status(400).json({ error: 'Titel und Text sind nötig.' });
+  if (!NEWS_AUD.includes(aud)) return res.status(400).json({ error: 'Ungültige Zielgruppe.' });
+  if (b.id) { const n = NEWS.find(x => x.id === String(b.id)); if (!n) return res.status(404).json({ error: 'News nicht gefunden.' }); n.title = title; n.body = body; n.aud = aud; n.edited = Date.now(); }
+  else { if (NEWS.length >= 300) NEWS.sort((a, c) => c.ts - a.ts).length = 299; NEWS.push({ id: crypto.randomBytes(6).toString('hex'), title, body, aud, ts: Date.now(), by: me.name }); }
+  await saveNews(); res.json({ ok: true });
+}));
+app.post('/admin/news/delete', admin(async (req, res) => { const i = NEWS.findIndex(x => x.id === String((req.body || {}).id)); if (i < 0) return res.status(404).json({ error: 'News nicht gefunden.' }); NEWS.splice(i, 1); await saveNews(); res.json({ ok: true }); }));
 app.all('/announce', auth(async (_q, res) => res.json(ANN)));
 app.post('/admin/backup', admin(async (req, res) => { const u = String(req.body.url || '').trim().replace(/\/+$/, '').slice(0, 200); if (u && !/^https?:\/\//i.test(u)) return res.status(400).json({ error: 'Adresse muss mit http:// oder https:// beginnen.' }); BACKUP = u; await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['backup', u]); res.json({ ok: true, backup: u }); }));
 app.post('/admin/keyreqs', admin(async (_q, res) => { await KR.purge(30); res.json({ requests: KR.list() }); }));

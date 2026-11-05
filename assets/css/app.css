@@ -771,3 +771,19 @@ html.gaming .blob,html.gaming .sky{display:none!important}
 .brand .blogo{width:34px;height:34px;border-radius:9px;display:block;box-shadow:0 4px 14px rgba(0,0,0,.35);flex:none}
 :root[data-layout="lunar"] .brand .blogo{width:28px;height:28px;filter:none}
 :root[data-theme="gold-light"] .brand{color:var(--ink);text-shadow:none}
+/* Einheitliche Aktionsknoepfe: Admin-Konten, Chat-Kopf (Freunde und Gruppen), Chips nie abgeschnitten */
+#admList .arow{display:grid;grid-template-columns:1fr;gap:8px;padding:12px 14px}
+#admList .arow>b{display:block;min-width:0;font-size:15px}
+#admList .arow>b small{display:block;margin-top:2px;font-weight:500}
+#admList .arow .btn{height:30px;padding:0 12px;font-size:12px;line-height:1;border-radius:10px;width:auto;white-space:nowrap;display:inline-flex;align-items:center}
+#admList .arow .btn.tagon{border-color:var(--accent);color:var(--accent)}
+#admList .arow{grid-auto-flow:row}
+#admList .arow>.btn{justify-self:start}
+@supports (display:contents){#admList .arow{display:flex;flex-wrap:wrap;gap:6px 6px;align-items:center}#admList .arow>b{flex:1 1 100%}}
+#frChatHead{display:flex;flex-wrap:wrap;align-items:center;gap:8px 8px}
+#frChatHead .btn{margin:0!important;height:34px;padding:0 14px!important;width:auto!important;font-size:13px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+#frChatHead .av,#frChatHead img{flex:none}
+.chip{flex:0 0 auto;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.tools .chip{min-width:0}
+#maintBar{position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9998;max-width:min(92vw,720px);padding:10px 18px;border-radius:14px;background:#2b2208;color:#ffd96a;border:1px solid rgba(255,200,60,.5);font-weight:600;font-size:13.5px;box-shadow:0 10px 30px rgba(0,0,0,.4);text-align:center}
+#maintBar[hidden]{display:none}

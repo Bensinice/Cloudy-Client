@@ -1,5 +1,16 @@
 [
  {
+  "v": "0.9.95",
+  "date": "2026-11-05",
+  "added": [
+   "News mit Zielgruppen: Admins schreiben News für Alle, nur Tester oder nur Admins; der Server prüft, wer sie sehen darf. Zu lesen im Neuigkeiten-Fenster unter „Cloudy-News\"",
+   "Admins können News bearbeiten und löschen (Einstellungen → Admin)",
+   "Automatischer Wartungsmodus: Ist der Haupt-Server nach mehreren Prüfungen nicht erreichbar, zeigt Cloudy einen Hinweis und blendet ihn bei Rückkehr von selbst aus. Kurze Netzwerkprobleme lösen ihn nicht aus",
+   "Admin-Konten-Liste, Chat-Kopf (Anruf, Chat leeren, Verwalten) und Chips sind einheitlich und werden nicht mehr abgeschnitten"
+  ],
+  "fixed": []
+ },
+ {
   "v": "0.9.94",
   "date": "2026-11-05",
   "added": [],

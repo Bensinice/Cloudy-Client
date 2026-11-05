@@ -192,6 +192,20 @@ ipcMain.handle('cloudStatus', async () => {
   const b = backupUrl(); if (b && b !== c.url) { const h = await get(b + '/health'); if (h && h.ok) return { ok: true, via: 'backup', api: true, db: true, status: 'degraded', maintenance: { on: false, text: '' }, mc: null, accounts: { online: 0 }, checkedAt: t, t }; }
   return { ok: false, offline: true, t };
 });
+// ---- Automatischer Wartungsmodus: Der Launcher prueft den Haupt-Server alle 20 s. Erst nach 3 Fehlschlaegen hintereinander (ca. 1 Minute) gilt er als offline, und erst nach 2 Erfolgen wieder als online.
+// So loesen kurze Netzwerkprobleme keine falsche Meldung aus. Ein von einem Admin gesetzter Wartungsmodus des Servers wird ebenfalls angezeigt. ----
+const MAINT_TEXT = 'Cloudy befindet sich momentan im Maintenance Mode, da der Main-Server nicht erreichbar ist. Bitte versuche es später erneut.';
+let maint = { on: false, auto: false, text: '' }, maintFail = 0, maintGood = 0;
+async function maintCheck() {
+  const c = srvCfg(); if (!c) { if (maint.on) { maint = { on: false, auto: false, text: '' }; send('maint', maint); } return; }
+  let j = null; { const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 7000); try { const r = await fetch(c.url + '/api/status', { signal: ctl.signal }); j = r.ok ? await r.json() : null; } catch { j = null; } finally { clearTimeout(to); } }
+  let next = maint;
+  if (j && j.api) { maintFail = 0; maintGood++; if (j.maintenance && j.maintenance.on) next = { on: true, auto: false, text: String(j.maintenance.text || 'Cloudy wird gerade gewartet.') }; else if (maint.on && (!maint.auto || maintGood >= 2)) next = { on: false, auto: false, text: '' }; }
+  else { maintGood = 0; maintFail++; if (maintFail >= 3) next = { on: true, auto: true, text: MAINT_TEXT }; }
+  if (next.on !== maint.on || next.text !== maint.text) { maint = next; send('maint', maint); }
+}
+ipcMain.handle('maintGet', () => maint);
+setTimeout(maintCheck, 8000); setInterval(() => maintCheck().catch(() => {}), 20000);
 ipcMain.handle('gateList', async () => (srvCfg() && adminOnly()) ? ((await srvCall('/admin/gatecodes', {}, srvTok).catch(() => ({}))).codes || []) : []);
 ipcMain.handle('gateCreate', async (_e, o) => { if (!adminOnly()) return { ok: false, error: 'Nur für Admins.' }; if (!srvCfg()) return gateNeedsSrv; const r = await srvCall('/admin/gatecreate', o || {}, srvTok).catch(() => null); return r ? { ok: !!r.ok, code: r.code, error: r.error } : { ...SRV_DOWN, ok: false }; });
 ipcMain.handle('admTag', async (_e, { name, tag, on }) => (srvCfg() && adminOnly()) ? !!(await srvCall('/admin/tag', { name, tag, on: !!on }, srvTok).catch(() => ({}))).ok : false);
@@ -838,7 +852,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.94'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.95'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1270,6 +1284,8 @@ ipcMain.handle('passState', async () => {
   return r.ok ? r : { ok: false, error: passErr(r) };
 });
 ipcMain.handle('admStars', async (_e, o) => { if (!adminOnly() || !srvCfg()) return { ok: false, error: 'Nur für Admins.' }; const r = await srvCall('/admin/stars', { name: String((o && o.name) || ''), amount: Math.trunc(+(o && o.amount)) || 0, xp: Math.trunc(+(o && o.xp)) || 0 }, srvTok).catch(() => null); return r ? (r.ok ? r : { ok: false, error: r.status === 404 && !r.code ? 'Der Server kennt das noch nicht (neue app.js einspielen).' : (r.error || r.code === 'bad_amount' ? 'Menge muss zwischen -5000 und 5000 liegen (nicht 0).' : 'Fehlgeschlagen.') }) : { ...SRV_DOWN, ok: false }; });
+ipcMain.handle('newsList', async () => { if (!srvCfg() || !srvTok) return { ok: false, error: 'Nicht angemeldet.' }; const r = await srvCall('/news', {}, srvTok).catch(() => null); return r && r.ok ? r : { ok: false, error: r && r.error ? r.error : 'Der Cloudy-Server ist nicht erreichbar.' }; });
+ipcMain.handle('admNews', async (_e, o) => { if (!adminOnly() || !srvCfg()) return { ok: false, error: 'Nur für Admins.' }; o = o || {}; const p_ = { list: '/admin/news', save: '/admin/news/save', del: '/admin/news/delete' }[o.a]; if (!p_) return { ok: false, error: 'Unbekannt.' }; const r = await srvCall(p_, { id: o.id, title: o.title, body: o.body, aud: o.aud }, srvTok).catch(() => null); return r ? (r.ok ? r : { ok: false, error: r.error || (r.status === 404 ? 'Der Server kennt das noch nicht – bitte die neue Server-Version einspielen.' : 'Fehlgeschlagen.') }) : { ok: false, error: 'Server nicht erreichbar.' }; });
 ipcMain.handle('admCq', async (_e, o) => { if (!adminOnly() || !srvCfg()) return { ok: false, error: 'Nur für Admins.' }; o = o || {}; const path_ = { list: '/admin/cquests', save: '/admin/cquests/save', del: '/admin/cquests/delete', prog: '/admin/cquests/progress' }[o.a]; if (!path_) return { ok: false, error: 'Unbekannt.' }; const r = await srvCall(path_, { quest: o.quest, id: o.id }, srvTok).catch(() => null); return r ? (r.ok ? r : { ok: false, error: r.error || (r.status === 404 ? 'Der Server kennt das noch nicht – bitte die neue Server-Version einspielen.' : 'Fehlgeschlagen.') }) : { ok: false, error: 'Server nicht erreichbar.' }; });
 ipcMain.handle('admQuestReset', async (_e, o) => { if (!adminOnly() || !srvCfg()) return { ok: false, error: 'Nur für Admins.' }; const r = await srvCall('/admin/quests/reset', { name: String((o && o.name) || ''), all: !!(o && o.all), claimed: !!(o && o.claimed) }, srvTok).catch(() => null); return r ? (r.ok ? r : { ok: false, error: r.status === 404 && !r.error ? 'Der Server kennt das noch nicht (neue app.js einspielen).' : (r.error || 'Fehlgeschlagen.') }) : { ...SRV_DOWN, ok: false }; });
 ipcMain.handle('admPlus', async (_e, o) => { if (!adminOnly() || !srvCfg()) return { ok: false, error: 'Nur für Admins.' }; const r = await srvCall('/admin/plus', { name: String((o && o.name) || ''), days: Math.max(0, Math.trunc(+(o && o.days)) || 0) }, srvTok).catch(() => null); return r ? (r.ok ? r : { ok: false, error: r.error || (r.status === 404 ? 'Der Server kennt das noch nicht (neue app.js einspielen).' : 'Fehlgeschlagen.') }) : { ...SRV_DOWN, ok: false }; });
