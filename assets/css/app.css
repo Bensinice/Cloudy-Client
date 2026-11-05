@@ -693,17 +693,8 @@ html.gaming .blob,html.gaming .sky{display:none!important}
 .spctl{display:flex;gap:8px}.spvol{display:flex;align-items:center;gap:6px}.spvol input{width:110px}
 .sperr{color:#ff9a9a;min-height:18px;margin:6px 2px;font-size:13px}
 .glass.lstage,.lstage{position:relative;height:300px;margin:12px 0;overflow:hidden;padding:0;background:radial-gradient(120% 90% at 50% 100%,rgba(138,92,245,.35),transparent 62%),linear-gradient(180deg,#1b2040,#0a0d20)!important;border-color:rgba(255,255,255,.12)}
-.lstage .lw{position:absolute;left:50%;top:50%;opacity:0;white-space:nowrap;font-weight:800;text-transform:uppercase;letter-spacing:.16em;font-size:22px;font-family:Poppins,'Segoe UI',system-ui,sans-serif;pointer-events:none;will-change:transform,opacity}
 .lstage .lnote{position:absolute;left:0;right:0;bottom:12px;text-align:center;font-size:13px;color:var(--muted,#9aa4bd)}
-.lstage .lpause{position:absolute;inset:0;pointer-events:none}
-.lstage .lp{position:absolute;font-weight:800;text-transform:uppercase;letter-spacing:.16em;font-size:24px;color:var(--lyr-old,#f2b3d6);text-shadow:0 0 8px rgba(242,179,214,.35)}
-.lstage .lp.l{left:5%}.lstage .lp.r{right:5%}
 .lcardw{position:absolute;top:10px;right:10px;width:min(240px,46%);text-align:left}
-.lcard{display:flex;gap:8px;align-items:center;background:rgba(0,0,0,.44);border-left:2px solid var(--accent,#8a5cf5);padding:6px 8px}
-.lcard i{flex:none;width:38px;height:38px;background:rgba(255,255,255,.1) center/cover no-repeat}
-.lcard div{min-width:0;flex:1}.lcard b,.lcard span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lcard b{font-size:13px;color:#fff}.lcard span{font-size:11px;color:#b4c3d8}
-.lcard u{display:block;height:2px;margin-top:4px;background:rgba(255,255,255,.3);text-decoration:none}.lcard u em{display:block;height:2px;width:0;background:var(--accent,#8a5cf5)}
-.lcur{margin-top:6px;font-size:12px;font-weight:700;line-height:1.35}.lcur s{text-decoration:none;color:#7f8ca3}.lcur s.on{color:var(--lyr-cur,#8a5cf5);text-shadow:0 0 8px rgba(138,92,245,.5)}
 .spgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:10px}
 .spcard{position:relative;display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:14px;background:rgba(255,255,255,.05);cursor:pointer;transition:transform .15s,background .15s}
 .spcard:hover{background:rgba(255,255,255,.1);transform:translateY(-2px)}.spcard .spc{width:100%;height:auto;aspect-ratio:1}
@@ -713,4 +704,64 @@ html.gaming .blob,html.gaming .sky{display:none!important}
 .sptracks{display:flex;flex-direction:column;margin-top:6px}
 .sptr{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:10px;cursor:pointer}.sptr:hover{background:rgba(255,255,255,.08)}.sptr.on{background:rgba(138,92,245,.18)}
 .sptr .n{width:24px;text-align:right;color:var(--muted,#9aa4bd);font-size:12px}.sptr div{flex:1;min-width:0}.sptr b,.sptr small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sptr small{color:var(--muted,#9aa4bd)}.sptr .d{color:var(--muted,#9aa4bd);font-size:12px}
-@media (max-width:700px){.lstage{height:240px}.lstage .lw{font-size:17px}}
+@media (max-width:700px){.lstage{height:240px}}
+
+/* ---- Lyrics-Schriften (SIL OFL, siehe assets/fonts/LIZENZ.txt) ---- */
+@font-face{font-family:'Poppins';src:url(../fonts/Poppins.woff) format('woff');font-display:swap}
+@font-face{font-family:'Montserrat';src:url(../fonts/Montserrat.woff) format('woff');font-display:swap}
+@font-face{font-family:'Kanit';src:url(../fonts/Kanit.woff) format('woff');font-display:swap}
+@font-face{font-family:'Fredoka';src:url(../fonts/Fredoka.woff) format('woff');font-display:swap}
+@font-face{font-family:'Unbounded';src:url(../fonts/Unbounded.woff) format('woff');font-display:swap}
+@font-face{font-family:'BebasNeue';src:url(../fonts/BebasNeue.woff) format('woff');font-display:swap}
+@font-face{font-family:'Pacifico';src:url(../fonts/Pacifico.woff) format('woff');font-display:swap}
+@font-face{font-family:'Caveat';src:url(../fonts/Caveat.woff) format('woff');font-display:swap}
+
+/* Spotify-Lyrics im Himmel + Einstellungsfenster */
+.lstage .lline{position:absolute;max-width:84%;text-align:center;line-height:1.12;font-weight:600;text-shadow:0 2px 18px rgba(0,0,0,.35),0 0 26px currentColor;pointer-events:none;transition:opacity .6s}
+.lstage .lline.out{opacity:0}
+.lstage .lwd{display:inline-block;opacity:0;transform:translateY(8px) rotate(var(--r,0deg));filter:blur(3px);transition:opacity .35s,transform .45s,filter .35s;white-space:pre}
+.lstage .lwd.on{opacity:1;transform:translateY(var(--y,0px)) rotate(var(--r,0deg));filter:none}
+.lstage .lline.whole .lwd{transition:none}
+.lstage .lintro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;background:rgba(0,0,0,.28);animation:lintro 4.2s both;pointer-events:none;color:#fff}
+.lstage .lintro small{letter-spacing:.42em;font-size:11px;opacity:.8}
+.lstage .lintro i{display:block;width:120px;height:2px;background:linear-gradient(90deg,transparent,#fff,transparent)}
+.lstage .lintro b{font-size:34px;font-weight:700;max-width:86%;line-height:1.1;text-shadow:0 0 24px rgba(255,255,255,.4)}
+.lstage .lintro span{font-size:15px;opacity:.85}
+@keyframes lintro{0%{opacity:0;transform:scale(.96)}12%{opacity:1;transform:none}82%{opacity:1}100%{opacity:0}}
+.lcardw{position:absolute;top:10px;left:50%;transform:translateX(-50%);max-width:70%}
+.lpill{display:flex;align-items:center;gap:10px;padding:5px 14px 5px 5px;border-radius:99px;background:rgba(10,8,30,.55);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.18);color:#fff}
+.lpill>i{flex:none;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15) center/cover no-repeat}
+.lpill b{position:relative;display:block;font-size:13px;font-weight:600;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lpill b span{display:block;color:rgba(255,255,255,.45)}.lpill b .fill{position:absolute;left:0;top:0;color:#fff;clip-path:inset(0 100% 0 0)}
+.lpill em{display:flex;gap:2px;align-items:flex-end;height:14px}.lpill em u{display:block;width:3px;background:#fff;border-radius:2px;animation:leq .9s ease-in-out infinite alternate}
+.lpill em u:nth-child(2){animation-delay:.3s}.lpill em u:nth-child(3){animation-delay:.6s}.lpill.paused em u{animation-play-state:paused;height:4px}
+@keyframes leq{from{height:3px}to{height:14px}}
+.glass.setwin,.setwin{display:grid!important;grid-template-columns:190px minmax(0,1fr);min-height:420px;padding:0;overflow:hidden;margin-bottom:12px;background:linear-gradient(180deg,#171433,#0d0b22)!important;color:#ecebff;border-color:rgba(255,255,255,.14)}
+.setwin aside{display:flex;flex-direction:column;gap:2px;padding:14px 10px;background:rgba(0,0,0,.22);border-right:1px solid rgba(255,255,255,.1)}
+.setwin .sbrand{padding:2px 8px 12px}.setwin .sbrand b{display:block;font-size:16px}.setwin .sbrand small{opacity:.6;font-size:11px}
+.setwin aside button{display:flex;align-items:center;gap:10px;text-align:left;padding:9px 10px;border-radius:10px;border:0;background:none;color:inherit;font:inherit;font-size:13px;cursor:pointer;opacity:.75}
+.setwin aside button span{width:18px;text-align:center}.setwin aside button:hover{background:rgba(255,255,255,.08);opacity:1}
+.setwin aside button.on{background:var(--accent,#8a5cf5);color:#fff;opacity:1}
+.setwin .ver{margin-top:auto;padding:8px;font-size:12px;opacity:.6}
+.setwin section{padding:18px 22px;overflow:auto;max-height:560px}
+.setwin h3{margin:0 0 2px;font-size:20px}.setwin h4{margin:16px 0 4px;font-size:13px;opacity:.75}.setwin .muted{opacity:.65;font-size:13px;margin:0 0 12px}
+.setnow{display:flex;gap:12px;align-items:center;padding:12px;border-radius:14px;background:rgba(255,255,255,.07);margin-bottom:6px}
+.setnow>i{flex:none;width:54px;height:54px;border-radius:10px;background:rgba(255,255,255,.12) center/cover no-repeat}
+.setnow>div{min-width:0;flex:1}.setnow b,.setnow span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.setnow span{opacity:.65;font-size:12px}
+.setnow u{display:block;height:3px;border-radius:2px;background:rgba(255,255,255,.18);margin-top:8px;text-decoration:none}.setnow u em{display:block;height:3px;border-radius:2px;background:var(--accent,#8a5cf5)}
+.setwin .badge.ok{background:rgba(70,200,130,.22);color:#6ff0b0;height:auto;padding:2px 8px;font-weight:600}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.setrow b{display:block;font-size:14px}.setrow small{display:block;opacity:.6;font-size:12px;margin-top:2px}.setrow .ctl{flex:none}
+.spsw{width:42px;height:24px;border-radius:99px;border:0;background:rgba(255,255,255,.2);position:relative;cursor:pointer;padding:0}
+.spsw i{position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .18s}.spsw.on{background:var(--accent,#8a5cf5)}.spsw.on i{left:21px}
+.seg{display:inline-flex;border-radius:10px;background:rgba(255,255,255,.1);padding:3px}
+.seg button{border:0;background:none;color:inherit;font:inherit;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;opacity:.8}.seg button.on{background:var(--accent,#8a5cf5);color:#fff;opacity:1}
+.stiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:6px 0 10px}
+.stile{position:relative;border:2px solid transparent;border-radius:12px;background:rgba(255,255,255,.09);color:inherit;padding:14px 6px;font-size:15px;cursor:pointer;min-height:48px}
+.stile.on{border-color:var(--accent,#8a5cf5);background:rgba(138,92,245,.2)}
+.stiles.skyg .stile{min-height:70px;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.6);font-size:13px}
+.stiles.looks .stile i{display:block;height:3px;width:40%;margin:6px auto 0;border-radius:2px}
+.sdots{display:inline-flex;gap:6px}.sdot{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;font-size:11px;font-weight:700;color:#fff}
+.sdot.a{background:linear-gradient(135deg,#d8762e,#8a3fd8)}.sdot.on{border-color:#fff;box-shadow:0 0 0 2px var(--accent,#8a5cf5)}
+@media (max-width:760px){.glass.setwin,.setwin{grid-template-columns:1fr!important}.setwin aside{flex-direction:row;flex-wrap:wrap;border-right:0}.stiles{grid-template-columns:repeat(2,1fr)}}
+.setwin .muted{color:rgba(236,235,255,.6)!important}

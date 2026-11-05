@@ -1,265 +1,270 @@
 {
- "0.9.87": [
-  "New “Spotify” page: your playlists with cover and song count, song list, click to play, liked songs, favorites (★) and recently played songs/playlists. Player with play/pause, next, previous and volume",
-  "Lyrics in the launcher in the style of the in-game overlay: words appear one by one in time with a glow, song card with cover and progress, calm display when paused, clear message when there are no lyrics",
-  "This needs new Spotify permissions: reconnect once (Settings → Spotify). Playing from Cloudy needs Spotify Premium"
- ],
- "0.9.86": [
-  "Admin: reset quests instantly (your own account, one account or all) without waiting for the reset timer. Already claimed quests stay claimed unless you choose otherwise",
-  "Admin settings for e-mail/Stripe: entered values are no longer overwritten when you switch pages, and “Send test e-mail” saves first. Clear hint when no SMTP server is set"
- ],
- "0.9.85": [
-  "Mobile app: Stay logged in now works reliably. The session renews automatically while you use it (90 days without use, 1 year at most), survives restarting the app and the PC, and the iOS app also backs it up in the Keychain. Passwords are never stored"
- ],
- "0.9.84": [
-  "Quests straight from Minecraft: mining wood and stone, defeating zombies and skeletons, walking blocks, crafting items, catching fish, mining ores and time on servers count automatically (singleplayer and servers). The server limits values by time and day",
-  "New quest types: beginner, daily (3 of 6 Minecraft tasks rotate each day), weekly, special and event quests with status, progress and reset countdown",
-  "Quest rewards: Cloudy Coins, Cloudy Stars and pass XP. The Cloudy Pass now levels up with pass XP",
-  "Resets run on the server in UTC (daily 00:00, weekly Monday 00:00); your PC clock does not matter",
-  "Admin: give pass XP (server update required)"
- ],
- "0.9.83": [
-  "Admin tab: new “Email & Stripe” card. Set the mailbox used for sending emails (with a test email) and the Stripe keys for Cloudy+. Passwords and keys are never shown (server update required)"
- ],
- "0.9.82": [
-  "Get Cloudy+: the Cloudy Pass now has “Get Cloudy+ · €5.99/month” (payment via Stripe, once the server owner has set it up) and “Manage subscription”",
-  "Cloudy Pass: more rewards, 4 items in the free track and 8 in the premium track",
-  "Admin: new “Pass & Stars” card to give Stars (pass XP) and Cloudy+. The debug menu is now in the admin tab",
-  "Small updates on Windows: only about 10 MB instead of the full installer (when Electron does not change)",
-  "The website shows the news from this changelog (from GitHub)"
- ],
- "0.9.81": [
-  "Cloudy Pass: 30 levels with a free and a premium track. You level up with Cloudy Stars earned from quests. The premium track comes with Cloudy+ (server update required)",
-  "Quests are now a sub-tab of the Cloudy Pass (tabs “Pass” and “Quests”)",
-  "Quests: the error message now shows the exact cause"
- ],
- "0.9.80": [
-  "Less stutter in game: hearts, armor, hunger and air bars are drawn more efficiently",
-  "Quests: clear message when the server does not know quests yet",
-  "Smaller installer: unneeded files (old ZIP, server files, unused Chromium languages) are no longer included, stronger compression"
- ],
- "0.9.79": [
-  "News now has two tabs: “Updates” (all versions) and “Newly added” (only what is new in the latest versions)",
-  "Update check: the launcher said “up to date” although GitHub had a newer version when your own server still offered the old one. Server and GitHub are now compared and the higher version is used"
- ],
- "0.9.78": [
-  "Quests: new page with daily and weekly tasks, progress, rewards to claim, reset time and history (needs the Cloudy account; server update required)",
-  "Cloudy Stars: second currency for the upcoming Cloudy Pass. You earn them with quests; they cannot be spent in the shop"
- ],
- "0.9.77": [
-  "Fixed the startup error \"Attempted to register a second handler for serverStatus\": the launcher starts normally again (the public Cloudy status now uses its own channel)"
- ],
- "0.9.76": [
-  "Offline mode: play without a Cloudy account from the login screen. Limits: singleplayer only, no servers, friends/chat, shop, cosmetics, cheats or cloud sync"
- ],
- "0.9.75": [
-  "The Timer mod and new hearts HUD from 0.9.74 are now really included in the client (0.9.74 failed to build completely)"
- ],
- "0.9.74": [
-  "New Timer mod: stopwatch or countdown on your HUD, Start/Stop and Reset by key or in the menu, adjustable size and position, saved between sessions",
-  "Hearts HUD reworked: 4 styles (Classic, Round, Pixel, Bar), animations (wave, pulse, low-HP shake), adjustable size and position, live preview in the menu"
- ],
- "0.9.73": [
-  "Request Key: ask for access on the access code screen. The owner approves or rejects it and the code appears automatically",
-  "Public server status (Settings and website) with real server checks",
-  "Updates from our own server are verified with a SHA-256 checksum before they are installed"
- ],
- "0.9.72": [
-  "Updates now come from cloudyclient.com first (only visible to the client); GitHub stays as a fallback"
- ],
- "0.9.71": [
-  "Phone remote: pressing Play now says that Minecraft starts on the PC and is seen via Moonlight"
- ],
- "0.9.70": [
-  "One-button streaming setup now also works on Mac (via Homebrew)"
- ],
- "0.9.69": [
-  "Phone streaming: one button sets up Sunshine on your PC automatically (Windows), and you enter the Moonlight PIN from your phone right in Cloudy"
- ],
- "0.9.68": [
-  "Settings: guide “Play on your phone (streaming)” with Sunshine and Moonlight, links and your PC's address"
- ],
- "0.9.67": [
-  "Phone remote control (Settings, off by default): open Cloudy in your phone browser (iPhone: Safari), pair with a PIN, same Wi-Fi – mods, updates, shop, friends and game launch run on the PC"
- ],
- "0.9.66": [
-  "“Forgot password?” sends the owner a message in the chat (Friends); the owner resets the account",
-  "Login window wrongly said the account only exists on this computer although it is an online account"
- ],
- "0.9.65": [
-  "New main server cloudyclient.com; the previous server (framebound) is now the built-in backup server and takes over automatically if the main one is down"
- ],
- "0.9.64": [
-  "Backup server: set it in Settings below the account server; if the main server goes down Cloudy switches automatically (the address is fetched from the main server for all players)"
- ],
- "0.9.63": [
-  "On launch Cloudy checks that Sodium, Lithium & co. are really installed; if something is missing or the version is unsupported, the launch status says so"
- ],
- "0.9.62": [
-  "Windows update: Cloudy now quits itself after starting the installer, so locked files can't cause a half-finished update"
- ],
- "0.9.61": [
-  "If a silent update fails, Cloudy asks on the next start and runs the installer visibly",
-  "Crash “Cannot find module ./lib/discord”: Discord is now optional; an incomplete install shows a clear message with a download link"
- ],
- "0.9.60": [
-  "Bundles can be code-only (random code button for admins); savings and separate price are shown",
-  "Try-on button for cosmetics and bundles",
-  "Launcher notice when a new limited drops",
-  "Admins: “Clear chat” in groups and DMs",
-  "New themes: Forest Light and Ember Light (the light/dark button now switches properly)",
-  "Discord “Playing Cloudy” starts automatically once the Discord ID is built in",
-  "All accounts are in Bugs/Ideas and friends with the owner even before they connect",
-  "After a server restart you stay signed in or go straight to login (no Cloudy restart needed)",
-  "Buy button is locked when you can't afford it and can't be spammed",
-  "Tags are always readable (Tester was invisible on light backgrounds) and smaller",
-  "Announcement is bigger and can be closed",
-  "Cape in bundle preview was too big",
-  "App icon in theme color also on Windows (taskbar and shortcuts)",
-  "While Minecraft runs, the launcher pauses its animations (less load, no freezing)"
- ],
- "0.9.59": [
-  "Bundles can now be limited (amount and/or time) and hidden by admins",
-  "Bundles were not shown when a shop filter other than “All” was active"
- ],
- "0.9.58": [
-  "Admins can delete messages in groups and chats (🗑)",
-  "All accounts are automatically friends with the owner",
-  "New “Ideas” group for everyone (like “Bugs”); no calls in these two groups",
-  "Mod search: already installed mods show “Installed ✓” instead of “Install”",
-  "Themes: a custom accent color no longer overrides the new theme's color when switching (e.g. Forest stayed blue)",
-  "Banner color: picking a color now also replaces a set image/animation",
-  "Switching themes no longer crashes when color values are missing"
- ],
- "0.9.57": [
-  "New tour through the whole launcher (replaces the old welcome intro)",
-  "Everyone automatically gets the Tester tag and joins the “Bugs” group (report bugs & wishes)",
-  "Shop: Halo – Black Edition",
-  "Spotify: one-click sign-in once the Spotify client ID is built in",
-  "Wings no longer swing through the body"
- ],
- "0.9.56": [
-  "Shop: much smoother scrolling (3D previews load only when scrolled into view, fewer blur effects)",
-  "Windows: portable update and uninstall no longer use batch scripts – should avoid antivirus false alarms (VirusTotal)"
- ],
- "0.9.55": [
-  "Creating bundles is cleaner: tap item cards with 3D previews, search and category filter, summary with total price",
-  "Bundles in the shop show their items with 3D previews"
- ],
- "0.9.54": [
-  "Mac: the Java files inside the app were read-only, so “Cloudy is damaged” could not be fixed with the Terminal command – they are now writable"
- ],
- "0.9.53": [
-  "Easy uninstall: Settings → “Uninstall Cloudy” removes Cloudy with one click (Windows, Mac, Linux), optionally including all data"
- ],
- "0.9.52": [
-  "Shop: 4 new 3D hats matching the wings and capes (zigzag hat purple, zigzag top hat blue, shadow hat, ice feather hat)",
-  "Bundles: admins combine several items into a bundle with its own price (e.g. cape + wings); players buy them with one click (re-upload the server file!)",
-  "Shop: mini tab “Cloudy+” (still empty); the big Skins tab in the menu is gone – skins are in the shop",
-  "In game: your head at the top left (can be turned off in Cloudy Mods → “Player head”)",
-  "The app icon (taskbar/dock) now takes the color of your theme",
-  "Mini player: pause/next/previous now also use the first Spotify device if none is active and show the exact reason on errors (e.g. Premium needed)",
-  "The tour now shows the whole launcher and explains why 1.21.4 is preselected"
- ],
- "0.9.51": [
-  "Shop: new mini tab “Skins” – your skins are now in the shop too; you can hide the Skins tab in the menu in Settings (Appearance)",
-  "Cloudy Client is set up and kept up to date automatically – no manual building/downloading in the shop any more",
-  "First start: Minecraft 1.21.4 is preselected (with Cloudy Client); the tour explains how to see cosmetics and who sees them",
-  "“What's new” is now available in English too (for the latest versions)"
- ],
- "0.9.50": [
-  "Mini player: YouTube, YouTube Music and SoundCloud links too (video, playlist, track). Lyrics now work with these sources as soon as something plays (new, only tested with sample data)",
-  "In-game tags: rank and clan tags (e.g. [Owner] [CLD]) appear before the name above the head and in the player list – visible to Cloudy players (re-upload the server file!)",
-  "Linux: Cloudy is now available as an AppImage (Cloudy-Linux.AppImage) with updates; new and not yet tested on real Linux",
-  "English: about 400 previously German texts (groups, calls, modpacks, shop, tour, error messages …) translated",
-  "Custom icon: the cloud symbol at the top left can be replaced by your own picture (Settings → Appearance)"
- ],
- "0.9.49": [
-  "Groups: custom group picture, color for the clan tag, new messages and calls as a bubble and as a desktop notification",
-  "Calls: floating call window (mute / hang up), one-to-one calls with friends (📞 in the chat), friends in a call are marked in the list",
-  "Custom chat profile picture (Friends tab, can be reset)",
-  "New tag “Manager” (Thepa1); tags are also shown next to your name and in the greeting",
-  "Possible stutter/freezing: removed an invisible, permanently animated bubble layer"
- ],
- "0.9.48": [
-  "Groups (Friends tab): group chat, group voice calls (directly between players), add/remove members, leave/delete group",
-  "Clan tag: every group can have a tag (up to 4 characters); show it as a second tag next to your rank or hide it (re-upload the server file!)",
-  "The Discord link in the settings opens now"
- ],
- "0.9.47": [
-  "Discord: “Playing Cloudy” (Settings → Discord, enter the Application ID)",
-  "Friends: play button next to the name and in the chat header when a friend is playing on a server (shows for friends using the new server)",
-  "Server: visible “Choose picture” button for custom thumbnails",
-  "Server thumbnails, the chat server card and the message bubble had no styling – now liquid glass in your theme"
- ],
- "0.9.46": [
-  "Custom server pictures: click the picture or “Picture” under “My servers” and choose a photo",
-  "Chat: server codes (CLD-…) and server addresses in messages automatically get a “Connect” button; your server code is now shown under “Own server” for copying",
-  "Server and friends explained more simply (3 steps)",
-  "Message bubble bigger, translucent in the theme color and in liquid-glass look"
- ],
- "0.9.45": [
-  "Mods: new mini tab “Modpacks” – search Modrinth modpacks and install them with one click (own instance per modpack), plus “Import .mrpack” for downloaded modpacks (Fabric only)"
- ],
- "0.9.44": [
-  "Admin: click shop item prices in the shop to change them (leave empty = default price; applies to all players, re-upload the server file)",
-  "When a friend writes, a small message bubble appears at the bottom right (click opens the chat)"
- ],
- "0.9.43": [
-  "19 new Cloudy mods (all off by default, in Cloudy Mods): displays for biome, light level, Nether coordinates, day/time, durability, arrows, potions, item counter, server, play time, effects, death point, food, health and look direction",
-  "Zigzag snake and GHG cape mirrored",
-  "“Client outdated”: the same or a newer client build now counts as up to date; the message shows the found and the required build"
- ],
- "0.9.42": [
-  "Limited by code: every code is valid for one player only – with 5 pieces there are 5 codes (admin sees all, used ones struck through). Re-upload the server file!"
- ],
- "0.9.41": [
-  "Claimed limited items now appear immediately under “Owned” and can be equipped (state is sent to the server before syncing)",
-  "Skies, totems and hotbars were removed from the shop"
- ],
- "0.9.40": [
-  "Limited form: a small “?” with an explanation on every row; “⏳ Limited” is now also a mini tab next to “Owned”",
-  "Zigzag snake cape and GHG cape were upside down – now the right way up"
- ],
- "0.9.39": [
-  "Limited form: 3D preview of the selected item and the buttons “🎲 Random item” and “🎲 Code” (random code)"
- ],
- "0.9.38": [
-  "Limited items: there is now a “Limited” section at the very bottom of the shop. The admin decides which item, whether you get it with coins or a code, how many exist, the price, the duration and a note (needs the current server)",
-  "Zigzag snake cape and GHG cape now use the 3D cape model with the texture on it"
- ],
- "0.9.37": [
-  "New 3D wings are smaller (preview and in game)",
-  "New capes (zigzag snake, GHG) are shown correctly as capes in the preview instead of a small square"
- ],
- "0.9.36": [
-  "Access code screen: new “Update” button that fetches and installs the newest version directly"
- ],
- "0.9.35": [
-  "Access code screen: “Admin?” button – only admin accounts (and owners) sign in directly with it, without an access code"
- ],
- "0.9.34": [
-  "New 3D items in the shop: zigzag wings (purple and blue), shadow wings, ice feather wings as well as the zigzag snake cape and the GHG cape – also visible to other Cloudy players",
-  "Admins can hide items in the shop (👁 Hide): nobody can buy hidden items any more, whoever already has them keeps them (needs an updated server)"
- ],
- "0.9.33": [
-  "Diagnostics for shared cosmetics: the launcher writes a small log (cloudy-cos.log in the Cloudy data folder) that shows whether name and selection reach the server",
-  "Shared cosmetics: all Z4 items are accepted"
- ],
- "0.9.32": [
-  "Anyone with the Owner tag gets admin rights (admin area, cannot be banned/paused; needs an updated server)"
- ],
- "0.9.31": [
-  "New tag “Owner” (red, glowing) – the admin account wears it automatically, for others you give it in the admin list with a click (needs an updated server)",
-  "Other players' cosmetics: the mod is now also loaded if you were never in the shop (otherwise you did not see others' cosmetics), plus a fallback for matching players"
- ],
- "0.9.30": [
-  "Cosmetics of other Cloudy players: when two people play with the Cloudy Client together (same server or world), everybody sees the other's hat, wings and Z4 cape (shield and normal capes stay visible only to you; needs the current server)",
-  "If someone has the same skin as you, they no longer get your cosmetics"
- ],
- "0.9.29": [
-  "Tags for accounts: Tester, Cloudy+, Moderator (you give admin in the admin list with a click; admin accounts automatically wear “Admin”). The badges appear in the friends list, in the chat header and next to your name (needs the current server)",
-  "Mods: “Modrinth can't be reached” in the mod search – a program error (missing variables), not your connection",
-  "While wearing an elytra, cosmetic wings and cape are hidden (no doubles)"
- ]
+  "0.9.88": [
+    "Spotify lyrics redone in a sky style: the whole phrase tilted in space, words fade in one by one, a “Now playing” title card when a song starts and a song pill with cover, progress and equalizer",
+    "New lyrics settings window with a sidebar (Overview, Skies, Lyrics, Styles, HUD, Performance, Settings, Information): 6 skies, 8 fonts, colours, styles, size, word by word or whole line, sky or screen",
+    "Lyrics size and font are also passed to the client mod in game (from the next game start)"
+  ],
+  "0.9.87": [
+    "New “Spotify” page: your playlists with cover and song count, song list, click to play, liked songs, favorites (★) and recently played songs/playlists. Player with play/pause, next, previous and volume",
+    "Lyrics in the launcher in the style of the in-game overlay: words appear one by one in time with a glow, song card with cover and progress, calm display when paused, clear message when there are no lyrics",
+    "This needs new Spotify permissions: reconnect once (Settings → Spotify). Playing from Cloudy needs Spotify Premium"
+  ],
+  "0.9.86": [
+    "Admin: reset quests instantly (your own account, one account or all) without waiting for the reset timer. Already claimed quests stay claimed unless you choose otherwise",
+    "Admin settings for e-mail/Stripe: entered values are no longer overwritten when you switch pages, and “Send test e-mail” saves first. Clear hint when no SMTP server is set"
+  ],
+  "0.9.85": [
+    "Mobile app: Stay logged in now works reliably. The session renews automatically while you use it (90 days without use, 1 year at most), survives restarting the app and the PC, and the iOS app also backs it up in the Keychain. Passwords are never stored"
+  ],
+  "0.9.84": [
+    "Quests straight from Minecraft: mining wood and stone, defeating zombies and skeletons, walking blocks, crafting items, catching fish, mining ores and time on servers count automatically (singleplayer and servers). The server limits values by time and day",
+    "New quest types: beginner, daily (3 of 6 Minecraft tasks rotate each day), weekly, special and event quests with status, progress and reset countdown",
+    "Quest rewards: Cloudy Coins, Cloudy Stars and pass XP. The Cloudy Pass now levels up with pass XP",
+    "Resets run on the server in UTC (daily 00:00, weekly Monday 00:00); your PC clock does not matter",
+    "Admin: give pass XP (server update required)"
+  ],
+  "0.9.83": [
+    "Admin tab: new “Email & Stripe” card. Set the mailbox used for sending emails (with a test email) and the Stripe keys for Cloudy+. Passwords and keys are never shown (server update required)"
+  ],
+  "0.9.82": [
+    "Get Cloudy+: the Cloudy Pass now has “Get Cloudy+ · €5.99/month” (payment via Stripe, once the server owner has set it up) and “Manage subscription”",
+    "Cloudy Pass: more rewards, 4 items in the free track and 8 in the premium track",
+    "Admin: new “Pass & Stars” card to give Stars (pass XP) and Cloudy+. The debug menu is now in the admin tab",
+    "Small updates on Windows: only about 10 MB instead of the full installer (when Electron does not change)",
+    "The website shows the news from this changelog (from GitHub)"
+  ],
+  "0.9.81": [
+    "Cloudy Pass: 30 levels with a free and a premium track. You level up with Cloudy Stars earned from quests. The premium track comes with Cloudy+ (server update required)",
+    "Quests are now a sub-tab of the Cloudy Pass (tabs “Pass” and “Quests”)",
+    "Quests: the error message now shows the exact cause"
+  ],
+  "0.9.80": [
+    "Less stutter in game: hearts, armor, hunger and air bars are drawn more efficiently",
+    "Quests: clear message when the server does not know quests yet",
+    "Smaller installer: unneeded files (old ZIP, server files, unused Chromium languages) are no longer included, stronger compression"
+  ],
+  "0.9.79": [
+    "News now has two tabs: “Updates” (all versions) and “Newly added” (only what is new in the latest versions)",
+    "Update check: the launcher said “up to date” although GitHub had a newer version when your own server still offered the old one. Server and GitHub are now compared and the higher version is used"
+  ],
+  "0.9.78": [
+    "Quests: new page with daily and weekly tasks, progress, rewards to claim, reset time and history (needs the Cloudy account; server update required)",
+    "Cloudy Stars: second currency for the upcoming Cloudy Pass. You earn them with quests; they cannot be spent in the shop"
+  ],
+  "0.9.77": [
+    "Fixed the startup error \"Attempted to register a second handler for serverStatus\": the launcher starts normally again (the public Cloudy status now uses its own channel)"
+  ],
+  "0.9.76": [
+    "Offline mode: play without a Cloudy account from the login screen. Limits: singleplayer only, no servers, friends/chat, shop, cosmetics, cheats or cloud sync"
+  ],
+  "0.9.75": [
+    "The Timer mod and new hearts HUD from 0.9.74 are now really included in the client (0.9.74 failed to build completely)"
+  ],
+  "0.9.74": [
+    "New Timer mod: stopwatch or countdown on your HUD, Start/Stop and Reset by key or in the menu, adjustable size and position, saved between sessions",
+    "Hearts HUD reworked: 4 styles (Classic, Round, Pixel, Bar), animations (wave, pulse, low-HP shake), adjustable size and position, live preview in the menu"
+  ],
+  "0.9.73": [
+    "Request Key: ask for access on the access code screen. The owner approves or rejects it and the code appears automatically",
+    "Public server status (Settings and website) with real server checks",
+    "Updates from our own server are verified with a SHA-256 checksum before they are installed"
+  ],
+  "0.9.72": [
+    "Updates now come from cloudyclient.com first (only visible to the client); GitHub stays as a fallback"
+  ],
+  "0.9.71": [
+    "Phone remote: pressing Play now says that Minecraft starts on the PC and is seen via Moonlight"
+  ],
+  "0.9.70": [
+    "One-button streaming setup now also works on Mac (via Homebrew)"
+  ],
+  "0.9.69": [
+    "Phone streaming: one button sets up Sunshine on your PC automatically (Windows), and you enter the Moonlight PIN from your phone right in Cloudy"
+  ],
+  "0.9.68": [
+    "Settings: guide “Play on your phone (streaming)” with Sunshine and Moonlight, links and your PC's address"
+  ],
+  "0.9.67": [
+    "Phone remote control (Settings, off by default): open Cloudy in your phone browser (iPhone: Safari), pair with a PIN, same Wi-Fi – mods, updates, shop, friends and game launch run on the PC"
+  ],
+  "0.9.66": [
+    "“Forgot password?” sends the owner a message in the chat (Friends); the owner resets the account",
+    "Login window wrongly said the account only exists on this computer although it is an online account"
+  ],
+  "0.9.65": [
+    "New main server cloudyclient.com; the previous server (framebound) is now the built-in backup server and takes over automatically if the main one is down"
+  ],
+  "0.9.64": [
+    "Backup server: set it in Settings below the account server; if the main server goes down Cloudy switches automatically (the address is fetched from the main server for all players)"
+  ],
+  "0.9.63": [
+    "On launch Cloudy checks that Sodium, Lithium & co. are really installed; if something is missing or the version is unsupported, the launch status says so"
+  ],
+  "0.9.62": [
+    "Windows update: Cloudy now quits itself after starting the installer, so locked files can't cause a half-finished update"
+  ],
+  "0.9.61": [
+    "If a silent update fails, Cloudy asks on the next start and runs the installer visibly",
+    "Crash “Cannot find module ./lib/discord”: Discord is now optional; an incomplete install shows a clear message with a download link"
+  ],
+  "0.9.60": [
+    "Bundles can be code-only (random code button for admins); savings and separate price are shown",
+    "Try-on button for cosmetics and bundles",
+    "Launcher notice when a new limited drops",
+    "Admins: “Clear chat” in groups and DMs",
+    "New themes: Forest Light and Ember Light (the light/dark button now switches properly)",
+    "Discord “Playing Cloudy” starts automatically once the Discord ID is built in",
+    "All accounts are in Bugs/Ideas and friends with the owner even before they connect",
+    "After a server restart you stay signed in or go straight to login (no Cloudy restart needed)",
+    "Buy button is locked when you can't afford it and can't be spammed",
+    "Tags are always readable (Tester was invisible on light backgrounds) and smaller",
+    "Announcement is bigger and can be closed",
+    "Cape in bundle preview was too big",
+    "App icon in theme color also on Windows (taskbar and shortcuts)",
+    "While Minecraft runs, the launcher pauses its animations (less load, no freezing)"
+  ],
+  "0.9.59": [
+    "Bundles can now be limited (amount and/or time) and hidden by admins",
+    "Bundles were not shown when a shop filter other than “All” was active"
+  ],
+  "0.9.58": [
+    "Admins can delete messages in groups and chats (🗑)",
+    "All accounts are automatically friends with the owner",
+    "New “Ideas” group for everyone (like “Bugs”); no calls in these two groups",
+    "Mod search: already installed mods show “Installed ✓” instead of “Install”",
+    "Themes: a custom accent color no longer overrides the new theme's color when switching (e.g. Forest stayed blue)",
+    "Banner color: picking a color now also replaces a set image/animation",
+    "Switching themes no longer crashes when color values are missing"
+  ],
+  "0.9.57": [
+    "New tour through the whole launcher (replaces the old welcome intro)",
+    "Everyone automatically gets the Tester tag and joins the “Bugs” group (report bugs & wishes)",
+    "Shop: Halo – Black Edition",
+    "Spotify: one-click sign-in once the Spotify client ID is built in",
+    "Wings no longer swing through the body"
+  ],
+  "0.9.56": [
+    "Shop: much smoother scrolling (3D previews load only when scrolled into view, fewer blur effects)",
+    "Windows: portable update and uninstall no longer use batch scripts – should avoid antivirus false alarms (VirusTotal)"
+  ],
+  "0.9.55": [
+    "Creating bundles is cleaner: tap item cards with 3D previews, search and category filter, summary with total price",
+    "Bundles in the shop show their items with 3D previews"
+  ],
+  "0.9.54": [
+    "Mac: the Java files inside the app were read-only, so “Cloudy is damaged” could not be fixed with the Terminal command – they are now writable"
+  ],
+  "0.9.53": [
+    "Easy uninstall: Settings → “Uninstall Cloudy” removes Cloudy with one click (Windows, Mac, Linux), optionally including all data"
+  ],
+  "0.9.52": [
+    "Shop: 4 new 3D hats matching the wings and capes (zigzag hat purple, zigzag top hat blue, shadow hat, ice feather hat)",
+    "Bundles: admins combine several items into a bundle with its own price (e.g. cape + wings); players buy them with one click (re-upload the server file!)",
+    "Shop: mini tab “Cloudy+” (still empty); the big Skins tab in the menu is gone – skins are in the shop",
+    "In game: your head at the top left (can be turned off in Cloudy Mods → “Player head”)",
+    "The app icon (taskbar/dock) now takes the color of your theme",
+    "Mini player: pause/next/previous now also use the first Spotify device if none is active and show the exact reason on errors (e.g. Premium needed)",
+    "The tour now shows the whole launcher and explains why 1.21.4 is preselected"
+  ],
+  "0.9.51": [
+    "Shop: new mini tab “Skins” – your skins are now in the shop too; you can hide the Skins tab in the menu in Settings (Appearance)",
+    "Cloudy Client is set up and kept up to date automatically – no manual building/downloading in the shop any more",
+    "First start: Minecraft 1.21.4 is preselected (with Cloudy Client); the tour explains how to see cosmetics and who sees them",
+    "“What's new” is now available in English too (for the latest versions)"
+  ],
+  "0.9.50": [
+    "Mini player: YouTube, YouTube Music and SoundCloud links too (video, playlist, track). Lyrics now work with these sources as soon as something plays (new, only tested with sample data)",
+    "In-game tags: rank and clan tags (e.g. [Owner] [CLD]) appear before the name above the head and in the player list – visible to Cloudy players (re-upload the server file!)",
+    "Linux: Cloudy is now available as an AppImage (Cloudy-Linux.AppImage) with updates; new and not yet tested on real Linux",
+    "English: about 400 previously German texts (groups, calls, modpacks, shop, tour, error messages …) translated",
+    "Custom icon: the cloud symbol at the top left can be replaced by your own picture (Settings → Appearance)"
+  ],
+  "0.9.49": [
+    "Groups: custom group picture, color for the clan tag, new messages and calls as a bubble and as a desktop notification",
+    "Calls: floating call window (mute / hang up), one-to-one calls with friends (📞 in the chat), friends in a call are marked in the list",
+    "Custom chat profile picture (Friends tab, can be reset)",
+    "New tag “Manager” (Thepa1); tags are also shown next to your name and in the greeting",
+    "Possible stutter/freezing: removed an invisible, permanently animated bubble layer"
+  ],
+  "0.9.48": [
+    "Groups (Friends tab): group chat, group voice calls (directly between players), add/remove members, leave/delete group",
+    "Clan tag: every group can have a tag (up to 4 characters); show it as a second tag next to your rank or hide it (re-upload the server file!)",
+    "The Discord link in the settings opens now"
+  ],
+  "0.9.47": [
+    "Discord: “Playing Cloudy” (Settings → Discord, enter the Application ID)",
+    "Friends: play button next to the name and in the chat header when a friend is playing on a server (shows for friends using the new server)",
+    "Server: visible “Choose picture” button for custom thumbnails",
+    "Server thumbnails, the chat server card and the message bubble had no styling – now liquid glass in your theme"
+  ],
+  "0.9.46": [
+    "Custom server pictures: click the picture or “Picture” under “My servers” and choose a photo",
+    "Chat: server codes (CLD-…) and server addresses in messages automatically get a “Connect” button; your server code is now shown under “Own server” for copying",
+    "Server and friends explained more simply (3 steps)",
+    "Message bubble bigger, translucent in the theme color and in liquid-glass look"
+  ],
+  "0.9.45": [
+    "Mods: new mini tab “Modpacks” – search Modrinth modpacks and install them with one click (own instance per modpack), plus “Import .mrpack” for downloaded modpacks (Fabric only)"
+  ],
+  "0.9.44": [
+    "Admin: click shop item prices in the shop to change them (leave empty = default price; applies to all players, re-upload the server file)",
+    "When a friend writes, a small message bubble appears at the bottom right (click opens the chat)"
+  ],
+  "0.9.43": [
+    "19 new Cloudy mods (all off by default, in Cloudy Mods): displays for biome, light level, Nether coordinates, day/time, durability, arrows, potions, item counter, server, play time, effects, death point, food, health and look direction",
+    "Zigzag snake and GHG cape mirrored",
+    "“Client outdated”: the same or a newer client build now counts as up to date; the message shows the found and the required build"
+  ],
+  "0.9.42": [
+    "Limited by code: every code is valid for one player only – with 5 pieces there are 5 codes (admin sees all, used ones struck through). Re-upload the server file!"
+  ],
+  "0.9.41": [
+    "Claimed limited items now appear immediately under “Owned” and can be equipped (state is sent to the server before syncing)",
+    "Skies, totems and hotbars were removed from the shop"
+  ],
+  "0.9.40": [
+    "Limited form: a small “?” with an explanation on every row; “⏳ Limited” is now also a mini tab next to “Owned”",
+    "Zigzag snake cape and GHG cape were upside down – now the right way up"
+  ],
+  "0.9.39": [
+    "Limited form: 3D preview of the selected item and the buttons “🎲 Random item” and “🎲 Code” (random code)"
+  ],
+  "0.9.38": [
+    "Limited items: there is now a “Limited” section at the very bottom of the shop. The admin decides which item, whether you get it with coins or a code, how many exist, the price, the duration and a note (needs the current server)",
+    "Zigzag snake cape and GHG cape now use the 3D cape model with the texture on it"
+  ],
+  "0.9.37": [
+    "New 3D wings are smaller (preview and in game)",
+    "New capes (zigzag snake, GHG) are shown correctly as capes in the preview instead of a small square"
+  ],
+  "0.9.36": [
+    "Access code screen: new “Update” button that fetches and installs the newest version directly"
+  ],
+  "0.9.35": [
+    "Access code screen: “Admin?” button – only admin accounts (and owners) sign in directly with it, without an access code"
+  ],
+  "0.9.34": [
+    "New 3D items in the shop: zigzag wings (purple and blue), shadow wings, ice feather wings as well as the zigzag snake cape and the GHG cape – also visible to other Cloudy players",
+    "Admins can hide items in the shop (👁 Hide): nobody can buy hidden items any more, whoever already has them keeps them (needs an updated server)"
+  ],
+  "0.9.33": [
+    "Diagnostics for shared cosmetics: the launcher writes a small log (cloudy-cos.log in the Cloudy data folder) that shows whether name and selection reach the server",
+    "Shared cosmetics: all Z4 items are accepted"
+  ],
+  "0.9.32": [
+    "Anyone with the Owner tag gets admin rights (admin area, cannot be banned/paused; needs an updated server)"
+  ],
+  "0.9.31": [
+    "New tag “Owner” (red, glowing) – the admin account wears it automatically, for others you give it in the admin list with a click (needs an updated server)",
+    "Other players' cosmetics: the mod is now also loaded if you were never in the shop (otherwise you did not see others' cosmetics), plus a fallback for matching players"
+  ],
+  "0.9.30": [
+    "Cosmetics of other Cloudy players: when two people play with the Cloudy Client together (same server or world), everybody sees the other's hat, wings and Z4 cape (shield and normal capes stay visible only to you; needs the current server)",
+    "If someone has the same skin as you, they no longer get your cosmetics"
+  ],
+  "0.9.29": [
+    "Tags for accounts: Tester, Cloudy+, Moderator (you give admin in the admin list with a click; admin accounts automatically wear “Admin”). The badges appear in the friends list, in the chat header and next to your name (needs the current server)",
+    "Mods: “Modrinth can't be reached” in the mod search – a program error (missing variables), not your connection",
+    "While wearing an elytra, cosmetic wings and cape are hidden (no doubles)"
+  ]
 }

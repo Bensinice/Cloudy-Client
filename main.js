@@ -205,7 +205,7 @@ async function gateCheck() { try { const c = cfgPatch({}); if (!srvCfg() || c.ga
 setTimeout(gateCheck, 6000); setInterval(gateCheck, 300000);
 ipcMain.handle('toolTex', (_e, v) => { if (typeof v === 'boolean') cfgPatch({ toolTex: v }); return cfgPatch({}).toolTex !== false; });
 ipcMain.handle('texCfg', (_e, v) => { const ok = ['toolTex', 'texTotem', 'texInv', 'texTheme']; if (v && typeof v === 'object') { const p = {}; for (const k of ok) if (typeof v[k] === 'boolean') p[k] = v[k]; if (typeof v.texColor === 'string' && /^#[0-9a-f]{6}$/i.test(v.texColor)) p.texColor = v.texColor; cfgPatch(p); } const c = cfgPatch({}); return { toolTex: c.toolTex !== false, texTotem: c.texTotem !== false, texInv: c.texInv !== false, texTheme: c.texTheme !== false, texColor: c.texColor || '#4aa3ff' }; });
-ipcMain.handle('clientCfg', (_e, p) => { if (!p || typeof p !== 'object') return false; const o = {}; if (Array.isArray(p.widgets)) o.widgets = p.widgets.slice(0, 12).map(w => ({ text: String(w.text || '').slice(0, 80), x: Math.max(0, Math.min(100, +w.x || 0)), on: w.on !== false })); if (typeof p.top === 'boolean') o.top = p.top; cfgPatch(o); return true; });
+ipcMain.handle('clientCfg', (_e, p) => { if (!p || typeof p !== 'object') return false; const o = {}; if (Array.isArray(p.widgets)) o.widgets = p.widgets.slice(0, 12).map(w => ({ text: String(w.text || '').slice(0, 80), x: Math.max(0, Math.min(100, +w.x || 0)), on: w.on !== false })); if (typeof p.top === 'boolean') o.top = p.top; if (Number.isFinite(+p.lyricsSize)) o.lyricsSize = Math.max(50, Math.min(200, Math.round(+p.lyricsSize))); if ([0, 1, 2].includes(p.lyricsFont)) o.lyricsFont = p.lyricsFont; cfgPatch(o); return true; });
 const artCache = new Map();
 ipcMain.handle('mediaArt', async (_e, { artist, title }) => { // Cover über die öffentliche iTunes-Suche (die Spotify-App gibt unter Windows kein Bild heraus)
   const k = (artist + '|' + title).slice(0, 160); if (artCache.has(k)) return artCache.get(k);
@@ -838,7 +838,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.87'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.88'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 

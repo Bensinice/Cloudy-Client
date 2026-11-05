@@ -1,894 +1,904 @@
 [
- {
-  "v": "0.9.87",
-  "date": "2026-11-05",
-  "added": [
-   "Neue Seite „Spotify“: deine Playlists mit Cover und Songanzahl, Songliste, Klick zum Abspielen, Lieblingssongs, Favoriten (★) und zuletzt gehörte Songs/Playlists. Player mit Play/Pause, Weiter, Zurück und Lautstärke",
-   "Lyrics im Launcher im Stil des Spiel-Overlays: Wörter erscheinen einzeln im Takt mit Schein, Song-Karte mit Cover und Fortschritt, ruhige Anzeige bei Pause, klare Meldung ohne Lyrics",
-   "Spotify braucht dafür neue Berechtigungen: einmal neu verbinden (Einstellungen → Spotify). Abspielen aus Cloudy braucht Spotify Premium"
-  ],
-  "fixed": []
- },
- {
-  "v": "0.9.86",
-  "date": "2026-11-05",
-  "added": [
-   "Admin: Quests sofort zurücksetzen (eigenes Konto, ein Konto oder alle), ohne auf den Reset-Timer zu warten. Bereits abgeholte Quests bleiben abgeholt, außer man wählt es extra aus"
-  ],
-  "fixed": [
-   "Admin-Einstellungen E-Mail/Stripe: Eingetragene Werte werden beim Wechseln der Seite nicht mehr überschrieben, und „Test-E-Mail senden“ speichert zuerst. Hinweis, wenn noch kein SMTP-Server eingetragen ist"
-  ]
- },
- {
-  "v": "0.9.85",
-  "date": "2026-11-04",
-  "added": [],
-  "fixed": [
-   "Handy-App: Angemeldet bleiben funktioniert jetzt zuverlässig. Die Sitzung wird bei Benutzung automatisch verlängert (90 Tage ohne Nutzung, höchstens 1 Jahr), überlebt Neustart von App und PC und wird in der iOS-App zusätzlich im Schlüsselbund gesichert. Passwörter werden nie gespeichert"
-  ]
- },
- {
-  "v": "0.9.84",
-  "date": "2026-11-04",
-  "added": [
-   "Quests direkt aus Minecraft: Holz und Stein abbauen, Zombies und Skelette besiegen, Blöcke laufen, Items herstellen, Fische fangen, Erze abbauen und Zeit auf Servern zählen automatisch (Einzelspieler und Server). Der Server begrenzt die Werte nach Zeit und Tag",
-   "Neue Quest-Arten: Anfänger-, Tägliche (3 von 6 Minecraft-Aufgaben wechseln jeden Tag), Wöchentliche, Spezial- und Event-Quests mit Status, Fortschritt und Reset-Countdown",
-   "Quest-Belohnungen: Cloudy Coins, Cloudy Stars und Pass-XP. Der Cloudy Pass steigt jetzt mit Pass-XP auf",
-   "Resets laufen serverseitig in UTC (täglich 00:00, wöchentlich Montag 00:00), die PC-Uhr spielt keine Rolle",
-   "Admin: Pass-XP vergeben (Server-Update nötig)"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.83",
-  "date": "2026-11-04",
-  "added": [
-   "Admin-Reiter: neue Karte „E-Mail & Stripe“. Hier stellst du das Postfach für den E-Mail-Versand ein (mit Test-E-Mail) und die Stripe-Schlüssel für Cloudy+. Passwörter und Schlüssel werden nie angezeigt (Server-Update nötig)"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.82",
-  "date": "2026-11-04",
-  "added": [
-   "Cloudy+ kaufen: im Cloudy Pass gibt es jetzt „Cloudy+ kaufen · 5,99 €/Monat“ (Bezahlung über Stripe, nach Einrichtung durch den Server-Betreiber) und „Abo verwalten“",
-   "Cloudy Pass: mehr Belohnungen, 4 Items in der Gratis-Reihe und 8 in der Premium-Reihe",
-   "Admin: neue Karte „Pass & Stars“ zum Vergeben von Stars (Pass-XP) und Cloudy+. Das Debug-Menü ist jetzt im Admin-Reiter",
-   "Kleine Updates unter Windows: nur ca. 10 MB statt des ganzen Installers (wenn sich Electron nicht ändert)",
-   "Die Webseite zeigt die Neuigkeiten aus diesem Changelog (von GitHub)"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.81",
-  "date": "2026-11-04",
-  "added": [
-   "Cloudy Pass: 30 Level mit Gratis- und Premium-Reihe. Du steigst mit Cloudy Stars auf, die du bei Quests verdienst. Die Premium-Reihe gibt es mit Cloudy+ (Server-Update nötig)",
-   "Quests sind jetzt ein Unterreiter im Cloudy Pass (Reiter „Pass“ und „Quests“)"
-  ],
-  "fixed": [
-   "Quests: Fehlermeldung zeigt jetzt die genaue Ursache"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.80",
-  "date": "2026-11-04",
-  "added": [],
-  "fixed": [
-   "Weniger Ruckeln im Spiel: Herz-, Rüstungs-, Hunger- und Luftleiste werden effizienter gezeichnet",
-   "Quests: klare Meldung, wenn der Server die Quests noch nicht kennt",
-   "Kleinerer Installer: nicht benötigte Dateien (alte ZIP, Server-Dateien, ungenutzte Chromium-Sprachen) sind nicht mehr enthalten, stärkere Kompression"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.79",
-  "date": "2026-11-03",
-  "added": [
-   "Neuigkeiten haben jetzt zwei Reiter: „Updates“ (alle Versionen) und „Neu hinzugefügt“ (nur das Neue der letzten Versionen)"
-  ],
-  "fixed": [
-   "Update-Suche: Der Launcher zeigte „aktuell“, obwohl auf GitHub eine neuere Version lag, wenn der eigene Server noch die alte Version anbot. Jetzt werden Server und GitHub verglichen und die höhere Version genommen"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.78",
-  "date": "2026-11-03",
-  "added": [
-   "Quests: neue Seite mit täglichen und wöchentlichen Aufgaben, Fortschritt, Belohnungen zum Abholen, Reset-Zeit und Verlauf (braucht das Cloudy-Konto; Server-Update nötig)",
-   "Cloudy Stars: zweite Währung für den kommenden Cloudy Pass. Du verdienst sie mit Quests; im Shop kannst du sie nicht ausgeben"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.77",
-  "date": "2026-11-03",
-  "added": [],
-  "fixed": [
-   "Startfehler „Attempted to register a second handler for serverStatus“ behoben: Der Launcher startet wieder normal (der öffentliche Cloudy-Status nutzt jetzt einen eigenen Kanal)"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.76",
-  "date": "2026-11-02",
-  "added": [
-   "Offline-Modus: Auf dem Anmelde-Bildschirm kannst du ohne Cloudy-Konto spielen. Einschränkungen: nur Einzelspieler, keine Server, keine Freunde/Chat, kein Shop, keine Cosmetics, keine Cheats, kein Cloud-Sync"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.75",
-  "date": "2026-11-02",
-  "added": [],
-  "fixed": [
-   "Timer-Mod und neues Herzen-HUD aus 0.9.74 sind jetzt wirklich im Client enthalten (0.9.74 ließ sich nicht fertig bauen)"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.74",
-  "date": "2026-11-02",
-  "added": [
-   "Neuer Timer-Mod: Stoppuhr oder Countdown im HUD, Start/Stop und Reset per Taste oder im Menü, Größe und Position einstellbar, Stand bleibt gespeichert",
-   "Herzen-HUD überarbeitet: 4 Stile (Classic, Round, Pixel, Leiste), Animationen (Welle, Puls, Zittern bei wenig Leben), Größe und Position einstellbar, Vorschau im Menü"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.73",
-  "date": "2026-11-02",
-  "added": [
-   "Request Key: Auf dem Zugangscode-Bildschirm kannst du Zugang anfragen. Der Owner gibt die Anfrage frei oder lehnt sie ab, der Code erscheint dann automatisch",
-   "Öffentlicher Server-Status (Einstellungen und Webseite) mit echten Server-Prüfungen",
-   "Updates vom eigenen Server werden mit einer Prüfsumme (SHA-256) geprüft, bevor sie installiert werden"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.72",
-  "date": "2026-11-02",
-  "added": [
-   "Updates kommen jetzt zuerst direkt von cloudyclient.com (nur für den Client sichtbar); GitHub bleibt als Ausweich-Weg"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.71",
-  "date": "2026-11-02",
-  "added": [],
-  "fixed": [
-   "Handy-Fernsteuerung: Beim Spielen-Drücken steht jetzt dabei, dass Minecraft am PC startet und man es per Moonlight sieht"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.70",
-  "date": "2026-11-02",
-  "added": [
-   "Streaming-Einrichtung per Knopf funktioniert jetzt auch auf dem Mac (über Homebrew)"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.69",
-  "date": "2026-11-02",
-  "added": [
-   "Streaming aufs Handy: ein Knopf richtet Sunshine am PC automatisch ein (Windows), die Moonlight-PIN vom Handy gibst du direkt in Cloudy ein"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.68",
-  "date": "2026-11-02",
-  "added": [
-   "Einstellungen: Anleitung „Auf dem Handy spielen (Streaming)“ mit Sunshine und Moonlight, Links und Adresse deines PCs"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.67",
-  "date": "2026-11-01",
-  "added": [
-   "Handy-Fernsteuerung (Einstellungen, standardmäßig aus): Cloudy im Handy-Browser öffnen (iPhone: Safari), mit PIN koppeln, im selben WLAN – Mods, Updates, Shop, Freunde und Spielstart laufen auf dem PC"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.66",
-  "date": "2026-11-01",
-  "added": [
-   "„Passwort vergessen?“ schickt dem Owner eine Nachricht im Chat (Freunde); er setzt das Konto zurück"
-  ],
-  "fixed": [
-   "Anmeldefenster behauptete, das Konto gelte nur auf diesem Computer, obwohl es ein Online-Konto ist"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.65",
-  "date": "2026-11-01",
-  "added": [
-   "Neuer Haupt-Server cloudyclient.com; der bisherige Server (framebound) ist jetzt eingebauter Backup-Server und springt bei Ausfall automatisch ein"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.64",
-  "date": "2026-11-01",
-  "added": [
-   "Backup-Server: In den Einstellungen unter dem Konto-Server eintragen; fällt der Haupt-Server aus, wechselt Cloudy automatisch um (Adresse wird für alle Spieler vom Haupt-Server geholt)"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.63",
-  "date": "2026-11-01",
-  "added": [
-   "Beim Start wird geprüft, ob Sodium, Lithium & Co. wirklich installiert sind; fehlt etwas oder ist die Version nicht unterstützt, steht das im Startstatus"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.62",
-  "date": "2026-11-01",
-  "added": [],
-  "fixed": [
-   "Update unter Windows: Cloudy beendet sich nach dem Start des Installers selbst, damit keine gesperrten Dateien ein halbes Update verursachen"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.61",
-  "date": "2026-11-01",
-  "added": [
-   "Hat ein stilles Update nicht geklappt, fragt Cloudy beim nächsten Start nach und startet den Installer sichtbar"
-  ],
-  "fixed": [
-   "Absturz „Cannot find module ./lib/discord“: Discord ist jetzt optional, bei unvollständiger Installation erscheint eine verständliche Meldung mit Download-Link"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.60",
-  "date": "2026-11-01",
-  "added": [
-   "Pakete: nur mit Code möglich (Zufallscode-Knopf für Admins), Ersparnis und Einzelpreis werden angezeigt",
-   "Anprobieren-Knopf für Cosmetics und Pakete (Vorschau am eigenen Skin)",
-   "Hinweis im Launcher, wenn ein neues Limited erscheint",
-   "Admins: „Chat leeren“ in Gruppen und Direktchats",
-   "Neue Themes: Forest Hell und Ember Hell (Hell/Dunkel-Knopf wechselt jetzt passend)",
-   "Discord „Spielt mit Cloudy“ startet automatisch, sobald die Discord-ID eingebaut ist"
-  ],
-  "fixed": [
-   "Alle Konten sind in Bugs/Ideen und mit dem Owner befreundet, auch wenn sie sich noch nicht gemeldet haben",
-   "Nach einem Server-Neustart bleibt man angemeldet bzw. kommt direkt zum Login (kein Neustart von Cloudy mehr nötig)",
-   "Kaufen-Knopf ist gesperrt, wenn das Geld nicht reicht, und lässt sich nicht mehr spammen",
-   "Tags sind immer lesbar (Tester war auf hellem Hintergrund unsichtbar) und kleiner",
-   "Ankündigung ist größer und lässt sich schließen",
-   "Umhang in Pakete-Vorschau war zu groß",
-   "Programm-Symbol in Theme-Farbe auch unter Windows (Taskleiste und Verknüpfungen)",
-   "Während Minecraft läuft, pausiert der Launcher seine Animationen (weniger Last, kein Einfrieren)"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.59",
-  "date": "2026-11-01",
-  "added": [
-   "Pakete können jetzt Limited sein (Menge und/oder Zeit) und vom Admin versteckt werden"
-  ],
-  "fixed": [
-   "Pakete wurden nicht angezeigt, wenn im Shop ein anderer Filter als „Alle“ aktiv war"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.58",
-  "date": "2026-11-01",
-  "added": [
-   "Admins können Nachrichten in Gruppen und Chats löschen (🗑)",
-   "Alle Konten sind automatisch mit dem Owner befreundet",
-   "Neue Gruppe „Ideen“ für alle (wie „Bugs“); in diesen beiden Gruppen gibt es keine Anrufe"
-  ],
-  "fixed": [
-   "Mods-Suche: bereits installierte Mods zeigen „Installiert ✓“ statt „Installieren“",
-   "Themes: Eine selbst gewählte Akzentfarbe überschreibt beim Themewechsel nicht mehr die Farbe des neuen Themes (z. B. Forest blieb blau)",
-   "Banner-Farbe: Auswahl einer Farbe ersetzt jetzt auch ein gesetztes Bild/Animation",
-   "Theme-Wechsel stürzt bei fehlenden Farbwerten nicht mehr ab"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.57",
-  "date": "2026-11-01",
-  "added": [
-   "Neue Tour durch den kompletten Launcher (ersetzt die alte Willkommens-Einführung)",
-   "Alle bekommen automatisch den Tester-Tag und sind in der Gruppe „Bugs“ (Fehler & Wünsche melden)",
-   "Shop: Heiligenschein – Black Edition",
-   "Spotify: Anmeldung mit einem Klick, sobald die Spotify-Client-ID eingebaut ist"
-  ],
-  "fixed": [
-   "Flügel schwingen nicht mehr durch den Körper"
-  ],
-  "removed": [
-   "Alte Willkommens-Einführung"
-  ]
- },
- {
-  "v": "0.9.56",
-  "date": "2026-11-01",
-  "added": [],
-  "fixed": [
-   "Shop: deutlich flüssigeres Scrollen (3D-Vorschauen laden erst beim Hinscrollen, weniger Unschärfe-Effekte)",
-   "Windows: Update der Portable-Version und Deinstallation kommen ohne Batch-Skripte aus – das sollte Fehlalarme von Virenscannern (VirusTotal) vermeiden"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.55",
-  "date": "2026-11-01",
-  "added": [
-   "Pakete erstellen ist jetzt übersichtlich: Items als Karten mit 3D-Vorschau antippen, Suche und Kategorie-Filter, Zusammenfassung mit Gesamtpreis",
-   "Pakete im Shop zeigen die enthaltenen Items mit 3D-Vorschau"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.54",
-  "date": "2026-11-01",
-  "added": [],
-  "fixed": [
-   "Mac: Die Java-Dateien im Programm waren schreibgeschützt, dadurch ließ sich „Cloudy ist beschädigt“ nicht mit dem Terminal-Befehl beheben – jetzt sind sie beschreibbar"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.53",
-  "date": "2026-11-01",
-  "added": [
-   "Einfach deinstallieren: Einstellungen → „Cloudy deinstallieren“ entfernt Cloudy mit einem Klick (Windows, Mac, Linux), auf Wunsch samt allen Daten"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.52",
-  "date": "2026-11-01",
-  "added": [
-   "Shop: 4 neue 3D-Hüte passend zu den Flügeln und Umhängen (Zickzack-Hut Violett, Zickzack-Zylinder Blau, Schattenhut, Eisfeder-Hut)",
-   "Pakete (Bundles): Admins stellen mehrere Items zu einem Paket mit eigenem Preis zusammen (z. B. Umhang + Flügel); Spieler kaufen sie mit einem Klick (Server-Datei neu hochladen!)",
-   "Shop: Mini-Tab „Cloudy+“ (noch leer); der große Skins-Reiter im Menü ist weg – Skins gibt es im Shop",
-   "Im Spiel: dein Kopf oben links (abschaltbar bei Cloudy Mods → „Player head“)",
-   "Das Programm-Symbol (Taskleiste/Dock) übernimmt die Farbe deines Themes",
-   "Mini-Player: Pause/Weiter/Zurück nutzen jetzt auch das erste Spotify-Gerät, wenn kein aktives da ist, und zeigen bei Fehlern den genauen Grund (z. B. Premium nötig)",
-   "Tour zeigt jetzt den ganzen Launcher und erklärt, warum 1.21.4 vorausgewählt ist"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.51",
-  "date": "2026-11-01",
-  "added": [
-   "Shop: neuer Mini-Tab „Skins“ – deine Skins sind jetzt auch im Shop; den Skins-Reiter im Menü kannst du in den Einstellungen (Darstellung) ausblenden",
-   "Cloudy Client wird automatisch eingerichtet und aktuell gehalten – kein manuelles Bauen/Herunterladen im Shop mehr",
-   "Erster Start: Minecraft 1.21.4 ist vorausgewählt (mit Cloudy Client); die Tour erklärt, wie man Cosmetics sieht und wer sie sieht",
-   "„Neuigkeiten“ gibt es jetzt auch auf Englisch (für die letzten Versionen)"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.50",
-  "date": "2026-11-01",
-  "added": [
-   "Mini-Player: auch YouTube-, YouTube-Music- und SoundCloud-Links (Video, Playlist, Track). Lyrics laufen jetzt auch mit diesen Quellen, sobald etwas spielt (neu, nur mit Testdaten geprüft)",
-   "Tags im Spiel: Rang- und Clan-Tags (z. B. [Owner] [CLD]) stehen vor dem Namen über dem Kopf und in der Spielerliste – sichtbar für Cloudy-Spieler (Server-Datei neu hochladen!)",
-   "Linux: Cloudy gibt es jetzt als AppImage (Cloudy-Linux.AppImage) mit Updates; neu und noch nicht auf echtem Linux getestet",
-   "Englisch: rund 400 bisher deutsche Texte (Gruppen, Anrufe, Modpacks, Shop, Tour, Fehlermeldungen …) übersetzt",
-   "Eigenes Icon: oben links lässt sich das Wolken-Symbol durch ein eigenes Bild ersetzen (Einstellungen → Darstellung)"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.49",
-  "date": "2026-11-01",
-  "added": [
-   "Gruppen: eigenes Gruppenbild, Farbe für das Clan-Tag, neue Nachrichten und Anrufe als Bubble und als Desktop-Benachrichtigung",
-   "Anrufe: schwebendes Anruf-Fenster (stumm / auflegen), Einzel-Anrufe mit Freunden (📞 im Chat), Freunde im Anruf werden in der Liste markiert",
-   "Eigenes Chat-Profilbild (Freunde-Reiter, auch zurücksetzbar)",
-   "Neues Tag „Manager“ (Thepa1); Tags werden auch neben deinem Namen und in der Begrüßung gezeigt"
-  ],
-  "fixed": [
-   "Mögliche Ruckler/Einfrieren: unsichtbare, dauernd animierte Bubble-Ebene entfernt"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.48",
-  "date": "2026-11-01",
-  "added": [
-   "Gruppen (Freunde-Reiter): Gruppenchat, Gruppen-Anruf mit Sprache (direkt zwischen den Spielern), Mitglieder hinzufügen/entfernen, Gruppe verlassen/auflösen",
-   "Clan-Tag: Jede Gruppe kann ein Tag (bis 4 Zeichen) haben; als zweites Tag neben dem Rang zeigen oder ausblenden (Server-Datei neu hochladen!)"
-  ],
-  "fixed": [
-   "Der Discord-Link in den Einstellungen öffnet sich jetzt"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.47",
-  "date": "2026-11-01",
-  "added": [
-   "Discord: „Spielt mit Cloudy“ (Einstellungen → Discord, Application-ID eintragen)",
-   "Freunde: Play-Knopf neben dem Namen und im Chat-Kopf, wenn ein Freund auf einem Server spielt (zeigt sich bei Freunden, die den neuen Server nutzen)",
-   "Server: sichtbarer „Bild wählen“-Knopf für eigene Thumbnails"
-  ],
-  "fixed": [
-   "Server-Thumbnails, Chat-Server-Karte und Nachrichten-Bubble hatten kein Styling – jetzt Liquid-Glas im Theme"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.46",
-  "date": "2026-11-01",
-  "added": [
-   "Eigene Server-Bilder: bei „Meine Server“ auf das Bild oder „Bild“ klicken und ein Foto wählen",
-   "Chat: Server-Codes (CLD-…) und Server-Adressen in Nachrichten bekommen automatisch einen „Verbinden“-Knopf; dein Server-Code steht jetzt bei „Eigener Server“ zum Kopieren",
-   "Server und Freunde einfacher erklärt (3 Schritte)"
-  ],
-  "fixed": [
-   "Nachrichten-Bubble größer, durchsichtig im Theme-Farbton und im Liquid-Glas-Look"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.45",
-  "date": "2026-11-01",
-  "added": [
-   "Mods: neuer Mini-Tab „Modpacks“ – Modrinth-Modpacks suchen und mit einem Klick installieren (eigene Instanz pro Modpack), dazu „.mrpack importieren“ für heruntergeladene Modpacks (nur Fabric)"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.44",
-  "date": "2026-11-01",
-  "added": [
-   "Admin: Preise der Shop-Items direkt im Shop anklicken und ändern (leer lassen = Standardpreis; gilt für alle Spieler, Server-Datei neu hochladen)",
-   "Wenn ein Freund schreibt, erscheint unten rechts eine kleine Nachrichten-Bubble (Klick öffnet den Chat)"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.43",
-  "date": "2026-11-01",
-  "added": [
-   "19 neue Cloudy-Mods (alle standardmäßig aus, in Cloudy Mods): Anzeigen für Biom, Lichtlevel, Nether-Koordinaten, Tag/Uhrzeit, Haltbarkeit, Pfeile, Tränke, Item-Zähler, Server, Spielzeit, Effekte, Todespunkt, Essen, Leben und Blickziel; dazu „No hurt cam“, bessere Tooltips, Todespunkt im Chat und Auto GG"
-  ],
-  "fixed": [
-   "Zickzack-Schlangen- und GHG-Umhang gespiegelt",
-   "„Client veraltet“: gleicher oder neuerer Client-Stand zählt jetzt als aktuell; die Meldung zeigt den gefundenen und den nötigen Stand"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.42",
-  "date": "2026-11-01",
-  "added": [
-   "Limited per Code: jeder Code gilt nur für einen Spieler – bei 5 Stück gibt es 5 Codes (Admin sieht alle, benutzte durchgestrichen). Server-Datei neu hochladen!"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.41",
-  "date": "2026-11-01",
-  "added": [],
-  "fixed": [
-   "Geholte Limited-Items erscheinen jetzt sofort unter „Gekauft“ und lassen sich ausrüsten (Stand wird vor dem Abgleich zum Server geschickt)"
-  ],
-  "removed": [
-   "Himmel, Totems und Hotbars wurden aus dem Shop entfernt"
-  ]
- },
- {
-  "v": "0.9.40",
-  "date": "2026-11-01",
-  "added": [
-   "Limited-Formular: bei jeder Zeile ein kleines „?“ mit Erklärung; „⏳ Limited“ steht jetzt auch als Mini-Tab neben „Gekauft“"
-  ],
-  "fixed": [
-   "Zickzack-Schlangen-Umhang und GHG-Umhang waren kopfüber – jetzt richtig herum"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.39",
-  "date": "2026-11-01",
-  "added": [
-   "Limited-Formular: 3D-Vorschau des gewählten Items sowie die Knöpfe „🎲 Zufälliges Item“ und „🎲 Code“ (zufälliger Code)"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.38",
-  "date": "2026-11-01",
-  "added": [
-   "Limited-Items: ganz unten im Shop gibt es jetzt einen Bereich „Limited“. Der Admin legt fest, welches Item, ob man es mit Coins oder mit einem Code bekommt, wie viele es gibt, den Preis, die Dauer und einen Hinweis (benötigt aktualisierten Server)"
-  ],
-  "fixed": [
-   "Zickzack-Schlangen-Umhang und GHG-Umhang nutzen jetzt das 3D-Umhangmodell mit der Textur darauf"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.37",
-  "date": "2026-11-01",
-  "added": [],
-  "fixed": [
-   "Neue 3D-Flügel sind kleiner (Vorschau und im Spiel)",
-   "Neue Umhänge (Zickzack-Schlange, GHG) werden in der Vorschau richtig als Umhang gezeigt statt als kleines Quadrat"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.36",
-  "date": "2026-11-01",
-  "added": [
-   "Zugangscode-Bildschirm: neuer „Update“-Knopf, der direkt die neueste Version holt und installiert"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.35",
-  "date": "2026-11-01",
-  "added": [
-   "Zugangscode-Bildschirm: Knopf „Admin?“ – damit melden sich nur Admin-Konten (und Owner) direkt an, ohne Zugangscode"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.34",
-  "date": "2026-11-01",
-  "added": [
-   "Neue 3D-Items im Shop: Zickzack-Flügel (Violett und Blau), Schattenflügel, Eisfeder-Flügel sowie der Zickzack-Schlangen-Umhang und der GHG-Umhang – auch für andere Cloudy-Spieler sichtbar",
-   "Admins können Items im Shop verstecken (👁 Verstecken): versteckte Items kann niemand mehr kaufen, wer sie schon hat, behält sie (benötigt aktualisierten Server)"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.33",
-  "date": "2026-11-01",
-  "added": [
-   "Diagnose für geteilte Cosmetics: der Launcher schreibt ein kleines Protokoll (cloudy-cos.log im Cloudy-Datenordner), das zeigt, ob Name und Auswahl beim Server ankommen"
-  ],
-  "fixed": [
-   "Geteilte Cosmetics: alle Z4-Items werden akzeptiert"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.32",
-  "date": "2026-11-01",
-  "added": [
-   "Wer den Owner-Tag hat, bekommt Admin-Rechte (Admin-Bereich, keine Sperren/Pausen; benötigt aktualisierten Server)"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.31",
-  "date": "2026-11-01",
-  "added": [
-   "Neuer Tag „Owner“ (rot, leuchtend) – das Admin-Konto trägt ihn automatisch, für andere vergibst du ihn in der Admin-Liste per Klick (benötigt aktualisierten Server)"
-  ],
-  "fixed": [
-   "Cosmetics anderer Spieler: Die Mod wird jetzt auch geladen, wenn du nie im Shop warst (sonst sah man die Cosmetics der anderen nicht), plus ein Ausweg bei der Zuordnung der Spieler"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.30",
-  "date": "2026-11-01",
-  "added": [
-   "Cosmetics anderer Cloudy-Spieler: Spielen zwei Leute mit dem Cloudy Client zusammen (gleicher Server oder Welt), sieht jeder Hut, Flügel und Z4-Umhang des anderen (Schild und normale Umhänge bleiben nur bei dir sichtbar; benötigt aktualisierten Server und Anmeldung im Launcher)"
-  ],
-  "fixed": [
-   "Hat jemand denselben Skin wie du, bekommt er nicht mehr deine Cosmetics"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.29",
-  "date": "2026-11-01",
-  "added": [
-   "Tags für Konten: Tester, Cloudy+, Moderator (Admin vergibst du in der Admin-Liste per Klick; Admin-Konten tragen automatisch „Admin“). Die Abzeichen erscheinen in der Freundesliste, im Chat-Kopf und neben deinem Namen (benötigt aktualisierten Server)"
-  ],
-  "fixed": [
-   "Mods: „Modrinth can't be reached“ in der Mod-Suche – ein Programmfehler (fehlende Variablen), nicht deine Verbindung"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.28",
-  "date": "2026-11-01",
-  "added": [],
-  "fixed": [
-   "Mit angelegter Elytra werden Cosmetic-Flügel und -Umhang ausgeblendet (kein Doppel mehr)",
-   "Hunger-Leiste hat jetzt dieselbe Höhe, denselben Farbverlauf und Look wie die Herzen (Knochen in abgetönter Hungerfarbe)"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.27",
-  "date": "2026-11-01",
-  "added": [
-   "Einstellung „Schimpfwörter zensieren“ (Chat und Lyrics im Spiel), standardmäßig an, jederzeit abschaltbar",
-   "Admin: Server-Statistik (Konten, online, neu, gesperrt, Coins, Codes) und „Ankündigung an alle“ – Spieler sehen sie einmal als Leiste oben (benötigt aktualisierten Server)"
-  ],
-  "fixed": [
-   "Modrinth: wenn Windows/Provider die Verbindung blockiert, nutzt Cloudy jetzt als dritten Weg DNS-über-HTTPS; Mod-Downloads laufen über denselben robusten Weg",
-   "Lyrics im Spiel: deutlich weniger Zeichenaufwand pro Bild (zwischengespeicherte Buchstaben, ein Leucht-Ring), Wörter blenden weich von „aktuell“ zu „alt“ über statt zu springen"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.26",
-  "date": "2026-10-31",
-  "added": [],
-  "fixed": [
-   "Virenscanner-Fehlalarm: Cloudy startet unter Windows kein verstecktes PowerShell mit Tastendruck-Simulation mehr (typisches Schadsoftware-Muster); Spotify wird über die Anmeldung gesteuert, ZIPs werden mit dem Windows-Programm tar entpackt",
-   "Windows-Programm trägt jetzt Name, Version und Beschreibung (weniger Fehlalarme)"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.25",
-  "date": "2026-10-31",
-  "added": [],
-  "fixed": [
-   "Lyrics im Spiel ruckeln nicht mehr: die Song-Position wird weich nachgeführt statt alle 1,5 s zu springen; der Zeitpunkt der Spotify-Messung wird korrekt mitgegeben"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.24",
-  "date": "2026-10-31",
-  "added": [
-   "Lyrics: neue synchronisierte Quelle (Kugou) zusätzlich zu lrclib und NetEase; Treffer werden zusätzlich anhand der Songlänge geprüft"
-  ],
-  "fixed": [
-   "Lyrics im Spiel: Wörter kleben nicht mehr aneinander (feste Wortabstände)",
-   "Lyrics ohne Zeitstempel (nur Text): werden nach Zeilenlänge über den gesungenen Teil verteilt statt gleichmäßig über das ganze Lied"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.23",
-  "date": "2026-10-31",
-  "added": [
-   "Lyrics-Einstellung „Timing“: ein Klick verschiebt die Lyrics jetzt in 0,25-s-Schritten nach SPÄTER (bis −5 s), damit zu frühe Texte passend werden"
-  ],
-  "fixed": [
-   "Miniplayer im Launcher: Pause/Weiter/Skip gehen zuerst direkt über Spotify (mit Anmeldung), sonst über die Medientasten",
-   "Lyrics: typografische Apostrophe und Sonderleerzeichen werden normalisiert (Wörter klebten aneinander)"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.22",
-  "date": "2026-10-31",
-  "added": [],
-  "fixed": [
-   "Lyrics: Falsche chinesische Treffer bei englischen Songs werden aussortiert (chinesische Zeilen werden bei lateinischen Songs verworfen)",
-   "Neuigkeiten: Nach einem Update öffnet sich „Was ist neu“ jetzt zuverlässig direkt beim ersten Start"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.21",
-  "date": "2026-10-31",
-  "added": [],
-  "fixed": [
-   "Minecraft-Start: Ein veraltetes selbst gebautes Cloudy-Client-Jar verdrängt nicht mehr das neue mitgelieferte – dadurch startete der Launcher nach jedem Update minutenlang einen Neubau („Cloudy Client wird aktualisiert …“)"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.20",
-  "date": "2026-10-31",
-  "added": [
-   "Chat: Vor jeder Nachricht steht der Skin-Kopf des Absenders (dein gewählter Skin wird mit deinem Konto geteilt)",
-   "Chat: Steht in einer Nachricht ein Code (z. B. MQZU-VU2J-AP2Y), erscheint darunter ein Knopf „Einlösen“"
-  ],
-  "fixed": [
-   "Lyrics-Test: prüft jetzt jede Quelle einzeln mit dem laufenden Song (sonst mit einem Beispiel) und zeigt Zeilen und Zeit; ohne Spiel erkannte er vorher keinen Song"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.19",
-  "date": "2026-10-31",
-  "added": [
-   "Code einlösen zeigt jetzt eine Belohnungs-Animation: Lichtstrahlen, die Karte des Items dreht sich auf (3D) und die Coins zählen hoch"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.18",
-  "date": "2026-10-31",
-  "added": [
-   "Einstellungen: „Update erzwingen“ lädt das neueste GitHub-Release und installiert es immer – auch wenn es nicht neuer oder sogar älter ist"
-  ],
-  "fixed": [],
-  "removed": []
- },
- {
-  "v": "0.9.17",
-  "date": "2026-10-31",
-  "added": [
-   "Das Menü oben passt jetzt immer in die Leiste (bei wenig Platz nur Symbole), nichts wird mehr abgeschnitten",
-   "Ein Klick auf die Wolke oben lädt Konto, Shop und Admin-Ansicht neu",
-   "Neuer Mini-Player ohne X: größeres Cover, große Steuerung; schließt per Spotify-Knopf, Esc oder Klick daneben",
-   "Das Start-Intro hat „Überspringen“ und „Nicht mehr zeigen“; in den Einstellungen gibt es den Schalter „Intro überspringen“",
-   "Codes: Knopf „Zufall“ erzeugt einen 12-stelligen Code (auch für Zugangscodes); Codes können ein Ablaufdatum bekommen",
-   "Admin: Bei Zugangscodes gibt es „Zugang entziehen“ – wer sich mit diesem Code freigeschaltet hat, muss danach wieder einen gültigen Code eingeben (braucht den neuen Server)",
-   "Freunde & Chat laufen jetzt direkt über dein Cloudy-Konto: Freund per Benutzername hinzufügen („+“) und chatten, ohne extra Freundesserver (braucht die neue app.js)",
-   "Start-Banner: Dein Skin mit Cosmetics steht rechts hinter den Knöpfen und schaut dem Mauszeiger nach (in den Einstellungen abschaltbar)",
-   "Shop: Filter „Alle · Nicht gekauft · Gekauft“; die 3D-Vorschau sitzt weiter mittig",
-   "Codes sehen jetzt so aus: MQZU-VU2J-AP2Y (Eingabe mit oder ohne Bindestriche, Groß-/Kleinschreibung egal)",
-   "Admin: „Zugangscode entziehen“ pro Nutzer; Meldung nach Item entfernen/hinzufügen",
-   "Update-Knopf hat 10 Sekunden Wartezeit gegen Spammen; Updates kommen immer von Bensinice/Cloudy-Client"
-  ],
-  "fixed": [
-   "Flügel und Umhänge bewegen sich im Shop jetzt auch, wenn Windows „Animationen“ abgeschaltet hat",
-   "Flügel und Umhänge bewegen sich im Shop jetzt immer, auch auf langsameren PCs (z. B. bei Freunden); wer Leistung braucht, nutzt den Performance-Knopf im Shop",
-   "Mini-Player: Ein Dreieck und ein verschobenes Layout (Namenskonflikt mit dem Spielen-Knopf) sind behoben",
-   "Mini-Player: Steuerknöpfe (Pause, Weiter, Zurück, Lautstärke) lösen jetzt zuverlässig aus – der Windows-Befehl wurde vorher von der Kommandozeile zerlegt",
-   "Die Wolke oben dreht sich jetzt auch, wenn Windows Animationen abgeschaltet hat",
-   "Entfernte Items kommen nicht mehr sofort von einem veralteten Launcher zurück"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.15",
-  "date": "2026-10-31",
-  "added": [
-   "Codes: Admins erstellen in Einstellungen → Admin Codes für Coins und/oder Items (mit Begrenzung, wie oft sie eingelöst werden dürfen); alle anderen lösen sie unter Einstellungen → „Code einlösen“ ein",
-   "Zugangscodes für den Launcher: Admins erstellen sie im Admin-Tab (Anzahl Einlösungen, Gültigkeit in Tagen). Sobald der erste existiert, funktioniert der alte feste Zugangscode nicht mehr",
-   "Admin: „Item hinzufügen …“ gibt einem Konto ein Item direkt",
-   "Admin: Beim Hinzufügen und Entfernen von Items gibt es eine 3D-Vorschau jedes Items",
-   "Lyrics: Die Karte im Spiel zeigt jetzt den Grund an („searching …“, „not found yet“ mit Fehlercode, „no lyrics found“) und es gibt eine zusätzliche Textquelle als Reserve",
-   "Der Konto-Server erkennt hinter nginx/Cloudflare die echte Besucher-Adresse, sodass das Versuchslimit nicht mehr alle gemeinsam trifft"
-  ],
-  "fixed": [
-   "Lyrics werden bei Netzwerkfehlern mehrfach erneut gesucht"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.14",
-  "date": "2026-10-31",
-  "added": [
-   "Grafik-Schnittstelle wählbar: OpenGL (Standard) oder Vulkan (experimentell, über VulkanMod) in den Einstellungen unter „Spiel“",
-   "Mouse effects: „Click animation“ und „Cursor trail“ lassen sich einzeln ein- und ausschalten",
-   "Im Spiel: Im Vanilla-Titelbildschirm gibt es oben links den Knopf „Cloudy menu“, der zurück zum Cloudy-Menü führt",
-   "Mehr FPS: zusätzliche Leistungs-Mods (ImmediatelyFast, Dynamic FPS) und bessere Speicherbereinigung (weniger Ruckler)",
-   "Nach einem Update öffnet sich die Update-Übersicht sofort"
-  ],
-  "fixed": [
-   "Mod-Auswahl zeigte fälschlich „client OUTDATED“, obwohl die Mod aktuell war",
-   "Neuigkeiten-Fenster erscheint auch bei Updates von älteren Versionen zuverlässig"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.13",
-  "date": "2026-10-31",
-  "added": [
-   "Konto-Daten (Coins, Items, Shop-Namen, Sperren) aktualisieren sich jetzt alle 15 Sekunden und beim Zurückkehren ins Fenster – kein Neustart mehr nötig",
-   "Die Admin-Liste aktualisiert sich alle 20 Sekunden selbst",
-   "Gesperrte oder pausierte Konten werden sofort abgemeldet",
-   "Neuer Knopf „Lyrics testen“ bei Spotify zeigt, ob lrclib.net erreichbar ist",
-   "Neues Skript „Client-Jar einbauen.bat“ legt die gebaute Client-Mod in den Update-Ordner"
-  ],
-  "fixed": [
-   "Minecraft-Start dauerte bei anderen PCs ewig: Die Client-Mod wird nur noch auf Admin-Konten automatisch gebaut, alle anderen nutzen die mitgelieferte Mod",
-   "Ist Modrinth nicht erreichbar, werden Mod-Downloads sofort übersprungen (kein minutenlanges Warten mehr)"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.12",
-  "date": "2026-10-31",
-  "added": [
-   "Geschenke: Items aus dem Shop an andere Konten verschenken (Knopf „Verschenken“ bei deinen Items)",
-   "Shop-Aktionen holen vorher den neuesten Stand vom Server, damit Geschenke und Admin-Änderungen nicht überschrieben werden"
-  ],
-  "fixed": [
-   "Lyrics im Spiel: Songtexte werden jetzt mehrmals und über einen zweiten Weg gesucht, statt nach einem Fehlversuch aufzugeben"
-  ],
-  "removed": []
- },
- {
-  "v": "0.9.11",
-  "date": "2026-10-31",
-  "added": [
-   "Neuigkeiten: nach jedem Update erscheint eine kurze Übersicht, alte Updates findest du über den Knopf „Neuigkeiten“",
-   "Admin: pro Konto lässt sich „∞ CC“ ein- und ausschalten",
-   "Spotify: Der Link zum Entwickler-Dashboard öffnet sich jetzt per Klick"
-  ],
-  "fixed": [
-   "Scrollbalken sind im ganzen Launcher ausgeblendet (Scrollen geht weiter)"
-  ],
-  "removed": [
-   "Das Tester-Konto hat keine unendlichen Coins mehr (100 CC am Anfang)"
-  ]
- },
- {
-  "v": "0.9.10",
-  "date": "2026-10-31",
-  "added": [
-   "Admin: Konten pausieren, zeitlich oder dauerhaft sperren, Items entfernen, Aktualisieren-Knopf",
-   "Neuer Reiter „Admin“ in den Einstellungen",
-   "Shop-Namen vom Admin sehen alle Spieler",
-   "Performance-Knopf im Shop",
-   "Slider für die Fenster-Transparenz im Glas-Theme",
-   "Sprachen: Spanisch und Französisch (Grundbegriffe)",
-   "Gewählte Version erscheint sofort in der Bibliothek"
-  ],
-  "fixed": [
-   "Intro läuft auch bei „Animationen reduzieren“ in Windows",
-   "Englisch: Heller/Dunkler Modus und weitere Texte übersetzt",
-   "Modrinth-Fehler zeigt Details und „Erneut versuchen“"
-  ],
-  "removed": [
-   "„Update von einer Adresse“ entfernt",
-   "Konto löschen verlangt jetzt eine Bestätigung"
-  ]
- },
- {
-  "v": "0.9.0 – 0.9.9",
-  "date": "",
-  "added": [
-   "Konto-Server (Konten zentral, Admin sieht alle Tester)",
-   "Dark- und Glas-Theme, neue Layouts und Knopfformen",
-   "Neuer Play-Knopf und neue Leiste unten",
-   "GitHub-Updates (ZIP-Releases) und automatische Prüfung alle 10 Minuten",
-   "Coins und Shop werden mit dem Server abgeglichen"
-  ],
-  "fixed": [
-   "Installer-Fehler „Access is denied“",
-   "Schrift im Spiel (Quadrate statt Text)",
-   "Intro und Tour überlagern sich nicht mehr mit der Anmeldung"
-  ],
-  "removed": []
- }
+  {
+    "v": "0.9.88",
+    "date": "2026-11-05",
+    "added": [
+      "Spotify-Lyrics neu im Himmel-Stil: ganze Phrase schräg im Raum, Wörter blenden nacheinander ein, Titelkarte „Jetzt läuft“ beim Songstart und Song-Leiste (Pille) mit Cover, Fortschritt und Equalizer",
+      "Neues Lyrics-Einstellungsfenster mit Seitenleiste (Übersicht, Himmel, Lyrics, Stile, HUD, Leistung, Einstellungen, Information): 6 Himmel, 8 Schriften, Farben, Stile, Größe, Wort für Wort oder ganze Zeile, Himmel oder Bildschirm",
+      "Lyrics-Größe und Schrift werden auch an die Client-Mod im Spiel weitergegeben (ab dem nächsten Spielstart)"
+    ],
+    "fixed": []
+  },
+  {
+    "v": "0.9.87",
+    "date": "2026-11-05",
+    "added": [
+      "Neue Seite „Spotify“: deine Playlists mit Cover und Songanzahl, Songliste, Klick zum Abspielen, Lieblingssongs, Favoriten (★) und zuletzt gehörte Songs/Playlists. Player mit Play/Pause, Weiter, Zurück und Lautstärke",
+      "Lyrics im Launcher im Stil des Spiel-Overlays: Wörter erscheinen einzeln im Takt mit Schein, Song-Karte mit Cover und Fortschritt, ruhige Anzeige bei Pause, klare Meldung ohne Lyrics",
+      "Spotify braucht dafür neue Berechtigungen: einmal neu verbinden (Einstellungen → Spotify). Abspielen aus Cloudy braucht Spotify Premium"
+    ],
+    "fixed": []
+  },
+  {
+    "v": "0.9.86",
+    "date": "2026-11-05",
+    "added": [
+      "Admin: Quests sofort zurücksetzen (eigenes Konto, ein Konto oder alle), ohne auf den Reset-Timer zu warten. Bereits abgeholte Quests bleiben abgeholt, außer man wählt es extra aus"
+    ],
+    "fixed": [
+      "Admin-Einstellungen E-Mail/Stripe: Eingetragene Werte werden beim Wechseln der Seite nicht mehr überschrieben, und „Test-E-Mail senden“ speichert zuerst. Hinweis, wenn noch kein SMTP-Server eingetragen ist"
+    ]
+  },
+  {
+    "v": "0.9.85",
+    "date": "2026-11-04",
+    "added": [],
+    "fixed": [
+      "Handy-App: Angemeldet bleiben funktioniert jetzt zuverlässig. Die Sitzung wird bei Benutzung automatisch verlängert (90 Tage ohne Nutzung, höchstens 1 Jahr), überlebt Neustart von App und PC und wird in der iOS-App zusätzlich im Schlüsselbund gesichert. Passwörter werden nie gespeichert"
+    ]
+  },
+  {
+    "v": "0.9.84",
+    "date": "2026-11-04",
+    "added": [
+      "Quests direkt aus Minecraft: Holz und Stein abbauen, Zombies und Skelette besiegen, Blöcke laufen, Items herstellen, Fische fangen, Erze abbauen und Zeit auf Servern zählen automatisch (Einzelspieler und Server). Der Server begrenzt die Werte nach Zeit und Tag",
+      "Neue Quest-Arten: Anfänger-, Tägliche (3 von 6 Minecraft-Aufgaben wechseln jeden Tag), Wöchentliche, Spezial- und Event-Quests mit Status, Fortschritt und Reset-Countdown",
+      "Quest-Belohnungen: Cloudy Coins, Cloudy Stars und Pass-XP. Der Cloudy Pass steigt jetzt mit Pass-XP auf",
+      "Resets laufen serverseitig in UTC (täglich 00:00, wöchentlich Montag 00:00), die PC-Uhr spielt keine Rolle",
+      "Admin: Pass-XP vergeben (Server-Update nötig)"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.83",
+    "date": "2026-11-04",
+    "added": [
+      "Admin-Reiter: neue Karte „E-Mail & Stripe“. Hier stellst du das Postfach für den E-Mail-Versand ein (mit Test-E-Mail) und die Stripe-Schlüssel für Cloudy+. Passwörter und Schlüssel werden nie angezeigt (Server-Update nötig)"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.82",
+    "date": "2026-11-04",
+    "added": [
+      "Cloudy+ kaufen: im Cloudy Pass gibt es jetzt „Cloudy+ kaufen · 5,99 €/Monat“ (Bezahlung über Stripe, nach Einrichtung durch den Server-Betreiber) und „Abo verwalten“",
+      "Cloudy Pass: mehr Belohnungen, 4 Items in der Gratis-Reihe und 8 in der Premium-Reihe",
+      "Admin: neue Karte „Pass & Stars“ zum Vergeben von Stars (Pass-XP) und Cloudy+. Das Debug-Menü ist jetzt im Admin-Reiter",
+      "Kleine Updates unter Windows: nur ca. 10 MB statt des ganzen Installers (wenn sich Electron nicht ändert)",
+      "Die Webseite zeigt die Neuigkeiten aus diesem Changelog (von GitHub)"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.81",
+    "date": "2026-11-04",
+    "added": [
+      "Cloudy Pass: 30 Level mit Gratis- und Premium-Reihe. Du steigst mit Cloudy Stars auf, die du bei Quests verdienst. Die Premium-Reihe gibt es mit Cloudy+ (Server-Update nötig)",
+      "Quests sind jetzt ein Unterreiter im Cloudy Pass (Reiter „Pass“ und „Quests“)"
+    ],
+    "fixed": [
+      "Quests: Fehlermeldung zeigt jetzt die genaue Ursache"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.80",
+    "date": "2026-11-04",
+    "added": [],
+    "fixed": [
+      "Weniger Ruckeln im Spiel: Herz-, Rüstungs-, Hunger- und Luftleiste werden effizienter gezeichnet",
+      "Quests: klare Meldung, wenn der Server die Quests noch nicht kennt",
+      "Kleinerer Installer: nicht benötigte Dateien (alte ZIP, Server-Dateien, ungenutzte Chromium-Sprachen) sind nicht mehr enthalten, stärkere Kompression"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.79",
+    "date": "2026-11-03",
+    "added": [
+      "Neuigkeiten haben jetzt zwei Reiter: „Updates“ (alle Versionen) und „Neu hinzugefügt“ (nur das Neue der letzten Versionen)"
+    ],
+    "fixed": [
+      "Update-Suche: Der Launcher zeigte „aktuell“, obwohl auf GitHub eine neuere Version lag, wenn der eigene Server noch die alte Version anbot. Jetzt werden Server und GitHub verglichen und die höhere Version genommen"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.78",
+    "date": "2026-11-03",
+    "added": [
+      "Quests: neue Seite mit täglichen und wöchentlichen Aufgaben, Fortschritt, Belohnungen zum Abholen, Reset-Zeit und Verlauf (braucht das Cloudy-Konto; Server-Update nötig)",
+      "Cloudy Stars: zweite Währung für den kommenden Cloudy Pass. Du verdienst sie mit Quests; im Shop kannst du sie nicht ausgeben"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.77",
+    "date": "2026-11-03",
+    "added": [],
+    "fixed": [
+      "Startfehler „Attempted to register a second handler for serverStatus“ behoben: Der Launcher startet wieder normal (der öffentliche Cloudy-Status nutzt jetzt einen eigenen Kanal)"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.76",
+    "date": "2026-11-02",
+    "added": [
+      "Offline-Modus: Auf dem Anmelde-Bildschirm kannst du ohne Cloudy-Konto spielen. Einschränkungen: nur Einzelspieler, keine Server, keine Freunde/Chat, kein Shop, keine Cosmetics, keine Cheats, kein Cloud-Sync"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.75",
+    "date": "2026-11-02",
+    "added": [],
+    "fixed": [
+      "Timer-Mod und neues Herzen-HUD aus 0.9.74 sind jetzt wirklich im Client enthalten (0.9.74 ließ sich nicht fertig bauen)"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.74",
+    "date": "2026-11-02",
+    "added": [
+      "Neuer Timer-Mod: Stoppuhr oder Countdown im HUD, Start/Stop und Reset per Taste oder im Menü, Größe und Position einstellbar, Stand bleibt gespeichert",
+      "Herzen-HUD überarbeitet: 4 Stile (Classic, Round, Pixel, Leiste), Animationen (Welle, Puls, Zittern bei wenig Leben), Größe und Position einstellbar, Vorschau im Menü"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.73",
+    "date": "2026-11-02",
+    "added": [
+      "Request Key: Auf dem Zugangscode-Bildschirm kannst du Zugang anfragen. Der Owner gibt die Anfrage frei oder lehnt sie ab, der Code erscheint dann automatisch",
+      "Öffentlicher Server-Status (Einstellungen und Webseite) mit echten Server-Prüfungen",
+      "Updates vom eigenen Server werden mit einer Prüfsumme (SHA-256) geprüft, bevor sie installiert werden"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.72",
+    "date": "2026-11-02",
+    "added": [
+      "Updates kommen jetzt zuerst direkt von cloudyclient.com (nur für den Client sichtbar); GitHub bleibt als Ausweich-Weg"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.71",
+    "date": "2026-11-02",
+    "added": [],
+    "fixed": [
+      "Handy-Fernsteuerung: Beim Spielen-Drücken steht jetzt dabei, dass Minecraft am PC startet und man es per Moonlight sieht"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.70",
+    "date": "2026-11-02",
+    "added": [
+      "Streaming-Einrichtung per Knopf funktioniert jetzt auch auf dem Mac (über Homebrew)"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.69",
+    "date": "2026-11-02",
+    "added": [
+      "Streaming aufs Handy: ein Knopf richtet Sunshine am PC automatisch ein (Windows), die Moonlight-PIN vom Handy gibst du direkt in Cloudy ein"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.68",
+    "date": "2026-11-02",
+    "added": [
+      "Einstellungen: Anleitung „Auf dem Handy spielen (Streaming)“ mit Sunshine und Moonlight, Links und Adresse deines PCs"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.67",
+    "date": "2026-11-01",
+    "added": [
+      "Handy-Fernsteuerung (Einstellungen, standardmäßig aus): Cloudy im Handy-Browser öffnen (iPhone: Safari), mit PIN koppeln, im selben WLAN – Mods, Updates, Shop, Freunde und Spielstart laufen auf dem PC"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.66",
+    "date": "2026-11-01",
+    "added": [
+      "„Passwort vergessen?“ schickt dem Owner eine Nachricht im Chat (Freunde); er setzt das Konto zurück"
+    ],
+    "fixed": [
+      "Anmeldefenster behauptete, das Konto gelte nur auf diesem Computer, obwohl es ein Online-Konto ist"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.65",
+    "date": "2026-11-01",
+    "added": [
+      "Neuer Haupt-Server cloudyclient.com; der bisherige Server (framebound) ist jetzt eingebauter Backup-Server und springt bei Ausfall automatisch ein"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.64",
+    "date": "2026-11-01",
+    "added": [
+      "Backup-Server: In den Einstellungen unter dem Konto-Server eintragen; fällt der Haupt-Server aus, wechselt Cloudy automatisch um (Adresse wird für alle Spieler vom Haupt-Server geholt)"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.63",
+    "date": "2026-11-01",
+    "added": [
+      "Beim Start wird geprüft, ob Sodium, Lithium & Co. wirklich installiert sind; fehlt etwas oder ist die Version nicht unterstützt, steht das im Startstatus"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.62",
+    "date": "2026-11-01",
+    "added": [],
+    "fixed": [
+      "Update unter Windows: Cloudy beendet sich nach dem Start des Installers selbst, damit keine gesperrten Dateien ein halbes Update verursachen"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.61",
+    "date": "2026-11-01",
+    "added": [
+      "Hat ein stilles Update nicht geklappt, fragt Cloudy beim nächsten Start nach und startet den Installer sichtbar"
+    ],
+    "fixed": [
+      "Absturz „Cannot find module ./lib/discord“: Discord ist jetzt optional, bei unvollständiger Installation erscheint eine verständliche Meldung mit Download-Link"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.60",
+    "date": "2026-11-01",
+    "added": [
+      "Pakete: nur mit Code möglich (Zufallscode-Knopf für Admins), Ersparnis und Einzelpreis werden angezeigt",
+      "Anprobieren-Knopf für Cosmetics und Pakete (Vorschau am eigenen Skin)",
+      "Hinweis im Launcher, wenn ein neues Limited erscheint",
+      "Admins: „Chat leeren“ in Gruppen und Direktchats",
+      "Neue Themes: Forest Hell und Ember Hell (Hell/Dunkel-Knopf wechselt jetzt passend)",
+      "Discord „Spielt mit Cloudy“ startet automatisch, sobald die Discord-ID eingebaut ist"
+    ],
+    "fixed": [
+      "Alle Konten sind in Bugs/Ideen und mit dem Owner befreundet, auch wenn sie sich noch nicht gemeldet haben",
+      "Nach einem Server-Neustart bleibt man angemeldet bzw. kommt direkt zum Login (kein Neustart von Cloudy mehr nötig)",
+      "Kaufen-Knopf ist gesperrt, wenn das Geld nicht reicht, und lässt sich nicht mehr spammen",
+      "Tags sind immer lesbar (Tester war auf hellem Hintergrund unsichtbar) und kleiner",
+      "Ankündigung ist größer und lässt sich schließen",
+      "Umhang in Pakete-Vorschau war zu groß",
+      "Programm-Symbol in Theme-Farbe auch unter Windows (Taskleiste und Verknüpfungen)",
+      "Während Minecraft läuft, pausiert der Launcher seine Animationen (weniger Last, kein Einfrieren)"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.59",
+    "date": "2026-11-01",
+    "added": [
+      "Pakete können jetzt Limited sein (Menge und/oder Zeit) und vom Admin versteckt werden"
+    ],
+    "fixed": [
+      "Pakete wurden nicht angezeigt, wenn im Shop ein anderer Filter als „Alle“ aktiv war"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.58",
+    "date": "2026-11-01",
+    "added": [
+      "Admins können Nachrichten in Gruppen und Chats löschen (🗑)",
+      "Alle Konten sind automatisch mit dem Owner befreundet",
+      "Neue Gruppe „Ideen“ für alle (wie „Bugs“); in diesen beiden Gruppen gibt es keine Anrufe"
+    ],
+    "fixed": [
+      "Mods-Suche: bereits installierte Mods zeigen „Installiert ✓“ statt „Installieren“",
+      "Themes: Eine selbst gewählte Akzentfarbe überschreibt beim Themewechsel nicht mehr die Farbe des neuen Themes (z. B. Forest blieb blau)",
+      "Banner-Farbe: Auswahl einer Farbe ersetzt jetzt auch ein gesetztes Bild/Animation",
+      "Theme-Wechsel stürzt bei fehlenden Farbwerten nicht mehr ab"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.57",
+    "date": "2026-11-01",
+    "added": [
+      "Neue Tour durch den kompletten Launcher (ersetzt die alte Willkommens-Einführung)",
+      "Alle bekommen automatisch den Tester-Tag und sind in der Gruppe „Bugs“ (Fehler & Wünsche melden)",
+      "Shop: Heiligenschein – Black Edition",
+      "Spotify: Anmeldung mit einem Klick, sobald die Spotify-Client-ID eingebaut ist"
+    ],
+    "fixed": [
+      "Flügel schwingen nicht mehr durch den Körper"
+    ],
+    "removed": [
+      "Alte Willkommens-Einführung"
+    ]
+  },
+  {
+    "v": "0.9.56",
+    "date": "2026-11-01",
+    "added": [],
+    "fixed": [
+      "Shop: deutlich flüssigeres Scrollen (3D-Vorschauen laden erst beim Hinscrollen, weniger Unschärfe-Effekte)",
+      "Windows: Update der Portable-Version und Deinstallation kommen ohne Batch-Skripte aus – das sollte Fehlalarme von Virenscannern (VirusTotal) vermeiden"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.55",
+    "date": "2026-11-01",
+    "added": [
+      "Pakete erstellen ist jetzt übersichtlich: Items als Karten mit 3D-Vorschau antippen, Suche und Kategorie-Filter, Zusammenfassung mit Gesamtpreis",
+      "Pakete im Shop zeigen die enthaltenen Items mit 3D-Vorschau"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.54",
+    "date": "2026-11-01",
+    "added": [],
+    "fixed": [
+      "Mac: Die Java-Dateien im Programm waren schreibgeschützt, dadurch ließ sich „Cloudy ist beschädigt“ nicht mit dem Terminal-Befehl beheben – jetzt sind sie beschreibbar"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.53",
+    "date": "2026-11-01",
+    "added": [
+      "Einfach deinstallieren: Einstellungen → „Cloudy deinstallieren“ entfernt Cloudy mit einem Klick (Windows, Mac, Linux), auf Wunsch samt allen Daten"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.52",
+    "date": "2026-11-01",
+    "added": [
+      "Shop: 4 neue 3D-Hüte passend zu den Flügeln und Umhängen (Zickzack-Hut Violett, Zickzack-Zylinder Blau, Schattenhut, Eisfeder-Hut)",
+      "Pakete (Bundles): Admins stellen mehrere Items zu einem Paket mit eigenem Preis zusammen (z. B. Umhang + Flügel); Spieler kaufen sie mit einem Klick (Server-Datei neu hochladen!)",
+      "Shop: Mini-Tab „Cloudy+“ (noch leer); der große Skins-Reiter im Menü ist weg – Skins gibt es im Shop",
+      "Im Spiel: dein Kopf oben links (abschaltbar bei Cloudy Mods → „Player head“)",
+      "Das Programm-Symbol (Taskleiste/Dock) übernimmt die Farbe deines Themes",
+      "Mini-Player: Pause/Weiter/Zurück nutzen jetzt auch das erste Spotify-Gerät, wenn kein aktives da ist, und zeigen bei Fehlern den genauen Grund (z. B. Premium nötig)",
+      "Tour zeigt jetzt den ganzen Launcher und erklärt, warum 1.21.4 vorausgewählt ist"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.51",
+    "date": "2026-11-01",
+    "added": [
+      "Shop: neuer Mini-Tab „Skins“ – deine Skins sind jetzt auch im Shop; den Skins-Reiter im Menü kannst du in den Einstellungen (Darstellung) ausblenden",
+      "Cloudy Client wird automatisch eingerichtet und aktuell gehalten – kein manuelles Bauen/Herunterladen im Shop mehr",
+      "Erster Start: Minecraft 1.21.4 ist vorausgewählt (mit Cloudy Client); die Tour erklärt, wie man Cosmetics sieht und wer sie sieht",
+      "„Neuigkeiten“ gibt es jetzt auch auf Englisch (für die letzten Versionen)"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.50",
+    "date": "2026-11-01",
+    "added": [
+      "Mini-Player: auch YouTube-, YouTube-Music- und SoundCloud-Links (Video, Playlist, Track). Lyrics laufen jetzt auch mit diesen Quellen, sobald etwas spielt (neu, nur mit Testdaten geprüft)",
+      "Tags im Spiel: Rang- und Clan-Tags (z. B. [Owner] [CLD]) stehen vor dem Namen über dem Kopf und in der Spielerliste – sichtbar für Cloudy-Spieler (Server-Datei neu hochladen!)",
+      "Linux: Cloudy gibt es jetzt als AppImage (Cloudy-Linux.AppImage) mit Updates; neu und noch nicht auf echtem Linux getestet",
+      "Englisch: rund 400 bisher deutsche Texte (Gruppen, Anrufe, Modpacks, Shop, Tour, Fehlermeldungen …) übersetzt",
+      "Eigenes Icon: oben links lässt sich das Wolken-Symbol durch ein eigenes Bild ersetzen (Einstellungen → Darstellung)"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.49",
+    "date": "2026-11-01",
+    "added": [
+      "Gruppen: eigenes Gruppenbild, Farbe für das Clan-Tag, neue Nachrichten und Anrufe als Bubble und als Desktop-Benachrichtigung",
+      "Anrufe: schwebendes Anruf-Fenster (stumm / auflegen), Einzel-Anrufe mit Freunden (📞 im Chat), Freunde im Anruf werden in der Liste markiert",
+      "Eigenes Chat-Profilbild (Freunde-Reiter, auch zurücksetzbar)",
+      "Neues Tag „Manager“ (Thepa1); Tags werden auch neben deinem Namen und in der Begrüßung gezeigt"
+    ],
+    "fixed": [
+      "Mögliche Ruckler/Einfrieren: unsichtbare, dauernd animierte Bubble-Ebene entfernt"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.48",
+    "date": "2026-11-01",
+    "added": [
+      "Gruppen (Freunde-Reiter): Gruppenchat, Gruppen-Anruf mit Sprache (direkt zwischen den Spielern), Mitglieder hinzufügen/entfernen, Gruppe verlassen/auflösen",
+      "Clan-Tag: Jede Gruppe kann ein Tag (bis 4 Zeichen) haben; als zweites Tag neben dem Rang zeigen oder ausblenden (Server-Datei neu hochladen!)"
+    ],
+    "fixed": [
+      "Der Discord-Link in den Einstellungen öffnet sich jetzt"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.47",
+    "date": "2026-11-01",
+    "added": [
+      "Discord: „Spielt mit Cloudy“ (Einstellungen → Discord, Application-ID eintragen)",
+      "Freunde: Play-Knopf neben dem Namen und im Chat-Kopf, wenn ein Freund auf einem Server spielt (zeigt sich bei Freunden, die den neuen Server nutzen)",
+      "Server: sichtbarer „Bild wählen“-Knopf für eigene Thumbnails"
+    ],
+    "fixed": [
+      "Server-Thumbnails, Chat-Server-Karte und Nachrichten-Bubble hatten kein Styling – jetzt Liquid-Glas im Theme"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.46",
+    "date": "2026-11-01",
+    "added": [
+      "Eigene Server-Bilder: bei „Meine Server“ auf das Bild oder „Bild“ klicken und ein Foto wählen",
+      "Chat: Server-Codes (CLD-…) und Server-Adressen in Nachrichten bekommen automatisch einen „Verbinden“-Knopf; dein Server-Code steht jetzt bei „Eigener Server“ zum Kopieren",
+      "Server und Freunde einfacher erklärt (3 Schritte)"
+    ],
+    "fixed": [
+      "Nachrichten-Bubble größer, durchsichtig im Theme-Farbton und im Liquid-Glas-Look"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.45",
+    "date": "2026-11-01",
+    "added": [
+      "Mods: neuer Mini-Tab „Modpacks“ – Modrinth-Modpacks suchen und mit einem Klick installieren (eigene Instanz pro Modpack), dazu „.mrpack importieren“ für heruntergeladene Modpacks (nur Fabric)"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.44",
+    "date": "2026-11-01",
+    "added": [
+      "Admin: Preise der Shop-Items direkt im Shop anklicken und ändern (leer lassen = Standardpreis; gilt für alle Spieler, Server-Datei neu hochladen)",
+      "Wenn ein Freund schreibt, erscheint unten rechts eine kleine Nachrichten-Bubble (Klick öffnet den Chat)"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.43",
+    "date": "2026-11-01",
+    "added": [
+      "19 neue Cloudy-Mods (alle standardmäßig aus, in Cloudy Mods): Anzeigen für Biom, Lichtlevel, Nether-Koordinaten, Tag/Uhrzeit, Haltbarkeit, Pfeile, Tränke, Item-Zähler, Server, Spielzeit, Effekte, Todespunkt, Essen, Leben und Blickziel; dazu „No hurt cam“, bessere Tooltips, Todespunkt im Chat und Auto GG"
+    ],
+    "fixed": [
+      "Zickzack-Schlangen- und GHG-Umhang gespiegelt",
+      "„Client veraltet“: gleicher oder neuerer Client-Stand zählt jetzt als aktuell; die Meldung zeigt den gefundenen und den nötigen Stand"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.42",
+    "date": "2026-11-01",
+    "added": [
+      "Limited per Code: jeder Code gilt nur für einen Spieler – bei 5 Stück gibt es 5 Codes (Admin sieht alle, benutzte durchgestrichen). Server-Datei neu hochladen!"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.41",
+    "date": "2026-11-01",
+    "added": [],
+    "fixed": [
+      "Geholte Limited-Items erscheinen jetzt sofort unter „Gekauft“ und lassen sich ausrüsten (Stand wird vor dem Abgleich zum Server geschickt)"
+    ],
+    "removed": [
+      "Himmel, Totems und Hotbars wurden aus dem Shop entfernt"
+    ]
+  },
+  {
+    "v": "0.9.40",
+    "date": "2026-11-01",
+    "added": [
+      "Limited-Formular: bei jeder Zeile ein kleines „?“ mit Erklärung; „⏳ Limited“ steht jetzt auch als Mini-Tab neben „Gekauft“"
+    ],
+    "fixed": [
+      "Zickzack-Schlangen-Umhang und GHG-Umhang waren kopfüber – jetzt richtig herum"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.39",
+    "date": "2026-11-01",
+    "added": [
+      "Limited-Formular: 3D-Vorschau des gewählten Items sowie die Knöpfe „🎲 Zufälliges Item“ und „🎲 Code“ (zufälliger Code)"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.38",
+    "date": "2026-11-01",
+    "added": [
+      "Limited-Items: ganz unten im Shop gibt es jetzt einen Bereich „Limited“. Der Admin legt fest, welches Item, ob man es mit Coins oder mit einem Code bekommt, wie viele es gibt, den Preis, die Dauer und einen Hinweis (benötigt aktualisierten Server)"
+    ],
+    "fixed": [
+      "Zickzack-Schlangen-Umhang und GHG-Umhang nutzen jetzt das 3D-Umhangmodell mit der Textur darauf"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.37",
+    "date": "2026-11-01",
+    "added": [],
+    "fixed": [
+      "Neue 3D-Flügel sind kleiner (Vorschau und im Spiel)",
+      "Neue Umhänge (Zickzack-Schlange, GHG) werden in der Vorschau richtig als Umhang gezeigt statt als kleines Quadrat"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.36",
+    "date": "2026-11-01",
+    "added": [
+      "Zugangscode-Bildschirm: neuer „Update“-Knopf, der direkt die neueste Version holt und installiert"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.35",
+    "date": "2026-11-01",
+    "added": [
+      "Zugangscode-Bildschirm: Knopf „Admin?“ – damit melden sich nur Admin-Konten (und Owner) direkt an, ohne Zugangscode"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.34",
+    "date": "2026-11-01",
+    "added": [
+      "Neue 3D-Items im Shop: Zickzack-Flügel (Violett und Blau), Schattenflügel, Eisfeder-Flügel sowie der Zickzack-Schlangen-Umhang und der GHG-Umhang – auch für andere Cloudy-Spieler sichtbar",
+      "Admins können Items im Shop verstecken (👁 Verstecken): versteckte Items kann niemand mehr kaufen, wer sie schon hat, behält sie (benötigt aktualisierten Server)"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.33",
+    "date": "2026-11-01",
+    "added": [
+      "Diagnose für geteilte Cosmetics: der Launcher schreibt ein kleines Protokoll (cloudy-cos.log im Cloudy-Datenordner), das zeigt, ob Name und Auswahl beim Server ankommen"
+    ],
+    "fixed": [
+      "Geteilte Cosmetics: alle Z4-Items werden akzeptiert"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.32",
+    "date": "2026-11-01",
+    "added": [
+      "Wer den Owner-Tag hat, bekommt Admin-Rechte (Admin-Bereich, keine Sperren/Pausen; benötigt aktualisierten Server)"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.31",
+    "date": "2026-11-01",
+    "added": [
+      "Neuer Tag „Owner“ (rot, leuchtend) – das Admin-Konto trägt ihn automatisch, für andere vergibst du ihn in der Admin-Liste per Klick (benötigt aktualisierten Server)"
+    ],
+    "fixed": [
+      "Cosmetics anderer Spieler: Die Mod wird jetzt auch geladen, wenn du nie im Shop warst (sonst sah man die Cosmetics der anderen nicht), plus ein Ausweg bei der Zuordnung der Spieler"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.30",
+    "date": "2026-11-01",
+    "added": [
+      "Cosmetics anderer Cloudy-Spieler: Spielen zwei Leute mit dem Cloudy Client zusammen (gleicher Server oder Welt), sieht jeder Hut, Flügel und Z4-Umhang des anderen (Schild und normale Umhänge bleiben nur bei dir sichtbar; benötigt aktualisierten Server und Anmeldung im Launcher)"
+    ],
+    "fixed": [
+      "Hat jemand denselben Skin wie du, bekommt er nicht mehr deine Cosmetics"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.29",
+    "date": "2026-11-01",
+    "added": [
+      "Tags für Konten: Tester, Cloudy+, Moderator (Admin vergibst du in der Admin-Liste per Klick; Admin-Konten tragen automatisch „Admin“). Die Abzeichen erscheinen in der Freundesliste, im Chat-Kopf und neben deinem Namen (benötigt aktualisierten Server)"
+    ],
+    "fixed": [
+      "Mods: „Modrinth can't be reached“ in der Mod-Suche – ein Programmfehler (fehlende Variablen), nicht deine Verbindung"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.28",
+    "date": "2026-11-01",
+    "added": [],
+    "fixed": [
+      "Mit angelegter Elytra werden Cosmetic-Flügel und -Umhang ausgeblendet (kein Doppel mehr)",
+      "Hunger-Leiste hat jetzt dieselbe Höhe, denselben Farbverlauf und Look wie die Herzen (Knochen in abgetönter Hungerfarbe)"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.27",
+    "date": "2026-11-01",
+    "added": [
+      "Einstellung „Schimpfwörter zensieren“ (Chat und Lyrics im Spiel), standardmäßig an, jederzeit abschaltbar",
+      "Admin: Server-Statistik (Konten, online, neu, gesperrt, Coins, Codes) und „Ankündigung an alle“ – Spieler sehen sie einmal als Leiste oben (benötigt aktualisierten Server)"
+    ],
+    "fixed": [
+      "Modrinth: wenn Windows/Provider die Verbindung blockiert, nutzt Cloudy jetzt als dritten Weg DNS-über-HTTPS; Mod-Downloads laufen über denselben robusten Weg",
+      "Lyrics im Spiel: deutlich weniger Zeichenaufwand pro Bild (zwischengespeicherte Buchstaben, ein Leucht-Ring), Wörter blenden weich von „aktuell“ zu „alt“ über statt zu springen"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.26",
+    "date": "2026-10-31",
+    "added": [],
+    "fixed": [
+      "Virenscanner-Fehlalarm: Cloudy startet unter Windows kein verstecktes PowerShell mit Tastendruck-Simulation mehr (typisches Schadsoftware-Muster); Spotify wird über die Anmeldung gesteuert, ZIPs werden mit dem Windows-Programm tar entpackt",
+      "Windows-Programm trägt jetzt Name, Version und Beschreibung (weniger Fehlalarme)"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.25",
+    "date": "2026-10-31",
+    "added": [],
+    "fixed": [
+      "Lyrics im Spiel ruckeln nicht mehr: die Song-Position wird weich nachgeführt statt alle 1,5 s zu springen; der Zeitpunkt der Spotify-Messung wird korrekt mitgegeben"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.24",
+    "date": "2026-10-31",
+    "added": [
+      "Lyrics: neue synchronisierte Quelle (Kugou) zusätzlich zu lrclib und NetEase; Treffer werden zusätzlich anhand der Songlänge geprüft"
+    ],
+    "fixed": [
+      "Lyrics im Spiel: Wörter kleben nicht mehr aneinander (feste Wortabstände)",
+      "Lyrics ohne Zeitstempel (nur Text): werden nach Zeilenlänge über den gesungenen Teil verteilt statt gleichmäßig über das ganze Lied"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.23",
+    "date": "2026-10-31",
+    "added": [
+      "Lyrics-Einstellung „Timing“: ein Klick verschiebt die Lyrics jetzt in 0,25-s-Schritten nach SPÄTER (bis −5 s), damit zu frühe Texte passend werden"
+    ],
+    "fixed": [
+      "Miniplayer im Launcher: Pause/Weiter/Skip gehen zuerst direkt über Spotify (mit Anmeldung), sonst über die Medientasten",
+      "Lyrics: typografische Apostrophe und Sonderleerzeichen werden normalisiert (Wörter klebten aneinander)"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.22",
+    "date": "2026-10-31",
+    "added": [],
+    "fixed": [
+      "Lyrics: Falsche chinesische Treffer bei englischen Songs werden aussortiert (chinesische Zeilen werden bei lateinischen Songs verworfen)",
+      "Neuigkeiten: Nach einem Update öffnet sich „Was ist neu“ jetzt zuverlässig direkt beim ersten Start"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.21",
+    "date": "2026-10-31",
+    "added": [],
+    "fixed": [
+      "Minecraft-Start: Ein veraltetes selbst gebautes Cloudy-Client-Jar verdrängt nicht mehr das neue mitgelieferte – dadurch startete der Launcher nach jedem Update minutenlang einen Neubau („Cloudy Client wird aktualisiert …“)"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.20",
+    "date": "2026-10-31",
+    "added": [
+      "Chat: Vor jeder Nachricht steht der Skin-Kopf des Absenders (dein gewählter Skin wird mit deinem Konto geteilt)",
+      "Chat: Steht in einer Nachricht ein Code (z. B. MQZU-VU2J-AP2Y), erscheint darunter ein Knopf „Einlösen“"
+    ],
+    "fixed": [
+      "Lyrics-Test: prüft jetzt jede Quelle einzeln mit dem laufenden Song (sonst mit einem Beispiel) und zeigt Zeilen und Zeit; ohne Spiel erkannte er vorher keinen Song"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.19",
+    "date": "2026-10-31",
+    "added": [
+      "Code einlösen zeigt jetzt eine Belohnungs-Animation: Lichtstrahlen, die Karte des Items dreht sich auf (3D) und die Coins zählen hoch"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.18",
+    "date": "2026-10-31",
+    "added": [
+      "Einstellungen: „Update erzwingen“ lädt das neueste GitHub-Release und installiert es immer – auch wenn es nicht neuer oder sogar älter ist"
+    ],
+    "fixed": [],
+    "removed": []
+  },
+  {
+    "v": "0.9.17",
+    "date": "2026-10-31",
+    "added": [
+      "Das Menü oben passt jetzt immer in die Leiste (bei wenig Platz nur Symbole), nichts wird mehr abgeschnitten",
+      "Ein Klick auf die Wolke oben lädt Konto, Shop und Admin-Ansicht neu",
+      "Neuer Mini-Player ohne X: größeres Cover, große Steuerung; schließt per Spotify-Knopf, Esc oder Klick daneben",
+      "Das Start-Intro hat „Überspringen“ und „Nicht mehr zeigen“; in den Einstellungen gibt es den Schalter „Intro überspringen“",
+      "Codes: Knopf „Zufall“ erzeugt einen 12-stelligen Code (auch für Zugangscodes); Codes können ein Ablaufdatum bekommen",
+      "Admin: Bei Zugangscodes gibt es „Zugang entziehen“ – wer sich mit diesem Code freigeschaltet hat, muss danach wieder einen gültigen Code eingeben (braucht den neuen Server)",
+      "Freunde & Chat laufen jetzt direkt über dein Cloudy-Konto: Freund per Benutzername hinzufügen („+“) und chatten, ohne extra Freundesserver (braucht die neue app.js)",
+      "Start-Banner: Dein Skin mit Cosmetics steht rechts hinter den Knöpfen und schaut dem Mauszeiger nach (in den Einstellungen abschaltbar)",
+      "Shop: Filter „Alle · Nicht gekauft · Gekauft“; die 3D-Vorschau sitzt weiter mittig",
+      "Codes sehen jetzt so aus: MQZU-VU2J-AP2Y (Eingabe mit oder ohne Bindestriche, Groß-/Kleinschreibung egal)",
+      "Admin: „Zugangscode entziehen“ pro Nutzer; Meldung nach Item entfernen/hinzufügen",
+      "Update-Knopf hat 10 Sekunden Wartezeit gegen Spammen; Updates kommen immer von Bensinice/Cloudy-Client"
+    ],
+    "fixed": [
+      "Flügel und Umhänge bewegen sich im Shop jetzt auch, wenn Windows „Animationen“ abgeschaltet hat",
+      "Flügel und Umhänge bewegen sich im Shop jetzt immer, auch auf langsameren PCs (z. B. bei Freunden); wer Leistung braucht, nutzt den Performance-Knopf im Shop",
+      "Mini-Player: Ein Dreieck und ein verschobenes Layout (Namenskonflikt mit dem Spielen-Knopf) sind behoben",
+      "Mini-Player: Steuerknöpfe (Pause, Weiter, Zurück, Lautstärke) lösen jetzt zuverlässig aus – der Windows-Befehl wurde vorher von der Kommandozeile zerlegt",
+      "Die Wolke oben dreht sich jetzt auch, wenn Windows Animationen abgeschaltet hat",
+      "Entfernte Items kommen nicht mehr sofort von einem veralteten Launcher zurück"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.15",
+    "date": "2026-10-31",
+    "added": [
+      "Codes: Admins erstellen in Einstellungen → Admin Codes für Coins und/oder Items (mit Begrenzung, wie oft sie eingelöst werden dürfen); alle anderen lösen sie unter Einstellungen → „Code einlösen“ ein",
+      "Zugangscodes für den Launcher: Admins erstellen sie im Admin-Tab (Anzahl Einlösungen, Gültigkeit in Tagen). Sobald der erste existiert, funktioniert der alte feste Zugangscode nicht mehr",
+      "Admin: „Item hinzufügen …“ gibt einem Konto ein Item direkt",
+      "Admin: Beim Hinzufügen und Entfernen von Items gibt es eine 3D-Vorschau jedes Items",
+      "Lyrics: Die Karte im Spiel zeigt jetzt den Grund an („searching …“, „not found yet“ mit Fehlercode, „no lyrics found“) und es gibt eine zusätzliche Textquelle als Reserve",
+      "Der Konto-Server erkennt hinter nginx/Cloudflare die echte Besucher-Adresse, sodass das Versuchslimit nicht mehr alle gemeinsam trifft"
+    ],
+    "fixed": [
+      "Lyrics werden bei Netzwerkfehlern mehrfach erneut gesucht"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.14",
+    "date": "2026-10-31",
+    "added": [
+      "Grafik-Schnittstelle wählbar: OpenGL (Standard) oder Vulkan (experimentell, über VulkanMod) in den Einstellungen unter „Spiel“",
+      "Mouse effects: „Click animation“ und „Cursor trail“ lassen sich einzeln ein- und ausschalten",
+      "Im Spiel: Im Vanilla-Titelbildschirm gibt es oben links den Knopf „Cloudy menu“, der zurück zum Cloudy-Menü führt",
+      "Mehr FPS: zusätzliche Leistungs-Mods (ImmediatelyFast, Dynamic FPS) und bessere Speicherbereinigung (weniger Ruckler)",
+      "Nach einem Update öffnet sich die Update-Übersicht sofort"
+    ],
+    "fixed": [
+      "Mod-Auswahl zeigte fälschlich „client OUTDATED“, obwohl die Mod aktuell war",
+      "Neuigkeiten-Fenster erscheint auch bei Updates von älteren Versionen zuverlässig"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.13",
+    "date": "2026-10-31",
+    "added": [
+      "Konto-Daten (Coins, Items, Shop-Namen, Sperren) aktualisieren sich jetzt alle 15 Sekunden und beim Zurückkehren ins Fenster – kein Neustart mehr nötig",
+      "Die Admin-Liste aktualisiert sich alle 20 Sekunden selbst",
+      "Gesperrte oder pausierte Konten werden sofort abgemeldet",
+      "Neuer Knopf „Lyrics testen“ bei Spotify zeigt, ob lrclib.net erreichbar ist",
+      "Neues Skript „Client-Jar einbauen.bat“ legt die gebaute Client-Mod in den Update-Ordner"
+    ],
+    "fixed": [
+      "Minecraft-Start dauerte bei anderen PCs ewig: Die Client-Mod wird nur noch auf Admin-Konten automatisch gebaut, alle anderen nutzen die mitgelieferte Mod",
+      "Ist Modrinth nicht erreichbar, werden Mod-Downloads sofort übersprungen (kein minutenlanges Warten mehr)"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.12",
+    "date": "2026-10-31",
+    "added": [
+      "Geschenke: Items aus dem Shop an andere Konten verschenken (Knopf „Verschenken“ bei deinen Items)",
+      "Shop-Aktionen holen vorher den neuesten Stand vom Server, damit Geschenke und Admin-Änderungen nicht überschrieben werden"
+    ],
+    "fixed": [
+      "Lyrics im Spiel: Songtexte werden jetzt mehrmals und über einen zweiten Weg gesucht, statt nach einem Fehlversuch aufzugeben"
+    ],
+    "removed": []
+  },
+  {
+    "v": "0.9.11",
+    "date": "2026-10-31",
+    "added": [
+      "Neuigkeiten: nach jedem Update erscheint eine kurze Übersicht, alte Updates findest du über den Knopf „Neuigkeiten“",
+      "Admin: pro Konto lässt sich „∞ CC“ ein- und ausschalten",
+      "Spotify: Der Link zum Entwickler-Dashboard öffnet sich jetzt per Klick"
+    ],
+    "fixed": [
+      "Scrollbalken sind im ganzen Launcher ausgeblendet (Scrollen geht weiter)"
+    ],
+    "removed": [
+      "Das Tester-Konto hat keine unendlichen Coins mehr (100 CC am Anfang)"
+    ]
+  },
+  {
+    "v": "0.9.10",
+    "date": "2026-10-31",
+    "added": [
+      "Admin: Konten pausieren, zeitlich oder dauerhaft sperren, Items entfernen, Aktualisieren-Knopf",
+      "Neuer Reiter „Admin“ in den Einstellungen",
+      "Shop-Namen vom Admin sehen alle Spieler",
+      "Performance-Knopf im Shop",
+      "Slider für die Fenster-Transparenz im Glas-Theme",
+      "Sprachen: Spanisch und Französisch (Grundbegriffe)",
+      "Gewählte Version erscheint sofort in der Bibliothek"
+    ],
+    "fixed": [
+      "Intro läuft auch bei „Animationen reduzieren“ in Windows",
+      "Englisch: Heller/Dunkler Modus und weitere Texte übersetzt",
+      "Modrinth-Fehler zeigt Details und „Erneut versuchen“"
+    ],
+    "removed": [
+      "„Update von einer Adresse“ entfernt",
+      "Konto löschen verlangt jetzt eine Bestätigung"
+    ]
+  },
+  {
+    "v": "0.9.0 – 0.9.9",
+    "date": "",
+    "added": [
+      "Konto-Server (Konten zentral, Admin sieht alle Tester)",
+      "Dark- und Glas-Theme, neue Layouts und Knopfformen",
+      "Neuer Play-Knopf und neue Leiste unten",
+      "GitHub-Updates (ZIP-Releases) und automatische Prüfung alle 10 Minuten",
+      "Coins und Shop werden mit dem Server abgeglichen"
+    ],
+    "fixed": [
+      "Installer-Fehler „Access is denied“",
+      "Schrift im Spiel (Quadrate statt Text)",
+      "Intro und Tour überlagern sich nicht mehr mit der Anmeldung"
+    ],
+    "removed": []
+  }
 ]
