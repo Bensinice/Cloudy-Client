@@ -599,7 +599,7 @@ let libMods=[],libQ='',libCat='all';
 function chips(items,cur){return items.map(([k,l])=>`<button class="chip ${cur===k?'on':''}" data-c="${esc(k)}">${esc(l)}</button>`).join('')}
 function modRow(x){
   const ic=x.icon?`<img class="mi" src="${esc(x.icon)}" alt="">`:`<span class="ph">${esc((x.name[0]||'?').toUpperCase())}</span>`;
-  return `<div class="glass srv">${ic}<div class="tx"><b ${x.project?`class="clk" data-o="${esc(x.project)}"`:''}>${esc(x.name)}</b>${x.version?` <small style="display:inline">${esc(x.version)}</small>`:''}${x.desc?`<small class="d">${esc(x.desc)}</small>`:''}<small>${esc(x.file.replace(/\.disabled$/,''))}${x.enabled?'':' · ausgeschaltet'}</small></div><label class="sw" title="An/Aus"><input type="checkbox" data-t="${esc(x.file)}" ${x.enabled?'checked':''}><i></i></label><button class="btn ghost" data-rm="${esc(x.file)}">Löschen</button></div>`;
+  return `<div class="glass srv">${ic}<div class="tx"><b ${x.project?`class="clk" data-o="${esc(x.project)}"`:''}>${esc(x.name)}</b>${x.version?` <small style="display:inline">${esc(x.version)}</small>`:''}${x.desc?`<small class="d">${esc(x.desc)}</small>`:''}<small>${esc(x.file.replace(/\.disabled$/,''))}${x.enabled?'':' · ausgeschaltet'}</small>${x.warn&&x.enabled?`<small class="mwarn ${x.warn.level}">${x.warn.level==='critical'?'⛔ Kritisch: ':'⚠ Hinweis: '}${esc(x.warn.reason)}${x.project?' Prüfe auf Modrinth, ob es eine passende Version gibt.':''}</small>`:''}</div><label class="sw" title="An/Aus"><input type="checkbox" data-t="${esc(x.file)}" ${x.enabled?'checked':''}><i></i></label><button class="btn ghost" data-rm="${esc(x.file)}">Löschen</button></div>`;
 }
 function paintLibMods(m){
   libMods=m;if(!$('#dMods'))return;

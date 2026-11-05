@@ -787,3 +787,7 @@ html.gaming .blob,html.gaming .sky{display:none!important}
 .tools .chip{min-width:0}
 #maintBar{position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:9998;max-width:min(92vw,720px);padding:10px 18px;border-radius:14px;background:#2b2208;color:#ffd96a;border:1px solid rgba(255,200,60,.5);font-weight:600;font-size:13.5px;box-shadow:0 10px 30px rgba(0,0,0,.4);text-align:center}
 #maintBar[hidden]{display:none}
+
+.mwarn{display:block!important;margin-top:4px;padding:5px 9px;border-radius:9px;font-size:12px!important;line-height:1.35}
+.mwarn.critical{background:rgba(255,59,74,.16);color:#ff6b78}.mwarn.warn{background:rgba(255,200,60,.16);color:#d9a300}
+:root[data-theme*=dark] .mwarn.warn,:root[data-theme=midnight] .mwarn.warn{color:#ffd96a}

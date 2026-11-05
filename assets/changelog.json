@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.98",
+  "date": "2026-11-05",
+  "added": [
+   "Warnung bei inkompatiblen Mods: In der Bibliothek zeigt jeder aktive Mod, der nicht zur gewählten Minecraft-Version passt oder ein Forge-Mod ist, eine rote Warnung mit Grund; unklare Dateien bekommen einen gelben Hinweis. Gelesen wird direkt aus der Mod-Datei",
+   "Einführung erweitert: Die Tour erklärt jetzt auch, wie du Cloudy herunterlädst, installierst (inkl. Mac-Hinweis) und Minecraft darüber startest. Überspringbar und in den Einstellungen wiederholbar"
+  ],
+  "fixed": []
+ },
+ {
   "v": "0.9.97",
   "date": "2026-11-05",
   "added": [

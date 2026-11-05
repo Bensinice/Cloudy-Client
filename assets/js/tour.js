@@ -23,6 +23,8 @@
   // ---------- Tour ----------
   const STEPS = [
     { s: null, t: 'Willkommen bei Cloudy', d: 'Eine kurze Runde durch den ganzen Launcher – in etwa einer Minute weißt du, wo alles ist. Mit den Pfeiltasten oder „Weiter“ geht es voran, „Überspringen“ beendet die Tour.', p: 'home' },
+    { s: null, t: 'So bekommst du Cloudy', d: '1. Lade den Cloudy-Launcher auf cloudyclient.com herunter (Windows: Cloudy-Setup.exe, Mac: die passende .dmg). 2. Installiere ihn: unter Windows die Setup-Datei öffnen, am Mac das Symbol in „Programme“ ziehen. Meldet der Mac „beschädigt“, öffne das Terminal und gib ein: xattr -cr /Applications/Cloudy.app. 3. Starte Cloudy und melde dich mit deinem Cloudy-Konto an.', p: 'home' },
+    { s: '#play', t: 'Minecraft über Cloudy öffnen', d: 'Wähle unter „Versionen“ eine Minecraft-Version (empfohlen: 1.21.4) und drücke „Spielen“. Cloudy lädt Java und alle Spieldateien selbst und startet Minecraft mit dem Cloudy Client. Dafür brauchst du ein Minecraft-Konto (Microsoft) in den Einstellungen.', p: 'home' },
     { s: '.nav[data-p="home"]', t: 'Start', d: 'Deine Startseite: schneller Zugriff auf Spielen, Neuigkeiten („Was ist neu“) und deinen Skin mit Cosmetics.', p: 'home' },
     { s: '.nav[data-p="versions"]', t: 'Versionen – warum 1.21.4?', d: 'Hier wählst du die Minecraft-Version. Vorausgewählt ist 1.21.4, weil der Cloudy Client (Cosmetics, Anzeigen, Tags) aktuell genau darauf läuft. Java und alle Spieldateien lädt Cloudy selbst herunter, der Cloudy Client wird automatisch installiert und aktuell gehalten.', p: 'versions' },
     { s: '.nav[data-p="servers"]', t: 'Server', d: 'Speichere Server, tritt mit einem Klick bei oder starte einen eigenen Server für deine Freunde.', p: 'servers' },

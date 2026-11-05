@@ -1,4 +1,8 @@
 {
+  "0.9.98": [
+    "Warning for incompatible mods: in the library every active mod that does not match the chosen Minecraft version or is a Forge mod shows a red warning with the reason; unclear files get a yellow note. Read straight from the mod file",
+    "Introduction extended: the tour now also explains how to download and install Cloudy (incl. Mac tip) and start Minecraft with it. Skippable and repeatable in Settings"
+  ],
   "0.9.97": [
     "Stay signed in: if the server is briefly unreachable at start (restart, update, network issue) you stay signed in instead of landing on the sign-in screen. Only a clear rejection by the server signs you out",
     "In-game tags: colours match the launcher (Owner red, Admin light red, Manager orange, Mod blue, Cloudy+ light gold, Gold strong gold, Tester green); Owner, Admin and Gold in bold so they stand apart from Cloudy+"

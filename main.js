@@ -18,6 +18,7 @@ const { execFileSync, spawnSync, spawn } = require('child_process');
 const { openZip } = require('./lib/zipread');
 const { Client, Authenticator } = require('minecraft-launcher-core');
 const { readJarInfo, prettyName } = require('./lib/modinfo');
+const { checkJar } = require('./lib/modcompat');
 const optsSync = require('./lib/options');
 const { findSystemJava } = require('./lib/java');
 const { readPackInfo } = require('./lib/packs');
@@ -450,9 +451,10 @@ function listMods(v) {
   const out = files.map(f => {
     const k = modKey(v, f);
     if (!c[k]) { c[k] = { local: readJarInfo(path.join(modsDir(v), f)) }; dirty = true; }
+    if (!c[k].compat || c[k].compat.mc !== v) { const r = checkJar(path.join(modsDir(v), f), v); c[k].compat = { mc: v, level: r.level || '', reason: r.reason || '' }; dirty = true; }
     const { local = {}, mr } = c[k];
     return {
-      file: f, enabled: f.endsWith('.jar'),
+      file: f, enabled: f.endsWith('.jar'), warn: c[k].compat.level ? { level: c[k].compat.level, reason: c[k].compat.reason } : null,
       name: (mr && mr.title) || local.name || prettyName(f),
       version: local.version || '', icon: (mr && mr.icon) || local.icon || null,
       desc: (mr && mr.desc) || local.desc || '', cats: (mr && mr.cats) || [],
@@ -852,7 +854,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.97'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.98'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
