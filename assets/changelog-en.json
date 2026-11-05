@@ -1,4 +1,11 @@
 {
+  "0.9.99": [
+    "Cloudy Notes: new “Notes” tab. Notes are stored per account on the Cloudy server (autosave, search, sorting, versions, restore, offline cache and sync between devices)",
+    "Turn a note into a detailed Claude prompt with ChatGPT (real OpenAI API, key stored encrypted on the server) – edit, copy, regenerate; the original note stays unchanged",
+    "“Build as Cloudy update”: the prompt goes to Claude Code in your project folder – with plan confirmation, status, progress, affected files, errors, cancel and resume. Claude cannot commit/push and only works inside the project folder",
+    "AI Connections: ChatGPT, Claude, Cloudy backend and project access can each be tested, optional Anthropic key, permission overview",
+    "Interactive 8-step tour for Cloudy Notes (skippable, repeatable, progress is saved)"
+  ],
   "0.9.98": [
     "Warning for incompatible mods: in the library every active mod that does not match the chosen Minecraft version or is a Forge mod shows a red warning with the reason; unclear files get a yellow note. Read straight from the mod file",
     "Introduction extended: the tour now also explains how to download and install Cloudy (incl. Mac tip) and start Minecraft with it. Skippable and repeatable in Settings"

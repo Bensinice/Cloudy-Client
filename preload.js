@@ -55,6 +55,8 @@ contextBridge.exposeInMainWorld('cloudy', {
   admQuestReset: o => inv('admQuestReset', o),
   admCq: o => inv('admCq', o),
   newsList: () => inv('newsList'),
+  notesApi: (p, b) => inv('notesApi', p, b), notesCfgGet: () => inv('notesCfgGet'), notesCfgSet: o => inv('notesCfgSet', o), notesPickProject: () => inv('notesPickProject'), notesCheck: w => inv('notesCheck', w),
+  notesBuildStart: o => inv('notesBuildStart', o), notesBuildGo: o => inv('notesBuildGo', o), notesBuildCancel: () => inv('notesBuildCancel'), notesBuildState: () => inv('notesBuildState'), onNotesBuild: f => ipcRenderer.on('notesBuild', (_e, d) => f(d)),
   maintGet: () => inv('maintGet'),
   plusRedeem: c => inv('plusRedeem', c),
   admPlusCodes: o => inv('admPlusCodes', o),

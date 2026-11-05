@@ -1,5 +1,17 @@
 [
  {
+  "v": "0.9.99",
+  "date": "2026-11-05",
+  "added": [
+   "Cloudy Notes: neuer Tab „Notes“. Notizen werden pro Konto auf dem Cloudy-Server gespeichert (automatisch, mit Suche, Sortierung, Versionen, Wiederherstellung, Offline-Cache und Sync zwischen Geräten)",
+   "Notiz per ChatGPT (echte OpenAI-API, Key verschlüsselt auf dem Server) in einen ausführlichen Claude-Prompt umwandeln – bearbeiten, kopieren, neu generieren; die Original-Notiz bleibt unverändert",
+   "„Als Cloudy Update bauen“: der Prompt geht an Claude Code in deinem Projektordner – mit Plan-Bestätigung, Status, Fortschritt, betroffenen Dateien, Fehlern, Abbrechen und Fortsetzen. Claude darf nicht committen/pushen und nur im Projektordner arbeiten",
+   "AI Connections: ChatGPT, Claude, Cloudy Backend und Projektzugriff einzeln testbar, optionaler Anthropic-Key, Berechtigungsübersicht",
+   "Interaktive 8-Schritte-Tour für Cloudy Notes (überspringbar, wiederholbar, Fortschritt wird gespeichert)"
+  ],
+  "fixed": []
+ },
+ {
   "v": "0.9.98",
   "date": "2026-11-05",
   "added": [
