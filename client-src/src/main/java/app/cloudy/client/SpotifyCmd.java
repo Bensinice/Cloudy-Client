@@ -21,6 +21,13 @@ public final class SpotifyCmd {
 		});
 	}
 
+	/** Befehl an den Launcher (pause, resume, skip, prev, play:spotify:playlist:ID, vol:0-100). Gibt false zurueck, wenn das Spiel nicht ueber Cloudy gestartet wurde. */
+	public static boolean send(String cmd) {
+		String p = System.getProperty("cloudy.cmd", "");
+		if (p.isEmpty()) return false;
+		try { Files.writeString(Path.of(p), cmd + "|" + System.currentTimeMillis()); return true; } catch (Exception e) { return false; }
+	}
+
 	private static void reg(com.mojang.brigadier.CommandDispatcher<net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource> d, String name, String msg) {
 		d.register(ClientCommandManager.literal(name).executes(ctx -> {
 			String p = System.getProperty("cloudy.cmd", "");

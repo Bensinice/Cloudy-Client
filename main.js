@@ -838,7 +838,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.89'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.90'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -2422,7 +2422,20 @@ ipcMain.handle('mediaKey', async (_e, k) => { // erst Spotify direkt (Premium + 
 
 // ---- Chat-Befehle im Spiel (/pause /resume /skip /prev): der Client schreibt sie in eine Datei, hier werden sie ausgeführt ----
 const cmdFile = path.join(app.getPath('userData'), 'cloudy-cmd.txt'); let cmdSeen = 0;
+// Spotify-Menue im Spiel (Taste I): der Launcher schreibt Playlists + Meldungen in eine Datei, die Mod schreibt Befehle in cmdFile (pause/resume/skip/prev/play:<uri>/vol:<0-100>)
+const spListFile = path.join(app.getPath('userData'), 'cloudy-spotify.json'); let spListAt = 0, spMsg = { t: 0, text: '' };
+async function spWriteList(force) {
+  if (!mcProc && !force) return; if (!spLoad().refresh) { try { fs.writeFileSync(spListFile, JSON.stringify({ ts: Date.now(), connected: false, playlists: [], msg: spMsg })); } catch {} return; }
+  if (!force && Date.now() - spListAt < 45000) return; spListAt = Date.now();
+  const r = await spApi.playlists().catch(() => null), pls = r && r.ok ? r.playlists.slice(0, 100).map(p => ({ name: p.name, uri: p.uri, total: p.total == null ? -1 : p.total })) : [];
+  try { fs.writeFileSync(spListFile, JSON.stringify({ ts: Date.now(), connected: true, error: r && r.ok ? '' : (r && r.error) || 'Spotify nicht erreichbar.', playlists: pls, msg: spMsg })); } catch {}
+}
+setInterval(() => { spWriteList(false).catch(() => {}); }, 5000);
 async function spotifyControl(cmd) {
+  if (/^play:spotify:(playlist|album|artist):[A-Za-z0-9]+$/.test(cmd) || /^vol:\d{1,3}$/.test(cmd)) { // neue Befehle aus dem Spiel
+    const r = cmd.startsWith('vol:') ? await spApi.volume(+cmd.slice(4)).catch(() => null) : await spApi.play({ context: cmd.slice(5) }).catch(() => null);
+    spMsg = { t: Date.now(), text: r && r.ok ? (cmd.startsWith('vol:') ? 'Volume set' : 'Playing') : (r && r.error) || 'Spotify nicht erreichbar.', ok: !!(r && r.ok) }; spListAt = 0; spWriteList(true).catch(() => {}); spCache = { t: 0, v: null }; return;
+  }
   const map = { pause: ['PUT', 'pause'], resume: ['PUT', 'play'], skip: ['POST', 'next'], prev: ['POST', 'previous'] }, a = map[cmd]; if (!a) return;
   try { // 1. Spotify-Anmeldung (braucht Spotify Premium und die Berechtigung "Wiedergabe steuern": einmal neu anmelden)
     const tok = await spToken();
@@ -2599,7 +2612,7 @@ ipcMain.handle('launch', async (_e, { username, version, type, ram, server, fabr
       overrides: { gameDirectory: gameDir(version), ...(newClasses ? { classes: newClasses } : {}) },
       memory: { max: `${ram}G`, min: '1G' },
       customArgs: [...(IS_MAC ? ['-XstartOnFirstThread'] : []), ...cdsFlags(version, safe), ...(/UseZGC|UseG1GC|UseShenandoah|UseParallelGC|UseSerialGC|UseConcMarkSweep/.test(jvm || '') || safe ? [] : GC_FLAGS), ...(jvm ? jvm.split(/\s+/).filter(Boolean) : []),
-        `-Dcloudy.mods=${clientMods.join(',')}`, ...(hasCape() ? [`-Dcloudy.cape=${capeFile}`] : []), ...(!safe && fs.existsSync(cosFile) ? [`-Dcloudy.cosmetics=${cosFile}`] : []), `-Dcloudy.cfg=${cfgFile}`, `-Dcloudy.coswant=${cosWant}`, `-Dcloudy.cosoth=${cosOth}`, `-Dcloudy.lyrics=${lyricsFile}`, `-Dcloudy.cmd=${cmdFile}`, `-Dcloudy.qstat=${qstatFile}`, `-Dcloudy.ver=${CLIENT_BUILD}`, ...(hud && !safe ? [`-Dcloudy.hud=${Object.entries(hud).filter(([, v]) => v).map(([k]) => k).join(',')}`] : []), ...(sndOn ? [`-Dcloudy.sounds=${sndActive}`] : []), ...(cheats && unlocked() ? ['-Dcloudy.cheats=1'] : [])],
+        `-Dcloudy.mods=${clientMods.join(',')}`, ...(hasCape() ? [`-Dcloudy.cape=${capeFile}`] : []), ...(!safe && fs.existsSync(cosFile) ? [`-Dcloudy.cosmetics=${cosFile}`] : []), `-Dcloudy.cfg=${cfgFile}`, `-Dcloudy.coswant=${cosWant}`, `-Dcloudy.cosoth=${cosOth}`, `-Dcloudy.lyrics=${lyricsFile}`, `-Dcloudy.cmd=${cmdFile}`, `-Dcloudy.spotify=${spListFile}`, `-Dcloudy.qstat=${qstatFile}`, `-Dcloudy.ver=${CLIENT_BUILD}`, ...(hud && !safe ? [`-Dcloudy.hud=${Object.entries(hud).filter(([, v]) => v).map(([k]) => k).join(',')}`] : []), ...(sndOn ? [`-Dcloudy.sounds=${sndActive}`] : []), ...(cheats && unlocked() ? ['-Dcloudy.cheats=1'] : [])],
       ...(ww && wh ? { window: { width: +ww, height: +wh } } : {}),
       ...(server && !modernQP(bv(version)) ? { server: { host: server.host, port: String(server.port || 25565) } } : {}),
       ...(server && modernQP(bv(version)) ? { customLaunchArgs: ['--quickPlayMultiplayer', `${server.host === 'localhost' ? '127.0.0.1' : server.host}:${server.port || 25565}`] } : {})

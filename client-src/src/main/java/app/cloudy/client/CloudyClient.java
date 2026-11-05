@@ -20,6 +20,7 @@ public class CloudyClient implements ClientModInitializer {
 	private static boolean shiftDown;
 	public static boolean CAPE, HUD, CHEATS, HUD_FPS, HUD_PING, HUD_ARMOR, HUD_COORDS;
 	private static KeyBinding menuKey, reloadKey, cosKey, zoomKey, modsKey;
+	static KeyBinding spotKey;
 	public static boolean STYLE = true;
 
 	@Override
@@ -71,12 +72,14 @@ public class CloudyClient implements ClientModInitializer {
 		});
 		zoomKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.cloudy.zoom", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_C, "category.cloudy"));
 		modsKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.cloudy.mods", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_H, "category.cloudy"));
+		spotKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.cloudy.spotify", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_I, "category.cloudy"));
 		ModConfig.load();
 		ClientTickEvents.END_CLIENT_TICK.register(mc -> {
 			Hud.pollClicks(mc);
 			Qol.tick(mc, zoomKey);
 			try { Hotkeys.tick(mc); } catch (Throwable ignored) {}
 			while (modsKey.wasPressed()) if (mc.currentScreen == null) mc.setScreen(new CloudyModsScreen(null));
+			while (spotKey.wasPressed()) if (mc.currentScreen == null) mc.setScreen(new SpotifyScreen(null));
 		});
 		Cosmetics.init();
 		ClientTickEvents.END_CLIENT_TICK.register(mc -> { try { CosmeticNet.tick(mc); } catch (Throwable ignored) {} });

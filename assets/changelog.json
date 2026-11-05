@@ -1,5 +1,15 @@
 [
   {
+    "v": "0.9.90",
+    "date": "2026-11-05",
+    "added": [
+      "Spotify direkt in Minecraft: Taste I öffnet ein Menü im Spiel mit aktuellem Song (Cover, Zeit, Fortschritt), Zurück/Pause/Weiter, Lautstärke, Playlists zum Anklicken sowie Schaltern für Lyrics, Song-Karte und Lyrics-Größe",
+      "Die Taste ist in den Minecraft-Steuerungen (Cloudy Client → „Open Spotify menu“) änderbar; nochmal drücken schließt das Menü",
+      "Playlists kommen vom Launcher (Spotify verbunden, Premium zum Abspielen nötig); Meldungen wie „kein aktives Gerät“ erscheinen im Menü"
+    ],
+    "fixed": []
+  },
+  {
     "v": "0.9.89",
     "date": "2026-11-05",
     "added": [

@@ -93,6 +93,17 @@ public final class Lyrics {
 		} catch (Throwable e) { coverId = null; }
 	}
 
+	// ---- Zugriff fuer das Spotify-Menue (Taste I) ----
+	public static void refresh() { load(); }
+	public static String nowTitle() { return title; }
+	public static String nowArtist() { return artist; }
+	public static boolean nowPlaying() { return playing; }
+	public static net.minecraft.util.Identifier nowCover() { return coverId; }
+	public static float nowProgress() { return durMs <= 0 ? 0f : Math.max(0f, Math.min(1f, (float) (posMs + (playing ? System.currentTimeMillis() - ts : 0)) / durMs)); }
+	public static String nowTime() { long p = posMs + (playing ? System.currentTimeMillis() - ts : 0); return fmt(p) + " / " + fmt(durMs); }
+	private static String fmt(long ms) { long s = Math.max(0, ms / 1000); return (s / 60) + ":" + String.format("%02d", s % 60); }
+	public static boolean hasLyrics() { return times.length > 0; }
+
 	private static long pos() { return posMs + ModConfig.lyricsOffset + (playing ? System.currentTimeMillis() - ts : 0); }
 
 	private static int current() {

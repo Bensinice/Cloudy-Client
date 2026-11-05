@@ -1,4 +1,9 @@
 {
+  "0.9.90": [
+    "Spotify right inside Minecraft: the I key opens an in-game menu with the current song (cover, time, progress), previous/pause/next, volume, clickable playlists and switches for lyrics, song card and lyrics size",
+    "The key can be changed in the Minecraft controls (Cloudy Client → “Open Spotify menu”); pressing it again closes the menu",
+    "Playlists come from the launcher (Spotify connected, Premium needed to play); messages like “no active device” show in the menu"
+  ],
   "0.9.89": [
     "Admins can create custom quests (Settings → “Custom quests”): title, description, Minecraft task (wood, stone, iron, diamonds, zombies, skeletons, walking, crafting, fishing) or play time, goal, reward (coins/stars/XP), difficulty, date range and time limit",
     "Quests can be assigned to specific players or everyone, enabled, disabled, edited and deleted; admins see all players’ progress",
