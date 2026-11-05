@@ -43,7 +43,7 @@ public final class CosmeticNet {
 
 	public static List<String> tagsOf(String name) { return name == null ? null : tagMap.get(name.toLowerCase()); }
 	private static int tagColor(String t) {
-		switch (t) { case "owner": return 0xFFAA00; case "admin": return 0xFF5555; case "manager": return 0xFF8A3D; case "mod": return 0x55FF55; case "plus": return 0x55FFFF; case "tester": return 0xAA77FF; default: return 0x9CC9FF; }
+		switch (t) { case "owner": return 0xFFAA00; case "admin": return 0xFF5555; case "manager": return 0xFF8A3D; case "mod": return 0x55FF55; case "plus": return 0x55FFFF; case "gold": return 0xFFD700; case "tester": return 0xAA77FF; default: return 0x9CC9FF; }
 	}
 	/** Vorsatz vor dem Namen, z. B. "[Owner] [CLD] ". Null, wenn der Spieler keine Tags hat. */
 	public static net.minecraft.text.MutableText tagPrefix(String name) {
@@ -52,7 +52,7 @@ public final class CosmeticNet {
 		for (String t : l) {
 			String label; int col;
 			if (t.startsWith("clan:")) { String[] p = t.split(":"); label = p.length > 1 ? p[1] : ""; col = 0x9CC9FF; if (p.length > 2) { try { col = Integer.parseInt(p[2], 16); } catch (Exception ignored) {} } }
-			else { label = t.isEmpty() ? "" : Character.toUpperCase(t.charAt(0)) + t.substring(1); col = tagColor(t); if (t.equals("plus")) label = "Cloudy+"; if (t.equals("mod")) label = "Mod"; }
+			else { label = t.isEmpty() ? "" : Character.toUpperCase(t.charAt(0)) + t.substring(1); col = tagColor(t); if (t.equals("plus")) label = "Cloudy+"; if (t.equals("mod")) label = "Mod"; if (t.equals("gold")) label = "Gold"; }
 			if (label.isEmpty()) continue;
 			final int c = col;
 			net.minecraft.text.MutableText part = net.minecraft.text.Text.literal("[" + label + "] ").styled(st -> st.withColor(c));

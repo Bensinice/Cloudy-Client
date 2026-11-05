@@ -316,7 +316,7 @@ public class SpotifyScreen extends Screen {
 		int y = row(c, "Show lyrics", "While Spotify plays");
 		toggle(c, mx, my, y, ModConfig.isOn("lyrics"), () -> ModConfig.set("lyrics", !ModConfig.isOn("lyrics")));
 		y = row(c, "Where", ModConfig.LPOS[ModConfig.lyricsMode], 250);
-		seg(c, mx, my, y, new String[] {"World", "Hotbar", "Top", "Center", "List"}, ModConfig.lyricsMode, i -> { ModConfig.lyricsMode = i; ModConfig.save(); });
+		seg(c, mx, my, y, new String[] {"Sky 3D", "Hotbar", "Top", "Center", "List", "Flat"}, ModConfig.lyricsMode, i -> { ModConfig.lyricsMode = i; ModConfig.save(); });
 		y = row(c, "Effect", "Behind the words", 210);
 		seg(c, mx, my, y, ModConfig.LFX, ModConfig.lyricsFx, i -> { ModConfig.lyricsFx = i; ModConfig.save(); });
 		section(c, "Font");

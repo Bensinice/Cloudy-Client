@@ -1,0 +1,98 @@
+/* Cloudy 2.0 – neues Design. Gilt nur, wenn <html data-ui="2"> gesetzt ist (Einstellungen → Darstellung → Cloudy 2.0).
+   Dieselben Seiten und Funktionen wie das alte Design; hier ändern sich nur Farben, Flächen, Abstände, Navigation und Animationen. */
+html[data-ui="2"]{
+  color-scheme:dark;--mode:dark;
+  --bg1:#0f0f11;--bg2:#121214;--bg3:#151518;--blob-op:0;
+  --ink:#f2f2f7;--ink2:#9a9aa3;--on-accent:#fff;
+  --g1:#1a1a1d;--g2:#1a1a1d;--gb:#2b2b30;--gh:rgba(255,255,255,.07);--gl:rgba(0,0,0,.35);--gs:rgba(0,0,0,.5);
+  --field:#202024;--field-b:#303036;--chip:#252529;--overlay:rgba(0,0,0,.62);--glass-tint:#1a1a1d;--gm-def:1;--title-bg:#0f0f11;
+  --r:14px;--ui2-line:#2a2a2f;--ui2-card:#1a1a1d;--ui2-side:#141416;--ui2-hover:#232327;
+}
+html[data-ui="2"] body{background:var(--bg1)}
+html[data-ui="2"] .sky,html[data-ui="2"] .blob{display:none}
+html[data-ui="2"] ::-webkit-scrollbar{width:8px}
+html[data-ui="2"] ::-webkit-scrollbar-thumb{background:#3a3a40;border:2px solid transparent;background-clip:padding-box}
+
+/* Flächen */
+html[data-ui="2"] .glass{background:var(--ui2-card);border:1px solid var(--ui2-line);box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;border-radius:var(--r)}
+html[data-ui="2"] .glass::before{display:none}
+
+/* Rahmen und Navigation: feste Seitenleiste links, Inhalt daneben */
+html[data-ui="2"] .app{grid-template-columns:236px minmax(0,1fr);gap:0;padding:44px 0 0}
+html[data-ui="2"] .side{border-radius:0;border:0;border-right:1px solid var(--ui2-line);background:var(--ui2-side);padding:14px 10px 12px;gap:2px}
+html[data-ui="2"] .brand{justify-content:flex-start;font-size:21px;font-weight:700;text-shadow:none;padding:2px 10px 16px;letter-spacing:-.01em}
+html[data-ui="2"] .brand svg{filter:none;width:26px;height:26px}
+html[data-ui="2"] .nav{height:38px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:500;gap:11px;color:var(--ink2);transition:background .18s,color .18s}
+html[data-ui="2"] .nav svg{width:18px;height:18px;stroke-width:1.8}
+html[data-ui="2"] .nav:hover{background:var(--ui2-hover);color:var(--ink);transform:none}
+html[data-ui="2"] .nav.on{background:#fff;color:#111114;box-shadow:none;font-weight:600}
+html[data-ui="2"] .acc{background:var(--ui2-card);border:1px solid var(--ui2-line);border-radius:12px}
+html[data-ui="2"] .av{border-radius:10px;background:var(--accent)}
+html[data-ui="2"] .stage{padding:0 28px}
+html[data-ui="2"] .page{padding:6px 4px 116px}
+html[data-ui="2"] .page.on{animation:ui2in .32s var(--ease)}
+@keyframes ui2in{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+
+/* Typografie */
+html[data-ui="2"] h2{font-size:26px;font-weight:700;letter-spacing:-.02em}
+html[data-ui="2"] h3{font-size:15px;font-weight:600}
+html[data-ui="2"] .sec h2{font-size:18px}
+html[data-ui="2"] .muted{font-size:13px}
+
+/* Start-Banner */
+html[data-ui="2"] .hero{min-height:260px;border-radius:20px;padding:34px 38px;border:1px solid var(--ui2-line);background:radial-gradient(80% 120% at 100% 0%,color-mix(in srgb,var(--accent) 55%,#000),transparent 70%),linear-gradient(135deg,#1d1d21,#141416);box-shadow:none}
+html[data-ui="2"] .hero::before,html[data-ui="2"] .hero .orb,html[data-ui="2"] .hero .cloud{display:none}
+html[data-ui="2"] .hero h1{font-size:44px;letter-spacing:-.03em;text-shadow:none}
+html[data-ui="2"] .hero .eyebrow{background:rgba(255,255,255,.1);backdrop-filter:none}
+html[data-ui="2"] .hero .chip{backdrop-filter:none;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18);height:42px;border-radius:10px}
+html[data-ui="2"] .hero .play{background:#fff;color:#111114;border-radius:12px;height:46px;font-size:16px;box-shadow:none}
+
+/* Knöpfe, Felder, Schalter */
+html[data-ui="2"] .btn{height:38px;border-radius:10px;background:#fff;color:#111114;box-shadow:none;font-weight:600;transition:background .18s,transform .15s}
+html[data-ui="2"] .btn:hover{filter:none;background:#e6e6ea;transform:none}
+html[data-ui="2"] .btn:active{transform:scale(.98)}
+html[data-ui="2"] .btn.ghost{background:var(--chip);color:var(--ink);border:1px solid var(--ui2-line)}
+html[data-ui="2"] .btn.ghost:hover{background:var(--ui2-hover)}
+html[data-ui="2"] .chip{height:32px;border-radius:8px;background:var(--chip);border-color:var(--ui2-line);color:var(--ink2);font-weight:500}
+html[data-ui="2"] .chip:hover{transform:none;background:var(--ui2-hover);color:var(--ink)}
+html[data-ui="2"] .chip.on{background:#fff;color:#111114;border-color:#fff;box-shadow:none;font-weight:600}
+html[data-ui="2"] .play{background:var(--accent);box-shadow:none;border-radius:12px;height:48px;min-width:150px;font-size:16px;text-shadow:none}
+html[data-ui="2"] .play::after{display:none}
+html[data-ui="2"] .play:hover{filter:brightness(1.1);transform:none}
+html[data-ui="2"] .field{height:38px;border-radius:10px;box-shadow:none;background:var(--field);border:1px solid var(--field-b);font-size:14px}
+html[data-ui="2"] .field:focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 35%,transparent);border-color:var(--accent)}
+html[data-ui="2"] .sw i{background:#3a3a40;box-shadow:none}
+html[data-ui="2"] .sw i::after{box-shadow:none}
+html[data-ui="2"] .sw input:checked+i{background:#fff}
+html[data-ui="2"] .sw input:checked+i::after{background:#1c1c1e}
+html[data-ui="2"] input[type=range]{height:6px;background:#3a3a40;box-shadow:none}
+html[data-ui="2"] input[type=range]::-webkit-slider-thumb{width:18px;height:18px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+html[data-ui="2"] .bar,html[data-ui="2"] .ubar{background:#303036;box-shadow:none;height:6px}
+html[data-ui="2"] .bar i,html[data-ui="2"] .ubar i{background:var(--accent);box-shadow:none}
+
+/* Karten und Listen */
+html[data-ui="2"] .tile{border-radius:14px;background:var(--ui2-card);border:1px solid var(--ui2-line);transition:transform .22s var(--ease),border-color .2s,background .2s}
+html[data-ui="2"] .tile:hover{transform:translateY(-3px);box-shadow:none;border-color:#4a4a52;background:#202024}
+html[data-ui="2"] .tile.sel{outline:2px solid #fff;outline-offset:-2px}
+html[data-ui="2"] .qa .ic{border-radius:10px;background:var(--accent);box-shadow:none}
+html[data-ui="2"] .srv{border-radius:14px;transition:transform .22s var(--ease),border-color .2s}
+html[data-ui="2"] .srv:hover{transform:translateX(3px);border-color:#44444b}
+html[data-ui="2"] .th{border-radius:12px;background:var(--ui2-card)}
+html[data-ui="2"] .th:hover{transform:translateY(-2px)}
+html[data-ui="2"] .th.on{border-color:#fff;box-shadow:none}
+html[data-ui="2"] .mi,html[data-ui="2"] .ph{border-radius:10px}
+html[data-ui="2"] .ph{background:var(--accent)}
+html[data-ui="2"] .pill,html[data-ui="2"] .tag{background:var(--chip);color:var(--ink2);border-radius:8px}
+html[data-ui="2"] .set{padding:18px 22px;max-width:620px}
+html[data-ui="2"] .upd{border-radius:14px}
+
+/* Spiel-Leiste unten */
+html[data-ui="2"] .dock{border-radius:16px;padding:10px 10px 10px 18px;left:0;right:0;bottom:12px;background:#17171a}
+
+/* Schalter in den Einstellungen für Cloudy 2.0 */
+.ui2row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 14px;border-radius:14px;border:1px solid var(--gb);background:var(--chip);margin-bottom:12px}
+.ui2row b{display:block;font-size:15px}.ui2row small{display:block;color:var(--ink2);margin-top:2px;font-size:12.5px}
+.ui2st{font-size:12px;font-weight:800;letter-spacing:.06em;margin-right:10px;color:var(--ink2)}
+.ui2st.on{color:#6ff0b0}
+
+@media (prefers-reduced-motion:reduce){html[data-ui="2"] .page.on{animation:none}html[data-ui="2"] *{transition-duration:.01ms!important}}

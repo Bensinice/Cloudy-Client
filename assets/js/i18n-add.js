@@ -1,5 +1,6 @@
 // Cloudy – zusätzliche englische Texte (werden von i18n.js zu EN dazugemischt). Format: "Deutsch": "English"
 window.CLOUDY_EN_EXTRA = {
+  "Neues Design: dunkle Flächen, feste Seitenleiste, ruhigere Animationen. Alle Funktionen bleiben gleich. AUS = bisheriges Cloudy-Design.": "New design: dark surfaces, fixed sidebar, calmer animations. All features stay the same. OFF = the previous Cloudy design.",
   "Dein Cloudy-Server kennt Quests noch nicht (Fehler 404). Der Server braucht das neue app.js und die neue quests.js und muss danach neu gestartet werden.": "Your Cloudy server does not know quests yet (error 404). The server needs the new app.js and quests.js and must be restarted afterwards.",
   "Neu hinzugefügt": "Newly added", "Noch nichts Neues.": "Nothing new yet.",
   "Offline spielen (eingeschränkt)": "Play offline (limited)",

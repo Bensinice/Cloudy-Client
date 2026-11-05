@@ -73,7 +73,7 @@ public final class ModConfig {
 	public static int bgStyle = 0, skySrc = 0, skyCol = 3, skyStr = 100;
 	public static final String[] BG_NAMES = {"Clean", "Theme scene"}, SKY_SRC = {"Shop sky", "Theme color", "Custom color"};
 	public static void skyReset() { skyBeat = 0; skySrc = 0; skyCol = 3; skyStr = 100; cloudMode = 0; cloudCol = 0; fogMode = 0; fogCol = 9; fogDist = 2; save(); }
-	public static final String[] LPOS = {"Words in world", "Near hotbar", "Top center", "Screen center", "Left list"};
+	public static final String[] LPOS = {"Words in world (3D sky)", "Near hotbar", "Top center", "Screen center", "Left list", "Words (flat)"};
 	public static final String[] LFONT = {"Extended", "Poppins", "Minecraft", "Montserrat", "Kanit", "Fredoka", "Unbounded", "Bebas Neue", "Pacifico", "Caveat"}, LFX = {"Glow", "Shadow", "Outline", "None"};
 	public static void lyricsReset() { lyricsMode = 0; lyricsOffset = 0; lyricsLife = 1600; lyricsCur = 0; lyricsOld = 3; lyricsFont = 0; lyricsFx = 0; lyricsMotion = 0; lyricsAlpha = 100; lyricsSize = 100; lyricsCard = true; save(); }
 	/** Farbauswahl fuer die Lyrics (Index): 0 Weiss, 1 Theme, 2 Gelb, 3 Hellblau, 4 Rosa, 5 Mint, 6 Orange, 7 Violett, 8 Rot */
@@ -124,7 +124,7 @@ public final class ModConfig {
 				if (o.has("pos")) for (var e : o.getAsJsonObject("pos").entrySet()) { var a = e.getValue().getAsJsonArray(); pos.put(e.getKey(), new float[]{a.get(0).getAsFloat(), a.get(1).getAsFloat(), a.get(2).getAsFloat()}); }
 				if (o.has("top")) top = o.get("top").getAsBoolean();
 				if (o.has("menu")) menu = o.get("menu").getAsBoolean();
-				if (o.has("lyricsMode")) lyricsMode = o.get("lyricsMode").getAsInt();
+				if (o.has("lyricsMode")) lyricsMode = Math.max(0, Math.min(LPOS.length - 1, o.get("lyricsMode").getAsInt()));
 				if (o.has("lyricsOffset")) lyricsOffset = o.get("lyricsOffset").getAsInt();
 				if (o.has("lyricsLife")) lyricsLife = Math.max(600, Math.min(4000, o.get("lyricsLife").getAsInt()));
 				if (o.has("pickCols")) { var a = o.getAsJsonArray("pickCols"); for (int i = 0; i < pick.length && i < a.size(); i++) pick[i] = a.get(i).getAsInt() & 0xFFFFFF; }

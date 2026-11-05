@@ -85,6 +85,7 @@ public class CloudyClient implements ClientModInitializer {
 		ClientTickEvents.END_CLIENT_TICK.register(mc -> { try { CosmeticNet.tick(mc); } catch (Throwable ignored) {} });
 		CreamHeist.init();
 		HudRenderCallback.EVENT.register(Hud::render);
+		try { net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents.AFTER_TRANSLUCENT.register(ctx -> { try { Lyrics.world(ctx); } catch (Throwable ignored) {} }); } catch (Throwable t) { LOG.warn("3D-Lyrics nicht verfuegbar", t); }
 		try { Extras.init(); } catch (Throwable ignored) {}
 		try {
 			KeyBinding lookKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.cloudy.freelook", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_ALT, "category.cloudy"));

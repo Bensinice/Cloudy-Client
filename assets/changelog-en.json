@@ -1,4 +1,11 @@
 {
+  "0.9.92": [
+    "New Cloudy logo in gold and black: shown at the top of the launcher instead of the white cloud, also as app icon (installer, window, dock)",
+    "Two new colour themes: Gold Black and Gold White (Settings → Appearance)",
+    "New golden tag “Gold”: admins assign it in the admin area, shown in the launcher and in game before the name",
+    "Cloudy 2.0: switch in Settings → Appearance with a new look (dark surfaces, fixed sidebar); OFF = previous design",
+    "Lyrics “Words in world” now real 3D in the sky: whole lines hang tilted above the horizon behind each other, older ones recede and fade. The old flat version is “Words (flat)” and is used automatically as fallback if needed"
+  ],
   "0.9.91": [
     "Spotify menu in game (I key) now laid out like the launcher window: sidebar with Overview, Skies, Lyrics, Styles, HUD, Performance, Settings, Information; “Now playing” card, switches, option fields, font tiles and a size slider",
     "Every setting in the menu is a real mod setting (lyrics on/off, position, effect, colour, size, motion, opacity, word duration, timing, song card)",

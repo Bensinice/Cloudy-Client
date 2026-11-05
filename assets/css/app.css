@@ -765,3 +765,9 @@ html.gaming .blob,html.gaming .sky{display:none!important}
 .sdot.a{background:linear-gradient(135deg,#d8762e,#8a3fd8)}.sdot.on{border-color:#fff;box-shadow:0 0 0 2px #fff}
 @media (max-width:760px){.glass.setwin,.setwin{grid-template-columns:1fr!important}.setwin aside{flex-direction:row;flex-wrap:wrap;border-right:0}.stiles{grid-template-columns:repeat(2,1fr)}}
 .setwin .muted{color:rgba(236,235,255,.6)!important}
+
+/* Gold-Tag und Logo */
+.ctag.gold{background:linear-gradient(135deg,#ffe28a,#d9a21f 55%,#a87408);color:#2a1c02;border-color:#ffe9a8;box-shadow:0 0 9px rgba(255,200,70,.55);font-weight:800;text-transform:uppercase}
+.brand .blogo{width:34px;height:34px;border-radius:9px;display:block;box-shadow:0 4px 14px rgba(0,0,0,.35);flex:none}
+:root[data-layout="lunar"] .brand .blogo{width:28px;height:28px;filter:none}
+:root[data-theme="gold-light"] .brand{color:var(--ink);text-shadow:none}

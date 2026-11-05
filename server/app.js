@@ -38,7 +38,7 @@ const limClaim = (key, b) => { const l = LIM[String(b.id || '')]; if (!l) return
   if (l.until && l.until < Date.now()) return { error: 'Die Aktion ist abgelaufen.' }; if (l.sold >= l.stock) return { error: 'Ausverkauft.' };
   let cd = null; if (l.mode === 'code') { const want = String(b.code || '').trim().toLowerCase(); cd = (l.codes || []).find(x => x.c.toLowerCase() === want); if (!want || !cd) return { error: 'Falscher Code.' }; if (cd.by) return { error: 'Dieser Code wurde schon eingeloest.' }; }
   if (cd) cd.by = key; l.sold++; l.claimed.push(key); return { ok: true, price: l.mode === 'coins' ? l.price : 0 }; };
-const TAGS_OK = ['owner', 'manager', 'tester', 'plus', 'mod'];
+const TAGS_OK = ['owner', 'manager', 'tester', 'plus', 'gold', 'mod'];
 const AUTO_TAGS = { thepa1: ['manager'] }; // feste Rollen
 const tagsOf = k => { const t = [...new Set([...(TAGS[k] || []), ...(AUTO_TAGS[k] || []), 'tester'])].filter(x => TAGS_OK.includes(x)); return k === 'admin' ? ['owner', ...t.filter(x => x !== 'owner')] : t; }; // das Admin-Konto ist automatisch Owner (rot)
 // Pakete: sichtbare Daten (ohne Käuferliste), Verstecken, Limited (Menge/Zeit) – wie bei Limited-Items zählt der Server

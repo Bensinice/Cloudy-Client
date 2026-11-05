@@ -340,6 +340,139 @@ public final class Lyrics {
 		words.removeIf(w -> now - w.t0 > ModConfig.lyricsLife + 700);
 	}
 
+
+	// =====================================================================================================
+	// 3D-Lyrics im Himmel (Wahl "Words in world"): Jede Zeile haengt als ganze Phrase fest in der Welt ueber dem Horizont, schraeg und mit
+	// Tiefe. Man kann darauf zulaufen. Die alte Phrase weicht nach hinten zurueck und verblasst, die neue steht davor.
+	// Waehrend des Singens wechseln die Woerter von blass zu hell. Zu Beginn eines Songs steht kurz der Titel im Himmel.
+	// =====================================================================================================
+	private static final class It { net.minecraft.text.Text t; float x, y, sc; int w = -1; }
+	private static final class Ph {
+		final List<It> items = new ArrayList<>(); long[] st; Vec3d eye; Vec3d dir; float yaw, pitch, tilt, s, d0, extra; long born, retired; boolean title; int line;
+	}
+	private static final List<Ph> phs = new ArrayList<>();
+	private static int phLine = -9; private static String phTitle = ""; private static long phFrame;
+	private static final float SKY_MIN_UP = 13f, SKY_MAX_UP = 52f; // Grad ueber dem Horizont: nur im Himmel, nie am Boden
+
+	private static float rnd2() { wRng = wRng * 6364136223846793005L + 1442695040888963407L; return ((wRng >>> 33) & 0xFFFFF) / (float) 0xFFFFF; }
+
+	private static Ph newPh(MinecraftClient mc, long now, float upAngleDeg, float tilt, boolean title, int line) {
+		Ph p = new Ph();
+		p.eye = mc.player.getEyePos(); p.born = now; p.title = title; p.line = line; p.tilt = tilt;
+		p.yaw = mc.player.getYaw() + (rnd2() * 2f - 1f) * 20f;
+		p.pitch = -Math.max(SKY_MIN_UP, Math.min(SKY_MAX_UP, upAngleDeg)); // Minecraft: negative Neigung = nach oben
+		double yr = Math.toRadians(p.yaw), pr = Math.toRadians(p.pitch);
+		p.dir = new Vec3d(-Math.sin(yr) * Math.cos(pr), -Math.sin(pr), Math.cos(yr) * Math.cos(pr));
+		p.d0 = 20f + rnd2() * 6f;
+		p.s = p.d0 * 0.011f * SZ(); // Weltgroesse eines Textpixels: gleiche Winkelgroesse wie im Video
+		return p;
+	}
+
+	private static void layout(Ph p, String[] ws, int[] widx, float rowScale, float yStart, float maxPx, List<It> out) {
+		var tr = MinecraftClient.getInstance().textRenderer;
+		int gap = Math.max(3, tr.getWidth(ft("a")) / 2 + 2);
+		List<List<Integer>> rows = new ArrayList<>(); List<Integer> cur = new ArrayList<>(); float w = 0;
+		int[] wd = new int[ws.length];
+		for (int i = 0; i < ws.length; i++) wd[i] = tr.getWidth(ft(ws[i]));
+		for (int i = 0; i < ws.length; i++) {
+			if (!cur.isEmpty() && w + gap + wd[i] > maxPx && rows.size() < 2) { rows.add(cur); cur = new ArrayList<>(); w = 0; }
+			if (!cur.isEmpty()) w += gap; w += wd[i]; cur.add(i);
+		}
+		if (!cur.isEmpty()) rows.add(cur);
+		float rowH = 12f * rowScale;
+		for (int r = 0; r < rows.size(); r++) {
+			float rw = 0; for (int k = 0; k < rows.get(r).size(); k++) rw += wd[rows.get(r).get(k)] + (k > 0 ? gap : 0);
+			float x = -rw / 2f, y = yStart + (r - (rows.size() - 1) / 2f) * rowH;
+			for (int i : rows.get(r)) { It it = new It(); it.t = ft(ws[i]); it.x = x * rowScale; it.y = y; it.sc = rowScale; it.w = widx == null ? -1 : widx[i]; out.add(it); x += wd[i] + gap; }
+		}
+	}
+
+	private static void spawn(MinecraftClient mc, int idx, long now) {
+		String[] ws = split(texts[idx]); if (ws.length == 0) return;
+		wRng = idx * 7919L + 17;
+		Ph p = newPh(mc, now, -mc.player.getPitch() + 10f + rnd2() * 10f, (rnd2() * 2f - 1f) * 0.17f, false, idx);
+		p.st = starts(idx, ws);
+		int[] wi = new int[ws.length]; for (int i = 0; i < ws.length; i++) wi[i] = i;
+		layout(p, ws, wi, 1f, 0f, 118f / Math.max(0.6f, SZ()), p.items);
+		phs.add(p);
+	}
+
+	private static void spawnTitle(MinecraftClient mc, long now) {
+		if (title.isEmpty()) return;
+		wRng = title.hashCode() * 31L + 5;
+		Ph p = newPh(mc, now, -mc.player.getPitch() + 5f, (rnd2() * 2f - 1f) * 0.06f, true, -1);
+		layout(p, split(title), null, 1.15f, -6f, 110f / Math.max(0.6f, SZ()), p.items);
+		layout(p, split(artist), null, 0.7f, 14f, 110f / Math.max(0.6f, SZ()), p.items);
+		p.retired = now + 3600; // nach einigen Sekunden zurueckweichen
+		phs.add(p);
+	}
+
+	public static void world(WorldRenderContext ctx) {
+		MinecraftClient mc = MinecraftClient.getInstance();
+		if (mc.player == null || mc.world == null || !ModConfig.isOn("lyrics") || ModConfig.lyricsMode != 0 || worldFailed || mc.options.hudHidden) { if (!phs.isEmpty() && (ModConfig.lyricsMode != 0 || !ModConfig.isOn("lyrics"))) phs.clear(); return; }
+		load();
+		if (title.isEmpty() || times.length == 0) { phs.clear(); phTitle = ""; phLine = -9; return; }
+		long now = System.currentTimeMillis();
+		if (!title.equals(phTitle)) { phs.clear(); phTitle = title; phLine = -9; spawnTitle(mc, now); }
+		int idx = current();
+		if (idx != phLine) {
+			phLine = idx;
+			for (Ph p : phs) if (!p.title && p.retired == 0) p.retired = now;
+			if (idx >= 0) spawn(mc, idx, now);
+		}
+		MatrixStack ms = ctx.matrixStack();
+		if (ms == null || ctx.camera() == null) { worldFailed = true; return; }
+		try { drawPhrases(mc, ctx, ms, now); } catch (Throwable t) { worldFailed = true; CloudyClient.LOG.warn("Lyrics 3D nicht verfuegbar, nutze 2D", t); }
+	}
+
+	private static float ease(float t) { t = Math.max(0f, Math.min(1f, t)); return 1f - (1f - t) * (1f - t) * (1f - t); }
+
+	private static void drawPhrases(MinecraftClient mc, WorldRenderContext ctx, MatrixStack ms, long now) {
+		float dt = phFrame == 0 ? 0.016f : Math.min(0.1f, (now - phFrame) / 1000f); phFrame = now;
+		phs.removeIf(p -> p.retired != 0 && now - p.retired > ModConfig.lyricsLife + 2600);
+		// Rang der abgeloesten Phrasen: neueste = 1 (gleich hinter der aktuellen), aeltere weiter hinten
+		int rank = 0;
+		for (int i = phs.size() - 1; i >= 0; i--) {
+			Ph p = phs.get(i);
+			if (p.retired != 0 && now >= p.retired) { rank++; float target = 15f * rank; p.extra += (target - p.extra) * Math.min(1f, dt * 2.6f); }
+		}
+		Vec3d cam = ctx.camera().getPos();
+		var tr = mc.textRenderer;
+		var vcp = mc.getBufferBuilders().getEntityVertexConsumers();
+		float alphaCfg = ModConfig.lyricsAlpha / 100f;
+		int curRgb = ModConfig.lcol(ModConfig.lyricsCur, 0), oldRgb = ModConfig.lcol(ModConfig.lyricsOld, 1), dimRgb = Ui.mix(0xFF000000 | curRgb, 0xFF7E7E86, 0.65f) & 0xFFFFFF;
+		long pos = pos();
+		for (Ph p : phs) {
+			boolean old = p.retired != 0 && now >= p.retired;
+			float vis = old ? Math.max(0f, 1f - (now - p.retired) / (float) (ModConfig.lyricsLife + 2300)) : Math.min(1f, (now - p.born) / 250f);
+			if (vis <= 0.02f) continue;
+			double d = p.d0 + p.extra;
+			Vec3d at = p.eye.add(p.dir.multiply(d)).add(0, p.extra * 0.10, 0);
+			ms.push();
+			ms.translate(at.x - cam.x, at.y - cam.y, at.z - cam.z);
+			ms.multiply(new org.joml.Quaternionf().rotationYXZ((float) Math.PI - (float) Math.toRadians(p.yaw), -(float) Math.toRadians(p.pitch), 0f).rotateZ(p.tilt));
+			ms.scale(-p.s, -p.s, p.s);
+			for (It it : p.items) {
+				float k; int rgb;
+				if (old || p.title) { k = 1f; rgb = old ? oldRgb : 0xFFFFFF; }
+				else { long t0 = p.st[Math.max(0, Math.min(p.st.length - 1, it.w))]; k = pos >= t0 ? ease((pos - t0) / 230f) : 0f; rgb = Ui.mix(0xFF000000 | dimRgb, 0xFF000000 | curRgb, k) & 0xFFFFFF; }
+				float a = vis * alphaCfg * (old || p.title ? (p.title ? 0.85f : 0.9f) : (0.30f + 0.70f * k));
+				int al = Math.max(0, Math.min(255, (int) (a * 255)));
+				if (al < 6) continue;
+				float lift = (!old && !p.title && it.w >= 0 && k < 1f) ? (1f - k) * 2.5f : 0f; // Wort steigt beim Einblenden leicht auf
+				ms.push();
+				ms.translate(it.x, it.y + lift, 0);
+				ms.scale(it.sc, it.sc, 1f);
+				Matrix4f m = ms.peek().getPositionMatrix();
+				tr.draw(it.t, 0f, 0f, ((al * 6 / 10) << 24), false, new Matrix4f(m).translate(1f, 1f, -0.6f), vcp, TextRenderer.TextLayerType.NORMAL, 0, 0xF000F0);
+				tr.draw(it.t, 0f, 0f, (al << 24) | rgb, false, new Matrix4f(m), vcp, TextRenderer.TextLayerType.NORMAL, 0, 0xF000F0);
+				ms.pop();
+			}
+			ms.pop();
+		}
+		vcp.draw();
+	}
+
 	/** Lyrics im Spiel (Vorbild: SpotOnFy). Modus 0: Woerter erscheinen einzeln in der Welt um dich; Modus 1: Zeile ueber der Hotbar. Dazu die Spotify-Karte oben rechts. */
 	public static void render(DrawContext c, MinecraftClient mc) {
 		if (mc.player == null || !ModConfig.isOn("lyrics") || mc.options.hudHidden) return;
@@ -352,10 +485,11 @@ public final class Lyrics {
 		if (idx != shownLine) { shownLine = idx; lineSince = now; }
 		int accent = Theme.accent, white = 0xFFFFFF;
 		if (times.length == 0) return;
-		if (ModConfig.lyricsMode == 0 && !playing && idx >= 0) { // Pause: die Zeile steht ruhig links und rechts am Bildrand
+		boolean flat = ModConfig.lyricsMode == 5 || (ModConfig.lyricsMode == 0 && worldFailed); // 2D-Woerter: Wahl "Words (flat)" oder Rueckfall, falls das 3D-Zeichnen nicht klappt
+		if (flat && !playing && idx >= 0) { // Pause: die Zeile steht ruhig links und rechts am Bildrand
 			words.clear();
 			pausedSides(c, idx, ww, wh);
-		} else if (ModConfig.lyricsMode == 0) {
+		} else if (flat) {
 			updateWords(mc, idx, now);
 			float yaw = mc.player.getYaw(), pitch = mc.player.getPitch();
 			double vf = Math.toRadians(mc.options.getFov().getValue()), tv = Math.tan(vf / 2), th = tv * ww / (double) wh;
@@ -408,7 +542,7 @@ public final class Lyrics {
 			karaoke(c, idx - 1, ww / 2, cy - (int) (sc * 15), sc * 0.65f, 2, mw, 110);
 			karaoke(c, idx, ww / 2, cy, sc, 0, mw, 255);
 			karaoke(c, idx + 1, ww / 2, cy + (int) (sc * 15), sc * 0.65f, 2, mw, 130);
-		} else { // linke Seite: Liste mit fuenf Zeilen
+		} else if (ModConfig.lyricsMode == 4) { // linke Seite: Liste mit fuenf Zeilen
 			float sc = Math.max(1.2f, wh / 330f);
 			int x = 12, mw = (int) (ww * 0.38f), cy = wh / 2 - (int) (sc * 20);
 			for (int d = -2; d <= 2; d++) karaoke(c, idx + d, x, cy + d * (int) (sc * 14), d == 0 ? sc * 1.1f : sc * 0.8f, d == 0 ? 3 : 1, mw, d == 0 ? 255 : 150 - Math.abs(d) * 35);

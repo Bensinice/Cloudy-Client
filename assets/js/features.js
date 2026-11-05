@@ -19,9 +19,11 @@ const THEMES = [
   { id: 'paper', name: 'Paper', bg: ['#fafaf7', '#e2e0d6'], c: '#2b2b2b' },
   { id: 'mono', name: 'Dark', bg: ['#232325', '#0b0b0c'], c: '#f2f2f2' },
   { id: 'glass', name: 'Glas (durchsichtig)', bg: ['#6fa8dc', '#1b3350'], c: '#8ccbff' },
+  { id: 'gold-dark', name: 'Gold Schwarz', bg: ['#241b0b', '#0b0a08'], c: '#e8b830' },
+  { id: 'gold-light', name: 'Gold Weiß', bg: ['#fffdf7', '#f2dc9b'], c: '#b8860b' },
   { id: 'system', name: 'System', bg: ['#eaf5ff', '#11244a'], c: '#4aa3ff' }
 ];
-const PAIR = { light: 'dark', dark: 'light', 'pink-light': 'pink-dark', 'pink-dark': 'pink-light', 'purple-light': 'purple-dark', 'purple-dark': 'purple-light', lavender: 'midnight', midnight: 'lavender', lunar: 'paper', paper: 'mono', mono: 'paper', glass: 'light', ember: 'ember-light', 'ember-light': 'ember', forest: 'forest-light', 'forest-light': 'forest' };
+const PAIR = { light: 'dark', dark: 'light', 'pink-light': 'pink-dark', 'pink-dark': 'pink-light', 'purple-light': 'purple-dark', 'purple-dark': 'purple-light', lavender: 'midnight', midnight: 'lavender', lunar: 'paper', paper: 'mono', mono: 'paper', glass: 'light', ember: 'ember-light', 'ember-light': 'ember', forest: 'forest-light', 'forest-light': 'forest', 'gold-dark': 'gold-light', 'gold-light': 'gold-dark' };
 const sysDark = matchMedia('(prefers-color-scheme: dark)');
 function themeId() {
   const t = st.get('theme', 'light');
@@ -434,7 +436,7 @@ async function paintAdmin(on) {
       <button class="btn ghost" data-ab="${n}" data-bn="${u.banned ? 0 : 1}">${u.banned ? L('Entsperren') : L('Sperren …')}</button>
       <button class="btn ghost" data-ap="${n}" data-pv="${u.paused ? 0 : 1}">${u.paused ? L('Aktivieren') : L('Pausieren')}</button>
       <button class="btn ghost" data-aa="${n}">${L('Item hinzufügen …')}</button><button class="btn ghost" data-ai="${n}" ${u.owned ? '' : 'disabled'}>${L('Items entfernen …')}</button>
-      <button class="btn ghost" data-an="${n}" data-on="${u.inf ? 0 : 1}">${u.inf ? L('∞ CC: an') : L('∞ CC: aus')}</button><button class="btn ghost" data-ac="${n}">${L('CC setzen')}</button><button class="btn ghost" data-ag="${n}">+500 CC</button><button class="btn ghost" data-ar="${n}">${L('Passwort → 12345')}</button><button class="btn ghost" data-ad="${n}">${L('Konto löschen')}</button>${[['owner', 'Owner'], ['tester', 'Tester'], ['plus', 'Cloudy+'], ['mod', 'Moderator']].map(([k, l]) => `<button class="btn ghost ${(u.tags || []).includes(k) ? 'tagon' : ''}" data-tg="${n}|${k}|${(u.tags || []).includes(k) ? 0 : 1}" title="Tag ${l} ${(u.tags || []).includes(k) ? 'entfernen' : 'vergeben'}">${(u.tags || []).includes(k) ? '✓ ' : ''}${l}</button>`).join('')}${u.gate ? `<button class="btn ghost" data-ax="${n}" title="${esc(u.gate)}">${L('Zugangscode entziehen')}</button>` : ''}</div>`;
+      <button class="btn ghost" data-an="${n}" data-on="${u.inf ? 0 : 1}">${u.inf ? L('∞ CC: an') : L('∞ CC: aus')}</button><button class="btn ghost" data-ac="${n}">${L('CC setzen')}</button><button class="btn ghost" data-ag="${n}">+500 CC</button><button class="btn ghost" data-ar="${n}">${L('Passwort → 12345')}</button><button class="btn ghost" data-ad="${n}">${L('Konto löschen')}</button>${[['owner', 'Owner'], ['tester', 'Tester'], ['plus', 'Cloudy+'], ['gold', 'Gold'], ['mod', 'Moderator']].map(([k, l]) => `<button class="btn ghost ${(u.tags || []).includes(k) ? 'tagon' : ''}" data-tg="${n}|${k}|${(u.tags || []).includes(k) ? 0 : 1}" title="Tag ${l} ${(u.tags || []).includes(k) ? 'entfernen' : 'vergeben'}">${(u.tags || []).includes(k) ? '✓ ' : ''}${l}</button>`).join('')}${u.gate ? `<button class="btn ghost" data-ax="${n}" title="${esc(u.gate)}">${L('Zugangscode entziehen')}</button>` : ''}</div>`;
   }).join('') : L('Keine weiteren Konten.');
   const A = window.cloudy, rp = () => paintAdmin(true), admNote = t => { const e = $('#admStat'); if (e) { e.textContent = L(t); clearTimeout(admNote.t); admNote.t = setTimeout(() => { e.textContent = ''; }, 6000); } };
   $$('#admList [data-ab]').forEach(b => b.onclick = async () => {
@@ -664,7 +666,7 @@ window.showOnb = showOnb;
 // ---------- Layout (Cloudy / Lunar / Kompakt / Oben) ----------
 (function () {
   const sel = document.getElementById('layout'), OK = ['cloudy', 'lunar', 'compact', 'top'];
-  const apply = v => { document.documentElement.dataset.layout = OK.includes(v) ? v : 'cloudy'; };
+  const apply = v => { document.documentElement.dataset.layout = document.documentElement.dataset.ui === '2' ? 'cloudy' : OK.includes(v) ? v : 'cloudy'; }; // Cloudy 2.0 hat immer die Seitenleiste links
   let v = 'cloudy'; try { v = localStorage.getItem('cloudy.layout') || 'cloudy'; } catch {}
   apply(v); if (sel) { sel.value = OK.includes(v) ? v : 'cloudy'; sel.onchange = () => { apply(sel.value); try { localStorage.setItem('cloudy.layout', sel.value); } catch {} }; }
   document.querySelectorAll('.nav[data-p]').forEach(n => { if (!n.title) n.title = n.textContent.trim(); });
@@ -741,7 +743,7 @@ window.rewardAnim = function (o) {
 })();
 
 // Tags (Tester, Cloudy+, Moderator, Admin) als kleine Abzeichen
-window.cloudyTags = tags => (tags || []).map(k => { const m = /^clan:([A-Z0-9]{1,4})(?::([0-9a-f]{6}))?$/i.exec(String(k)); if (m) return [m[1], 'clan', m[2] ? '#' + m[2] : '']; const t = ({ owner: ['Owner', 'owner'], admin: ['Admin', 'admin'], manager: ['Manager', 'manager'], mod: ['Moderator', 'mod'], plus: ['Cloudy+', 'plus'], tester: ['Tester', 'tester'] })[k]; return t ? [t[0], t[1], ''] : null; }).filter(Boolean).map(([l, c, col]) => `<span class="ctag ${c}"${col ? ` style="background:${col}40;border-color:${col};color:#fff"` : ''}>${l}</span>`).join('');
+window.cloudyTags = tags => (tags || []).map(k => { const m = /^clan:([A-Z0-9]{1,4})(?::([0-9a-f]{6}))?$/i.exec(String(k)); if (m) return [m[1], 'clan', m[2] ? '#' + m[2] : '']; const t = ({ owner: ['Owner', 'owner'], admin: ['Admin', 'admin'], manager: ['Manager', 'manager'], mod: ['Moderator', 'mod'], plus: ['Cloudy+', 'plus'], gold: ['Gold', 'gold'], tester: ['Tester', 'tester'] })[k]; return t ? [t[0], t[1], ''] : null; }).filter(Boolean).map(([l, c, col]) => `<span class="ctag ${c}"${col ? ` style="background:${col}40;border-color:${col};color:#fff"` : ''}>${l}</span>`).join('');
 
 // ---------- Server-Status (öffentlich, für alle) ----------
 (function () {
@@ -759,4 +761,21 @@ window.cloudyTags = tags => (tags || []).map(k => { const m = /^clan:([A-Z0-9]{1
     if (window.setLang && document.documentElement.lang === 'en') window.setLang('en');
   }
   paint(); setInterval(() => { if (document.hidden) return; paint(); }, 30000);
+})();
+
+
+// ---------- Cloudy 2.0 (Schalter in Einstellungen → Darstellung; gespeichert in localStorage "cloudy.ui2") ----------
+(function () {
+  const cb = document.getElementById('ui2On'), st = document.getElementById('ui2St'), root = document.documentElement;
+  const show = on => { if (cb) cb.checked = on; if (st) { st.textContent = document.documentElement.lang === 'de' ? (on ? 'AN' : 'AUS') : (on ? 'ON' : 'OFF'); st.classList.toggle('on', on); } };
+  const set = on => {
+    if (on) root.dataset.ui = '2'; else delete root.dataset.ui;
+    try { localStorage.setItem('cloudy.ui2', on ? '1' : '0'); } catch {}
+    let lay = 'cloudy'; try { lay = localStorage.getItem('cloudy.layout') || 'cloudy'; } catch {}
+    root.dataset.layout = on ? 'cloudy' : (['cloudy', 'lunar', 'compact', 'top'].includes(lay) ? lay : 'cloudy');
+    const ls = document.getElementById('layout'); if (ls) { ls.disabled = on; ls.title = on ? 'Cloudy 2.0 nutzt immer die Seitenleiste links.' : ''; }
+    show(on);
+  };
+  set(root.dataset.ui === '2');
+  if (cb) cb.onchange = () => set(cb.checked);
 })();
