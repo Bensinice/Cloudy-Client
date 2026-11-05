@@ -1,4 +1,7 @@
 {
+  "0.9.100": [
+    "Cloudy Notes (notes, ChatGPT prompts, Claude implementation) moved out of the launcher into the Cloudy Server app (“Notes” tab)"
+  ],
   "0.9.98": [
     "Warning for incompatible mods: in the library every active mod that does not match the chosen Minecraft version or is a Forge mod shows a red warning with the reason; unclear files get a yellow note. Read straight from the mod file",
     "Introduction extended: the tour now also explains how to download and install Cloudy (incl. Mac tip) and start Minecraft with it. Skippable and repeatable in Settings"

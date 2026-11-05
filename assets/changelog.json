@@ -1,5 +1,13 @@
 [
  {
+  "v": "0.9.100",
+  "date": "2026-11-05",
+  "added": [],
+  "fixed": [
+   "Cloudy Notes (Notizen, ChatGPT-Prompts, Claude-Umsetzung) ist nicht mehr im Launcher, sondern in der Cloudy Server App (Tab „Notes“)"
+  ]
+ },
+ {
   "v": "0.9.98",
   "date": "2026-11-05",
   "added": [
