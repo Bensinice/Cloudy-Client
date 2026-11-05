@@ -1,5 +1,16 @@
 [
   {
+    "v": "0.9.89",
+    "date": "2026-11-05",
+    "added": [
+      "Admins können eigene Quests erstellen (Einstellungen → „Eigene Quests“): Titel, Beschreibung, Minecraft-Aufgabe (Holz, Stein, Eisen, Diamanten, Zombies, Skelette, Laufen, Herstellen, Fischen) oder Spielzeit, Ziel, Belohnung (Coins/Stars/XP), Schwierigkeit, Zeitraum und Zeitlimit",
+      "Quests lassen sich bestimmten Spielern oder allen zuweisen, aktivieren, deaktivieren, ändern und löschen; der Admin sieht den Fortschritt aller Spieler",
+      "Belohnungen zahlt nur der Server aus: Minecraft-Zähler werden pro Zeit und Tag begrenzt, nicht fertige Quests lassen sich nicht abholen. Spieler sehen die Quests unter „Cloudy-Quests“",
+      "Neue Server-Version nötig (neue Routen, Speicherung in der bestehenden Tabelle, keine Datenbank-Änderung)"
+    ],
+    "fixed": []
+  },
+  {
     "v": "0.9.88",
     "date": "2026-11-05",
     "added": [

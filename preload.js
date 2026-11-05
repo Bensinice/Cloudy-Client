@@ -53,6 +53,7 @@ contextBridge.exposeInMainWorld('cloudy', {
   admStars: o => inv('admStars', o),
   admPlus: o => inv('admPlus', o),
   admQuestReset: o => inv('admQuestReset', o),
+  admCq: o => inv('admCq', o),
   spPlaylists: () => inv('spPlaylists'), spTracks: id => inv('spTracks', id), spRecent: () => inv('spRecent'), spPlay: o => inv('spPlay', o), spVolume: v => inv('spVolume', v), spPlayer: () => inv('spPlayer'), spFavs: () => inv('spFavs'), spFavToggle: id => inv('spFavToggle', id), lyricsUi: on => inv('lyricsUi', on), lyricsNow: () => inv('lyricsNow'),
   plusBuy: m => inv('plusBuy', !!m),
   admSettingsGet: () => inv('admSettingsGet'),

@@ -1,4 +1,10 @@
 {
+  "0.9.89": [
+    "Admins can create custom quests (Settings → “Custom quests”): title, description, Minecraft task (wood, stone, iron, diamonds, zombies, skeletons, walking, crafting, fishing) or play time, goal, reward (coins/stars/XP), difficulty, date range and time limit",
+    "Quests can be assigned to specific players or everyone, enabled, disabled, edited and deleted; admins see all players’ progress",
+    "Only the server pays rewards: Minecraft counters are limited per time and day, unfinished quests cannot be claimed. Players see them under “Cloudy quests”",
+    "New server version required (new routes, stored in the existing table, no database change)"
+  ],
   "0.9.88": [
     "Spotify lyrics redone in a sky style: the whole phrase tilted in space, words fade in one by one, a “Now playing” title card when a song starts and a song pill with cover, progress and equalizer",
     "New lyrics settings window with a sidebar (Overview, Skies, Lyrics, Styles, HUD, Performance, Settings, Information): 6 skies, 8 fonts, colours, styles, size, word by word or whole line, sky or screen",

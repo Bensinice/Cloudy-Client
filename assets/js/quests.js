@@ -33,7 +33,7 @@
     e_s1_play: () => [T('Season-1-Start: 60 Minuten spielen', 'Season 1 start: play 60 minutes'), T('Event-Quest, nur bis zum Ende des Events.', 'Event quest, only until the event ends.')],
     e_winter_craft: () => [T('Winter-Event: 150 Items herstellen', 'Winter event: craft 150 items'), T('Event-Quest, nur bis zum Ende des Events.', 'Event quest, only until the event ends.')]
   };
-  const CAT = { newbie: ['Anfänger-Quests', 'Beginner quests'], daily: ['Tägliche Quests', 'Daily quests'], weekly: ['Wöchentliche Quests', 'Weekly quests'], special: ['Spezial-Quests', 'Special quests'], event: ['Event-Quests', 'Event quests'] };
+  const CAT = { newbie: ['Anfänger-Quests', 'Beginner quests'], daily: ['Tägliche Quests', 'Daily quests'], weekly: ['Wöchentliche Quests', 'Weekly quests'], special: ['Spezial-Quests', 'Special quests'], event: ['Event-Quests', 'Event quests'], custom: ['Cloudy-Quests', 'Cloudy quests'] };
   const root = document.getElementById('p-quests'); if (!root) return;
   let data = null, err = '', msg = '', loading = false, timer = null;
   const esc2 = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -41,19 +41,19 @@
   const prog = q => q.unit === 'min' ? Math.floor(q.p) + ' / ' + q.target + ' min' : q.p + ' / ' + q.target;
   const ST = { active: ['Aktiv', 'Active'], done: ['Abgeschlossen', 'Completed'], claimed: ['Belohnung erhalten', 'Reward received'] };
   function row(q) {
-    const [title, desc] = Q[q.id] ? Q[q.id](q) : [q.id, ''], pct = Math.min(100, Math.round(100 * q.p / q.target));
+    const [title, desc] = Q[q.id] ? Q[q.id](q) : q.title ? [q.title, q.desc || ''] : [q.id, ''], pct = Math.min(100, Math.round(100 * q.p / q.target));
     const btn = q.claimed ? `<button class="btn ghost" disabled>${T('Abgeholt ✓', 'Claimed ✓')}</button>` : q.done ? `<button class="btn" data-qc="${q.id}">${T('Abholen', 'Claim')}</button>` : `<button class="btn ghost" disabled>${T('Offen', 'In progress')}</button>`;
-    const st = ST[q.status] || ST.active, ends = q.endsIn != null ? ` · ${T('Event endet in ', 'Event ends in ')}${left(q.endsIn)}` : '';
+    const st = ST[q.status] || ST.active, ends = q.endsIn != null ? ` · ${q.title ? T('Endet in ', 'Ends in ') : T('Event endet in ', 'Event ends in ')}${left(q.endsIn)}` : '';
     return `<div class="glass qrow${q.claimed ? ' qdone' : ''}"><div class="qmain"><b>${esc2(title)}</b><span class="muted">${esc2(desc)}</span><div class="bar"><i style="width:${pct}%"></i></div><small class="muted">${prog(q)} · <span class="qst ${q.status}">${st[en() ? 1 : 0]}</span>${ends}</small></div><div class="qrew"><span class="qchip">${q.coins} CC</span><span class="qchip qs">★ ${q.stars}</span><span class="qchip qx">${q.xp} XP</span></div><div class="qbtn">${btn}</div></div>`;
   }
   function paint() {
     const head = (window.passTabs ? window.passTabs('quests') : '') + `<h2>Quests</h2><p class="muted">${T('Erledige Aufgaben, auch direkt in Minecraft, und hole dir Belohnungen: <b>Cloudy Coins (CC)</b> für den Shop, <b>Cloudy Stars (★)</b> und <b>Pass-XP</b> für den Cloudy Pass. Minecraft-Aufgaben zählen automatisch, solange du mit Cloudy spielst. Resets um 00:00 Uhr UTC.', 'Complete tasks, also right inside Minecraft, and claim rewards: <b>Cloudy Coins (CC)</b> for the shop, <b>Cloudy Stars (★)</b> and <b>pass XP</b> for the Cloudy Pass. Minecraft tasks count automatically while you play with Cloudy. Resets at 00:00 UTC.')}</p>`;
     if (err) { root.innerHTML = head + `<div class="glass set"><p>${esc2(err)}</p><button class="btn ghost" id="qRetry">${T('Erneut versuchen', 'Try again')}</button></div>`; if (window.passTabsBind) window.passTabsBind(root); const r = root.querySelector('#qRetry'); if (r) r.onclick = refresh; return; }
     if (!data) { root.innerHTML = head + `<p class="muted">${T('Lädt …', 'Loading …')}</p>`; return; }
-    const hist = (data.hist || []).map(h => { const [t] = Q[h.id] ? Q[h.id]({ feat: '' }) : [h.id]; return `<div class="qh"><span>${esc2(t.replace(/: $/, ''))}</span><span class="muted">${new Date(h.t).toLocaleDateString(en() ? 'en-GB' : 'de-DE')} · +${h.coins} CC · ★ ${h.stars}</span></div>`; }).join('');
+    const hist = (data.hist || []).map(h => { const [t] = Q[h.id] ? Q[h.id]({ feat: '' }) : [h.title || h.id]; return `<div class="qh"><span>${esc2(t.replace(/: $/, ''))}</span><span class="muted">${new Date(h.t).toLocaleDateString(en() ? 'en-GB' : 'de-DE')} · +${h.coins} CC · ★ ${h.stars}</span></div>`; }).join('');
     root.innerHTML = head +
       `<div class="glass qstars"><div><span class="qbig">★ ${data.stars.bal}</span><small class="muted">${T('Cloudy Stars', 'Cloudy Stars')}</small></div><div class="qsub"><span>${T('Pass-XP', 'Pass XP')}: <b>${data.xp || 0}</b></span><span>${T('Verdient', 'Earned')}: <b>${data.stars.earned}</b></span><span>${T('Ausgegeben (Pass)', 'Spent (Pass)')}: <b>${data.stars.spent}</b></span></div></div>` +
-      ['newbie', 'daily', 'weekly', 'special', 'event'].map(c => { const arr = (data.cats && data.cats[c]) || []; if (!arr.length) return ''; const rs = c === 'daily' ? T('Neu in ', 'Resets in ') + left(data.resets.daily) : c === 'weekly' ? T('Neu in ', 'Resets in ') + left(data.resets.weekly) : c === 'event' ? '' : T('Einmalig', 'One-time'); return `<div class="qsec"><h3>${CAT[c][en() ? 1 : 0]}</h3><small class="muted">${rs}</small></div>${arr.map(row).join('')}`; }).join('') +
+      ['newbie', 'daily', 'weekly', 'special', 'event', 'custom'].map(c => { const arr = (data.cats && data.cats[c]) || []; if (!arr.length) return ''; const rs = c === 'daily' ? T('Neu in ', 'Resets in ') + left(data.resets.daily) : c === 'weekly' ? T('Neu in ', 'Resets in ') + left(data.resets.weekly) : c === 'event' ? '' : T('Einmalig', 'One-time'); return `<div class="qsec"><h3>${CAT[c][en() ? 1 : 0]}</h3><small class="muted">${rs}</small></div>${arr.map(row).join('')}`; }).join('') +
       `<p class="muted" style="min-height:20px;color:var(--accent)" id="qMsg">${esc2(msg)}</p>` +
       `<div class="qsec"><h3>${T('Verlauf', 'History')}</h3></div><div class="glass qhist">${hist || `<span class="muted">${T('Noch nichts abgeholt.', 'Nothing claimed yet.')}</span>`}</div>`;
     root.querySelectorAll('[data-qc]').forEach(b => b.onclick = () => claim(b.dataset.qc, b)); if (window.passTabsBind) window.passTabsBind(root);

@@ -89,6 +89,7 @@ async function init() {
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='keyreqs'"); REQS = r.length ? parse(r[0].v, {}) : {}; if (!REQS || typeof REQS !== 'object' || Array.isArray(REQS)) REQS = {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='settings'"); SETS = r.length ? parse(r[0].v, {}) : {}; if (!SETS || typeof SETS !== 'object' || Array.isArray(SETS)) SETS = {}; require('./mail').setOverride(SETS.mail); }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='pass'"); PDATA = r.length ? parse(r[0].v, {}) : {}; if (!PDATA || typeof PDATA !== 'object' || Array.isArray(PDATA)) PDATA = {}; }
+  { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='cquests'"); QS.setCustom(r.length ? parse(r[0].v, []) : []); }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='quests'"); QDATA = r.length ? parse(r[0].v, {}) : {}; if (!QDATA || typeof QDATA !== 'object' || Array.isArray(QDATA)) QDATA = {}; }
   for (const [c, def] of [['owned', 'TEXT'], ['equip', 'TEXT'], ['daily', 'VARCHAR(20)']]) { const [r] = await db.query('SHOW COLUMNS FROM cloudy_users LIKE ?', [c]); if (!r.length) await db.query(`ALTER TABLE cloudy_users ADD COLUMN ${c} ${def} NULL`); }
   const a = await get('admin'); if (!a || !okPw(a, ADMIN_PASS)) await put(mk('admin', ADMIN_PASS, { admin: 1, coins: null }));
@@ -401,6 +402,12 @@ app.post('/admin/quests/reset', admin(async (req, res, me) => { // Admin: Quests
   let n = 0; for (const k of keys) n += QS.reset(QDATA, k, wc).reset;
   await saveQ(true); res.json({ ok: true, accounts: keys.length, reset: n });
 }));
+const saveCQ = () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['cquests', JSON.stringify(QS.customList())]);
+const CQERR = { bad_quest: 'Titel und Quest-Art prüfen.', bad_dates: 'Das Enddatum liegt vor dem Startdatum.', too_many: 'Zu viele Quests (höchstens 200).', unknown: 'Quest nicht gefunden.' };
+app.post('/admin/cquests', admin(async (_q, res) => res.json({ ok: true, quests: QS.customList(), metrics: QS.CMETRICS }))); // Admin: eigene Quests auflisten
+app.post('/admin/cquests/save', admin(async (req, res) => { const r = QS.customSave(req.body && req.body.quest); if (!r.ok) return res.status(400).json({ ...r, error: CQERR[r.code] || 'Ungültig.' }); await saveCQ(); res.json(r); }));
+app.post('/admin/cquests/delete', admin(async (req, res) => { const r = QS.customDelete(String((req.body && req.body.id) || '')); if (!r.ok) return res.status(404).json({ ...r, error: CQERR.unknown }); await saveCQ(); res.json(r); }));
+app.post('/admin/cquests/progress', admin(async (req, res) => { const r = QS.customProgress(QDATA, String((req.body && req.body.id) || '')); if (!r.ok) return res.status(404).json({ ...r, error: CQERR.unknown }); res.json(r); }));
 app.post('/admin/stars', target(async (req, res, t) => { const r = QS.grant(QDATA, t.name_key, req.body && req.body.amount, req.body && req.body.xp); if (!r.ok) return res.status(400).json(r); await saveQ(true); res.json(r); })); // Admin: Stars (= Pass-XP) geben
 app.post('/admin/plus', target(async (req, res, t) => { const r = PS.grantPlus(PDATA, t.name_key, req.body && req.body.days); await savePass(); res.json(r); })); // Cloudy+ vergeben/entziehen (days: 0 = beenden); die Zahlung (Stripe) kommt später hier an
 // ---- Einstellungen im Admin-Bereich: E-Mail (SMTP) und Stripe. Geheimnisse werden nie zurückgegeben (nur "gesetzt: ja/nein"). Sie liegen in der Server-Datenbank (cloudy_kv, Schlüssel settings). ----

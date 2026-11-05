@@ -21,7 +21,9 @@ const DEFS = [
   D('e_s1_play', 'play', 60, 100, 6, 150, { cat: 'event', unit: 'min', from: '2026-11-01', to: '2027-01-31', ev: 'Season 1' }),
   D('e_winter_craft', 'craft', 150, 100, 8, 150, { cat: 'event', from: '2026-12-01', to: '2027-01-06', ev: 'Winter' })
 ];
-const CATS = ['newbie', 'daily', 'weekly', 'special', 'event'];
+const CATS = ['newbie', 'daily', 'weekly', 'special', 'event', 'custom'];
+const CMETRICS = ['logs', 'stone', 'iron', 'diamond', 'zombie', 'skeleton', 'walk', 'craft', 'fish', 'play', 'srv', 'launch']; // Messgrößen, die der Server aus Minecraft/Launcher kennt (Admin-Quests dürfen nur diese nutzen)
+const DIFFS = ['easy', 'medium', 'hard', 'extreme'];
 // Minecraft-Zähler: höchstens so viele pro Sekunde seit der letzten Meldung (Schutz gegen gefälschte Werte) und höchstens so viele pro Tag
 const RATE = { logs: 3, stone: 8, iron: 2, diamond: 2, zombie: 2, skeleton: 2, walk: 40, craft: 300, fish: 1 };
 const DAILY_CAP = { logs: 3000, stone: 12000, iron: 800, diamond: 400, zombie: 600, skeleton: 600, walk: 60000, craft: 20000, fish: 400 };
@@ -39,28 +41,32 @@ module.exports = ({ now = () => Date.now() } = {}) => {
   const nextWeek = t => { let x = nextDay(t); while (weekOf(x) === weekOf(t)) x += 864e5; return x; };
   const hash = s => { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
   const featOf = day => FEATURES[hash(day) % FEATURES.length];
+  let CUS = []; // vom Admin erstellte Quests (Liste wird vom Server geladen/gesetzt)
+  const all = () => DEFS.concat(CUS);
   const pool = DEFS.filter(d => d.pool);
   const dailyPick = day => { const ids = pool.map(d => d.id), out = []; let h = hash('pick' + day); while (out.length < 3) { out.push(ids.splice(h % ids.length, 1)[0]); h = (h >>> 3) + 7919 * out.length; } return out; };
 
-  const fresh = () => ({ day: '', week: '', q: {}, days: [], dc: 0, feat: '', pick: [], stars: { bal: 0, earned: 0, spent: 0 }, xp: 0, hist: [], beat: 0, ev: {}, mcAt: 0, mcDay: {} });
-  const keyOf = (def, day, week) => def.cat === 'daily' ? day : def.cat === 'weekly' ? week : def.cat === 'event' ? def.id + ':' + def.from : '';
-  const activeDefs = (S, day) => DEFS.filter(d => d.cat !== 'event' ? (!d.pool || S.pick.includes(d.id)) : (day >= d.from && day <= d.to));
+  const fresh = () => ({ day: '', week: '', key: '', q: {}, days: [], dc: 0, feat: '', pick: [], stars: { bal: 0, earned: 0, spent: 0 }, xp: 0, hist: [], beat: 0, ev: {}, mcAt: 0, mcDay: {} });
+  const keyOf = (def, day, week) => def.cat === 'custom' ? def.id : def.cat === 'daily' ? day : def.cat === 'weekly' ? week : def.cat === 'event' ? def.id + ':' + def.from : '';
+  const cusOk = (c, S, day) => c.on !== false && (!c.from || day >= c.from) && (!c.to || day <= c.to) && (!c.users || !c.users.length || c.users.includes(S.key)) && (!c.limitH || !S.q[c.id] || !S.q[c.id].t || S.q[c.id].c || S.q[c.id].p >= c.target || now() <= S.q[c.id].t + c.limitH * 3600000);
+  const activeDefs = (S, day) => all().filter(d => d.cat === 'custom' ? cusOk(d, S, day) : d.cat !== 'event' ? (!d.pool || S.pick.includes(d.id)) : (day >= d.from && day <= d.to));
   function ensure(Q, key) {
-    const S = Q[key] || (Q[key] = fresh()), t = now(), day = dayOf(t), week = weekOf(t);
+    const S = Q[key] || (Q[key] = fresh()), t = now(), day = dayOf(t), week = weekOf(t); S.key = key;
     if (S.q === undefined) { Object.assign(S, { q: {}, pick: [], xp: Math.round((S.stars && S.stars.earned || 0) * 12), mcAt: 0, mcDay: {} }); S.days = S.days || []; } // Stand aus der ersten Version übernehmen
     if (S.week !== week) { S.week = week; S.days = []; S.dc = 0; }
     if (S.day !== day) { S.day = day; S.feat = featOf(day); S.pick = dailyPick(day); S.mcDay = {}; }
-    for (const d of DEFS) { const s = S.q[d.id], k = keyOf(d, day, week); if (s && s.k !== k) delete S.q[d.id]; if (!S.q[d.id] && (d.cat !== 'daily' || !d.pool || S.pick.includes(d.id))) S.q[d.id] = { p: 0, c: false, k }; }
+    for (const id of Object.keys(S.q)) if (id.startsWith('c_') && !CUS.some(c => c.id === id)) delete S.q[id]; // gelöschte Admin-Quests verschwinden auch beim Spieler
+    for (const d of all()) { const s = S.q[d.id], k = keyOf(d, day, week); if (s && s.k !== k) delete S.q[d.id]; if (!S.q[d.id] && (d.cat === 'custom' ? cusOk(d, S, day) : (d.cat !== 'daily' || !d.pool || S.pick.includes(d.id)))) S.q[d.id] = { p: 0, c: false, k, t: t }; }
     return S;
   }
-  const defOf = id => DEFS.find(d => d.id === id);
+  const defOf = id => all().find(d => d.id === id);
   // Fortschritt für alle offenen Aufgaben einer Art erhöhen (n kann Bruchteil sein, z. B. Minuten)
   function add(S, metric, n) { const day = S.day; for (const d of activeDefs(S, day)) if (d.metric === metric) { const s = S.q[d.id]; if (s && !s.c) s.p = Math.min(d.target, s.p + n); } }
   const setTo = (S, metric, n) => { for (const d of activeDefs(S, S.day)) if (d.metric === metric) { const s = S.q[d.id]; if (s && !s.c) s.p = Math.min(d.target, Math.max(s.p, n)); } };
 
   function view(Q, key) {
     const S = ensure(Q, key), t = now(); setTo(S, 'open', 1); // „Cloudy öffnen“ zählt, sobald der Launcher den Stand abruft
-    const row = d => { const s = S.q[d.id]; return { id: d.id, cat: d.cat, target: d.target, unit: d.unit || '', p: Math.floor(s.p * 100) / 100, done: s.p >= d.target, claimed: s.c, status: s.c ? 'claimed' : s.p >= d.target ? 'done' : 'active', coins: d.coins, stars: d.stars, xp: d.xp, feat: d.id === 'd_feat' ? S.feat : undefined, ev: d.ev, endsIn: d.cat === 'event' ? Math.max(0, Date.parse(d.to + 'T23:59:59Z') - t) : undefined }; };
+    const row = d => { const s = S.q[d.id]; return { id: d.id, cat: d.cat, target: d.target, unit: d.unit || '', p: Math.floor(s.p * 100) / 100, done: s.p >= d.target, claimed: s.c, status: s.c ? 'claimed' : s.p >= d.target ? 'done' : 'active', coins: d.coins, stars: d.stars, xp: d.xp, feat: d.id === 'd_feat' ? S.feat : undefined, ev: d.ev, endsIn: d.cat === 'event' ? Math.max(0, Date.parse(d.to + 'T23:59:59Z') - t) : d.cat === 'custom' ? (d.limitH && S.q[d.id].t ? Math.max(0, S.q[d.id].t + d.limitH * 3600000 - t) : d.to ? Math.max(0, Date.parse(d.to + 'T23:59:59Z') - t) : undefined) : undefined, title: d.cat === 'custom' ? d.title : undefined, desc: d.cat === 'custom' ? d.desc : undefined, diff: d.diff, metric: d.cat === 'custom' ? d.metric : undefined }; };
     const cats = {}; for (const c of CATS) cats[c] = activeDefs(S, S.day).filter(d => d.cat === c).map(row);
     if (cats.newbie.length && cats.newbie.every(r => r.claimed)) cats.newbie = []; // fertig: Anfänger-Quests ausblenden
     return { now: t, tz: 'UTC', day: S.day, week: S.week, cats, daily: cats.daily, weekly: cats.weekly, stars: { ...S.stars }, xp: S.xp, resets: { daily: nextDay(t) - t, weekly: nextWeek(t) - t }, hist: S.hist.slice(-20).reverse() };
@@ -103,7 +109,7 @@ module.exports = ({ now = () => Date.now() } = {}) => {
     if (s.p < def.target) return { ok: false, code: 'not_done' };
     s.c = true; S.stars.bal += def.stars; S.stars.earned += def.stars; S.xp += def.xp;
     if (def.cat === 'daily') { S.dc++; setTo(S, 'daily_claims', S.dc); }
-    S.hist.push({ id: def.id, t: now(), coins: def.coins, stars: def.stars, xp: def.xp }); if (S.hist.length > 60) S.hist.splice(0, S.hist.length - 60);
+    S.hist.push({ id: def.id, t: now(), coins: def.coins, stars: def.stars, xp: def.xp, title: def.title }); if (S.hist.length > 60) S.hist.splice(0, S.hist.length - 60);
     return { ok: true, id: def.id, coins: def.coins, stars: def.stars, xp: def.xp, balance: S.stars.bal };
   }
 
@@ -124,5 +130,30 @@ module.exports = ({ now = () => Date.now() } = {}) => {
     S.mcAt = 0; S.mcDay = {}; S.ev = {}; S.beat = 0; return { ok: true, reset: n };
   }
 
-  return { view, event, beat, mc, claim, spend, grant, reset, dayOf, weekOf, DEFS, CATS, RATE, FEATURES };
+  // ---- Admin-Quests ----
+  const clean = (o, id) => { // prüft und säubert eine vom Admin gesendete Quest; null = ungültig
+    o = o || {}; const n = (v, lo, hi) => { v = Math.floor(+v); return Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : lo; };
+    const title = String(o.title || '').trim().slice(0, 60), desc = String(o.desc || '').trim().slice(0, 200), metric = String(o.metric || '');
+    if (!title || !CMETRICS.includes(metric)) return null;
+    const date = v => /^\d{4}-\d{2}-\d{2}$/.test(String(v || '')) ? String(v) : '';
+    const users = Array.isArray(o.users) ? [...new Set(o.users.map(u => String(u).trim().toLowerCase()).filter(u => /^[a-z0-9_\-]{1,16}$/.test(u)))].slice(0, 200) : [];
+    return { id, cat: 'custom', title, desc, metric, target: n(o.target, 1, 100000), coins: n(o.coins, 0, 10000), stars: n(o.stars, 0, 500), xp: n(o.xp, 0, 5000), diff: DIFFS.includes(o.diff) ? o.diff : 'easy', unit: metric === 'play' || metric === 'srv' ? 'min' : '', from: date(o.from), to: date(o.to), limitH: n(o.limitH, 0, 720), users, on: o.on !== false };
+  };
+  const setCustom = list => { CUS = (Array.isArray(list) ? list : []).filter(c => c && /^c_[a-z0-9]{4,20}$/.test(c.id)); return CUS; };
+  const customList = () => CUS.slice();
+  function customSave(o) { // neu (ohne id) oder ändern
+    const id = o && /^c_[a-z0-9]{4,20}$/.test(String(o.id || '')) ? o.id : 'c_' + now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const c = clean(o, id); if (!c) return { ok: false, code: 'bad_quest' }; if (c.from && c.to && c.to < c.from) return { ok: false, code: 'bad_dates' };
+    if (CUS.length >= 200 && !CUS.some(x => x.id === id)) return { ok: false, code: 'too_many' };
+    const i = CUS.findIndex(x => x.id === id); if (i >= 0) CUS[i] = c; else CUS.push(c); return { ok: true, quest: c };
+  }
+  function customDelete(id) { const i = CUS.findIndex(x => x.id === id); if (i < 0) return { ok: false, code: 'unknown' }; CUS.splice(i, 1); return { ok: true }; }
+  function customProgress(Q, id) { // Fortschritt aller Spieler (liest nur, verändert nichts)
+    const c = CUS.find(x => x.id === id); if (!c) return { ok: false, code: 'unknown' }; const rows = [];
+    for (const k of Object.keys(Q)) { const s = Q[k] && Q[k].q && Q[k].q[id]; if (s) rows.push({ name: k, p: Math.floor(s.p * 100) / 100, done: s.p >= c.target, claimed: !!s.c }); }
+    rows.sort((a, b) => (b.claimed - a.claimed) || (b.done - a.done) || (b.p - a.p));
+    return { ok: true, target: c.target, rows, done: rows.filter(r => r.done).length, claimed: rows.filter(r => r.claimed).length };
+  }
+
+  return { setCustom, customList, customSave, customDelete, customProgress, CMETRICS, DIFFS, view, event, beat, mc, claim, spend, grant, reset, dayOf, weekOf, DEFS, CATS, RATE, FEATURES };
 };
