@@ -5,7 +5,7 @@ import WebKit
 struct CloudyWebView: UIViewRepresentable {
     let url: URL
     let reloadToken: Int
-    let onFail: () -> Void
+    let onFail: (Error) -> Void
     let onOK: () -> Void
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
@@ -57,8 +57,15 @@ struct CloudyWebView: UIViewRepresentable {
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { backup(); parent.onOK() }
-        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { parent.onFail() }
-        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { parent.onFail() }
+        /// Abbrueche (neuer Ladevorgang ersetzt den alten, -999 / WebKit 102) sind keine Fehler und duerfen die Fehleransicht nicht ausloesen.
+        private func fail(_ error: Error) {
+            let e = error as NSError
+            if e.domain == NSURLErrorDomain && e.code == NSURLErrorCancelled { return }
+            if e.domain == "WebKitErrorDomain" && e.code == 102 { return }
+            parent.onFail(error)
+        }
+        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { fail(error) }
+        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { fail(error) }
 
         // Links zu anderen Seiten (Modrinth, Discord ...) im normalen Browser oeffnen; die Cloudy-Seite selbst bleibt in der App.
         func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {

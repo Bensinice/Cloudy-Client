@@ -7,6 +7,8 @@ struct RootView: View {
     @State private var failed = false
     @State private var reloadToken = 0
     @State private var hint = ""
+    @State private var why = ""
+    private let retry = Timer.publish(every: 6, on: .main, in: .common).autoconnect()
 
     private func normalize(_ s: String) -> String? {
         var t = s.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -23,10 +25,29 @@ struct RootView: View {
             setup
         } else {
             ZStack {
-                CloudyWebView(url: URL(string: pcURL)!, reloadToken: reloadToken, onFail: { failed = true }, onOK: { failed = false })
+                CloudyWebView(url: URL(string: pcURL)!, reloadToken: reloadToken, onFail: { e in why = describe(e); failed = true }, onOK: { failed = false; why = "" })
                     .ignoresSafeArea()
                 if failed { errorView }
             }
+            // Solange der PC nicht erreichbar ist, alle paar Sekunden von selbst neu versuchen (z. B. nach WLAN-Wechsel oder wenn Cloudy am PC gerade startet)
+            .onReceive(retry) { _ in if failed { reloadToken += 1 } }
+        }
+    }
+
+    /// Erklaert den Verbindungsfehler in einfachen Worten, damit klar ist, woran es liegt.
+    private func describe(_ e: Error) -> String {
+        let c = (e as NSError).code
+        switch c {
+        case NSURLErrorTimedOut:
+            return "Keine Antwort vom PC. Meist ist die Adresse falsch, das iPhone ist in einem anderen WLAN (nicht Mobilfunk), oder die Firewall am PC blockiert Cloudy."
+        case NSURLErrorCannotConnectToHost:
+            return "Der PC ist da, aber Cloudy lauscht dort nicht. Schalte in Cloudy am PC die Handy-Fernsteuerung ein und prüfe den Port."
+        case NSURLErrorCannotFindHost, NSURLErrorDNSLookupFailed:
+            return "Die Adresse wurde nicht gefunden. Prüfe die Eingabe."
+        case NSURLErrorNotConnectedToInternet, NSURLErrorNetworkConnectionLost:
+            return "Das iPhone kommt nicht ans Heimnetz. Erlaube Cloudy unter Einstellungen → Cloudy → Lokales Netzwerk und nutze das WLAN, nicht Mobilfunk."
+        default:
+            return "Verbindungsfehler (\(c))."
         }
     }
 
@@ -52,6 +73,9 @@ struct RootView: View {
             Text("PC nicht erreichbar").font(.title2.bold())
             Text("Ist Cloudy am PC geöffnet, die Fernsteuerung eingeschaltet und das iPhone im selben WLAN?\n\(pcURL)")
                 .multilineTextAlignment(.center).foregroundColor(.secondary).font(.callout)
+            if !why.isEmpty { Text(why).multilineTextAlignment(.center).font(.callout.bold()) }
+            Text("Cloudy versucht es automatisch weiter.").foregroundColor(.secondary).font(.footnote)
+            Button("iPhone-Einstellungen öffnen") { if let u = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(u) } }.buttonStyle(.bordered)
             Button("Erneut versuchen") { failed = false; reloadToken += 1 }.buttonStyle(.borderedProminent)
             Button("Adresse ändern") { failed = false; input = pcURL; pcURL = "" }.buttonStyle(.bordered)
         }
