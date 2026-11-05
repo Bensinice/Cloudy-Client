@@ -1,4 +1,10 @@
 {
+  "0.9.91": [
+    "Spotify menu in game (I key) now laid out like the launcher window: sidebar with Overview, Skies, Lyrics, Styles, HUD, Performance, Settings, Information; “Now playing” card, switches, option fields, font tiles and a size slider",
+    "Every setting in the menu is a real mod setting (lyrics on/off, position, effect, colour, size, motion, opacity, word duration, timing, song card)",
+    "8 lyrics fonts now in game too: Poppins, Montserrat, Kanit, Fredoka, Unbounded, Bebas Neue, Pacifico, Caveat (plus Extended and Minecraft)",
+    "Launcher: selected tabs, switches and fields in the lyrics window are readable in every colour theme (white with dark text)"
+  ],
   "0.9.90": [
     "Spotify right inside Minecraft: the I key opens an in-game menu with the current song (cover, time, progress), previous/pause/next, volume, clickable playlists and switches for lyrics, song card and lyrics size",
     "The key can be changed in the Minecraft controls (Cloudy Client → “Open Spotify menu”); pressing it again closes the menu",

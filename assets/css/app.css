@@ -741,27 +741,27 @@ html.gaming .blob,html.gaming .sky{display:none!important}
 .setwin .sbrand{padding:2px 8px 12px}.setwin .sbrand b{display:block;font-size:16px}.setwin .sbrand small{opacity:.6;font-size:11px}
 .setwin aside button{display:flex;align-items:center;gap:10px;text-align:left;padding:9px 10px;border-radius:10px;border:0;background:none;color:inherit;font:inherit;font-size:13px;cursor:pointer;opacity:.75}
 .setwin aside button span{width:18px;text-align:center}.setwin aside button:hover{background:rgba(255,255,255,.08);opacity:1}
-.setwin aside button.on{background:var(--accent,#8a5cf5);color:#fff;opacity:1}
+.setwin aside button.on{background:#fff;color:#1c1c1e;opacity:1;font-weight:600}
 .setwin .ver{margin-top:auto;padding:8px;font-size:12px;opacity:.6}
 .setwin section{padding:18px 22px;overflow:auto;max-height:560px}
 .setwin h3{margin:0 0 2px;font-size:20px}.setwin h4{margin:16px 0 4px;font-size:13px;opacity:.75}.setwin .muted{opacity:.65;font-size:13px;margin:0 0 12px}
 .setnow{display:flex;gap:12px;align-items:center;padding:12px;border-radius:14px;background:rgba(255,255,255,.07);margin-bottom:6px}
 .setnow>i{flex:none;width:54px;height:54px;border-radius:10px;background:rgba(255,255,255,.12) center/cover no-repeat}
 .setnow>div{min-width:0;flex:1}.setnow b,.setnow span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.setnow span{opacity:.65;font-size:12px}
-.setnow u{display:block;height:3px;border-radius:2px;background:rgba(255,255,255,.18);margin-top:8px;text-decoration:none}.setnow u em{display:block;height:3px;border-radius:2px;background:var(--accent,#8a5cf5)}
+.setnow u{display:block;height:3px;border-radius:2px;background:rgba(255,255,255,.18);margin-top:8px;text-decoration:none}.setnow u em{display:block;height:3px;border-radius:2px;background:#fff}
 .setwin .badge.ok{background:rgba(70,200,130,.22);color:#6ff0b0;height:auto;padding:2px 8px;font-weight:600}
 .setrow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08)}
 .setrow b{display:block;font-size:14px}.setrow small{display:block;opacity:.6;font-size:12px;margin-top:2px}.setrow .ctl{flex:none}
 .spsw{width:42px;height:24px;border-radius:99px;border:0;background:rgba(255,255,255,.2);position:relative;cursor:pointer;padding:0}
-.spsw i{position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .18s}.spsw.on{background:var(--accent,#8a5cf5)}.spsw.on i{left:21px}
+.spsw i{position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .18s}.spsw.on{background:#fff}.spsw.on i{left:21px;background:#2c2c30}
 .seg{display:inline-flex;border-radius:10px;background:rgba(255,255,255,.1);padding:3px}
-.seg button{border:0;background:none;color:inherit;font:inherit;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;opacity:.8}.seg button.on{background:var(--accent,#8a5cf5);color:#fff;opacity:1}
+.seg button{border:0;background:none;color:inherit;font:inherit;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;opacity:.8}.seg button.on{background:#fff;color:#1c1c1e;opacity:1;font-weight:600}
 .stiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:6px 0 10px}
 .stile{position:relative;border:2px solid transparent;border-radius:12px;background:rgba(255,255,255,.09);color:inherit;padding:14px 6px;font-size:15px;cursor:pointer;min-height:48px}
-.stile.on{border-color:var(--accent,#8a5cf5);background:rgba(138,92,245,.2)}
+.stile.on{border-color:#fff;background:#2b2447}
 .stiles.skyg .stile{min-height:70px;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.6);font-size:13px}
 .stiles.looks .stile i{display:block;height:3px;width:40%;margin:6px auto 0;border-radius:2px}
 .sdots{display:inline-flex;gap:6px}.sdot{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;font-size:11px;font-weight:700;color:#fff}
-.sdot.a{background:linear-gradient(135deg,#d8762e,#8a3fd8)}.sdot.on{border-color:#fff;box-shadow:0 0 0 2px var(--accent,#8a5cf5)}
+.sdot.a{background:linear-gradient(135deg,#d8762e,#8a3fd8)}.sdot.on{border-color:#fff;box-shadow:0 0 0 2px #fff}
 @media (max-width:760px){.glass.setwin,.setwin{grid-template-columns:1fr!important}.setwin aside{flex-direction:row;flex-wrap:wrap;border-right:0}.stiles{grid-template-columns:repeat(2,1fr)}}
 .setwin .muted{color:rgba(236,235,255,.6)!important}

@@ -74,7 +74,7 @@ public final class ModConfig {
 	public static final String[] BG_NAMES = {"Clean", "Theme scene"}, SKY_SRC = {"Shop sky", "Theme color", "Custom color"};
 	public static void skyReset() { skyBeat = 0; skySrc = 0; skyCol = 3; skyStr = 100; cloudMode = 0; cloudCol = 0; fogMode = 0; fogCol = 9; fogDist = 2; save(); }
 	public static final String[] LPOS = {"Words in world", "Near hotbar", "Top center", "Screen center", "Left list"};
-	public static final String[] LFONT = {"Extended", "Cloudy", "Minecraft"}, LFX = {"Glow", "Shadow", "Outline", "None"};
+	public static final String[] LFONT = {"Extended", "Poppins", "Minecraft", "Montserrat", "Kanit", "Fredoka", "Unbounded", "Bebas Neue", "Pacifico", "Caveat"}, LFX = {"Glow", "Shadow", "Outline", "None"};
 	public static void lyricsReset() { lyricsMode = 0; lyricsOffset = 0; lyricsLife = 1600; lyricsCur = 0; lyricsOld = 3; lyricsFont = 0; lyricsFx = 0; lyricsMotion = 0; lyricsAlpha = 100; lyricsSize = 100; lyricsCard = true; save(); }
 	/** Farbauswahl fuer die Lyrics (Index): 0 Weiss, 1 Theme, 2 Gelb, 3 Hellblau, 4 Rosa, 5 Mint, 6 Orange, 7 Violett, 8 Rot */
 	public static final String[] LCOL_NAMES = {"White", "Theme", "Yellow", "Sky blue", "Pink", "Mint", "Orange", "Violet", "Red", "Custom"};
@@ -169,7 +169,7 @@ public final class ModConfig {
 				if (o.has("skySrc")) skySrc = Math.max(0, Math.min(2, o.get("skySrc").getAsInt()));
 				if (o.has("skyCol")) skyCol = o.get("skyCol").getAsInt();
 				if (o.has("skyStr")) skyStr = Math.max(10, Math.min(100, o.get("skyStr").getAsInt()));
-				if (o.has("lyricsFont")) lyricsFont = Math.max(0, Math.min(2, o.get("lyricsFont").getAsInt()));
+				if (o.has("lyricsFont")) lyricsFont = Math.max(0, Math.min(LFONT.length - 1, o.get("lyricsFont").getAsInt()));
 				if (o.has("lyricsFx")) lyricsFx = Math.max(0, Math.min(3, o.get("lyricsFx").getAsInt()));
 				if (o.has("lyricsCur")) lyricsCur = o.get("lyricsCur").getAsInt();
 				if (o.has("lyricsOld")) lyricsOld = o.get("lyricsOld").getAsInt();

@@ -194,8 +194,17 @@ public final class Lyrics {
 		return switch (ModConfig.lyricsFont) {
 			case 0 -> net.minecraft.text.Text.literal(s).setStyle(net.minecraft.text.Style.EMPTY.withFont(net.minecraft.util.Identifier.of("cloudy-client", "lyrics")));
 			case 1 -> Ui.t(s);
-			default -> net.minecraft.text.Text.literal(s);
+			case 2 -> net.minecraft.text.Text.literal(s);
+			default -> fontText(ModConfig.lyricsFont, s);
 		};
+	}
+
+	private static final String[] FONT_IDS = {"lyrics", "ui", "", "lf_montserrat", "lf_kanit", "lf_fredoka", "lf_unbounded", "lf_bebas", "lf_pacifico", "lf_caveat"};
+	/** Text in einer der Lyrics-Schriften (Nummer wie ModConfig.LFONT); auch fuer die Vorschau im Spotify-Menue. */
+	public static net.minecraft.text.Text fontText(int idx, String s) {
+		idx = Math.max(0, Math.min(FONT_IDS.length - 1, idx));
+		if (FONT_IDS[idx].isEmpty()) return net.minecraft.text.Text.literal(s);
+		return net.minecraft.text.Text.literal(s).setStyle(net.minecraft.text.Style.EMPTY.withFont(net.minecraft.util.Identifier.of("cloudy-client", FONT_IDS[idx])));
 	}
 	private static final java.util.HashMap<Integer, Integer> FW = new java.util.HashMap<>();
 	private static final java.util.HashMap<Integer, net.minecraft.text.Text> FT = new java.util.HashMap<>();

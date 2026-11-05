@@ -1,3 +1,5 @@
 Schriften für die Lyrics-Anzeige (Poppins, Montserrat, Kanit, Fredoka, Unbounded, Bebas Neue, Pacifico, Caveat):
 Alle stehen unter der SIL Open Font License 1.1 (siehe OFL-Poppins.txt; gleiche Lizenz), Quelle: github.com/google/fonts.
 Es sind verkleinerte Auszüge (nur lateinische Zeichen, je ein Schnitt).
+
+Die Schriften Montserrat, Kanit, Fredoka, Unbounded, Bebas Neue, Pacifico und Caveat liegen auch als verkleinerte TTF-Dateien in der Client-Mod (client-src/.../font/lf_*.ttf). Alle stehen unter der SIL Open Font License 1.1 (Text: OFL-Montserrat-etc.txt, gleicher Wortlaut fuer alle).

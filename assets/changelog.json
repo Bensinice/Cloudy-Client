@@ -1,5 +1,16 @@
 [
   {
+    "v": "0.9.91",
+    "date": "2026-11-05",
+    "added": [
+      "Spotify-Menü im Spiel (Taste I) jetzt im Aufbau des Launcher-Fensters: Seitenleiste mit Übersicht, Himmel, Lyrics, Stile, HUD, Leistung, Einstellungen, Information; Karte „Jetzt läuft“, Schalter, Wahl-Felder, Schrift-Kacheln und Größen-Regler",
+      "Alle Einstellungen im Menü sind echte Mod-Einstellungen (Lyrics an/aus, Position, Effekt, Farbe, Größe, Bewegung, Transparenz, Wortdauer, Timing, Song-Karte)",
+      "8 Lyrics-Schriften jetzt auch im Spiel: Poppins, Montserrat, Kanit, Fredoka, Unbounded, Bebas Neue, Pacifico, Caveat (zusätzlich Extended und Minecraft)",
+      "Launcher: ausgewählte Tabs, Schalter und Felder im Lyrics-Fenster sind jetzt in jedem Farbthema gut lesbar (weiß mit dunkler Schrift)"
+    ],
+    "fixed": []
+  },
+  {
     "v": "0.9.90",
     "date": "2026-11-05",
     "added": [
