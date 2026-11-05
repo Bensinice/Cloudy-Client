@@ -1,0 +1,70 @@
+name: Cloudy Server App
+# Baut die Server-App (Fenster ohne Terminal) fuer Mac (Apple Silicon + Intel) und Windows. Eigenes Release "server-app" – beruehrt den Launcher nicht.
+on:
+  push:
+    branches: [main, master]
+    paths: ['server-app/**', 'server/**', '.github/workflows/server-app.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Modul-Tests
+        run: cd server-app && node test/run.js
+  build:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-15, args: '--mac dmg --arm64', name: mac-arm64 }
+          - { os: macos-15, args: '--mac dmg --x64', name: mac-x64 }
+          - { os: windows-latest, args: '--win nsis --x64', name: windows }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Server-Dateien mitgeben (ohne Skripte/Geheimnisse)
+        shell: bash
+        run: |
+          mkdir -p server-app/server-default
+          for f in server/*.js server/*.json; do [ -f "$f" ] && cp "$f" server-app/server-default/; done
+          [ -d server/site ] && cp -R server/site server-app/server-default/site
+          rm -f server-app/server-default/package-lock.json
+          rm -rf server-app/server-default/node_modules
+          ls server-app/server-default
+      - name: Abhaengigkeiten
+        run: cd server-app && npm install --no-audit --no-fund
+      - name: Bauen
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: cd server-app && npx electron-builder ${{ matrix.args }} --publish never
+      - name: Dateien
+        shell: bash
+        run: ls -la server-app/dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Cloudy-Server-${{ matrix.name }}
+          path: |
+            server-app/dist/*.dmg
+            server-app/dist/*.exe
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: out, merge-multiple: true }
+      - name: Release "server-app"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          ls -la out
+          gh release view server-app >/dev/null 2>&1 || gh release create server-app --prerelease --title "Cloudy Server App" --notes "Fenster-App zum Hosten des Cloudy-Servers. Mac: .dmg (arm64 = Apple Silicon, x64 = Intel). Windows: Setup.exe. Mac-Hinweis: ungesignierte App – nach dem Kopieren nach Programme einmal im Terminal 'xattr -cr \"/Applications/Cloudy Server.app\"' oder per Rechtsklick > Öffnen." --target "$GITHUB_SHA"
+          gh release upload server-app out/* --clobber

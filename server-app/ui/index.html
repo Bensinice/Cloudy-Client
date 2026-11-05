@@ -1,0 +1,77 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
+<title>Cloudy Server</title><link rel="stylesheet" href="app.css"></head><body>
+<aside>
+  <div class="brand"><img src="../assets/logo.png" alt=""><div>Cloudy Server<small id="ver"></small></div></div>
+  <button class="nav on" data-p="home">⌂ &nbsp;Übersicht</button>
+  <button class="nav" data-p="logs">☰ &nbsp;Logs</button>
+  <button class="nav" data-p="db">▤ &nbsp;Datenbank</button>
+  <button class="nav" data-p="tun">☁ &nbsp;Tunnel</button>
+  <button class="nav" data-p="bak">⤓ &nbsp;Backup</button>
+  <div class="sp"></div>
+  <button class="nav" data-p="set">⚙ &nbsp;Einstellungen</button>
+  <div class="foot" id="foot"></div>
+</aside>
+<main>
+<section class="page on" id="p-home">
+  <h1>Übersicht</h1><p class="sub">Dein Cloudy-Server – ohne Terminal.</p>
+  <div class="card"><div class="big"><span class="dot" id="dot"></span><div style="flex:1"><div style="font-size:18px;font-weight:600" id="stTxt">…</div><div class="note" id="stSub"></div></div>
+    <div class="row"><button class="btn pri" id="bStart">Starten</button><button class="btn" id="bRestart">Neustarten</button><button class="btn dng" id="bStop">Stoppen</button></div></div></div>
+  <div class="grid">
+    <div class="card stat">Erreichbar<b id="sHealth">–</b></div><div class="card stat">Port<b id="sPort">–</b></div>
+    <div class="card stat">Läuft seit<b id="sUp">–</b></div><div class="card stat">Neustarts<b id="sRes">0</b></div></div>
+  <div class="card"><h2>Schnellzugriff</h2><div class="row">
+    <button class="btn" id="qLocal">Server im Browser öffnen</button><button class="btn" id="qFolder">Server-Ordner zeigen</button><button class="btn" id="qEdit">app.js bearbeiten</button><button class="btn" id="qRep">Fehlerbericht erstellen</button></div>
+    <p class="note" id="stErr"></p></div>
+</section>
+<section class="page" id="p-logs">
+  <h1>Logs</h1><p class="sub">Ausgaben und Fehler des Servers (Passwörter werden nie angezeigt).</p>
+  <div class="row" style="margin-bottom:10px"><select id="logWho"><option value="server">Server</option><option value="tunnel">Tunnel</option></select><label class="note"><input type="checkbox" id="logErr"> nur Fehler</label><span class="sp"></span><button class="btn" id="logClr">Anzeige leeren</button><button class="btn" id="logOpen">Log-Ordner</button></div>
+  <div class="log" id="log"></div>
+</section>
+<section class="page" id="p-db">
+  <h1>Datenbank</h1><p class="sub">MySQL-Verbindung prüfen und die Datenbank für den Server anlegen.</p>
+  <div class="card"><h2>Verbindung</h2><div class="row"><button class="btn pri" id="dbTest">Verbindung testen</button><button class="btn" id="dbStart">MySQL starten (Homebrew)</button></div><p class="msg" id="dbMsg"></p>
+    <p class="note">Zugangsdaten stehen im Tab Einstellungen → Konfiguration (DB_HOST, DB_USER, DB_NAME, DB_PASS).</p></div>
+  <div class="card"><h2>Datenbank &amp; Benutzer anlegen</h2><p class="note">Einmalig nötig. Das MySQL-Root-Passwort wird nur dafür benutzt und <b>nicht gespeichert</b>. Bei frischem Homebrew-MySQL ist es meist leer.</p>
+    <div class="row"><input type="text" id="rootUser" value="root" placeholder="Root-Benutzer"><input type="password" id="rootPass" placeholder="Root-Passwort (evtl. leer)"><button class="btn" id="dbCreate">Anlegen / reparieren</button></div><p class="msg" id="dbMsg2"></p></div>
+</section>
+<section class="page" id="p-tun">
+  <h1>Tunnel</h1><p class="sub">Macht den Server über Cloudflare von außen erreichbar (z. B. cloudyclient.com).</p>
+  <div class="card"><div class="row"><span class="dot" id="tDot"></span><b id="tTxt">aus</b><span class="sp"></span><button class="btn pri" id="tStart">Starten</button><button class="btn dng" id="tStop">Stoppen</button></div><p class="note" id="tErr"></p></div>
+  <div class="card"><h2>Art</h2>
+    <label class="f"><span>Modus</span><select id="tMode"><option value="off">Aus</option><option value="token">Tunnel-Token (empfohlen)</option><option value="config">Vorhandene cloudflared-Einrichtung (~/.cloudflared/config.yml)</option></select></label>
+    <label class="f" id="tTokW"><span>Tunnel-Token (aus dem Cloudflare-Zero-Trust-Dashboard → Tunnels)</span><input type="password" id="tTok" placeholder="eyJ…"></label>
+    <div class="row"><button class="btn pri" id="tSave">Speichern</button><span class="note" id="tTool"></span></div>
+    <p class="note">Das Token wird lokal in den App-Einstellungen gespeichert und nie in Logs angezeigt. <code>cloudflared</code> muss installiert sein.</p></div>
+</section>
+<section class="page" id="p-bak">
+  <h1>Backup</h1><p class="sub">Sichert Server-Dateien und (wenn mysqldump da ist) die Datenbank.</p>
+  <div class="card"><div class="row"><button class="btn pri" id="bkNow">Jetzt sichern</button><button class="btn" id="bkOpen">Backup-Ordner öffnen</button></div><p class="msg" id="bkMsg"></p></div>
+  <div class="card"><div class="sw"><div>Täglich automatisch sichern<small>solange die App läuft</small></div><input type="checkbox" id="bkDaily"></div>
+    <div class="sw"><div>Backups behalten<small>ältere werden gelöscht</small></div><input type="number" id="bkKeep" min="1" max="30" style="width:80px"></div></div>
+</section>
+<section class="page" id="p-set">
+  <h1>Einstellungen</h1><p class="sub">Code bearbeiten, Konfiguration und App-Optionen.</p>
+  <div class="tabs"><button class="btn on" data-s="code">Code-Editor</button><button class="btn" data-s="env">Konfiguration</button><button class="btn" data-s="app">App</button></div>
+  <div id="s-code"><div class="ed">
+    <div class="fl" id="fl"></div>
+    <div class="code"><div class="bar"><b id="edName">–</b><span class="tag" id="edDirty" hidden>geändert</span><span class="sp" style="flex:1"></span>
+      <select id="edVer" title="Frühere Versionen"><option value="">Versionen…</option></select><button class="btn" id="edReset" title="Originalfassung aus der App wiederherstellen">Original</button>
+      <button class="btn" id="edSave">Speichern</button><button class="btn pri" id="edSaveRs">Speichern &amp; neu starten</button></div>
+      <div class="wrap"><div class="gut" id="gut">1</div><textarea class="ta" id="ta" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"></textarea></div>
+      <div class="msg" id="edMsg"></div></div></div>
+    <p class="note">Beim Speichern wird <code>.js</code>/<code>.json</code> auf Syntaxfehler geprüft und die alte Fassung gesichert. Cmd/Strg + S speichert.</p></div>
+  <div id="s-env" hidden><div class="card"><h2>cloudy.env</h2><p class="note">Diese Werte bekommt der Server als Umgebungsvariablen. Nach dem Speichern neu starten.</p><div id="envRows"></div>
+    <div class="row"><button class="btn" id="envAdd">+ Eintrag</button><button class="btn pri" id="envSave">Speichern</button><button class="btn pri" id="envSaveRs">Speichern &amp; neu starten</button></div><p class="msg" id="envMsg"></p></div></div>
+  <div id="s-app" hidden><div class="card">
+    <div class="sw"><div>Server beim App-Start automatisch starten</div><input type="checkbox" id="oAuto"></div>
+    <div class="sw"><div>Bei Absturz automatisch neu starten<small>mit Bremse bei ständigen Abstürzen</small></div><input type="checkbox" id="oRes"></div>
+    <div class="sw"><div>App beim Anmelden am Computer starten</div><input type="checkbox" id="oLogin"></div>
+    <div class="sw"><div>Computer nicht in den Ruhezustand schicken lassen<small>damit der Server erreichbar bleibt</small></div><input type="checkbox" id="oAwake"></div>
+    <label class="f" style="margin-top:12px"><span>Server-Ordner</span><div class="row"><input type="text" id="oDir" readonly style="flex:1"><button class="btn" id="oPick">Ändern…</button><button class="btn" id="oDef">Standard</button></div></label>
+    <p class="note">Hier liegen app.js &amp; Co. Du kannst einen bestehenden Cloudy-Server-Ordner wählen – vorhandene Dateien werden nie überschrieben.</p>
+    <div class="row"><button class="btn pri" id="oSave">Speichern</button><span class="msg" id="oMsg"></span></div></div></div>
+</section>
+</main>
+<div class="toast" id="toast"></div>
+<script src="app.js"></script></body></html>
