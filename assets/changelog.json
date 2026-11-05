@@ -1,5 +1,13 @@
 [
  {
+  "v": "0.9.93",
+  "date": "2026-11-05",
+  "added": [
+   "Cloudy-Logo hat jetzt ein Plus in der Wolke (Cloudy+), in Gold und Schwarz"
+  ],
+  "fixed": []
+ },
+ {
   "v": "0.9.92",
   "date": "2026-11-05",
   "added": [

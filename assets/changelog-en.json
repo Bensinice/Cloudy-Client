@@ -1,4 +1,7 @@
 {
+  "0.9.93": [
+    "Cloudy logo now has a plus inside the cloud (Cloudy+), in gold and black"
+  ],
   "0.9.92": [
     "New Cloudy logo in gold and black: shown at the top of the launcher instead of the white cloud, also as app icon (installer, window, dock)",
     "Two new colour themes: Gold Black and Gold White (Settings → Appearance)",
