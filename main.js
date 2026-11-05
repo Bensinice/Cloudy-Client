@@ -852,7 +852,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.96'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.97'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1165,7 +1165,13 @@ async function srvAuth(path_, { user, pass, remember }) {
 async function accSrvState() {
   try {
     const s = JSON.parse(fs.readFileSync(sessFile, 'utf8')); if (!s.srv) return { fresh: false, user: null };
-    const r = await srvCall('/me', {}, s.srv); if (!r.user) return { fresh: false, user: null };
+    let r = null, netErr = false;
+    try { r = await srvCall('/me', {}, s.srv); } catch { netErr = true; }
+    if (netErr || (r && r.status >= 500)) { // Server gerade nicht erreichbar (Neustart, Netzproblem): angemeldet bleiben, nicht auf den Anmeldebildschirm werfen. Der Wartungshinweis zeigt, falls der Server laenger fehlt.
+      const u = s.key && readAuth().users[s.key]; if (u) { currentUser = u.name; srvTok = s.srv; return { fresh: false, user: u.name, admin: !!u.admin, offline: true }; }
+      currentUser = null; return { fresh: false, user: null };
+    }
+    if (!r || !r.user) return { fresh: false, user: null }; // eindeutig abgelehnt (Token ungueltig oder Konto gesperrt)
     const key = srvMirror(r.user); currentUser = r.user.name; srvTok = s.srv; return { fresh: false, user: r.user.name, admin: !!r.user.admin };
   } catch { currentUser = null; return { fresh: false, user: null }; }
 }

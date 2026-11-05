@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.97",
+  "date": "2026-11-05",
+  "added": [
+   "Angemeldet bleiben: Ist der Server beim Start kurz nicht erreichbar (Neustart, Update, Netzproblem), bleibst du angemeldet statt auf dem Anmeldebildschirm zu landen. Nur eine klare Ablehnung des Servers meldet ab",
+   "Tags im Spiel: Farben wie im Launcher (Owner rot, Admin hellrot, Manager orange, Mod blau, Cloudy+ hellgold, Gold kräftig gold, Tester grün); Owner, Admin und Gold fett, damit sie sich von Cloudy+ klar abheben"
+  ],
+  "fixed": []
+ },
+ {
   "v": "0.9.96",
   "date": "2026-11-05",
   "added": [

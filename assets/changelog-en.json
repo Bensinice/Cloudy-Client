@@ -1,4 +1,8 @@
 {
+  "0.9.97": [
+    "Stay signed in: if the server is briefly unreachable at start (restart, update, network issue) you stay signed in instead of landing on the sign-in screen. Only a clear rejection by the server signs you out",
+    "In-game tags: colours match the launcher (Owner red, Admin light red, Manager orange, Mod blue, Cloudy+ light gold, Gold strong gold, Tester green); Owner, Admin and Gold in bold so they stand apart from Cloudy+"
+  ],
   "0.9.96": [
     "Cloudy+ by code: admins create codes with duration (1 week to 12 months), number of redemptions and expiry, and can disable or delete them. Users redeem them in the Cloudy Pass; the server checks everything and limits guessing",
     "Cloudy 2.0 is now Cloudy+ only (admins excepted); regular accounts keep the normal design",

@@ -42,9 +42,12 @@ public final class CosmeticNet {
 	}
 
 	public static List<String> tagsOf(String name) { return name == null ? null : tagMap.get(name.toLowerCase()); }
+	/** Farben wie im Launcher: Owner rot, Admin hellrot, Manager orange, Mod blau, Cloudy+ gelb, Gold kraeftig gold, Tester gruen. */
 	private static int tagColor(String t) {
-		switch (t) { case "owner": return 0xFFAA00; case "admin": return 0xFF5555; case "manager": return 0xFF8A3D; case "mod": return 0x55FF55; case "plus": return 0x55FFFF; case "gold": return 0xFFD700; case "tester": return 0xAA77FF; default: return 0x9CC9FF; }
+		switch (t) { case "owner": return 0xFF3B4A; case "admin": return 0xFF7A82; case "manager": return 0xFFA028; case "mod": return 0x7DB4FF; case "plus": return 0xFFE08A; case "gold": return 0xFFC400; case "tester": return 0x5FE0A0; default: return 0x9CC9FF; }
 	}
+	/** Rang-Tags (Owner, Admin, Gold) fett, damit sie sich klar von Cloudy+ und Tester abheben. */
+	private static boolean tagBold(String t) { return t.equals("owner") || t.equals("admin") || t.equals("gold"); }
 	/** Vorsatz vor dem Namen, z. B. "[Owner] [CLD] ". Null, wenn der Spieler keine Tags hat. */
 	public static net.minecraft.text.MutableText tagPrefix(String name) {
 		List<String> l = tagsOf(name); if (l == null || l.isEmpty()) return null;
@@ -55,7 +58,8 @@ public final class CosmeticNet {
 			else { label = t.isEmpty() ? "" : Character.toUpperCase(t.charAt(0)) + t.substring(1); col = tagColor(t); if (t.equals("plus")) label = "Cloudy+"; if (t.equals("mod")) label = "Mod"; if (t.equals("gold")) label = "Gold"; }
 			if (label.isEmpty()) continue;
 			final int c = col;
-			net.minecraft.text.MutableText part = net.minecraft.text.Text.literal("[" + label + "] ").styled(st -> st.withColor(c));
+			final boolean bold = !t.startsWith("clan:") && tagBold(t);
+			net.minecraft.text.MutableText part = net.minecraft.text.Text.literal("[" + label + "] ").styled(st -> st.withColor(c).withBold(bold));
 			if (out == null) out = part; else out.append(part);
 		}
 		return out;
