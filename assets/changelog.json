@@ -1,5 +1,13 @@
 [
  {
+  "v": "0.9.94",
+  "date": "2026-11-05",
+  "added": [],
+  "fixed": [
+   "Plus im Cloudy-Logo sitzt jetzt mittig in der Wolke"
+  ]
+ },
+ {
   "v": "0.9.93",
   "date": "2026-11-05",
   "added": [
