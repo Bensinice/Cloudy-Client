@@ -492,6 +492,7 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
     }
     else if (!c.supported.includes(bvr(version))) { msg = `Cosmetics gibt es im Spiel ab Minecraft 1.21.4 (gewählt: ${version}).`; btn = `<button class="btn" id="clVer">Auf 1.21.4 wechseln</button>`; }
     else { msg = `✓ Cloudy Client ist installiert und wird automatisch aktuell gehalten. Deine Cosmetics erscheinen in Minecraft ${version}.`; cls = 'ok'; }
+    el.style.display = cls === 'ok' ? 'none' : ''; // Alles in Ordnung: kein Client-Kasten im Shop. Updates laufen nur ueber das Update-System; hier erscheint nur noch ein Hinweis, wenn etwas nicht stimmt.
     el.innerHTML = `<div style="font-weight:700">${L2(msg)}</div>${buildLog ? `<small class="muted" style="white-space:pre-wrap;word-break:break-all">${esc(buildLog)}</small>` : ''}${btn}`;
     const b = $('#clBuild'); if (b) b.onclick = buildCl;
     const v = $('#clVer'); if (v) v.onclick = () => { version = '1.21.4'; st.set('version', version); paintVersion(); paintCl(); };

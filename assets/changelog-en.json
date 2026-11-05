@@ -1,4 +1,9 @@
 {
+  "0.9.96": [
+    "Cloudy+ by code: admins create codes with duration (1 week to 12 months), number of redemptions and expiry, and can disable or delete them. Users redeem them in the Cloudy Pass; the server checks everything and limits guessing",
+    "Cloudy 2.0 is now Cloudy+ only (admins excepted); regular accounts keep the normal design",
+    "Shop: the client mod box is gone while everything is fine. Updates only go through the update system"
+  ],
   "0.9.95": [
     "News with audiences: admins write news for everyone, testers only or admins only; the server checks who may see them. Find them in the news window under “Cloudy-News”",
     "Admins can edit and delete news (Settings → Admin)",

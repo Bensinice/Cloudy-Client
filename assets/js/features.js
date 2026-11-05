@@ -776,6 +776,21 @@ window.cloudyTags = tags => (tags || []).map(k => { const m = /^clan:([A-Z0-9]{1
     const ls = document.getElementById('layout'); if (ls) { ls.disabled = on; ls.title = on ? 'Cloudy 2.0 nutzt immer die Seitenleiste links.' : ''; }
     show(on);
   };
+  // Der 2.0-Look ist nur fuer Cloudy+ (und Admins). Der Schalter wird hier nur bedient; ob jemand Cloudy+ hat, kommt vom Server (Cloudy Pass).
+  // Ist der Server nicht erreichbar, bleibt der letzte Stand bestehen. Nur eine klare Antwort "kein Cloudy+" schaltet den Look ab.
+  let allowed = false;
+  const lock = ok => {
+    allowed = ok; if (cb) cb.disabled = !ok;
+    const note = document.getElementById('ui2Note'); if (note) note.style.display = ok ? 'none' : '';
+    if (!ok && root.dataset.ui === '2') set(false);
+  };
+  const check = async () => {
+    try {
+      const r = await window.cloudy.passState();
+      if (r && r.ok) lock(!!r.plus || !!admTabOn);
+    } catch {}
+  };
   set(root.dataset.ui === '2');
-  if (cb) cb.onchange = () => set(cb.checked);
+  if (cb) { cb.disabled = true; cb.onchange = () => { if (!allowed) { cb.checked = false; return; } set(cb.checked); }; }
+  check(); setInterval(check, 120000); window.addEventListener('cloudy-plus', check);
 })();

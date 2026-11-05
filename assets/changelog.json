@@ -1,5 +1,15 @@
 [
  {
+  "v": "0.9.96",
+  "date": "2026-11-05",
+  "added": [
+   "Cloudy+ per Code: Admins erstellen Codes mit Laufzeit (1 Woche bis 12 Monate), Anzahl der Einlösungen und Ablauf, können sie abschalten und löschen. Nutzer lösen sie im Cloudy Pass ein; der Server prüft alles und bremst Raten",
+   "Cloudy 2.0 gibt es jetzt nur noch mit Cloudy+ (Admins ausgenommen); normale Konten behalten das normale Design",
+   "Shop: Der Kasten zur Client-Mod ist weg, solange alles in Ordnung ist. Updates laufen nur noch über das Update-System"
+  ],
+  "fixed": []
+ },
+ {
   "v": "0.9.95",
   "date": "2026-11-05",
   "added": [

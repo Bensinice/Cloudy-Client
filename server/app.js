@@ -39,6 +39,7 @@ const limClaim = (key, b) => { const l = LIM[String(b.id || '')]; if (!l) return
   let cd = null; if (l.mode === 'code') { const want = String(b.code || '').trim().toLowerCase(); cd = (l.codes || []).find(x => x.c.toLowerCase() === want); if (!want || !cd) return { error: 'Falscher Code.' }; if (cd.by) return { error: 'Dieser Code wurde schon eingeloest.' }; }
   if (cd) cd.by = key; l.sold++; l.claimed.push(key); return { ok: true, price: l.mode === 'coins' ? l.price : 0 }; };
 const TAGS_OK = ['owner', 'manager', 'tester', 'plus', 'gold', 'mod'];
+let PCODES = {}; // Cloudy+-Codes: { CODE: {days, uses, used, by:[Namen], exp, off, note, created} }
 let NEWS = []; // Admin-News: [{id,title,body,aud:'all'|'tester'|'admin',ts,by,edited}]
 const NEWS_AUD = ['all', 'tester', 'admin'];
 const AUTO_TAGS = { thepa1: ['manager'] }; // feste Rollen
@@ -84,6 +85,7 @@ async function init() {
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='secret'"); SECRET = r.length ? String(r[0].v) : ''; if (SECRET.length < 32) { SECRET = crypto.randomBytes(32).toString('hex'); await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['secret', SECRET]); } }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='backup'"); BACKUP = r.length ? String(r[0].v || '') : ''; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='announce'"); ANN = r.length ? parse(r[0].v, ANN) : ANN; }
+  { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='pluscodes'"); PCODES = r.length ? parse(r[0].v, {}) : {}; if (!PCODES || typeof PCODES !== 'object' || Array.isArray(PCODES)) PCODES = {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='news'"); NEWS = r.length ? parse(r[0].v, []) : []; if (!Array.isArray(NEWS)) NEWS = []; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='gate'"); GATE = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='friends'"); FR = r.length ? parse(r[0].v, FR) : FR; if (!FR.f) FR = { f: {}, msgs: {}, seq: 1 }; }
@@ -428,6 +430,39 @@ app.post('/admin/cquests/save', admin(async (req, res) => { const r = QS.customS
 app.post('/admin/cquests/delete', admin(async (req, res) => { const r = QS.customDelete(String((req.body && req.body.id) || '')); if (!r.ok) return res.status(404).json({ ...r, error: CQERR.unknown }); await saveCQ(); res.json(r); }));
 app.post('/admin/cquests/progress', admin(async (req, res) => { const r = QS.customProgress(QDATA, String((req.body && req.body.id) || '')); if (!r.ok) return res.status(404).json({ ...r, error: CQERR.unknown }); res.json(r); }));
 app.post('/admin/stars', target(async (req, res, t) => { const r = QS.grant(QDATA, t.name_key, req.body && req.body.amount, req.body && req.body.xp); if (!r.ok) return res.status(400).json(r); await saveQ(true); res.json(r); })); // Admin: Stars (= Pass-XP) geben
+
+// ---- Cloudy+ per Code. Admins erstellen Codes (Laufzeit, Anzahl Einloesungen, Ablaufdatum) und koennen sie abschalten. Eingeloest wird nur hier auf dem Server. ----
+const savePC = () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['pluscodes', JSON.stringify(PCODES)]);
+const PC_DAYS = [7, 30, 90, 180, 365]; // erlaubte Laufzeiten: 1 Woche, 1, 3, 6, 12 Monate
+const pcRate = new Map(); // Fehlversuche je Konto: nach 6 Fehlern 10 Minuten Pause (Raten verhindern)
+const pcOut = (k, c) => ({ code: k, days: c.days, uses: c.uses, used: c.used, by: c.by, exp: c.exp || 0, off: !!c.off, note: c.note || '', created: c.created });
+app.post('/admin/pluscodes', admin(async (_q, res) => res.json({ ok: true, codes: Object.entries(PCODES).map(([k, c]) => pcOut(k, c)).sort((a, b) => b.created - a.created) })));
+app.post('/admin/pluscodes/create', admin(async (req, res) => {
+  const b = req.body || {}, days = Math.floor(+b.days), uses = Math.floor(+b.uses || 1), expDays = Math.floor(+b.expDays || 0);
+  if (!PC_DAYS.includes(days)) return res.status(400).json({ error: 'Laufzeit muss 7, 30, 90, 180 oder 365 Tage sein.' });
+  if (!(uses >= 1 && uses <= 1000)) return res.status(400).json({ error: 'Einlösungen: 1 bis 1000.' });
+  if (!(expDays >= 0 && expDays <= 730)) return res.status(400).json({ error: 'Ablauf: 0 (nie) bis 730 Tage.' });
+  let code = ''; do { code = 'CP-' + crypto.randomBytes(5).toString('hex').toUpperCase(); } while (PCODES[code]);
+  PCODES[code] = { days, uses, used: 0, by: [], exp: expDays ? Date.now() + expDays * 864e5 : 0, off: false, note: String(b.note || '').trim().slice(0, 80), created: Date.now() };
+  await savePC(); res.json({ ok: true, code });
+}));
+app.post('/admin/pluscodes/toggle', admin(async (req, res) => { const c = PCODES[String((req.body || {}).code || '')]; if (!c) return res.status(404).json({ error: 'Code nicht gefunden.' }); c.off = !c.off; await savePC(); res.json({ ok: true, off: c.off }); }));
+app.post('/admin/pluscodes/delete', admin(async (req, res) => { const k = String((req.body || {}).code || ''); if (!PCODES[k]) return res.status(404).json({ error: 'Code nicht gefunden.' }); delete PCODES[k]; await savePC(); res.json({ ok: true }); }));
+app.post('/plus/redeem', auth(async (req, res, me) => {
+  const key = me.name_key, r = pcRate.get(key) || { n: 0, t: Date.now() };
+  if (r.n >= 6 && Date.now() - r.t < 600000) return res.status(429).json({ error: 'Zu viele falsche Codes. Warte 10 Minuten.' });
+  if (Date.now() - r.t >= 600000) { r.n = 0; r.t = Date.now(); }
+  const k = String((req.body || {}).code || '').trim().toUpperCase().replace(/\s+/g, ''), c = PCODES[k];
+  const bad = msg => { r.n++; pcRate.set(key, r); return res.status(400).json({ error: msg }); };
+  if (!c) return bad('Diesen Code gibt es nicht.');
+  if (c.off) return bad('Dieser Code wurde deaktiviert.');
+  if (c.exp && c.exp < Date.now()) return bad('Dieser Code ist abgelaufen.');
+  if (c.used >= c.uses) return bad('Dieser Code wurde schon so oft eingelöst, wie erlaubt ist.');
+  if (c.by.includes(key)) return bad('Du hast diesen Code schon eingelöst.');
+  c.used++; c.by.push(key); await savePC(); // erst den Code verbrauchen, dann Cloudy+ geben: so kann er bei gleichzeitigen Anfragen nicht doppelt zaehlen
+  const g = PS.grantPlus(PDATA, key, c.days); await savePass(); pcRate.delete(key);
+  res.json({ ok: true, days: c.days, plus: g.plus });
+}));
 app.post('/admin/plus', target(async (req, res, t) => { const r = PS.grantPlus(PDATA, t.name_key, req.body && req.body.days); await savePass(); res.json(r); })); // Cloudy+ vergeben/entziehen (days: 0 = beenden); die Zahlung (Stripe) kommt später hier an
 // ---- Einstellungen im Admin-Bereich: E-Mail (SMTP) und Stripe. Geheimnisse werden nie zurückgegeben (nur "gesetzt: ja/nein"). Sie liegen in der Server-Datenbank (cloudy_kv, Schlüssel settings). ----
 const M = require('./mail'), saveSets = () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['settings', JSON.stringify(SETS)]);
