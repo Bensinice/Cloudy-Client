@@ -412,7 +412,7 @@ async function pickItems(title, ids, opts) { // opts: { multi, allLabel } -> Pro
   });
 }
 const BAN_OPTS = [['1 Stunde', 3600e3], ['1 Tag', 864e5], ['7 Tage', 6048e5], ['30 Tage', 2592e6], ['Dauerhaft', 0]];
-let admTabOn = false;
+let admTabOn = false, admOpenName = null;
 function setSetTab(t) { const pg = $('#p-settings'); if (!pg) return; if (t === 'adm' && !admTabOn) t = 'gen'; pg.dataset.tab = t; $$('#setTabs [data-st]').forEach(b => b.classList.toggle('on', b.dataset.st === t)); }
 $$('#setTabs [data-st]').forEach(b => b.onclick = () => setSetTab(b.dataset.st));
 setSetTab('gen');
@@ -429,41 +429,60 @@ async function paintAdmin(on) {
   const box = $('#admList'); box.textContent = L('Lade …');
   const us = await window.cloudy.authListFull().catch(() => []);
   const catName = id => { try { const c = (window.shopCatalog || []).find(x => x.id === id); return c ? c.name : id; } catch { return id; } };
-  box.innerHTML = us.length ? us.map(u => {
-    const left = u.banned && u.until ? u.until - Date.now() : 0, n = esc(u.name);
-    const tag = u.paused ? ` · <b>PAUSIERT</b>` : u.banned ? ` · <b>${u.until ? 'GESPERRT' : 'PERMANENT GESPERRT'}</b>${u.until ? ' (' + fmtLeft(left) + ')' : ''}${u.reason ? ': ' + esc(u.reason) : ''}` : '';
-    return `<div class="arow" style="${u.banned || u.paused ? 'opacity:.8' : ''}"><b>${n} <small class="muted">${u.coins} CC · ${u.owned} Items${tag}</small></b>
-      <button class="btn ghost" data-ab="${n}" data-bn="${u.banned ? 0 : 1}">${u.banned ? L('Entsperren') : L('Sperren …')}</button>
-      <button class="btn ghost" data-ap="${n}" data-pv="${u.paused ? 0 : 1}">${u.paused ? L('Aktivieren') : L('Pausieren')}</button>
-      <button class="btn ghost" data-aa="${n}">${L('Item hinzufügen …')}</button><button class="btn ghost" data-ai="${n}" ${u.owned ? '' : 'disabled'}>${L('Items entfernen …')}</button>
-      <button class="btn ghost" data-an="${n}" data-on="${u.inf ? 0 : 1}">${u.inf ? L('∞ CC: an') : L('∞ CC: aus')}</button><button class="btn ghost" data-ac="${n}">${L('CC setzen')}</button><button class="btn ghost" data-ag="${n}">+500 CC</button><button class="btn ghost" data-ar="${n}">${L('Passwort → 12345')}</button><button class="btn ghost" data-ad="${n}">${L('Konto löschen')}</button>${[['owner', 'Owner'], ['tester', 'Tester'], ['plus', 'Cloudy+'], ['gold', 'Gold'], ['mod', 'Moderator']].map(([k, l]) => `<button class="btn ghost ${(u.tags || []).includes(k) ? 'tagon' : ''}" data-tg="${n}|${k}|${(u.tags || []).includes(k) ? 0 : 1}" title="Tag ${l} ${(u.tags || []).includes(k) ? 'entfernen' : 'vergeben'}">${(u.tags || []).includes(k) ? '✓ ' : ''}${l}</button>`).join('')}${u.gate ? `<button class="btn ghost" data-ax="${n}" title="${esc(u.gate)}">${L('Zugangscode entziehen')}</button>` : ''}</div>`;
-  }).join('') : L('Keine weiteren Konten.');
+  const rowHead = u => { const tag = u.paused ? ` · <b>${L('PAUSIERT')}</b>` : u.banned ? ` · <b>${u.until ? L('GESPERRT') : L('PERMANENT GESPERRT')}</b>` : ''; return `<b>${esc(u.name)}</b><small class="muted">${u.coins} CC · ${u.owned} Items${tag}</small>`; };
+  box.innerHTML = us.length ? us.map(u => `<div class="arow clk" data-open="${esc(u.name)}" style="${u.banned || u.paused ? 'opacity:.75' : ''}"><span class="arn">${rowHead(u)}</span><span class="aro">›</span></div>`).join('') : L('Keine weiteren Konten.');
   const A = window.cloudy, rp = () => paintAdmin(true), admNote = t => { const e = $('#admStat'); if (e) { e.textContent = L(t); clearTimeout(admNote.t); admNote.t = setTimeout(() => { e.textContent = ''; }, 6000); } };
-  $$('#admList [data-ab]').forEach(b => b.onclick = async () => {
+  const toolHtml = u => { const n = esc(u.name); return { status: `<button class="btn ghost" data-ab="${n}" data-bn="${u.banned ? 0 : 1}">${u.banned ? L('Entsperren') : L('Sperren …')}</button>
+      <button class="btn ghost" data-ap="${n}" data-pv="${u.paused ? 0 : 1}">${u.paused ? L('Aktivieren') : L('Pausieren')}</button>
+      `, items: `<button class="btn ghost" data-aa="${n}">${L('Item hinzufügen …')}</button><button class="btn ghost" data-ai="${n}" ${u.owned ? '' : 'disabled'}>${L('Items entfernen …')}</button>
+      `, cc: `<button class="btn ghost" data-an="${n}" data-on="${u.inf ? 0 : 1}">${u.inf ? L('∞ CC: an') : L('∞ CC: aus')}</button><button class="btn ghost" data-ac="${n}">${L('CC setzen')}</button><button class="btn ghost" data-ag="${n}">+500 CC</button>`, tags: `${[['owner', 'Owner'], ['tester', 'Tester'], ['plus', 'Cloudy+'], ['gold', 'Gold'], ['mod', 'Moderator']].map(([k, l]) => `<button class="btn ghost ${(u.tags || []).includes(k) ? 'tagon' : ''}" data-tg="${n}|${k}|${(u.tags || []).includes(k) ? 0 : 1}" title="Tag ${l} ${(u.tags || []).includes(k) ? 'entfernen' : 'vergeben'}">${(u.tags || []).includes(k) ? '✓ ' : ''}${l}</button>`).join('')}${u.gate ? `<button class="btn ghost" data-ax="${n}" title="${esc(u.gate)}">${L('Zugangscode entziehen')}</button>` : ''}`, acc: `<button class="btn ghost" data-ar="${n}">${L('Passwort → 12345')}</button><button class="btn ghost" data-ad="${n}">${L('Konto löschen')}</button>` }; };
+  const bindTools = (root, close) => { const q = sel => [...root.querySelectorAll(sel)];
+  q('[data-ab]').forEach(b => b.onclick = async () => {
     const ban = b.dataset.bn === '1'; let reason = '', until = 0;
     if (ban) { const d = await askChoice('Wie lange sperren?', BAN_OPTS); if (d === null) return; until = d ? Date.now() + d : 0; reason = (await askText(L('Grund für die Sperre (optional)'))) || ''; }
     await A.authAdminBan({ name: b.dataset.ab, banned: ban, reason, until }); rp(); });
-  $$('#admList [data-tg]').forEach(b => b.onclick = async () => { const [name, tag, on] = b.dataset.tg.split('|'); const ok = await A.admTag({ name, tag, on: on === '1' }); admNote(ok ? 'Tag gespeichert.' : 'Tag konnte nicht gespeichert werden (nur mit Konto-Server).'); rp(); });
-  $$('#admList [data-ap]').forEach(b => b.onclick = async () => { await A.authAdminPause({ name: b.dataset.ap, paused: b.dataset.pv === '1' }); rp(); });
-  $$('#admList [data-ai]').forEach(b => b.onclick = async () => {
+  q('[data-tg]').forEach(b => b.onclick = async () => { const [name, tag, on] = b.dataset.tg.split('|'); const ok = await A.admTag({ name, tag, on: on === '1' }); admNote(ok ? 'Tag gespeichert.' : 'Tag konnte nicht gespeichert werden (nur mit Konto-Server).'); try { window.__frPoll && setTimeout(window.__frPoll, 800); } catch {} rp(); });
+  q('[data-ap]').forEach(b => b.onclick = async () => { await A.authAdminPause({ name: b.dataset.ap, paused: b.dataset.pv === '1' }); rp(); });
+  q('[data-ai]').forEach(b => b.onclick = async () => {
     const row = us.find(x => x.name === b.dataset.ai), items = (row && row.items) || [];
     const o = await pickItems('Welches Item entfernen?', items, { allLabel: 'Alle Items' }); if (o === null) return;
     const ok = await A.authAdminRemoveItem(o === '__all' ? { name: b.dataset.ai, all: true } : { name: b.dataset.ai, id: o[0] }); admNote(ok ? (o === '__all' ? 'Alle Items entfernt.' : 'Item entfernt.') : 'Entfernen hat nicht geklappt – läuft auf dem Server die neueste app.js?'); rp(); });
-  $$('#admList [data-aa]').forEach(b => b.onclick = async () => {
+  q('[data-aa]').forEach(b => b.onclick = async () => {
     const row = us.find(x => x.name === b.dataset.aa), have = (row && row.items) || [], all = (await shopCat()).map(c => c.id).filter(id => !have.includes(id));
     const o = await pickItems('Welches Item hinzufügen?', all, {}); if (o === null || !o[0]) return;
     const ok = await A.authAdminAddItem({ name: b.dataset.aa, id: o[0] }); admNote(ok ? 'Item hinzugefügt.' : 'Hinzufügen hat nicht geklappt.'); rp(); });
-  $$('#admList [data-ax]').forEach(b => b.onclick = async () => { if (!confirm(b.dataset.ax + ' – ' + L('Zugangscode entziehen? Der Launcher fragt dann wieder nach einem gültigen Code.'))) return; const n = await A.gateRevokeUser(b.dataset.ax); admNote(n > 0 ? 'Zugang entzogen.' : n === 0 ? 'Kein Zugang gefunden.' : 'Geht nur mit Konto-Server.'); rp(); });
-  $$('#admList [data-an]').forEach(b => b.onclick = async () => { await A.authAdminInf({ name: b.dataset.an, on: b.dataset.on === '1' }); rp(); });
-  $$('#admList [data-ac]').forEach(b => b.onclick = async () => { const v = await askText(L('Neuer CC-Stand für ') + b.dataset.ac); if (v == null || v === '') return; await A.authAdminCoins({ name: b.dataset.ac, amount: v }); rp(); });
-  $$('#admList [data-ar]').forEach(b => b.onclick = async () => { await A.authAdminReset(b.dataset.ar); rp(); });
-  $$('#admList [data-ag]').forEach(b => b.onclick = async () => { await A.authAdminGrant({ name: b.dataset.ag, amount: 500 }); b.textContent = '✓ +500 CC'; });
-  $$('#admList [data-ad]').forEach(b => b.onclick = async () => { if (confirm(b.dataset.ad + ' – ' + L('Löschen') + '?')) { await A.authAdminDelete(b.dataset.ad); rp(); } });
+  q('[data-ax]').forEach(b => b.onclick = async () => { if (!confirm(b.dataset.ax + ' – ' + L('Zugangscode entziehen? Der Launcher fragt dann wieder nach einem gültigen Code.'))) return; const n = await A.gateRevokeUser(b.dataset.ax); admNote(n > 0 ? 'Zugang entzogen.' : n === 0 ? 'Kein Zugang gefunden.' : 'Geht nur mit Konto-Server.'); rp(); });
+  q('[data-an]').forEach(b => b.onclick = async () => { await A.authAdminInf({ name: b.dataset.an, on: b.dataset.on === '1' }); rp(); });
+  q('[data-ac]').forEach(b => b.onclick = async () => { const v = await askText(L('Neuer CC-Stand für ') + b.dataset.ac); if (v == null || v === '') return; await A.authAdminCoins({ name: b.dataset.ac, amount: v }); rp(); });
+  q('[data-ar]').forEach(b => b.onclick = async () => { await A.authAdminReset(b.dataset.ar); rp(); });
+  q('[data-ag]').forEach(b => b.onclick = async () => { await A.authAdminGrant({ name: b.dataset.ag, amount: 500 }); b.textContent = '✓ +500 CC'; });
+  q('[data-ad]').forEach(b => b.onclick = async () => { if (confirm(b.dataset.ad + ' – ' + L('Löschen') + '?')) { await A.authAdminDelete(b.dataset.ad); close(); rp(); } });
+  };
+  // Konto-Fenster: pro Konto ein Popup mit allen Aktionen, nach Themen sortiert
+  const showUser = name => {
+    const u = us.find(x => x.name === name); document.getElementById('admModal')?.remove(); if (!u) { admOpenName = null; return; }
+    admOpenName = name; const n = esc(u.name), T = toolHtml(u);
+    const left = u.banned && u.until ? u.until - Date.now() : 0;
+    const state = u.paused ? `<b>${L('PAUSIERT')}</b>` : u.banned ? `<b>${u.until ? L('GESPERRT') : L('PERMANENT GESPERRT')}</b>${u.until ? ' (' + fmtLeft(left) + ')' : ''}${u.reason ? ': ' + esc(u.reason) : ''}` : L('Aktiv');
+    const d = document.createElement('div'); d.id = 'admModal'; d.className = 'adm-ov';
+    d.innerHTML = `<div class="adm-box glass set"><div class="adm-head"><div><h3>${n}</h3><small class="muted">${u.coins} CC · ${u.owned} Items · ${state}</small></div><button class="btn ghost adm-x" data-close aria-label="${L('Schließen')}">✕</button></div>
+      <div class="adm-sec"><h4>${L('Status')}</h4><div class="adm-btns">${T.status}</div></div>
+      <div class="adm-sec"><h4>${L('Items')}</h4><div class="adm-btns">${T.items}</div></div>
+      <div class="adm-sec"><h4>${L('Coins')}</h4><div class="adm-btns">${T.cc}</div></div>
+      <div class="adm-sec"><h4>${L('Rollen / Tags')}</h4><div class="adm-btns">${T.tags}</div></div>
+      <div class="adm-sec adm-danger"><h4>${L('Konto')}</h4><div class="adm-btns">${T.acc}</div></div></div>`;
+    document.body.appendChild(d);
+    const close = () => { admOpenName = null; d.remove(); }; d.onclick = e => { if (e.target === d) close(); }; d.querySelector('[data-close]').onclick = close;
+    bindTools(d, close); if (window.setLang) window.setLang(document.documentElement.lang || 'de');
+  };
+  $$('#admList [data-open]').forEach(r => r.onclick = () => showUser(r.dataset.open));
+  if (admOpenName && document.getElementById('admModal')) showUser(admOpenName);
   if (window.paintCodes) window.paintCodes();
   if (window.setLang) window.setLang(document.documentElement.lang || 'de');
 }
+window.__paintAdmin = paintAdmin;
 { const r = $('#admRef'); if (r) r.onclick = () => { paintAdmin(true); if (window.paintCodes) window.paintCodes(); if (window.paintGate) window.paintGate(); }; }
-setInterval(() => { try { if (admTabOn && !document.hidden && $('#p-settings').classList.contains('on') && $('#p-settings').dataset.tab === 'adm' && !document.querySelector('.news-ov,[style*="z-index:10001"]')) paintAdmin(true); } catch {} }, 20000); // Admin-Liste hält sich selbst aktuell
+setInterval(() => { try { if (admTabOn && !document.hidden && $('#p-settings').classList.contains('on') && $('#p-settings').dataset.tab === 'adm' && !document.querySelector('.news-ov,.adm-ov,[style*="z-index:10001"]')) paintAdmin(true); } catch {} }, 20000); // Admin-Liste hält sich selbst aktuell
 window.cloudy.on('acctLocked', async msg => { try { await window.cloudy.authLogout(); } catch {} $('#login').classList.remove('off'); lgSet('in', ''); paintAdmin(false); $('#lgMsg').textContent = L(msg || 'Konto gesperrt.'); });
 
 // ---------- Codes: einlösen (alle) und erstellen (Admin) ----------

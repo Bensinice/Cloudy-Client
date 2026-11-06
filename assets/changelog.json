@@ -1,5 +1,15 @@
 [
  {
+  "v": "0.9.102",
+  "date": "2026-11-07",
+  "added": [
+   "Admin-Bereich aufgeräumt: die Kontenliste zeigt nur noch die Namen, ein Klick öffnet ein Fenster mit allen Aktionen (Status, Items, Coins, Rollen/Tags, Konto)"
+  ],
+  "fixed": [
+   "Rang-Tags (Owner, Tester …) erscheinen schneller im Launcher: Aktualisierung alle 90 Sekunden und sofort nach einer Tag-Änderung"
+  ]
+ },
+ {
   "v": "0.9.101",
   "date": "2026-11-06",
   "added": [

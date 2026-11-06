@@ -1,4 +1,8 @@
 {
+  "0.9.102": [
+    "Admin area tidied up: the account list shows only names, a click opens a window with all actions (status, items, coins, roles/tags, account)",
+    "Rank tags (Owner, Tester …) show up faster in the launcher: refresh every 90 seconds and right after a tag change"
+  ],
   "0.9.101": [
     "7 new 3D-model cosmetics (real .glb models): Astral Wizard Hat, Crown of Embers, Nebula and Inferno Phoenix capes, Seraph, Prism Shard and Void Dragon wings. Rotatable 3D preview in the shop, and rendered on your player in-game (Minecraft 1.21.4 with the Cloudy client)"
   ],
