@@ -1,6 +1,6 @@
 # Cloudy-Server (Mac)
 
-**Nur eine Datei öffnen: `CLOUDY-SERVER.command`** (Doppelklick, beim ersten Mal Rechtsklick → Öffnen).
+**Nur eine Datei öffnen: `CLOUDY-SERVER.command`** (Mac: Doppelklick, beim ersten Mal Rechtsklick → Öffnen) bzw. **`CLOUDY-SERVER.bat`** (Windows: Doppelklick; richtet Node, Datenbank, cloudflared und Tunnel selbst ein).
 
 - Erster Start: installiert alles Nötige (Homebrew, Node, MySQL, cloudflared), legt Datenbank und `cloudy.env` an (Admin-Passwort, optional Upload-Schlüssel), richtet den Cloudflare-Tunnel ein oder nutzt den vorhandenen.
 - Jeder weitere Start: startet MySQL, Server und Tunnel. Stürzt der Server ab oder aktualisiert er sich, startet er automatisch neu. Fenster offen lassen.
