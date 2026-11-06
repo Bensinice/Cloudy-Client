@@ -146,6 +146,8 @@ if errorlevel 1 echo Hinweis: Der DNS-Eintrag fuer %HOST% existiert evtl. schon.
 >> "%CFG%" echo     service: http://127.0.0.1:%PORT%
 >> "%CFG%" echo   - service: http_status:404
 :tunnelok
+rem Port in der Tunnel-Datei immer an den Server-Port aus cloudy.env anpassen
+powershell -NoProfile -Command "$f='%CFG%'; if (Test-Path $f) { $t=Get-Content -Raw $f; $n=[regex]::Replace($t,'service: http://127\.0\.0\.1:\d+','service: http://127.0.0.1:%PORT%'); if ($n -ne $t) { Set-Content -NoNewline -Path $f -Value $n; Write-Host 'Tunnel-Datei auf Port %PORT% angepasst.' } }"
 
 echo.
 echo == 5/5  Server und Tunnel starten
