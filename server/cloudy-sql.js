@@ -1,9 +1,14 @@
 // Hilfsprogramm fuer CLOUDY-SERVER.bat: legt Datenbank/Benutzer an und spielt .sql ein - ohne mysql-Programm, nur mit Node (mysql2).
 // node cloudy-sql.js setup        (liest NEWDBPASS, optional ROOTPW)
 // node cloudy-sql.js import <datei.sql>
+// node cloudy-sql.js check        (Login mit DB_USER/DB_PASS pruefen)
 const mysql = require('mysql2/promise'), fs = require('fs'), e = process.env;
 const [, , mode, file] = process.argv, PASS = e.NEWDBPASS || e.DB_PASS || '';
 (async () => {
+  if (mode === 'check') { // Login mit den Zugangsdaten aus cloudy.env testen
+    try { const k = await mysql.createConnection({ host: e.DB_HOST || '127.0.0.1', port: +(e.DB_PORT || 3306), user: e.DB_USER || 'CloudyClient', password: e.DB_PASS || '', database: e.DB_NAME || 'CloudyClient', connectTimeout: 8000 }); await k.end(); console.log('OK'); process.exit(0); }
+    catch (x) { console.error('Datenbank-Login fehlgeschlagen: ' + (x.code || x.message)); process.exit(1); }
+  }
   let c;
   try { c = await mysql.createConnection({ host: '127.0.0.1', port: +(e.DB_PORT || 3306), user: 'root', password: e.ROOTPW || '', multipleStatements: true, connectTimeout: 8000 }); }
   catch (x) { console.error(x.code === 'ER_ACCESS_DENIED_ERROR' ? 'Root-Zugang abgelehnt (Root-Passwort noetig).' : 'Keine Verbindung: ' + (x.code || x.message)); process.exit(x.code === 'ER_ACCESS_DENIED_ERROR' ? 2 : 1); }

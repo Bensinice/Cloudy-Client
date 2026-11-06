@@ -107,7 +107,9 @@ goto envdone
 echo Gespeicherte Einstellungen ^(cloudy.env^) werden benutzt.
 :envdone
 for /f "usebackq eol=# tokens=1,* delims==" %%A in ("cloudy.env") do set "%%A=%%B"
-if "%PORT%"=="" set "PORT=3364"
+if "%PORT%"=="" set "PORT=3380"
+call node cloudy-sql.js check >nul 2>&1
+if errorlevel 1 call :provision
 if /i "%~1"=="import" call :importask
 
 echo.
@@ -170,6 +172,19 @@ node app.js
 echo Server beendet, Neustart in 3 Sekunden ^(Strg+C zum Stoppen^) ...
 timeout /t 3 /nobreak >nul
 goto sl
+
+:provision
+echo Der Datenbank-Benutzer aus cloudy.env fehlt oder hat ein anderes Passwort - ich lege ihn neu an ...
+set "ROOTPW="
+:prov
+call node cloudy-sql.js setup
+if "%ERRORLEVEL%"=="2" (
+  set /p "ROOTPW=Root-Passwort der Datenbank (wird nicht gespeichert; leer = Enter): "
+  goto prov
+)
+if errorlevel 1 ( echo FEHLER: Datenbank-Benutzer konnte nicht angelegt werden. Schick mir die Meldung oben. & goto fail )
+echo Datenbank-Benutzer ist eingerichtet.
+exit /b 0
 
 :importask
 echo.
