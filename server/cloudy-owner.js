@@ -9,6 +9,10 @@ const mysql = require('mysql2/promise'), e = process.env, name = String(process.
   const [r] = await c.query("SELECT v FROM cloudy_kv WHERE k='tags'"); let tags = {}; try { tags = r.length ? JSON.parse(r[0].v) : {}; } catch {}
   console.log('Vorhandene Tags: ' + (Object.keys(tags).length ? JSON.stringify(tags) : '(keine - der Import hat keine Tags mitgebracht)'));
   tags[name] = [...new Set([...(tags[name] || []), 'owner'])];
-  await c.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['tags', JSON.stringify(tags)]); await c.end();
+  await c.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['tags', JSON.stringify(tags)]);
+  const [u] = await c.query('SELECT name_key, name FROM cloudy_users WHERE name_key = ?', [name]);
+  if (!u.length) { const [all] = await c.query('SELECT name FROM cloudy_users ORDER BY created LIMIT 40'); console.log('WARNUNG: Es gibt kein Konto "' + name + '". Vorhandene Konten: ' + all.map(x => x.name).join(', ')); }
+  else { await c.query('UPDATE cloudy_users SET admin = 1, banned = 0, paused = 0 WHERE name_key = ?', [name]); console.log('Konto ' + u[0].name + ': Admin-Flag gesetzt, nicht gesperrt.'); }
+  await c.end();
   console.log('OK: "' + name + '" hat jetzt das Tag owner (Admin-Rechte).');
 })().catch(x => { console.error(x.sqlMessage || x.message); process.exit(1); });
