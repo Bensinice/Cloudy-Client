@@ -90,7 +90,7 @@ if "%NEWURL%"=="" set "NEWURL=https://cloudyclient.com"
 >> cloudy.env echo DB_NAME=CloudyClient
 >> cloudy.env echo DB_PASS=%NEWDBPASS%
 >> cloudy.env echo ADMIN_PASS=%NEWADMIN%
->> cloudy.env echo PORT=3364
+>> cloudy.env echo PORT=3380
 >> cloudy.env echo PUBLIC_URL=%NEWURL%
 if not "%NEWUPKEY%"=="" >> cloudy.env echo UPLOAD_KEY=%NEWUPKEY%
 set "ROOTPW="
