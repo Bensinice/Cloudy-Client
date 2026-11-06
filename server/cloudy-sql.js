@@ -9,6 +9,13 @@ const [, , mode, file] = process.argv, PASS = e.NEWDBPASS || e.DB_PASS || '';
     try { const k = await mysql.createConnection({ host: e.DB_HOST || '127.0.0.1', port: +(e.DB_PORT || 3306), user: e.DB_USER || 'CloudyClient', password: e.DB_PASS || '', database: e.DB_NAME || 'CloudyClient', connectTimeout: 8000 }); await k.end(); console.log('OK'); process.exit(0); }
     catch (x) { console.error('Datenbank-Login fehlgeschlagen: ' + (x.code || x.message)); process.exit(1); }
   }
+  if (mode === 'stats') { // was ist in der Datenbank?
+    const k = await mysql.createConnection({ host: e.DB_HOST || '127.0.0.1', port: +(e.DB_PORT || 3306), user: e.DB_USER || 'CloudyClient', password: e.DB_PASS || '', database: e.DB_NAME || 'CloudyClient' });
+    const [t] = await k.query('SELECT table_name n FROM information_schema.tables WHERE table_schema = DATABASE()');
+    for (const x of t) { const [r] = await k.query('SELECT COUNT(*) c FROM `' + String(x.n).replace(/`/g, '') + '`'); console.log('  Tabelle ' + x.n + ': ' + r[0].c + ' Zeilen'); }
+    try { const [r] = await k.query("SELECT v FROM cloudy_kv WHERE k='tags'"); const tg = r.length ? JSON.parse(r[0].v) : {}; console.log('  Tags vorhanden fuer: ' + (Object.keys(tg).join(', ') || '(niemand)')); } catch { console.log('  Tags: nicht lesbar'); }
+    await k.end(); process.exit(0);
+  }
   let c;
   try { c = await mysql.createConnection({ host: '127.0.0.1', port: +(e.DB_PORT || 3306), user: 'root', password: e.ROOTPW || '', multipleStatements: true, connectTimeout: 8000 }); }
   catch (x) { console.error(x.code === 'ER_ACCESS_DENIED_ERROR' ? 'Root-Zugang abgelehnt (Root-Passwort noetig).' : 'Keine Verbindung: ' + (x.code || x.message)); process.exit(x.code === 'ER_ACCESS_DENIED_ERROR' ? 2 : 1); }

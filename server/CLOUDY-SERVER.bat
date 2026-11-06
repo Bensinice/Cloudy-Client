@@ -202,7 +202,8 @@ if "%ERRORLEVEL%"=="2" (
   goto imp
 )
 if errorlevel 1 ( echo FEHLER: Die Datei konnte nicht eingespielt werden. & goto fail )
-echo Daten eingespielt.
+echo Daten eingespielt. Das ist jetzt in der Datenbank:
+call node cloudy-sql.js stats
 exit /b 0
 
 :dbping
