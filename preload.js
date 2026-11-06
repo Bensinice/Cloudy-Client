@@ -5,7 +5,7 @@ contextBridge.exposeInMainWorld('cloudy', {
   versions: s => inv('versions', s),
   toolTex: v => inv('toolTex', v), texCfg: v => inv('texCfg', v), gate: v => inv('gate', v), gateAdmin: o => inv('gateAdmin', o), gateList: () => inv('gateList'), gateCreate: o => inv('gateCreate', o), gateDelete: (c, r) => inv('gateDelete', c, r), gateRevokeUser: n => inv('gateRevokeUser', n),
   launch: o => inv('launch', o),
-  openFolder: () => inv('openFolder'),
+  openFolder: () => inv('openFolder'), glbRead: n => inv('glbRead', n),
   modsSearch: o => inv('modsSearch', o),
   srvShareCode: o => inv('srvShareCode', o), srvCodeJoin: c => inv('srvCodeJoin', c),
   mpSearch: o => inv('mpSearch', o), mpInstall: o => inv('mpInstall', o), mpImportFile: () => inv('mpImportFile'), onMpProgress: f => ipcRenderer.on('mpProgress', (_e, t) => f(t)),

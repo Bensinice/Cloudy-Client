@@ -110,7 +110,8 @@ public final class Cosmetics {
 		"cape-nebula", "cape-emerald", "cape-royal",
 		"cape-zz4", "cape-zz4m", "cape-zz3", "cape-zz3s", "cape-zz5", "cape-zk5", "wings-zz4", "wings-zz4m", "wings-zz3", "wings-zz3s", "wings-zz5", "wings-zk5",
 		"shield-zz4", "shield-zz4m", "shield-zz3", "shield-zz3s", "shield-zz5", "cape-yy", "shield-yy",
-		"wings-zv", "wings-zs", "wings-zf", "wings-zb", "cape-zbs", "cape-ghg"};
+		"wings-zv", "wings-zs", "wings-zf", "wings-zb", "cape-zbs", "cape-ghg",
+		"hat-g3wizard", "hat-g3crown", "cape-g3nebula", "cape-g3phoenix", "wings-g3seraph", "wings-g3prism", "wings-g3void"}; // letzte Zeile: 3D-Modelle aus .glb (GLB.java)
 
 	/** Umhaenge aus normalen 64x32-Texturen (in den Mod gepackt): fuer dich und fuer andere Cloudy-Spieler. */
 	public static boolean isTexCape(String id) { return false; } // zbs/ghg laufen jetzt ueber das Z4-Umhangmodell (ZZ4)
@@ -215,6 +216,13 @@ public final class Cosmetics {
 			case "hat-zzb" -> "Zigzag Top Hat Blue";
 			case "hat-zsh" -> "Shadow Hat";
 			case "hat-zif" -> "Ice Feather Hat";
+			case "hat-g3wizard" -> "Astral Wizard Hat (3D)";
+			case "hat-g3crown" -> "Crown of Embers (3D)";
+			case "cape-g3nebula" -> "Nebula Drift Cape (3D)";
+			case "cape-g3phoenix" -> "Inferno Phoenix Cape (3D)";
+			case "wings-g3seraph" -> "Seraph Wings (3D)";
+			case "wings-g3prism" -> "Prism Shard Wings (3D)";
+			case "wings-g3void" -> "Void Dragon Wings (3D)";
 			default -> id;
 		};
 	}

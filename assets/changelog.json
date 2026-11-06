@@ -1,5 +1,13 @@
 [
  {
+  "v": "0.9.101",
+  "date": "2026-11-06",
+  "added": [
+   "7 neue 3D-Modell-Cosmetics (echte .glb-Modelle): Astraler Zauberhut, Krone der Glut, Nebeltreiben- und Inferno-Phönix-Umhang, Seraph-, Prismensplitter- und Leere-Drachenflügel. Im Shop als drehbare 3D-Vorschau, im Spiel (Minecraft 1.21.4 mit Cloudy-Client) am Spieler"
+  ],
+  "fixed": []
+ },
+ {
   "v": "0.9.100",
   "date": "2026-11-05",
   "added": [],

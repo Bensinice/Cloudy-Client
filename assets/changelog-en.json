@@ -1,4 +1,7 @@
 {
+  "0.9.101": [
+    "7 new 3D-model cosmetics (real .glb models): Astral Wizard Hat, Crown of Embers, Nebula and Inferno Phoenix capes, Seraph, Prism Shard and Void Dragon wings. Rotatable 3D preview in the shop, and rendered on your player in-game (Minecraft 1.21.4 with the Cloudy client)"
+  ],
   "0.9.100": [
     "Cloudy Notes (notes, ChatGPT prompts, Claude implementation) moved out of the launcher into the Cloudy Server app (“Notes” tab)"
   ],

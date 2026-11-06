@@ -629,6 +629,7 @@ paintUser();paintVersion();renderServers();
 window.cloudy.versions(true).then(l=>{all=l;if(!version||!all.find(v=>v.id===bvr(version))){version=(all.find(v=>v.id==='1.21.4')||all.find(v=>v.type==='release')||all[0]).id;st.set('version',version)}paintVersion();renderVersions()}).catch(()=>$('#status').textContent='Versionen konnten nicht geladen werden. Prüfe dein Internet.');
 </script>
 <script src="assets/js/features.js"></script>
+<script src="assets/js/vendor/three.min.js"></script><script src="assets/js/vendor/GLTFLoader.js"></script><script src="assets/js/glb3d.js"></script>
 <script src="assets/js/shop.js"></script>
 <script src="assets/js/quests.js"></script>
 <script src="assets/js/pass.js"></script>

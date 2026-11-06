@@ -42,7 +42,7 @@ public final class ZZ4 {
 		return null;
 	}
 
-	public static boolean handles(String id) { return pack(id) != null; }
+	public static boolean handles(String id) { return pack(id) != null || GLB.handles(id); } // auch die .glb-Modelle (GLB.java) laufen ueber diese Wege
 
 	private static Mesh[] load(String pack) {
 		Mesh[] have = MESHES.get(pack);
@@ -77,6 +77,7 @@ public final class ZZ4 {
 	private static final Map<String, int[]> ICOSZ = new HashMap<>();
 	/** Sauberes Vorschaubild (Rueckansicht des 3D-Modells) fuer Menues; null wenn nicht vorhanden. Groesse in out[0..1]. */
 	public static Identifier ico(String id, int[] out) {
+		if (GLB.handles(id)) return GLB.ico(id, out);
 		String pk = pack(id);
 		if (pk == null) return null;
 		String name = "ico-" + pk + "-" + id.substring(0, id.indexOf('-'));
@@ -179,6 +180,7 @@ public final class ZZ4 {
 
 	/** Umhang: haengt am Koerper, weht nach hinten wenn man vorwaerts laeuft, faellt in Ruhe zurueck, kippt beim Schleichen. */
 	public static void cloak(MatrixStack ms, VertexConsumerProvider vcp, int light, int ov, String id, float limb) {
+		if (GLB.handles(id)) { GLB.cloak(ms, vcp, light, ov, id, limb); return; }
 		Mesh[] meshes = load(pack(id));
 		if (meshes == null) return;
 		long now = System.currentTimeMillis();
@@ -214,6 +216,7 @@ public final class ZZ4 {
 
 	/** Fluegel: beide Seiten schlagen leicht gegenlaeufig um die Wurzel. */
 	public static void wings(MatrixStack ms, VertexConsumerProvider vcp, int light, int ov, String id) {
+		if (GLB.handles(id)) { GLB.wings(ms, vcp, light, ov, id); return; }
 		Mesh[] meshes = load(pack(id));
 		if (meshes == null || meshes.length < 3) return;
 		Identifier t = tex(pack(id), "wings");

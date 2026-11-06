@@ -608,6 +608,8 @@ ipcMain.handle('libDelete', (_e, id) => {
   for (const d of fs.readdirSync(vd)) if (d.startsWith('fabric-loader-') && d.endsWith('-' + id)) fs.rmSync(path.join(vd, d), { recursive: true, force: true });
 });
 ipcMain.handle('modsRemove', (_e, v, f) => fs.rmSync(path.join(modsDir(v), path.basename(f)), { force: true }));
+// .glb-Modelle fuer die 3D-Vorschau (fetch auf file:// geht im Fenster nicht): nur feste Dateinamen aus assets/cosmetics3d
+ipcMain.handle('glbRead', (_e, name) => { if (!/^[a-z_]+\.glb$/.test(String(name))) return null; try { return fs.readFileSync(path.join(__dirname, 'assets', 'cosmetics3d', name)); } catch { return null; } });
 ipcMain.handle('openFolder', () => { fs.mkdirSync(root, { recursive: true }); return shell.openPath(root); });
 
 ipcMain.handle('modsUpdate', async (_e, mc) => {
@@ -854,7 +856,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.100'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.101'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1466,6 +1468,14 @@ const CATALOG = [
   { id: 'cape-zz5', cat: 'cape', name: 'ZZ5 2 Mio.-Umhang (3D)', price: 1500 }, { id: 'wings-zz5', cat: 'wings', name: 'ZZ5 2 Mio.-Flügel (3D)', price: 1800 }, { id: 'shield-zz5', cat: 'shield', name: 'ZZ5 2 Mio.-Schild (3D)', price: 1200 },
   { id: 'cape-yy', cat: 'cape', name: 'Yin-Yang-Umhang (3D)', price: 1500 }, { id: 'shield-yy', cat: 'shield', name: 'Yin-Yang-Schild (3D)', price: 1200 },
   { id: 'cape-zk5', cat: 'cape', name: '500K-Umhang (3D)', price: 1500 }, { id: 'wings-zk5', cat: 'wings', name: '500K-Flügel (3D)', price: 1800 },
+  // 3D-Modelle (.glb): im Launcher mit three.js, im Spiel mit dem GLB-Renderer des Mods
+  { id: 'hat-g3wizard', cat: 'hat', name: 'Astraler Zauberhut (3D)', price: 900 },
+  { id: 'hat-g3crown', cat: 'hat', name: 'Krone der Glut (3D)', price: 900 },
+  { id: 'cape-g3nebula', cat: 'cape', name: 'Nebeltreiben-Umhang (3D)', price: 1500 },
+  { id: 'cape-g3phoenix', cat: 'cape', name: 'Inferno-Phönix-Umhang (3D)', price: 1500 },
+  { id: 'wings-g3seraph', cat: 'wings', name: 'Seraph-Flügel (3D)', price: 1800 },
+  { id: 'wings-g3prism', cat: 'wings', name: 'Prismensplitter-Flügel (3D)', price: 1800 },
+  { id: 'wings-g3void', cat: 'wings', name: 'Leere-Drachenflügel (3D)', price: 1800 },
 ];
 const PACK_FILES = {
   ...Object.fromEntries(['zz4', 'zz4m', 'zz3', 'zz3s', 'zz5', 'yy'].map(k => ['shield-' + k, `cloudy-shield-${k}.zip`])) };

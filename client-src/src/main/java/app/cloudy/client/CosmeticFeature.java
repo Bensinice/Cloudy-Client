@@ -56,7 +56,8 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 		if (!Cosmetics.ensure()) return;
 		VertexConsumer vc = vcp.getBuffer(RenderLayer.getEntityCutoutNoCull(Cosmetics.TEX));
 		if (cape != null && ZZ4.handles(cape)) { matrices.push(); body.rotate(matrices); ZZ4.cloak(matrices, vcp, light, ov, cape, limb); matrices.pop(); }
-		if (hat != null) draw(matrices, vc, light, ov, head, Cosmetics.parts(hat));
+		if (hat != null && GLB.handles(hat)) { matrices.push(); head.rotate(matrices); GLB.hat(matrices, vcp, light, ov, hat); matrices.pop(); }
+		else if (hat != null) draw(matrices, vc, light, ov, head, Cosmetics.parts(hat));
 		if (shield != null && held > 0 && ZZ4.handles(shield)) {
 			// Im Spiel liegt das Schild-Design als Textur auf dem normalen Minecraft-Schild (Ressourcenpaket vom Launcher). Nur die Vorschau zeichnet das Modell.
 			if (PREVIEW) {

@@ -48,6 +48,13 @@
     'cape-zk5': { b: [0, 8, 16, 24], c: ['#ffffff','#9aa0b0'], img: 'assets/cosmetics/zz-zk5-cape.png', ar: 336 / 200 }, 'wings-zk5': { b: [-9, 0, 34, 24], c: ['#ffffff','#9aa0b0'], img: 'assets/cosmetics/zz-zk5-wings.png', ar: 340 / 520 },
     'cape-yy': { b: [0, 8, 16, 24], c: ['#f2f2f2', '#14141a'], img: 'assets/cosmetics/zz-yy-cape.png', ar: 336 / 200 }, 'shield-yy': { b: [-7, 10, 12, 18], c: ['#f2f2f2', '#14141a'], img: 'assets/cosmetics/zz-yy-shield.png', ar: 1 },
     'hat-zzv': { b: [0, -12, 16, 14], c: ['#6d28d9', '#e9d5ff'] }, 'hat-zzb': { b: [1, -9, 14, 11], c: ['#1d4ed8', '#60a5fa'] }, 'hat-zsh': { b: [0, -12, 16, 14], c: ['#1b1030', '#b07cff'] }, 'hat-zif': { b: [0, -12, 16, 14], c: ['#bfeaff', '#ffffff'] },
+    'hat-g3wizard': { b: [0, -12, 16, 14], c: ['#2a3f9a', '#ffd24a'], img: 'assets/cosmetics3d/icons/hat-g3wizard.png', ar: 1, glb: true },
+    'hat-g3crown': { b: [0, -12, 16, 14], c: ['#ffd24a', '#c42a2a'], img: 'assets/cosmetics3d/icons/hat-g3crown.png', ar: 1, glb: true },
+    'cape-g3nebula': { b: [0, 8, 16, 24], c: ['#7a3cff', '#0a0a2a'], img: 'assets/cosmetics3d/icons/cape-g3nebula.png', ar: 1, glb: true },
+    'cape-g3phoenix': { b: [0, 8, 16, 24], c: ['#ff8a1f', '#3a0a0a'], img: 'assets/cosmetics3d/icons/cape-g3phoenix.png', ar: 1, glb: true },
+    'wings-g3seraph': { b: [-9, 0, 34, 24], c: ['#f4ecd8', '#c9a24a'], img: 'assets/cosmetics3d/icons/wings-g3seraph.png', ar: 1, glb: true },
+    'wings-g3prism': { b: [-9, 0, 34, 24], c: ['#3be0d0', '#7a5cff'], img: 'assets/cosmetics3d/icons/wings-g3prism.png', ar: 1, glb: true },
+    'wings-g3void': { b: [-9, 0, 34, 24], c: ['#5a2aa0', '#14081f'], img: 'assets/cosmetics3d/icons/wings-g3void.png', ar: 1, glb: true },
     'hat-crown': { b: [3, -6, 10, 6], c: ['#ffd24a', '#e23b3b'] }, 'hat-halo': { b: [3, -9, 10, 5], c: ['#fff7b0', '#ffd24a'] }, 'hat-haloblack': { b: [3, -9, 10, 5], c: ['#7c5cff', '#0b0b12'] }
   };
   const lt = (hex, k) => { const n = parseInt(hex.slice(1), 16), f = c => Math.round(c + (255 - c) * k); return '#' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(f).map(x => x.toString(16).padStart(2, '0')).join(''); };
@@ -145,6 +152,7 @@
   function paint3d(equip, hostSel) {
     const host = $(hostSel || '#shop3d'); if (!host) return; host.innerHTML = ''; const rig = document.createElement('div'); rig.className = 'rig3'; host.appendChild(rig);
     const sk = skins.find(x => x.id === sel) || skins[0], im0 = sk && load(sk.data), ok = im0 && im0.complete && im0.naturalWidth, im = ok ? im0 : steve(), tall = ok ? im0.naturalHeight >= 64 : true, slim = sk && sk.model === 'slim', aw = slim ? 3 : 4;
+    if (window.Glb3d && Glb3d.usesGlb(equip)) { Glb3d.mount(host, { equip, skin: ok ? im0 : null, slim, angle: hostSel === '#heroSkin' ? () => heroAng : () => ang3 }); return; } // 3D-Modelle (.glb) brauchen echtes 3D (three.js)
     const add = e => rig.appendChild(e);
     add(skinBox(im, 0, 0, 8, 8, 8, 0, 4, 0)); add(skinBox(im, 16, 16, 8, 12, 4, 0, 14, 0));
     add(skinBox(im, 40, 16, aw, 12, 4, -(4 + aw / 2), 14, 0)); add(skinBox(im, tall ? 32 : 40, tall ? 48 : 16, aw, 12, 4, 4 + aw / 2, 14, 0));
@@ -168,7 +176,7 @@
   try { heroOn = localStorage.getItem('cloudy.heroSkin') !== '0'; } catch {}
   function paintHero() {
     const host = $('#heroSkin'); if (!host) return; host.style.display = heroOn ? '' : 'none'; if (!heroOn || !shop) { host.innerHTML = ''; return; }
-    paint3d(shop.equip, '#heroSkin'); const rig = host.firstChild; if (!rig) return;
+    paint3d(shop.equip, '#heroSkin'); if (window.Glb3d && Glb3d.usesGlb(shop.equip)) { loopHero(); return; } const rig = host.firstChild; if (!rig) return; // 3D-Modelle zeichnen sich selbst (host._apply von Glb3d)
     host._apply = () => { rig.style.transform = `rotateX(-6deg) rotateY(${heroAng}deg)`; }; host._apply(); loopHero();
   }
   function loopHero() {
@@ -251,6 +259,7 @@
     for (let i = 0; i < N; i++) { const z = (i - (N - 1) / 2) * .26, b = flat(box3(W, W * I.ar, .1, 0, 16, z, spr(I.img))); if (i === 0 || i === N - 1) b.style.filter = 'brightness(.78)'; else if (i === 1 || i === N - 2) b.style.filter = 'brightness(.9)'; root.appendChild(b); }
   }
   function item3d(id) {
+    if (ITEMS[id] && ITEMS[id].glb) { const w = document.createElement('div'); w.className = 'i3'; w.style.cssText = 'display:flex;align-items:center;justify-content:center'; const im = new Image(); im.src = ITEMS[id].img; im.alt = ''; im.style.cssText = 'width:86%;height:86%;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))'; w.appendChild(im); return w; } // Vorschaubild kommt aus dem .glb selbst (mit three.js gerendert)
     const wrap = document.createElement('div'); wrap.className = 'i3'; const rig = document.createElement('div'); rig.className = 'rig3 i3r'; wrap.appendChild(rig);
     const add = e => rig.appendChild(e), cat = id.split('-')[0];
     if (cat === 'totem') {

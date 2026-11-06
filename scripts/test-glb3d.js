@@ -1,0 +1,30 @@
+// Prueft die 3D-Cosmetics (.glb): Laden aller Modelle, Platzierung, echtes Rendern (Chromium/WebGL), und dass Launcher, Katalog und Mod dieselben IDs/Dateien kennen.
+// Aufruf: NODE_PATH=$(npm root -g) node scripts/test-glb3d.js
+const http = require('http'), fs = require('fs'), path = require('path'); const { chromium } = require('playwright');
+const root = path.join(__dirname, '..'); let n = 0, bad = 0; const ok = (c, m) => { n++; console.log(c ? 'OK  ' : 'FAIL', m); if (!c) bad++; };
+const read = f => fs.readFileSync(path.join(root, f), 'utf8');
+const IDS = ['hat-g3wizard', 'hat-g3crown', 'cape-g3nebula', 'cape-g3phoenix', 'wings-g3seraph', 'wings-g3prism', 'wings-g3void'];
+// ---- Konsistenz (ohne Browser) ----
+const main = read('main.js'), shop = read('assets/js/shop.js'), glbjs = read('assets/js/glb3d.js'), java = read('client-src/src/main/java/app/cloudy/client/GLB.java'), cos = read('client-src/src/main/java/app/cloudy/client/Cosmetics.java');
+for (const id of IDS) {
+  ok(main.includes(`id: '${id}'`) && shop.includes(`'${id}': {`) && glbjs.includes(`'${id}'`) && java.includes(`"${id}"`) && cos.includes(`"${id}"`), 'ID in Katalog, Shop, glb3d.js, GLB.java und Cosmetics.ALL: ' + id);
+  ok(fs.existsSync(path.join(root, 'assets/cosmetics3d/icons', id + '.png')) && fs.existsSync(path.join(root, 'client-src/src/main/resources/cloudy-cos', 'ico-' + id + '.png')), 'Vorschaubild fuer Launcher und Mod: ' + id);
+}
+for (const f of fs.readdirSync(path.join(root, 'assets/cosmetics3d')).filter(x => x.endsWith('.glb'))) ok(fs.readFileSync(path.join(root, 'assets/cosmetics3d', f)).equals(fs.readFileSync(path.join(root, 'client-src/src/main/resources/cloudy-cos/glb', f))), 'GLB im Mod identisch mit Launcher: ' + f);
+// gleiche Platzierungszahlen in JS und Java
+const num = s => s.replace(/\s/g, ''); ok(/cape:\{pos:\[0,0,-0\.155\],scale:1,tilt:0\.05\}/.test(num(glbjs)) && /wings:\{pos:\[0,-0\.22,-0\.15\],scale:0\.62\}/.test(num(glbjs)) && /halo:\[0,0\.66,0\]/.test(num(glbjs)) && /CAPE_TILT=0\.05f/.test(num(java)) && /CAPE_Z=0\.155f/.test(num(java)) && /WING_Y=-0\.22f/.test(num(java)) && /WING_Z=-0\.15f/.test(num(java)) && /WING_SC=0\.62f/.test(num(java)) && /HALO_Y=0\.66f/.test(num(java)), 'Platzierungszahlen in JS und Java gleich');
+// ---- Browser ----
+const s = http.createServer((q, r) => { const u = decodeURIComponent(q.url.split('?')[0]); const f = u === '/p.html' ? path.join(__dirname, 'fixtures', 'glb-harness.html') : path.join(root, u); if (!fs.existsSync(f) || fs.statSync(f).isDirectory()) { r.writeHead(404); return r.end(); } r.writeHead(200, { 'Content-Type': { '.js': 'text/javascript', '.html': 'text/html' }[path.extname(f)] || 'application/octet-stream' }); r.end(fs.readFileSync(f)); });
+s.listen(0, async () => {
+  const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] }); const p = await b.newPage({ viewport: { width: 600, height: 700 } }); const errs = []; p.on('pageerror', e => errs.push(String(e)));
+  await p.goto('http://127.0.0.1:' + s.address().port + '/p.html');
+  const info = await p.evaluate(async ids => { const out = {}; for (const id of ids) { const m = await Glb3d.load(id); const box = new THREE.Box3().setFromObject(m), sz = box.getSize(new THREE.Vector3()); let tris = 0, tex = true; m.traverse(o => { if (o.isMesh) { tris += o.geometry.index.count / 3; if (!o.material.map || !o.material.map.image) tex = false; } }); out[id] = { y0: +box.min.y.toFixed(3), y1: +box.max.y.toFixed(3), w: +sz.x.toFixed(3), tris, tex }; } return out; }, IDS);
+  for (const id of IDS) { const i = info[id]; ok(i.tris > 1000 && i.tex, `${id}: ${i.tris} Dreiecke, Textur geladen`); }
+  ok(info['hat-g3wizard'].y0 > 0.4 && info['hat-g3wizard'].y1 < 1.5, 'Hut sitzt ueber dem Kopf (Halsgelenk-Ursprung)'); ok(info['cape-g3nebula'].y0 < -0.95 && info['cape-g3nebula'].w > 0.6 && info['cape-g3nebula'].w < 0.7, 'Umhang ~1 Block lang, ~0.65 breit');
+  const px = async eq => p.evaluate(async e => { const h = document.getElementById('h'); await Glb3d.mount(h, { equip: e, skin: null, slim: false, angle: () => 180 }); h._apply(); const c = h.querySelector('canvas'), t = document.createElement('canvas'); t.width = c.width; t.height = c.height; const g = t.getContext('2d'); g.drawImage(c, 0, 0); const d = g.getImageData(0, 0, t.width, t.height).data; let nz = 0, gold = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 20) { nz++; } return nz; }, eq);
+  const base = await px({}), withAll = await px({ hat: 'hat-g3wizard', cape: 'cape-g3nebula', wings: 'wings-g3seraph' }), wings = await px({ wings: 'wings-g3void' });
+  ok(base > 5000 && withAll > base * 1.1 && wings > base, `echtes Rendern: Figur ${base}px, mit Hut+Umhang+Fluegel ${withAll}px`);
+  ok(await p.evaluate(() => Glb3d.usesGlb({ hat: 'hat-g3wizard' }) && !Glb3d.usesGlb({ hat: 'hat-top' }) && !Glb3d.usesGlb({})), 'usesGlb erkennt nur GLB-Items');
+  const icon = await p.evaluate(() => Glb3d.iconOf('wings-g3seraph', 128)); ok(/^data:image\/png/.test(icon) && icon.length > 2000, 'Vorschaubild kann aus dem Modell gerendert werden');
+  ok(!errs.length, 'keine JS-Fehler ' + errs.join(';')); await b.close(); s.close(); console.log(bad ? 'GLB3D FEHLER' : `GLB3D OK – ${n} Prüfungen`); process.exit(bad ? 1 : 0);
+});

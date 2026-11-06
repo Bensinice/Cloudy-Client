@@ -1,0 +1,4 @@
+<!doctype html><body style="margin:0;background:#1b2233"><div id=h style="width:600px;height:700px"></div>
+<script src="/assets/js/vendor/three.min.js"></script><script src="/assets/js/vendor/GLTFLoader.js"></script><script src="/assets/js/glb3d.js"></script>
+<script>window.go=async(eq,ang)=>{const h=document.getElementById('h');await Glb3d.mount(h,{equip:eq,skin:null,slim:false,angle:()=>ang});h._apply();return h.querySelector('canvas').toDataURL('image/png');};
+window.ic=async id=>Glb3d.iconOf(id,256);</script>
