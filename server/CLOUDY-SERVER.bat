@@ -77,9 +77,6 @@ echo Datenbank laeuft.
 
 echo.
 echo == 3/5  Einstellungen und Datenbank
-set "MYSQLBIN=mysql"
-if exist "%DBDIR%\bin\mysql.exe" set "MYSQLBIN=%DBDIR%\bin\mysql.exe"
-if exist "%DBDIR%\bin\mariadb.exe" set "MYSQLBIN=%DBDIR%\bin\mariadb.exe"
 if exist cloudy.env goto envok
 echo Erster Start: Ich lege die Datenbank und die Einstellungen an.
 for /f %%P in ('powershell -NoProfile -Command "-join ((48..57)+(97..102) | Get-Random -Count 20 | %%{[char]$_})"') do set "NEWDBPASS=%%P"
@@ -96,16 +93,21 @@ if "%NEWURL%"=="" set "NEWURL=https://cloudyclient.com"
 >> cloudy.env echo PORT=3364
 >> cloudy.env echo PUBLIC_URL=%NEWURL%
 if not "%NEWUPKEY%"=="" >> cloudy.env echo UPLOAD_KEY=%NEWUPKEY%
-"%MYSQLBIN%" -u root -e "CREATE DATABASE IF NOT EXISTS CloudyClient CHARACTER SET utf8mb4; CREATE USER IF NOT EXISTS 'CloudyClient'@'127.0.0.1' IDENTIFIED BY '%NEWDBPASS%'; ALTER USER 'CloudyClient'@'127.0.0.1' IDENTIFIED BY '%NEWDBPASS%'; CREATE USER IF NOT EXISTS 'CloudyClient'@'localhost' IDENTIFIED BY '%NEWDBPASS%'; ALTER USER 'CloudyClient'@'localhost' IDENTIFIED BY '%NEWDBPASS%'; GRANT ALL ON CloudyClient.* TO 'CloudyClient'@'127.0.0.1'; GRANT ALL ON CloudyClient.* TO 'CloudyClient'@'localhost'; FLUSH PRIVILEGES;"
-if errorlevel 1 ( del cloudy.env & echo FEHLER: Die Datenbank konnte nicht angelegt werden. Hast du ein MySQL-Root-Passwort gesetzt? Dann schick mir diese Meldung. & goto fail )
+set "ROOTPW="
+:dbsetup
+call node cloudy-sql.js setup
+if "%ERRORLEVEL%"=="2" (
+  set /p "ROOTPW=Auf Port 3306 laeuft schon eine Datenbank mit Root-Passwort. Root-Passwort eingeben (wird nicht gespeichert): "
+  goto dbsetup
+)
+if errorlevel 1 ( del cloudy.env & echo FEHLER: Die Datenbank konnte nicht angelegt werden. Schick mir die Meldung oben. & goto fail )
 echo Wenn du Konten von deinem alten Server mitnehmen willst: ziehe die exportierte .sql-Datei in dieses Fenster und druecke Enter. Sonst nur Enter.
 set "SQLF="
 set /p "SQLF=Datei: "
 if "%SQLF%"=="" goto envok
 set "SQLF=%SQLF:"=%"
 if not exist "%SQLF%" ( echo FEHLER: Die Datei wurde nicht gefunden: %SQLF% & goto fail )
-"%MYSQLBIN%" -u root -e "DROP DATABASE IF EXISTS CloudyClient; CREATE DATABASE CloudyClient CHARACTER SET utf8mb4; GRANT ALL ON CloudyClient.* TO 'CloudyClient'@'127.0.0.1'; GRANT ALL ON CloudyClient.* TO 'CloudyClient'@'localhost';"
-"%MYSQLBIN%" -u root CloudyClient < "%SQLF%"
+call node cloudy-sql.js import "%SQLF%"
 if errorlevel 1 ( echo FEHLER: Die Datei konnte nicht eingespielt werden. & goto fail )
 echo Daten eingespielt.
 goto envdone
