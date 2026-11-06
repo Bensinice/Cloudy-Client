@@ -101,21 +101,14 @@ if "%ERRORLEVEL%"=="2" (
   goto dbsetup
 )
 if errorlevel 1 ( del cloudy.env & echo FEHLER: Die Datenbank konnte nicht angelegt werden. Schick mir die Meldung oben. & goto fail )
-echo Wenn du Konten von deinem alten Server mitnehmen willst: ziehe die exportierte .sql-Datei in dieses Fenster und druecke Enter. Sonst nur Enter.
-set "SQLF="
-set /p "SQLF=Datei: "
-if "%SQLF%"=="" goto envok
-set "SQLF=%SQLF:"=%"
-if not exist "%SQLF%" ( echo FEHLER: Die Datei wurde nicht gefunden: %SQLF% & goto fail )
-call node cloudy-sql.js import "%SQLF%"
-if errorlevel 1 ( echo FEHLER: Die Datei konnte nicht eingespielt werden. & goto fail )
-echo Daten eingespielt.
+call :importask
 goto envdone
 :envok
 echo Gespeicherte Einstellungen ^(cloudy.env^) werden benutzt.
 :envdone
 for /f "usebackq eol=# tokens=1,* delims==" %%A in ("cloudy.env") do set "%%A=%%B"
 if "%PORT%"=="" set "PORT=3364"
+if /i "%~1"=="import" call :importask
 
 echo.
 echo == 4/5  Cloudflare-Tunnel ^(Verbindung zu deiner Domain^)
@@ -168,6 +161,25 @@ node app.js
 echo Server beendet, Neustart in 3 Sekunden ^(Strg+C zum Stoppen^) ...
 timeout /t 3 /nobreak >nul
 goto sl
+
+:importask
+echo.
+echo SQL-Datei einspielen ^(z. B. database.sql vom alten Server^). Der Inhalt der Datenbank wird dabei ersetzt.
+echo Tippe den ganzen Pfad zur Datei ein ^(z. B. C:\Users\Name\Downloads\database.sql^) oder ziehe die Datei in dieses Fenster. Nur Enter = ueberspringen.
+set "SQLF="
+set /p "SQLF=Pfad zur .sql-Datei: "
+if "%SQLF%"=="" exit /b 0
+set "SQLF=%SQLF:"=%"
+if not exist "%SQLF%" ( echo FEHLER: Die Datei wurde nicht gefunden: %SQLF% & goto fail )
+:imp
+call node cloudy-sql.js import "%SQLF%"
+if "%ERRORLEVEL%"=="2" (
+  set /p "ROOTPW=Root-Passwort der Datenbank (wird nicht gespeichert): "
+  goto imp
+)
+if errorlevel 1 ( echo FEHLER: Die Datei konnte nicht eingespielt werden. & goto fail )
+echo Daten eingespielt.
+exit /b 0
 
 :dbping
 powershell -NoProfile -Command "try { $c = New-Object Net.Sockets.TcpClient; $c.Connect('127.0.0.1',3306); $c.Close(); exit 0 } catch { exit 1 }"
