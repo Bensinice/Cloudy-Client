@@ -113,6 +113,13 @@ if /i "%~1"=="import" call :importask
 echo.
 echo == 4/5  Cloudflare-Tunnel ^(Verbindung zu deiner Domain^)
 set "CFG=%USERPROFILE%\.cloudflared\config.yml"
+if /i not "%~1"=="dns" goto nodnsfix
+set "HOST=%PUBLIC_URL:https://=%"
+set "HOST=%HOST:http://=%"
+for /f "delims=/" %%H in ("%HOST%") do set "HOST=%%H"
+echo Setze die Adresse %HOST% auf DIESEN Tunnel ^(ueberschreibt den alten Eintrag, z. B. vom Mac^) ...
+cloudflared tunnel route dns --overwrite-dns cloudy-server %HOST%
+:nodnsfix
 if exist "%CFG%" ( echo Vorhandener Tunnel wird benutzt ^(%CFG%^). & goto tunnelok )
 echo Noch kein Tunnel eingerichtet. Ich lege einen an ^(die Domain muss bei Cloudflare liegen^).
 if not exist "%USERPROFILE%\.cloudflared\cert.pem" (
@@ -130,8 +137,8 @@ if "%TID%"=="" (
   for /f %%I in ('cloudflared tunnel list --name cloudy-server -o json 2^>nul ^| node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{const a=JSON.parse(s);console.log(a[0]&&a[0].id||'')}catch{console.log('')}})"') do set "TID=%%I"
 )
 if "%TID%"=="" ( echo FEHLER: Die Tunnel-ID wurde nicht gefunden. & goto fail )
-cloudflared tunnel route dns cloudy-server %HOST%
-if errorlevel 1 echo Hinweis: Der DNS-Eintrag fuer %HOST% existiert evtl. schon. Falls nichts erreichbar ist, loesche den alten Eintrag im Cloudflare-Dashboard und starte die Datei nochmal.
+cloudflared tunnel route dns --overwrite-dns cloudy-server %HOST%
+if errorlevel 1 echo Hinweis: Der DNS-Eintrag fuer %HOST% existiert evtl. schon. Falls Cloudflare Fehler 1033 zeigt: starte CLOUDY-SERVER.bat dns
 > "%CFG%" echo tunnel: %TID%
 >> "%CFG%" echo credentials-file: %USERPROFILE%\.cloudflared\%TID%.json
 >> "%CFG%" echo ingress:
