@@ -102,7 +102,7 @@ async function init() {
   if (!(await get('tester'))) await put(mk('Tester', '12345', { must_change: 1, coins: 100 }));
 }
 const app = express(); app.set('trust proxy', true); // hinter nginx/Cloudflare: echte Besucher-IP für die Versuchsbegrenzung
-app.use(cors()); app.use(express.json({ limit: '100kb', verify: (req, _res, buf) => { if (req.originalUrl === '/stripe/webhook') req.rawBody = buf; } })); // rawBody: Stripe prüft die Signatur über den unveränderten Text
+app.use('/notes', express.json({ limit: '400kb' })); app.use(cors()); app.use(express.json({ limit: '100kb', verify: (req, _res, buf) => { if (req.originalUrl === '/stripe/webhook') req.rawBody = buf; } })); // rawBody: Stripe prüft die Signatur über den unveränderten Text
 require('./site')(app, express, async req => { // Webseite, Downloads, Update-Feed, Upload (site.js); Admin = Konto mit Admin-Recht oder Owner-Tag
   const m = /^Bearer (.+)$/.exec(req.headers.authorization || ''), key = m && (sessions.get(m[1]) || await tokKey(m[1])), me = key && await get(key);
   return !!me && !lockMsg(me) && isAdm(me);
@@ -159,6 +159,10 @@ const auth = wrap2 => wrap(async (req, res) => {
   { const lm = lockMsg(me); if (lm) return res.status(403).json({ error: lm }); }
   await wrap2(req, res, me);
 });
+// ---- Cloudy Notes: Notizen pro Konto (gleiche Daten fuer Server-App, iPhone-Web-App und Website). Nur der Sync-Kern; KI/Claude laufen in der Server-App.
+{ const NOTES = require('./notes'); let nh = null, ni = null;
+  const lazy = k => async (u, b) => { if (!nh) { if (!ni) ni = (async () => { const repo = NOTES.sqlRepo(db); await repo.init(); nh = NOTES.create({ repo, getSecret: () => SECRET }); })().catch(e => { ni = null; throw e; }); await ni; } return nh[k](u, b); };
+  NOTES.mount(app, auth, { list: lazy('list'), save: lazy('save'), del: lazy('del'), history: lazy('history'), restore: lazy('restore'), exportAll: lazy('exportAll'), info: lazy('info') }); }
 // ---- Freunde & Chat direkt über den Konto-Server (kein extra Freundesserver nötig) ----
 let TAGLIVE = () => []; // Clan-Tags (wird von frHandle gesetzt) – für die Namens-Tags im Spiel
 const PRES = new Map(); // Konto -> { srv, t } (wo jemand gerade spielt/hostet)

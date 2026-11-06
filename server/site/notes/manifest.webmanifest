@@ -1,0 +1,15 @@
+{
+  "name": "Cloudy Notes",
+  "short_name": "Notes",
+  "description": "Deine Cloudy-Notizen – gleiche Daten wie in der Server-App und im Launcher.",
+  "start_url": "/notes/",
+  "scope": "/notes/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "lang": "de",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
