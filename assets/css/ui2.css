@@ -32,22 +32,23 @@ html[data-ui="2"] .glass::before{display:none}
 html[data-ui="2"] .app{grid-template-columns:240px minmax(0,1fr);gap:0;padding:44px 0 0}
 html[data-ui="2"] .side{border-radius:0;border:0;border-right:1px solid var(--ui2-line);background:var(--ui2-side);padding:12px 10px;gap:2px;overflow-y:auto}
 html[data-ui="2"] .brand{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:2px 4px 14px;text-shadow:none;cursor:default}
-html[data-ui="2"] .brandmark{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:9px;cursor:pointer;padding:6px 8px;border-radius:10px;font-size:20px;font-weight:700;letter-spacing:-.02em;color:var(--ink);transition:background var(--ui2-t)}
-html[data-ui="2"] .brandmark:hover{background:var(--ui2-hover)}
-html[data-ui="2"] .brandmark:focus-visible,html[data-ui="2"] .ibtn:focus-visible,html[data-ui="2"] .nav:focus-visible,html[data-ui="2"] .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-html[data-ui="2"] .brandmark svg{width:26px;height:26px;filter:none;transition:transform .6s var(--ease,ease)}
+.brandmark{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:9px;cursor:pointer;padding:6px 8px;border-radius:10px;font-size:20px;font-weight:700;letter-spacing:-.02em;color:var(--ink);transition:background var(--ui2-t)}
+.brandmark:hover{background:var(--ui2-hover)}
+/* gilt in beiden Looks: Marke + Icon-Knoepfe */
+.brandmark:focus-visible,.ibtn:focus-visible,.nav:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.brandmark svg{width:26px;height:26px;filter:none;transition:transform .6s var(--ease,ease)}
 html[data-ui="2"] .brandmark svg path:not(.bplus){fill:var(--accent)}
-html[data-ui="2"] .brandmark.spinning svg{transform:rotate(360deg) scale(1.15)}
-html[data-ui="2"] .brandmark[aria-busy="true"]{cursor:progress}
-html[data-ui="2"] .brandtools{display:flex;gap:4px}
-html[data-ui="2"] .ibtn{all:unset;box-sizing:border-box;width:32px;height:32px;display:grid;place-items:center;border-radius:9px;color:var(--ink2);cursor:pointer;transition:background var(--ui2-t),color var(--ui2-t)}
-html[data-ui="2"] .ibtn:hover{background:var(--ui2-hover);color:var(--ink)}
-html[data-ui="2"] .ibtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-html[data-ui="2"] .ibtn.on{background:color-mix(in srgb,var(--accent) 22%,transparent);color:var(--accent)}
-html[data-ui="2"] .ibtn .i-off,html[data-ui="2"] .ibtn .i-sun{display:none}
-html[data-ui="2"] #musicBtn:not(.on) .i-on{display:none}html[data-ui="2"] #musicBtn:not(.on) .i-off{display:block}
-html[data-ui="2"] #themeBtn.on .i-moon{display:none}html[data-ui="2"] #themeBtn.on .i-sun{display:block}
-html[data-ui="2"] .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.brandmark.spinning svg{transform:rotate(360deg) scale(1.15)}
+.brandmark[aria-busy="true"]{cursor:progress}
+.brandtools{display:flex;gap:4px}
+.ibtn{all:unset;box-sizing:border-box;width:32px;height:32px;display:grid;place-items:center;border-radius:9px;color:var(--ink2);cursor:pointer;transition:background var(--ui2-t),color var(--ui2-t)}
+.ibtn:hover{background:var(--ui2-hover);color:var(--ink)}
+.ibtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.ibtn.on{background:color-mix(in srgb,var(--accent) 22%,transparent);color:var(--accent)}
+.ibtn .i-off,.ibtn .i-sun{display:none}
+#musicBtn:not(.on) .i-on{display:none}#musicBtn:not(.on) .i-off{display:block}
+#themeBtn.on .i-moon{display:none}#themeBtn.on .i-sun{display:block}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 html[data-ui="2"] .nav{height:38px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:500;gap:11px;color:var(--ink2);transition:background var(--ui2-t),color var(--ui2-t)}
 html[data-ui="2"] .nav[hidden]{display:none}
 html[data-ui="2"] .nav svg{width:18px;height:18px;stroke-width:1.8}
@@ -203,3 +204,4 @@ html[data-ui="2"] #acCl{border-color:color-mix(in srgb,var(--accent) 40%,var(--u
 
 @media (max-width:900px){.notes-grid{grid-template-columns:1fr;height:auto}}
 @media (prefers-reduced-motion:reduce){html[data-ui="2"] .page.on,.v2-modal,.v2-box,.tokskel{animation:none}html[data-ui="2"] *{transition-duration:.01ms!important}}
+.nav[hidden],.brandtools [hidden]{display:none!important}

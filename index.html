@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de"><head><meta charset="UTF-8"><title>Cloudy</title>
 <link rel="stylesheet" href="themes/themes.css">
-<link rel="stylesheet" href="assets/css/app.css"><link rel="stylesheet" href="assets/css/ui2.css"><script>document.documentElement.dataset.ui="2";document.documentElement.dataset.layout="cloudy"</script></head><body>
+<link rel="stylesheet" href="assets/css/app.css"><link rel="stylesheet" href="assets/css/ui2.css"><script>try{if(localStorage.getItem("cloudy.ui2")==="1")document.documentElement.dataset.ui="2"}catch(e){}</script></head><body>
 <div class="drag"></div>
 <div class="wc" id="wc"><button id="wcMin" aria-label="Minimieren"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button><button id="wcMax" aria-label="Maximieren"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button><button id="wcX" aria-label="Schließen"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button></div>
 <div class="sky"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>

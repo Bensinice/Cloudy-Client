@@ -802,7 +802,7 @@ window.cloudyTags = tags => (tags || []).map(k => { const m = /^clan:([A-Z0-9]{1
   const lock = ok => {
     allowed = ok; if (cb) cb.disabled = !ok;
     const note = document.getElementById('ui2Note'); if (note) note.style.display = ok ? 'none' : '';
-    // Cloudy 2.0 ist jetzt das Standarddesign für alle: kein Abschalten mehr
+    if (!ok && root.dataset.ui === '2') set(false);
   };
   const check = async () => {
     try {
@@ -810,8 +810,9 @@ window.cloudyTags = tags => (tags || []).map(k => { const m = /^clan:([A-Z0-9]{1
       if (r && r.ok) lock(!!r.plus || !!admTabOn);
     } catch {}
   };
-  set(true);
-  if (cb) { cb.checked = true; cb.disabled = true; }
+  set(root.dataset.ui === '2');
+  if (cb) { cb.disabled = true; cb.onchange = () => { if (!allowed) { cb.checked = false; return; } set(cb.checked); }; }
+  check(); setInterval(check, 120000); window.addEventListener('cloudy-plus', check);
 })();
 
 // Marken-Icon: Wolke, mit Plus nur fuer Cloudy+
