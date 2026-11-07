@@ -226,16 +226,55 @@
         <div class="tools" style="margin:0 0 8px;gap:8px;flex-wrap:wrap;align-items:center"><label class="muted">Von <input id="cqFrom" class="field" type="date"></label><label class="muted">Bis <input id="cqTo" class="field" type="date"></label><input id="cqLim" class="field" type="number" min="0" placeholder="Zeitlimit in Std. (0 = keins)" style="max-width:210px"><input id="cqUsers" class="field" placeholder="Spieler (Komma-getrennt, leer = alle)" style="max-width:280px"></div>
         <div class="tools" style="margin:0 0 8px;gap:8px;flex-wrap:wrap"><button class="btn" id="cqSave" type="button">Quest speichern</button><button class="btn ghost" id="cqNew" type="button">Neu / leeren</button></div>
         <p class="muted" id="cqMsg" style="min-height:18px;margin:0 0 6px"></p><div id="cqList"></div></div>
-      <div class="glass set wide" data-adm id="cfgAdm"><h3>E-Mail &amp; Stripe (Admin)</h3><p class="muted">Hier stellst du ein, über welches Postfach der Server E-Mails sendet (z. B. bei Early-Access-Anfragen) und wie Cloudy+ bezahlt wird. Passwörter und Schlüssel werden nie angezeigt; ein leeres Feld lässt den gespeicherten Wert unverändert.</p>
-        <h4 style="margin:10px 0 6px">E-Mail senden (SMTP)</h4>
-        <div class="tools" style="margin:0 0 8px;gap:8px;flex-wrap:wrap"><input id="cfHost" class="field" placeholder="SMTP-Server (z. B. smtp.gmail.com)" style="max-width:240px" autocomplete="off"><input id="cfPort" class="field" type="number" placeholder="Port (465)" style="max-width:110px"><select id="cfSec" class="field" style="max-width:140px"><option value="">Auto</option><option value="ssl">SSL</option><option value="starttls">STARTTLS</option><option value="none">Keine</option></select></div>
-        <div class="tools" style="margin:0 0 8px;gap:8px;flex-wrap:wrap"><input id="cfUser" class="field" placeholder="Benutzer / E-Mail-Adresse des Postfachs" style="max-width:280px" autocomplete="off"><input id="cfPass" class="field" type="password" placeholder="Passwort (leer = behalten)" style="max-width:220px" autocomplete="new-password"></div>
-        <div class="tools" style="margin:0 0 8px;gap:8px;flex-wrap:wrap"><input id="cfFrom" class="field" placeholder="Absender (leer = Benutzer)" style="max-width:240px" autocomplete="off"><input id="cfTo" class="field" placeholder="Empfänger der Meldungen" style="max-width:280px" autocomplete="off"><button class="btn ghost" id="cfMailTest" type="button">Test-E-Mail senden</button></div>
-        <h4 style="margin:12px 0 6px">Stripe (Cloudy+ kaufen)</h4>
-        <div class="tools" style="margin:0 0 8px;gap:8px;flex-wrap:wrap"><input id="cfSk" class="field" type="password" placeholder="Geheimer Schlüssel sk_live_… (leer = behalten)" style="max-width:320px" autocomplete="new-password"><input id="cfWh" class="field" type="password" placeholder="Webhook-Secret whsec_… (leer = behalten)" style="max-width:320px" autocomplete="new-password"></div>
-        <div class="tools" style="margin:0 0 8px;gap:8px;flex-wrap:wrap"><input id="cfUrl" class="field" placeholder="Webseite (https://cloudyclient.com)" style="max-width:280px" autocomplete="off"><button class="btn ghost" id="cfClearSk" type="button">Stripe-Schlüssel löschen</button></div>
-        <p class="muted" id="cfInfo" style="margin:0 0 6px;font-size:12px"></p>
-        <div class="tools" style="margin:0"><button class="btn" id="cfSave" type="button">Speichern</button><span class="muted" id="cfMsg" style="min-height:18px"></span></div></div>
+      <div class="glass set wide" data-adm id="cfgAdm"><h3>E-Mail &amp; Stripe (Admin)</h3>
+        <p class="muted">Zwei Dinge, die dein Server braucht: ein <b>Postfach zum Senden von E-Mails</b> und ein <b>Zahlungskonto</b>, damit Cloudy+ gekauft werden kann. Passwörter und Schlüssel werden nie angezeigt; ein leeres Feld lässt den gespeicherten Wert unverändert.</p>
+        <div class="cfstat"><span class="cfchip" id="cfStMail">E-Mail: …</span><span class="cfchip" id="cfStStripe">Stripe: …</span></div>
+        <div class="cfgrid">
+          <section class="cfbox"><h4>① E-Mail senden (SMTP)</h4>
+            <details class="cfhelp"><summary>Was ist SMTP? Anleitung</summary>
+              <p><b>SMTP</b> ist der „Postausgang“ des Internets: der Weg, wie ein Programm E-Mails verschickt. Dein Cloudy-Server meldet sich damit bei einem Postfach (z. B. Gmail) an und sendet darüber Mails, etwa wenn jemand Early Access anfragt.</p>
+              <ol>
+                <li>Postfach wählen (am einfachsten ein Gmail-Konto nur für Cloudy). Unten auf <b>Gmail</b> oder <b>Outlook</b> klicken, dann sind Server, Port und Sicherheit schon richtig.</li>
+                <li>Bei Gmail brauchst du ein <b>App-Passwort</b> (nicht dein normales Passwort): zuerst <a href="#" data-ext="https://myaccount.google.com/security">Bestätigung in zwei Schritten einschalten</a>, dann <a href="#" data-ext="https://myaccount.google.com/apppasswords">App-Passwort erstellen</a> (Name z. B. „Cloudy“). Es hat 16 Zeichen, die Leerzeichen sind egal.</li>
+                <li><b>Benutzer</b> = die Mail-Adresse des Postfachs, <b>Passwort</b> = das App-Passwort. <b>Empfänger</b> = die Adresse, an die du die Meldungen bekommen willst.</li>
+                <li>Auf <b>Speichern</b> und dann auf <b>Test-E-Mail senden</b> klicken. Kommt sie an, ist alles fertig.</li>
+              </ol>
+              <p class="muted">Probleme? <a href="#" data-ext="https://support.google.com/accounts/answer/185833">Hilfe zu App-Passwörtern</a> · Outlook: <a href="#" data-ext="https://support.microsoft.com/de-de/office/pop-imap-und-smtp-einstellungen-8361e398-8af4-4e97-b147-6c6c4ac95353">SMTP-Einstellungen</a></p>
+            </details>
+            <div class="cfpre"><span>Schnell ausfüllen:</span><button class="btn ghost" type="button" data-pre="gmail">Gmail</button><button class="btn ghost" type="button" data-pre="outlook">Outlook</button></div>
+            <div class="cfform">
+              <label class="cff">SMTP-Server<input id="cfHost" class="field" placeholder="smtp.gmail.com" autocomplete="off"></label>
+              <div class="cfrow"><label class="cff">Port<input id="cfPort" class="field" type="number" placeholder="465"></label><label class="cff">Sicherheit<select id="cfSec" class="field"><option value="">Auto</option><option value="ssl">SSL</option><option value="starttls">STARTTLS</option><option value="none">Keine</option></select></label></div>
+              <label class="cff">Benutzer (Mail-Adresse des Postfachs)<input id="cfUser" class="field" placeholder="cloudy@gmail.com" autocomplete="off"></label>
+              <label class="cff">Passwort / App-Passwort<input id="cfPass" class="field" type="password" placeholder="Passwort (leer = behalten)" autocomplete="new-password"></label>
+              <label class="cff">Absender (leer = Benutzer)<input id="cfFrom" class="field" placeholder="Cloudy &lt;cloudy@gmail.com&gt;" autocomplete="off"></label>
+              <label class="cff">Empfänger der Meldungen<input id="cfTo" class="field" placeholder="deine@mail.de" autocomplete="off"></label>
+              <div class="tools" style="margin:0"><button class="btn ghost" id="cfMailTest" type="button">Test-E-Mail senden</button></div>
+            </div>
+          </section>
+          <section class="cfbox"><h4>② Stripe (Cloudy+ kaufen)</h4>
+            <details class="cfhelp"><summary>Was ist Stripe? Anleitung</summary>
+              <p><b>Stripe</b> ist ein Zahlungsanbieter. Damit können Spieler Cloudy+ mit Karte oder PayPal kaufen, ohne dass du Zahlungsdaten selbst speicherst. Du brauchst zwei Schlüssel von Stripe.</p>
+              <ol>
+                <li><a href="#" data-ext="https://dashboard.stripe.com/register">Stripe-Konto erstellen</a> (oder anmelden) und Firmen- bzw. Auszahlungsdaten ausfüllen, bis das Konto „live“ ist.</li>
+                <li>Geheimen Schlüssel holen: <a href="#" data-ext="https://dashboard.stripe.com/apikeys">API-Schlüssel öffnen</a>, bei „Geheimer Schlüssel“ auf <b>Anzeigen</b> klicken (beginnt mit <code>sk_live_</code>) und unten bei „Geheimer Schlüssel“ einfügen.</li>
+                <li>Webhook anlegen: <a href="#" data-ext="https://dashboard.stripe.com/webhooks">Webhooks öffnen</a> → „Endpunkt hinzufügen“. Als Adresse trägst du die <b>Webhook-Adresse</b> ein (steht unten, mit Kopieren-Knopf). Als Ereignisse wählst du <code>checkout.session.completed</code> und <code>invoice.paid</code>.</li>
+                <li>Beim neuen Webhook auf „Signierungsgeheimnis“ → <b>Anzeigen</b> klicken (beginnt mit <code>whsec_</code>) und unten bei „Webhook-Secret“ einfügen.</li>
+                <li><b>Speichern</b> drücken. Oben muss dann „Stripe: bereit“ stehen.</li>
+              </ol>
+              <p class="muted">Mehr dazu: <a href="#" data-ext="https://docs.stripe.com/webhooks">Stripe-Webhooks erklärt</a> · <a href="#" data-ext="https://docs.stripe.com/keys">Stripe-Schlüssel erklärt</a></p>
+            </details>
+            <div class="cfform">
+              <label class="cff">Geheimer Schlüssel<input id="cfSk" class="field" type="password" placeholder="sk_live_… (leer = behalten)" autocomplete="new-password"></label>
+              <label class="cff">Webhook-Secret<input id="cfWh" class="field" type="password" placeholder="whsec_… (leer = behalten)" autocomplete="new-password"></label>
+              <label class="cff">Webseite von Cloudy<input id="cfUrl" class="field" placeholder="https://cloudyclient.com" autocomplete="off"></label>
+              <div class="cfhook"><span class="muted">Webhook-Adresse für Stripe:</span><code id="cfHook">…</code><button class="btn ghost" id="cfHookCopy" type="button">Kopieren</button></div>
+              <div class="tools" style="margin:0"><button class="btn ghost" id="cfClearSk" type="button">Stripe-Schlüssel löschen</button></div>
+            </div>
+          </section>
+        </div>
+        <p class="muted" id="cfInfo" style="margin:0;font-size:12px"></p>
+        <div class="tools cfsave" style="margin:0"><button class="btn" id="cfSave" type="button">Alles speichern</button><span class="muted" id="cfMsg" style="min-height:18px"></span></div></div>
       <div class="glass set wide" data-adm id="gateCard"><h3>Zugangscodes für den Launcher</h3><p class="muted">Wer Cloudy neu installiert, muss beim ersten Start einen Zugangscode eingeben. Sobald du hier den ersten Code erstellst, funktioniert der alte feste Code nicht mehr (bereits freigeschaltete Installationen bleiben freigeschaltet). „Einlösungen“ 0 = unbegrenzt, „Tage“ 0 = läuft nie ab. Braucht den Konto-Server.</p>
         <div class="tools" style="margin:0 0 8px;gap:8px;flex-wrap:wrap"><input id="gcName" class="field" placeholder="Code (leer = 12 zufällige Zeichen)" maxlength="24" autocomplete="off" style="max-width:190px"><button class="btn ghost" id="gcRnd" type="button" title="12 zufällige Zeichen">🎲 Zufall</button><input id="gcUses" class="field" type="number" min="0" placeholder="Einlösungen" style="max-width:130px"><input id="gcDays" class="field" type="number" min="0" placeholder="Tage gültig" style="max-width:120px"><button class="btn" id="gcMake">Zugangscode erstellen</button></div>
         <p class="muted" id="gcMsg" style="min-height:18px;margin:0 0 6px"></p><div id="gcList"></div><h3 style="margin-top:14px">Zugangsanfragen (Request Key)</h3><div id="krList" class="muted">…</div></div>
