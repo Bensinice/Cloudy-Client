@@ -1096,14 +1096,14 @@ async function srvTry(base, p, body, tok, ms) {
     return { status: r.status, ...j };
   } finally { clearTimeout(to); }
 }
-async function srvCall(p, body, tok) {
+async function srvCall(p, body, tok, ms) { // ms: laengeres Zeitlimit (z. B. E-Mail-Test)
   const c = srvCfg(); if (!c) throw new Error('kein Server');
   const b = backupUrl(); let r;
-  if (!b || b === c.url) r = await srvTry(c.url, p, body, tok, 10000);
+  if (!b || b === c.url) r = await srvTry(c.url, p, body, tok, ms || 10000);
   else {
     const order = Date.now() < srvBackUntil ? [b, c.url] : [c.url, b]; let err;
     for (const base of order) {
-      try { r = await srvTry(base, p, body, tok, base === order[0] ? 6000 : 10000); if (base === b) srvBackUntil = Date.now() + 60000; else if (srvBackUntil) srvBackUntil = 0; err = null; break; } catch (e) { err = e; if (base === c.url) srvBackUntil = Date.now() + 60000; }
+      try { r = await srvTry(base, p, body, tok, ms || (base === order[0] ? 6000 : 10000)); if (base === b) srvBackUntil = Date.now() + 60000; else if (srvBackUntil) srvBackUntil = 0; err = null; break; } catch (e) { err = e; if (base === c.url) srvBackUntil = Date.now() + 60000; }
     }
     if (err) throw err;
   }
@@ -1431,10 +1431,10 @@ ipcMain.handle('plusBuy', async (_e, manage) => {
   if (r.ok && /^https:\/\/(checkout|billing)\.stripe\.com\//.test(String(r.url || ''))) { shell.openExternal(r.url); return { ok: true }; } // nur echte Stripe-Seiten öffnen
   return { ok: false, error: r.status === 404 ? 'Dein Cloudy-Server kennt die Bezahlung noch nicht (neue app.js, stripe.js und pass.js einspielen).' : (r.error || 'Fehlgeschlagen.') };
 });
-const admSet = async (path, body) => { if (!adminOnly() || !srvCfg()) return { ok: false, error: 'Nur für Admins.' }; const r = await srvCall(path, body || {}, srvTok).catch(() => null); if (!r) return { ...SRV_DOWN, ok: false }; return r.ok ? r : { ok: false, error: r.status === 404 ? 'Der Server kennt das noch nicht (neue app.js und mail.js einspielen, neu starten).' : (r.error || 'Fehlgeschlagen.') }; };
+const admSet = async (path, body, ms) => { if (!adminOnly() || !srvCfg()) return { ok: false, error: 'Nur für Admins.' }; const r = await srvCall(path, body || {}, srvTok, ms).catch(() => null); if (!r) return { ...SRV_DOWN, ok: false }; return r.ok ? r : { ok: false, error: r.status === 404 ? 'Der Server kennt das noch nicht (neue app.js und mail.js einspielen, neu starten).' : (r.error || 'Fehlgeschlagen.') }; };
 ipcMain.handle('admSettingsGet', () => admSet('/admin/settings/get'));
 ipcMain.handle('admSettingsSet', (_e, o) => admSet('/admin/settings/set', { mail: (o && o.mail) || {}, stripe: (o && o.stripe) || {}, clear: Array.isArray(o && o.clear) ? o.clear.slice(0, 5) : [] }));
-ipcMain.handle('admMailTest', () => admSet('/admin/settings/testmail'));
+ipcMain.handle('admMailTest', () => admSet('/admin/settings/testmail', {}, 35000));
 ipcMain.handle('passClaim', async (_e, o) => {
   if (!qOnline()) return { ok: false, error: 'Nicht angemeldet.' };
   const r = await srvCall('/pass/claim', { level: Math.floor(+(o && o.level)) || 0, track: String((o && o.track) || '').slice(0, 10) }, srvTok).catch(() => null); if (!r) return { ...SRV_DOWN, ok: false };
