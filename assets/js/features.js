@@ -813,3 +813,13 @@ window.cloudyTags = tags => (tags || []).map(k => { const m = /^clan:([A-Z0-9]{1
   if (cb) { cb.disabled = true; cb.onchange = () => { if (!allowed) { cb.checked = false; return; } set(cb.checked); }; }
   check(); setInterval(check, 120000); window.addEventListener('cloudy-plus', check);
 })();
+
+// Marken-Icon: Wolke, mit Plus nur fuer Cloudy+
+(() => {
+  const b = () => document.querySelector('.brand');
+  const check = async () => {
+    try { const r = await window.cloudy.passState(); if (r && r.ok && b()) b().dataset.plus = r.plus ? '1' : '0'; } catch {}
+  };
+  check(); setInterval(check, 120000); window.addEventListener('cloudy-plus', check);
+  if (window.onLoggedIn) { const o = window.onLoggedIn; window.onLoggedIn = function () { try { check(); } catch {} return o.apply(this, arguments); }; }
+})();

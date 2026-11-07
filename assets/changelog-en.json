@@ -1,4 +1,7 @@
 {
+  "0.9.103": [
+    "New logo top left: the classic white cloud without the dark frame – with a plus inside when you have Cloudy+"
+  ],
   "0.9.102": [
     "Admin area tidied up: the account list shows only names, a click opens a window with all actions (status, items, coins, roles/tags, account)",
     "Rank tags (Owner, Tester …) show up faster in the launcher: refresh every 90 seconds and right after a tag change"

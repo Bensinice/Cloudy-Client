@@ -768,8 +768,11 @@ html.gaming .blob,html.gaming .sky{display:none!important}
 
 /* Gold-Tag und Logo */
 .ctag.gold{background:linear-gradient(135deg,#ffe28a,#d9a21f 55%,#a87408);color:#2a1c02;border-color:#ffe9a8;box-shadow:0 0 9px rgba(255,200,70,.55);font-weight:800;text-transform:uppercase}
-.brand .blogo{width:34px;height:34px;border-radius:9px;display:block;box-shadow:0 4px 14px rgba(0,0,0,.35);flex:none}
-:root[data-layout="lunar"] .brand .blogo{width:28px;height:28px;filter:none}
+.brand .blogo{width:30px;height:30px;display:block;flex:none;filter:drop-shadow(0 4px 10px var(--accent))}
+.brand .bplus{display:none}
+.brand[data-plus="1"] .bplus{display:block}
+:root[data-layout="lunar"] .brand .blogo{width:26px;height:26px;filter:none}
+:root[data-layout="lunar"] .brand .blogo path:not(.bplus){fill:var(--accent)}
 :root[data-theme="gold-light"] .brand{color:var(--ink);text-shadow:none}
 /* Einheitliche Aktionsknoepfe: Admin-Konten, Chat-Kopf (Freunde und Gruppen), Chips nie abgeschnitten */
 #admList .arow{display:grid;grid-template-columns:1fr;gap:8px;padding:12px 14px}
