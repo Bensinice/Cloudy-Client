@@ -96,3 +96,16 @@ html[data-ui="2"] .dock{border-radius:16px;padding:10px 10px 10px 18px;left:0;ri
 .ui2st.on{color:#6ff0b0}
 
 @media (prefers-reduced-motion:reduce){html[data-ui="2"] .page.on{animation:none}html[data-ui="2"] *{transition-duration:.01ms!important}}
+
+/* Admin: E-Mail & Stripe, uebersichtlich in zwei Spalten */
+.cfstat{display:flex;gap:8px;flex-wrap:wrap}.cfchip{font-size:12px;font-weight:700;padding:5px 11px;border-radius:99px;background:var(--chip);border:1px solid var(--gb,var(--ui2-line));color:var(--ink2)}.cfchip.ok{color:#2fbf85;border-color:#2fbf85}.cfchip.bad{color:#e5894d;border-color:#e5894d}
+.cfgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:14px;align-items:start}
+.cfbox{display:grid;gap:10px;padding:14px;border-radius:14px;border:1px solid var(--gb,var(--ui2-line));background:var(--chip);min-width:0}.cfbox h4{margin:0;font-size:15px}
+.cfform{display:grid;gap:10px}.cff{display:grid;gap:4px;font-size:12px;font-weight:600;color:var(--ink2);min-width:0}.cff .field{width:100%;max-width:none!important;box-sizing:border-box}
+.cfrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cfpre{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.cfhelp{border-radius:10px;border:1px dashed var(--gb,var(--ui2-line));padding:8px 12px;font-size:13px;line-height:1.5}.cfhelp summary{cursor:pointer;font-weight:700;color:var(--accent)}.cfhelp ol{margin:6px 0 6px 18px;padding:0}.cfhelp li{margin:6px 0}.cfhelp p{margin:6px 0}
+.cfhelp a,.set a[data-ext]{color:var(--accent);text-decoration:underline;cursor:pointer}.cfhelp code,.cfhook code{background:var(--field);padding:1px 6px;border-radius:6px;font-size:12px;word-break:break-all}
+.cfhook{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px}
+.cfsave{padding:8px 0}
+
