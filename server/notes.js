@@ -13,7 +13,8 @@ const PROVIDERS = {
   groq: { id: 'groq', name: 'Groq (Llama)', base: 'https://api.groq.com/openai/v1', def: 'llama-3.3-70b-versatile', keyRe: /^(?!sk-)[A-Za-z0-9_\-.]{20,300}$/, keyHint: 'API Key (z. B. gsk_…)', keyUrl: 'https://console.groq.com/keys', free: true },
 };
 // Passendes Standardmodell aus der Modellliste des Anbieters waehlen (wenn das voreingestellte nicht mehr existiert)
-const pickModel = (P, ids) => {
+const pickModel = (P, ids, skip) => {
+  ids = (ids || []).filter(id => !(skip || []).includes(id));
   const v = id => (id.match(/(\d+(?:\.\d+)?)/) || [0, 0])[1] * 1; const bad = /(audio|realtime|tts|transcribe|image|embedding|moderation|search|instruct|whisper|guard|vision|preview|exp|thinking|learnlm|gemma|robotics|live|computer)/i;
   const ok = ids.filter(id => !bad.test(id));
   const rank = P.id === 'gemini' ? [/^gemini-flash-latest$/, /^gemini-[\d.]+-flash$/, /flash(?!-lite)/, /flash/, /^gemini-/] : P.id === 'groq' ? [/llama-3\.3.*70b/, /llama.*70b/, /llama/, /./] : [/^gpt-4\.1$/, /^gpt-4o$/, /^gpt-/];
@@ -96,15 +97,22 @@ function create({ repo, getSecret, fetchImpl, now = Date.now }) {
   const err = (status, error, extra) => ({ status, json: { ok: false, error, ...extra } }), ok = (json) => ({ status: 200, json: { ok: true, ...json } });
   const pub = n => ({ id: n.id, title: n.title, body: n.body, prompt: n.prompt || '', promptAt: n.prompt_at || 0, promptModel: n.prompt_model || '', build: n.build || null, created: n.created, updated: n.updated, deleted: !!n.deleted });
   const openaiErr = (status, j, pn) => {
-    pn = pn || 'OpenAI';
+    pn = pn || 'OpenAI'; if (Array.isArray(j)) j = j[0] || {}; // Gemini liefert Fehler teils als Liste
     const code = j && j.error && (j.error.code || j.error.type) || '';
     if (status === 401) return 'Der API Key von ' + pn + ' ist ungültig oder wurde widerrufen. Erstelle einen neuen Key.';
     if (status === 403) return 'Dein ' + pn + '-Konto hat keinen Zugriff auf dieses Modell oder diese Region.';
-    if (status === 404) return 'Dieses Modell gibt es bei ' + pn + ' nicht oder dein Konto darf es nicht benutzen. Wähle ein anderes Modell (AI Connections).';
+    if (status === 404) return 'Dieses Modell gibt es bei ' + pn + ' nicht oder dein Konto darf es nicht benutzen. Wähle ein anderes Modell (AI Connections).' + (j && j.error && j.error.message ? ' Antwort von ' + pn + ': ' + clip(String(j.error.message).replace(/(key|sk-)[=A-Za-z0-9_\-*.]{8,}/gi, '…'), 200) : '');
     if (status === 429) return /quota|billing/i.test(code) ? 'Dein Guthaben bei ' + pn + ' ist aufgebraucht.' : pn + '-Limit erreicht (bei kostenlosen Stufen sind die Limits klein). Warte einen Moment und versuche es erneut.';
     if (status === 400) return pn + ' hat die Anfrage abgelehnt' + (j && j.error && j.error.message ? ': ' + clip(String(j.error.message).replace(/sk-[A-Za-z0-9_\-*]+/g, '…'), 200) : '.');
     return status >= 500 ? pn + ' hat gerade Probleme (Fehler ' + status + '). Versuche es gleich noch einmal.' : pn + '-Fehler ' + status + '.';
   };
+  // Google Gemini direkt (nicht ueber die OpenAI-kompatible Schicht): Rueckfall, wenn diese 404 liefert
+  async function geminiNative(key, model, system, user) {
+    let r; try { r = await doFetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent', { method: 'POST', headers: { 'x-goog-api-key': key, 'Content-Type': 'application/json' }, body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: user }] }] }), signal: AbortSignal.timeout(90000) }); } catch (e) { return { net: true, error: 'Google Gemini ist nicht erreichbar (Internet prüfen).' }; }
+    const j = await r.json().catch(() => ({})); if (!r.ok) return { status: r.status, error: openaiErr(r.status, j, 'Google Gemini') };
+    const c = j.candidates && j.candidates[0], text = c && c.content && (c.content.parts || []).map(x => x.text || '').join('').trim();
+    return text ? { j: { choices: [{ message: { content: text }, finish_reason: c.finishReason === 'MAX_TOKENS' ? 'length' : 'stop' }] } } : { status: 502, error: 'Google Gemini hat keinen Text geliefert' + (c && c.finishReason ? ' (' + c.finishReason + ')' : '') + '.' };
+  }
   async function userKey(me) { const u = await repo.user(me); if (!u.openai_enc) return { u, key: '' }; try { return { u, key: decrypt(u.openai_enc, getSecret()) }; } catch { return { u, key: '', broken: true }; } }
   async function oa(key, path, opt, p) {
     p = p || PROVIDERS.openai; let r; try { r = await doFetch(base(p) + path, { ...opt, headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(opt && opt.ms || 90000) }); } catch (e) { return { net: true, error: e && e.name === 'TimeoutError' ? p.name + ' hat zu lange nicht geantwortet.' : p.name + ' ist nicht erreichbar (Internet prüfen).' }; }
@@ -139,10 +147,16 @@ function create({ repo, getSecret, fetchImpl, now = Date.now }) {
       const user = (b.extra ? 'Zusätzliche Hinweise des Entwicklers: ' + clip(b.extra, 2000) + '\n\n' : '') + 'NOTIZ "' + n.title + '":\n' + n.body;
       const r = await oa(key, '/chat/completions', { method: 'POST', body: JSON.stringify({ model, messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: user }] }) }, P);
       let r2 = r, avail = [], tried = [model];
+      if (r2.error && r2.status === 404 && P.id === 'gemini') { const nr = await geminiNative(key, model.replace(/^models\//, ''), SYSTEM_PROMPT, user); if (!nr.error) r2 = nr; else if (nr.status && ![404, 502].includes(nr.status)) r2 = nr; }
       if (r2.error && r2.status === 404) { // Modell gibt es nicht: Liste holen; ohne eigene Modellwahl ein vorhandenes nehmen und wiederholen
         const ml = await oa(key, '/models', { method: 'GET', ms: 20000 }, P); avail = ml.j ? (ml.j.data || []).map(x => String(x.id).replace(/^models\//, '')) : [];
-        const pick = !b.model && !u.model ? pickModel(P, avail) : '';
-        if (pick && pick !== model) { tried.push(pick); const rr = await oa(key, '/chat/completions', { method: 'POST', body: JSON.stringify({ model: pick, messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: user }] }) }, P); if (!rr.error) { r2 = rr; u.model = pick; await repo.putUser(u); } else r2 = rr; }
+        const skip = [model]; // das gewaehlte Modell steht in der Liste, antwortet aber mit 404 (z. B. fuer neue Konten gesperrt): bis zu 3 andere der Reihe nach probieren
+        const listed = avail.includes(model); // nur wenn das Modell in der Liste steht (also existiert, aber nicht nutzbar ist); ein ungueltiges, selbst getipptes Modell wird nie heimlich ersetzt
+        for (let i = 0; i < 3 && !b.model && (!u.model || listed) && r2.error && r2.status === 404; i++) {
+          const pick = pickModel(P, avail, skip); if (!pick) break; skip.push(pick); tried.push(pick);
+          const rr = await oa(key, '/chat/completions', { method: 'POST', body: JSON.stringify({ model: pick, messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: user }] }) }, P);
+          if (!rr.error) { r2 = rr; u.model = pick; await repo.putUser(u); } else r2 = rr;
+        }
       }
       if (r2.error) { const r = r2; if (r.status === 401) { u.tested = 0; await repo.putUser(u); } const hint = r.status === 404 ? ' (Versucht: ' + tried.join(', ') + (avail.length ? '. Bei deinem Konto verfügbar: ' + avail.filter(x => !/(embedding|aqa|imagen|veo|tts|audio)/i.test(x)).slice(0, 12).join(', ') : '. Die Modellliste konnte nicht geladen werden – Key und Internet prüfen') + '.)' : ''; return err(r.net ? 502 : r.status === 429 ? 429 : 502, r.error + hint, { retry: true, models: avail.slice(0, 40) }); }
       const ch = r2.j.choices && r2.j.choices[0], text = ch && ch.message && String(ch.message.content || '').trim();
