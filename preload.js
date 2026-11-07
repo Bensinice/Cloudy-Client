@@ -97,5 +97,8 @@ contextBridge.exposeInMainWorld('cloudy', {
   capePick: () => inv('capePick'),
   capeSave: d => inv('capeSave', d),
   capeClear: () => inv('capeClear'),
+  cloudyMsLogin: o => inv('cloudyMsLogin', o), cloudyMsLink: o => inv('cloudyMsLink', o), accountInfo: () => inv('accountInfo'),
+  notesCall: o => inv('notesCall', o), authSearch: o => inv('authSearch', o),
+  autostartGet: () => inv('autostartGet'), autostartSet: on => inv('autostartSet', !!on),
   on: (ch, fn) => ipcRenderer.on(ch, (_e, d) => fn(d))
 });

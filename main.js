@@ -816,18 +816,22 @@ const enc = t => safeStorage.isEncryptionAvailable() ? 'e:' + safeStorage.encryp
 const dec = t => t.startsWith('e:') ? safeStorage.decryptString(Buffer.from(t.slice(2), 'base64')) : t.slice(2);
 const saveAcc = (name, uuid, refresh) => fs.writeFileSync(accFile, JSON.stringify({ name, uuid, refresh: enc(refresh) }));
 let msmc; try { msmc = require('msmc'); } catch {}
-ipcMain.handle('accountGet', () => { const a = readAcc(); return a ? { ms: true, name: a.name } : { ms: false }; });
-ipcMain.handle('accountLogout', () => fs.rmSync(accFile, { force: true }));
-ipcMain.handle('msLogin', async () => {
+ipcMain.handle('accountGet', () => { const a = readAcc(); return a ? { ms: true, name: a.name, uuid: a.uuid } : { ms: false }; });
+// „Microsoft-Konto abmelden“: entfernt NUR die Microsoft-/Minecraft-Anmeldung dieses PCs. Die Cloudy-Sitzung bleibt bestehen.
+ipcMain.handle('accountLogout', () => { try { fs.rmSync(accFile, { force: true }); msCache = null; return { ok: true }; } catch (e) { return { ok: false, error: 'Abmelden fehlgeschlagen: ' + String((e && e.message) || e).slice(0, 120) }; } });
+// Interaktive Microsoft-Anmeldung (Fenster). Danach wird geprüft, ob die laufende Cloudy-Sitzung noch zu diesem Microsoft-Konto gehört.
+async function msInteractive() {
   if (!msmc) { try { msmc = require('msmc'); } catch {} }
   if (!msmc) return { ok: false, error: 'Paket fehlt: führe im Cloudy-Ordner „npm install msmc“ aus.' };
   try {
     const x = await new msmc.Auth('select_account').launch('electron', { width: 520, height: 700, show: true, title: 'Microsoft-Anmeldung' });
     const mc = await x.getMinecraft();
-    saveAcc(mc.profile.name, mc.profile.id, x.save());
-    return { ok: true };
-  } catch (e) { const m = String((e && (e.message || e.name)) || e); return { ok: false, error: /closed/i.test(m) ? 'Das Anmeldefenster wurde geschlossen.' : 'Microsoft-Anmeldung fehlgeschlagen: ' + m }; }
-});
+    saveAcc(mc.profile.name, mc.profile.id, x.save()); msCache = null;
+    const dropped = await msBindCheck(mc.profile.id).catch(() => false);
+    return { ok: true, name: mc.profile.name, uuid: mc.profile.id, sessionEnded: !!dropped };
+  } catch (e) { const m = String((e && (e.message || e.name)) || e); return { ok: false, error: /closed/i.test(m) ? 'Das Anmeldefenster wurde geschlossen.' : 'Microsoft-Anmeldung fehlgeschlagen: ' + m.slice(0, 160) }; }
+}
+ipcMain.handle('msLogin', () => msInteractive());
 let msCache = null;
 async function msAuth() {
   const a = readAcc();
@@ -1069,7 +1073,7 @@ function openSession(key, remember) {
   u.token = sha(token).toString('hex'); saveAuth(a);
   fs.writeFileSync(sessFile, JSON.stringify({ key, token }));
 }
-const info = u => ({ user: u.name, admin: !!u.admin });
+const info = u => ({ user: u.name, admin: !!u.admin, owner: !!u.owner });
 
 // ---- Konto-Server (optional): Konten liegen zentral auf deinem Server (cloudy-server), der Admin sieht alle Tester ----
 const accSrvFile = path.join(app.getPath('userData'), 'cloudy-server.json');
@@ -1116,6 +1120,7 @@ function srvMirror(pu) { // lokale Kopie (für Shop, Cosmetics, Spielzeit) – A
   const a = readAuth(), key = pu.name.toLowerCase();
   const u = a.users[key] || (a.users[key] = mkUser(pu.name, crypto.randomBytes(12).toString('hex'), { coins: 100 }));
   if (pu.names && typeof pu.names === 'object') { try { fs.writeFileSync(namesFile, JSON.stringify(pu.names)); } catch {} }
+  u.owner = !!pu.owner; u.msId = String(pu.msId || ''); // Owner-Recht kommt immer frisch vom Server (Konto-Wechsel überschreibt es)
   if (pu.bundles && typeof pu.bundles === 'object') { try { fs.writeFileSync(bundlesFile, JSON.stringify(pu.bundles)); } catch {} }
   if (pu.prices && typeof pu.prices === 'object') { try { fs.writeFileSync(pricesFile, JSON.stringify(pu.prices)); } catch {} }
   if (Array.isArray(pu.hidden)) setHidden(pu.hidden); u.name = pu.name; u.admin = !!pu.admin; u.infCoins = !pu.admin && pu.coins === null; u.mustChange = false; u.banned = false;
@@ -1126,6 +1131,121 @@ function srvOpen(key, tok, remember) {
   currentUser = readAuth().users[key].name; pendingKey = null; srvTok = tok;
   if (remember) fs.writeFileSync(sessFile, JSON.stringify({ key, srv: tok })); else fs.rmSync(sessFile, { force: true });
 }
+// ---- Microsoft-Konto <-> Cloudy-Konto ----
+// Cloudy-Konten sind fest mit der UUID eines Microsoft-Kontos verknüpft (der Server prüft das Token bei Mojang/Microsoft, nie nach Name).
+// Abmelden ist getrennt: „Microsoft abmelden“ (accountLogout) berührt die Cloudy-Sitzung nicht, „Von Cloudy abmelden“ (authLogout) nicht die Microsoft-Anmeldung.
+function dropCloudySession() { // beendet die Cloudy-Sitzung lokal vollständig (Token im Speicher + Sitzungsdatei)
+  srvTok = null; srvPendTok = null; currentUser = null; pendingKey = null; offlineMode = false;
+  try { fs.rmSync(sessFile, { force: true }); } catch {}
+}
+async function msBindCheck(uuid) { // nach Microsoft-Kontowechsel: gehört die laufende Cloudy-Sitzung zu dieser UUID? sonst Sitzung beenden
+  if (!currentUser || !srvTok || !srvCfg()) return false;
+  const r = await srvCall('/me', {}, srvTok).catch(() => null), u = r && r.user;
+  if (!u || !u.msLinked || String(u.msId) === String(uuid || '').replace(/-/g, '').toLowerCase()) return false;
+  dropCloudySession(); send('acctLocked', 'Du hast ein anderes Microsoft-Konto angemeldet. Die bisherige Cloudy-Sitzung wurde beendet – melde dich mit diesem Microsoft-Konto neu an.');
+  return true;
+}
+let msLoginBusy = false;
+async function mcTokenNow() { // Minecraft-Zugriffstoken des angemeldeten Microsoft-Kontos (wird nur an den Cloudy-Server zur Prüfung geschickt)
+  const o = await msAuth();
+  if (!o || !o.access_token) throw new Error('Kein Zugriffstoken erhalten.');
+  return o.access_token;
+}
+async function cloudyMsFlow(path_, extra, remember) {
+  if (!srvCfg()) return { ok: false, error: 'Die Microsoft-Anmeldung braucht den Cloudy-Konto-Server.' };
+  if (msLoginBusy) return { ok: false, error: 'Eine Anmeldung läuft bereits.' };
+  msLoginBusy = true;
+  try {
+    let tok = null;
+    if (readAcc()) { try { tok = await mcTokenNow(); } catch { tok = null; } } // gespeicherte Anmeldung nutzen; abgelaufen -> Fenster
+    if (!tok) { const i = await msInteractive(); if (!i.ok) return i; try { tok = await mcTokenNow(); } catch (e) { return { ok: false, error: 'Microsoft-Token nicht verfügbar: ' + String((e && e.message) || e).slice(0, 120) }; } }
+    let r; try { r = await srvCall(path_, { mcToken: tok, grant: cfgPatch({}).gateTok || '', ...extra }); } catch { return SRV_DOWN; }
+    tok = null;
+    if (!r.token || !r.user) return { ok: false, code: r.code || '', msName: r.msName || '', error: r.error || (r.status === 404 ? 'Der Server kennt die Microsoft-Anmeldung noch nicht (neue app.js und msauth.js einspielen).' : 'Anmeldung fehlgeschlagen.') };
+    dropCloudySession(); // alte Sitzung nie weiterverwenden
+    const key = srvMirror(r.user); srvOpen(key, r.token, remember !== false);
+    return { ok: true, user: r.user.name, admin: !!r.user.admin, owner: !!r.user.owner, first: !!r.created, linked: !!r.linked };
+  } finally { msLoginBusy = false; }
+}
+ipcMain.handle('cloudyMsLogin', (_e, o) => { o = o || {}; const cu = o.create && typeof o.create === 'object' ? String(o.create.user || '').trim().slice(0, 16) : ''; return cloudyMsFlow('/auth/ms', cu ? { create: { user: cu } } : {}, o.remember); });
+ipcMain.handle('cloudyMsLink', (_e, o) => { o = o || {}; return cloudyMsFlow('/ms/link', { user: String(o.user || '').trim().slice(0, 16), pass: String(o.pass || '').slice(0, 200) }, o.remember); });
+ipcMain.handle('accountInfo', async () => { // Account-Bereich: beide Konten getrennt darstellen
+  const a = readAcc(), out = { ms: a ? { name: a.name, uuid: a.uuid } : null, cloudy: null };
+  if (currentUser && srvTok && srvCfg()) {
+    const r = await srvCall('/me', {}, srvTok).catch(() => null), u = r && r.user;
+    out.cloudy = u ? { name: u.name, msLinked: !!u.msLinked, msId: u.msId || '', msName: u.msName || '', owner: !!u.owner, admin: !!u.admin } : { name: currentUser, unreachable: true };
+  } else if (currentUser) out.cloudy = { name: currentUser, offlineServer: true };
+  return out;
+});
+// „Von Cloudy abmelden“: Cloudy-Sitzung lokal entfernen; die Microsoft-Anmeldung bleibt. Mehrfachklicks werden ignoriert.
+let loggingOut = false;
+ipcMain.handle('authLogout', () => {
+  if (loggingOut) return { ok: true, busy: true };
+  loggingOut = true;
+  try { dropCloudySession(); return { ok: true }; } catch (e) { return { ok: false, error: 'Abmelden fehlgeschlagen: ' + String((e && e.message) || e).slice(0, 120) }; } finally { loggingOut = false; }
+});
+// Notes: nur Owner. Der Launcher prüft zusätzlich, entscheidend ist aber die Prüfung des Servers (403 owner_only).
+const ownerNow = () => { const u = curRec(); return !!(u && u.owner); };
+ipcMain.handle('notesCall', async (_e, o) => {
+  o = o && typeof o === 'object' ? o : {};
+  const P = { list: '/notes/list', save: '/notes/save', del: '/notes/delete', usage: '/notes/usage' }[o.a];
+  if (!P) return { ok: false, error: 'Unbekannte Aktion.' };
+  if (!currentUser || !srvTok || !srvCfg() || !ownerNow()) return { ok: false, code: 'owner_only', error: 'Notes sind nur für den Owner.' };
+  const s = (v, n) => String(v == null ? '' : v).slice(0, n);
+  const body = o.a === 'list' ? { since: Math.max(0, +o.since || 0) }
+    : o.a === 'save' ? { id: s(o.id, 24), title: s(o.title, 200), body: s(o.body, 200000), base: o.base == null ? undefined : +o.base || 0, force: !!o.force }
+    : o.a === 'del' ? { id: s(o.id, 24), undo: !!o.undo }
+    : (o.limit === undefined ? {} : { limit: Math.max(0, Math.round(+o.limit) || 0) });
+  const r = await srvCall(P, body, srvTok).catch(() => null);
+  if (!r) return { ...SRV_DOWN };
+  if (r.status === 403 && r.code === 'owner_only') return { ok: false, code: 'owner_only', error: 'Notes sind nur für den Owner.' };
+  return r;
+});
+ipcMain.handle('authSearch', async (_e, o) => { // Admin: Benutzer nach Namen suchen (serverseitig, begrenzt, mit Seiten)
+  if (!adminOnly() || !srvCfg() || !srvTok) return { ok: false, error: 'Nur für Admins.' };
+  o = o || {};
+  const r = await srvCall('/admin/users/search', { q: String(o.q || '').slice(0, 32), limit: Math.max(1, Math.min(50, Math.trunc(+o.limit) || 25)), offset: Math.max(0, Math.trunc(+o.offset) || 0) }, srvTok).catch(() => null);
+  if (!r) return { ...SRV_DOWN };
+  return r.ok ? r : { ok: false, error: r.status === 404 ? 'Der Server kennt die Suche noch nicht (neue app.js und msauth.js einspielen).' : (r.error || 'Suche fehlgeschlagen.') };
+});
+// ---- Autostart beim Systemstart (Windows und macOS; im Entwicklungsmodus nicht) ----
+const bootFile = path.join(app.getPath('userData'), 'cloudy-autostart.json');
+const autoExe = () => process.env.PORTABLE_EXECUTABLE_FILE || process.execPath;
+const autoStored = () => { try { const j = JSON.parse(fs.readFileSync(bootFile, 'utf8')); return typeof j.enabled === 'boolean' ? j.enabled : null; } catch { return null; } };
+const autoSave = on => { try { fs.writeFileSync(bootFile,JSON.stringify({ enabled: !!on })); } catch {} };
+const autoSupported = () => (IS_WIN || IS_MAC) && app.isPackaged;
+const autoOpts = () => (IS_WIN ? { path: autoExe(), args: [] } : {});
+function autoSystem() { // tatsächlicher Stand im System: registriert + nicht vom Nutzer im Task-Manager deaktiviert
+  const s = app.getLoginItemSettings(autoOpts());
+  return { registered: !!s.openAtLogin, active: IS_WIN ? s.executableWillLaunchAtLogin !== false && !!s.openAtLogin : !!s.openAtLogin };
+}
+function autoApply(on) {
+  try {
+    if (!autoSupported()) return { ok: false, enabled: false, error: app.isPackaged ? 'Autostart gibt es nur unter Windows und macOS.' : 'Im Entwicklungsmodus gibt es keinen Autostart (nur in der installierten App).' };
+    app.setLoginItemSettings({ openAtLogin: !!on, ...autoOpts() });
+    const sys = autoSystem();
+    return sys.registered === !!on ? { ok: true, enabled: !!on } : { ok: false, enabled: sys.registered, error: 'Das System hat die Einstellung nicht übernommen.' };
+  } catch (e) { return { ok: false, enabled: false, error: 'Autostart konnte nicht geändert werden: ' + String((e && e.message) || e).slice(0, 120) }; }
+}
+function autoSync() { // beim Start: gespeicherte Einstellung (Standard AN) mit dem System abgleichen – nur ändern, wenn nötig
+  try {
+    if (!autoSupported()) return;
+    let want = autoStored(); if (want === null) { want = true; autoSave(true); }
+    const sys = autoSystem();
+    if (want && sys.registered && !sys.active) { autoSave(false); return; } // der Nutzer hat es im Task-Manager/Systemeinstellungen ausgeschaltet: respektieren
+    if (sys.registered !== want) autoApply(want);
+  } catch {}
+}
+app.whenReady().then(autoSync).catch(() => {});
+ipcMain.handle('autostartGet', () => {
+  const supported = autoSupported(); let sys = null; try { if (supported) sys = autoSystem(); } catch {}
+  const stored = autoStored();
+  return { supported, packaged: app.isPackaged, enabled: supported && sys ? sys.active : stored !== false, system: sys ? sys.active : null, platform: process.platform };
+});
+ipcMain.handle('autostartSet', (_e, on) => {
+  const r = autoApply(!!on); if (r.ok) autoSave(!!on);
+  return { ...r, supported: autoSupported() };
+});
 async function srvPull() { // Stand vom Server holen (Admin kann Coins vergeben haben, Käufe von anderen PCs)
   if (!srvCfg() || !srvTok) return;
   try { const r = await srvCall('/me', {}, srvTok); if (r.user) srvMirror(r.user); else if (r.status === 403 && r.error) { currentUser = null; srvTok = null; fs.rmSync(sessFile, { force: true }); send('acctLocked', r.error); } } catch {}
@@ -1164,7 +1284,7 @@ async function srvAuth(path_, { user, pass, remember }) {
   if (!r.token) return { ok: false, error: r.error || 'Anmeldung fehlgeschlagen.' };
   if (r.user.mustChange) { currentUser = null; pendingKey = r.user.name.toLowerCase(); srvPendTok = r.token; pendingRemember = !!remember; return { ok: true, user: r.user.name, mustChange: true }; }
   const key = srvMirror(r.user); srvOpen(key, r.token, !!remember);
-  return { ok: true, user: r.user.name, admin: !!r.user.admin, first: path_ === '/register' };
+  return { ok: true, user: r.user.name, admin: !!r.user.admin, owner: !!r.user.owner, first: path_ === '/register' };
 }
 async function accSrvState() {
   try {
@@ -1172,11 +1292,14 @@ async function accSrvState() {
     let r = null, netErr = false;
     try { r = await srvCall('/me', {}, s.srv); } catch { netErr = true; }
     if (netErr || (r && r.status >= 500)) { // Server gerade nicht erreichbar (Neustart, Netzproblem): angemeldet bleiben, nicht auf den Anmeldebildschirm werfen. Der Wartungshinweis zeigt, falls der Server laenger fehlt.
-      const u = s.key && readAuth().users[s.key]; if (u) { currentUser = u.name; srvTok = s.srv; return { fresh: false, user: u.name, admin: !!u.admin, offline: true }; }
+      const u = s.key && readAuth().users[s.key]; if (u) { currentUser = u.name; srvTok = s.srv; return { fresh: false, user: u.name, admin: !!u.admin, owner: !!u.owner, offline: true }; }
       currentUser = null; return { fresh: false, user: null };
     }
     if (!r || !r.user) return { fresh: false, user: null }; // eindeutig abgelehnt (Token ungueltig oder Konto gesperrt)
-    const key = srvMirror(r.user); currentUser = r.user.name; srvTok = s.srv; return { fresh: false, user: r.user.name, admin: !!r.user.admin };
+    { // Sitzung gehört zu einem Microsoft-Konto: weicht das angemeldete Microsoft-Konto davon ab, wird die Sitzung nicht weiterverwendet
+      const ms = readAcc(); if (r.user.msLinked && ms && ms.uuid && String(ms.uuid).replace(/-/g, '').toLowerCase() !== String(r.user.msId)) { dropCloudySession(); return { fresh: false, user: null, msMismatch: true }; }
+    }
+    const key = srvMirror(r.user); currentUser = r.user.name; srvTok = s.srv; return { fresh: false, user: r.user.name, admin: !!r.user.admin, owner: !!r.user.owner };
   } catch { currentUser = null; return { fresh: false, user: null }; }
 }
 ipcMain.handle('authForgot', async (_e, user) => { // Passwort vergessen: Nachricht an den Owner im Chat (Freunde), der Owner setzt das Konto zurueck
@@ -1319,7 +1442,6 @@ ipcMain.handle('passClaim', async (_e, o) => {
 });
 ipcMain.handle('questEvent', (_e, o) => { const type = o && o.type === 'launch' ? 'launch' : 'use'; qSend('/quests/event', { type, what: String((o && o.what) || '').slice(0, 20) }); return true; });
 ipcMain.handle('offlineEnter', () => { if (currentUser) return { ok: false, error: 'Du bist angemeldet.' }; if (cfgPatch({}).gateOk !== true) return { ok: false, error: 'Access code required.' }; offlineMode = true; return { ok: true }; });
-ipcMain.handle('authLogout', () => { offlineMode = false; srvTok = null; currentUser = null; pendingKey = null; fs.rmSync(sessFile, { force: true }); });
 ipcMain.handle('authReset', () => {
   if (srvCfg()) return; // „Passwort vergessen?“: setzt NUR das Tester-Konto auf Tester / 12345 zurück (muss danach neu gesetzt werden); Admin bleibt unberührt
   currentUser = null; pendingKey = null; fs.rmSync(sessFile, { force: true });
@@ -1353,7 +1475,7 @@ ipcMain.handle('authDelete', async (_e, { pass }) => {
 const lockMsgL = u => { if (!u || u.admin) return ''; if (u.paused) return 'Konto vorübergehend deaktiviert.'; if (u.banned && (!u.banUntil || u.banUntil > Date.now())) { const r = u.banReason ? ': ' + u.banReason : ''; if (!u.banUntil) return 'Konto dauerhaft gesperrt' + r; const m = Math.ceil((u.banUntil - Date.now()) / 60000); return 'Konto gesperrt für noch ' + (m >= 1440 ? Math.ceil(m / 1440) + ' Tag(e)' : m >= 60 ? Math.ceil(m / 60) + ' Std.' : m + ' Min.') + r; } return ''; };
 const adminOnly = () => { const u = curRec(); return u && u.admin; };
 ipcMain.handle('authList', async () => srvCfg() ? (adminOnly() ? (await srvCall('/admin/users', {}, srvTok).catch(() => ({}))).users?.map(u => u.name) || [] : []) : adminOnly() ? Object.values(readAuth().users).filter(u => !u.admin).map(u => u.name) : []);
-ipcMain.handle('authListFull', async () => srvCfg() ? (adminOnly() ? ((await srvCall('/admin/users', {}, srvTok).catch(() => ({}))).users || []).map(u => ({ name: u.name, inf: !!u.inf, banned: !!u.banned, until: u.until || 0, paused: !!u.paused, items: u.items || [], reason: u.reason || '', coins: u.coins, owned: u.owned || 0, gate: u.gate || '', tags: u.tags || [] })) : []) : adminOnly() ? Object.values(readAuth().users).filter(u => !u.admin).map(u => ({ name: u.name, inf: !!u.infCoins, banned: !!u.banned && (!u.banUntil || u.banUntil > Date.now()), until: u.banUntil || 0, paused: !!u.paused, items: u.owned || [], reason: u.banReason || '', coins: u.infCoins ? '∞' : (u.coins == null ? 100 : u.coins), owned: (u.owned || []).length })) : []);
+ipcMain.handle('authListFull', async () => srvCfg() ? (adminOnly() ? ((await srvCall('/admin/users', {}, srvTok).catch(() => ({}))).users || []).map(u => ({ name: u.name, inf: !!u.inf, banned: !!u.banned, until: u.until || 0, paused: !!u.paused, items: u.items || [], reason: u.reason || '', coins: u.coins, owned: u.owned || 0, gate: u.gate || '', tags: u.tags || [], msLinked: !!u.msLinked, msId: u.msId || '', msName: u.msName || '' })) : []) : adminOnly() ? Object.values(readAuth().users).filter(u => !u.admin).map(u => ({ name: u.name, inf: !!u.infCoins, banned: !!u.banned && (!u.banUntil || u.banUntil > Date.now()), until: u.banUntil || 0, paused: !!u.paused, items: u.owned || [], reason: u.banReason || '', coins: u.infCoins ? '∞' : (u.coins == null ? 100 : u.coins), owned: (u.owned || []).length })) : []);
 ipcMain.handle('authAdminBan', async (_e, { name, banned, reason, until }) => {
   until = +until > Date.now() ? Math.round(+until) : 0;
   if (srvCfg()) return adminOnly() && !!(await srvCall('/admin/ban', { name, banned, reason, until }, srvTok).catch(() => ({}))).ok;
@@ -2670,6 +2792,9 @@ async function replacePortable() {
   try { spawn(old, [], { detached: true, stdio: 'ignore', windowsHide: false }).unref(); } catch {}
   app.exit(0); return true;
 }
-app.whenReady().then(async () => { if (await replacePortable()) return; if (!localUpdate.applyOnStart()) createWindow(); });
+// Nur eine Cloudy-Instanz (auch bei Autostart + manuellem Start): die zweite holt das erste Fenster nach vorn. Beim Neustart nach einem Update wird kurz auf das Ende der alten Instanz gewartet.
+async function acquireSingleLock() { for (let i = 0; i < 6; i++) { if (app.requestSingleInstanceLock()) return true; await new Promise(r => setTimeout(r, 1000)); } return false; }
+app.on('second-instance', () => { try { if (win && !win.isDestroyed()) { if (win.isMinimized()) win.restore(); win.show(); win.focus(); } } catch {} });
+app.whenReady().then(async () => { if (await replacePortable()) return; if (!(await acquireSingleLock())) { app.quit(); return; } if (!localUpdate.applyOnStart()) createWindow(); });
 app.on('window-all-closed', () => app.quit());
 app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) createWindow(); });

@@ -1,25 +1,28 @@
 <!DOCTYPE html>
 <html lang="de"><head><meta charset="UTF-8"><title>Cloudy</title>
 <link rel="stylesheet" href="themes/themes.css">
-<link rel="stylesheet" href="assets/css/app.css"><link rel="stylesheet" href="assets/css/ui2.css"><script>try{if(localStorage.getItem("cloudy.ui2")==="1")document.documentElement.dataset.ui="2"}catch(e){}</script></head><body>
+<link rel="stylesheet" href="assets/css/app.css"><link rel="stylesheet" href="assets/css/ui2.css"><script>document.documentElement.dataset.ui="2";document.documentElement.dataset.layout="cloudy"</script></head><body>
 <div class="drag"></div>
 <div class="wc" id="wc"><button id="wcMin" aria-label="Minimieren"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button><button id="wcMax" aria-label="Maximieren"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button><button id="wcX" aria-label="Schließen"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button></div>
 <div class="sky"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
 <div class="app">
 <aside class="side glass">
-  <div class="brand"><svg class="blogo" width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><defs><mask id="bplusMask"><rect width="32" height="32" fill="#fff"/><path class="bplus" d="M15 13h2.4v3.3h3.3v2.4h-3.3V22H15v-3.3h-3.3v-2.4H15z" fill="#000"/></mask></defs><path d="M9 24a6 6 0 0 1-.6-12A8 8 0 0 1 24 10a7 7 0 0 1-1 14z" fill="#fff" mask="url(#bplusMask)"/></svg>Cloudy</div>
+  <div class="brand"><button class="brandmark" id="brandBtn" type="button" aria-label="Refresh" title="Refresh"><svg class="blogo" width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><defs><mask id="bplusMask"><rect width="32" height="32" fill="#fff"/><path class="bplus" d="M15 13h2.4v3.3h3.3v2.4h-3.3V22H15v-3.3h-3.3v-2.4H15z" fill="#000"/></mask></defs><path d="M9 24a6 6 0 0 1-.6-12A8 8 0 0 1 24 10a7 7 0 0 1-1 14z" fill="#fff" mask="url(#bplusMask)"/></svg><b>Cloudy</b></button>
+    <div class="brandtools">
+      <button class="ibtn" id="musicBtn" type="button"><svg class="i-on" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><svg class="i-off" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M3 3l18 18"/></svg><span class="sr">Musik an</span></button>
+      <button class="ibtn" id="themeBtn" type="button"><svg class="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span class="sr">Dunkelmodus</span></button>
+    </div></div>
   <button class="nav on" data-p="home"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Start</button>
   <button class="nav" data-p="versions"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5M3 17l9 5 9-5"/></svg>Versionen</button>
   <button class="nav" data-p="servers"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>Server</button>
   <button class="nav" data-p="friends"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2 20a7 7 0 0 1 14 0zM16 4.5a3.5 3.5 0 0 1 0 7M18 14a7 7 0 0 1 4 6"/></svg>Freunde<span class="badge" id="frBadge" style="display:none;margin-left:auto"></span></button>
   <button class="nav" data-p="mods"><svg viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7zM12 12l9-5M12 12v10M12 12L3 7"/></svg>Mods</button>
-  <button class="nav" data-p="shop"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9.5c0-1 1-1.8 3-1.8s3 .8 3 1.8-1 1.6-3 2-3 1-3 2 1 1.8 3 1.8 3-.8 3-1.8"/></svg>Shop</button>
-  <button class="nav" data-p="pass"><svg viewBox="0 0 24 24"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/></svg>Cloudy Pass</button>
-  <button class="nav" data-p="spotify"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="7" cy="18" r="2.5"/><circle cx="17" cy="16" r="2.5"/></svg>Spotify</button>
+  <button class="nav" data-p="shop"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9.5c0-1 1-1.8 3-1.8s3 .8 3 1.8-1 1.6-3 2-3 1-3 2 1 1.8 3 1.8 3-.8 3-1.8"/></svg>Shop &amp; Pass</button>
+  <button class="nav" data-p="notes" id="notesNav" hidden><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/></svg>Notes</button>
+  <button class="nav" data-p="spotify"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="7" cy="18" r="2.5"/><circle cx="17" cy="16" r="2.5"/></svg>Musik</button>
   <button class="nav" data-p="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Einstellungen</button>
   <div class="sp"></div>
-  <button class="nav" id="musicBtn"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span>Musik an</span></button>
-  <button class="nav" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><span>Dunkelmodus</span></button>
+  <div class="tokcard" id="tokCard" hidden aria-live="polite"></div>
   <div class="acc"><div class="av" id="av"></div><div><b id="accName">Spieler</b><span id="accTags"></span><small id="accType">Offline-Konto</small><small id="accCC" style="display:block;font-weight:800;color:var(--accent)"></small></div></div>
 </aside>
 <section class="stage">
@@ -122,7 +125,11 @@
     <div class="sec"><h2>Entdecken</h2></div><p class="muted" id="skDiscMsg"></p><div class="row skg" id="skDisc"></div>
   </div>
   <div class="page" id="p-shop">
-    <h2>Shop</h2><p class="muted">Kaufe Cosmetics mit Cloudy Coins (CC). CC verdienst du beim Spielen (5 CC pro Minute) und mit dem Tagesbonus (50 CC). Neue Konten starten mit 100 CC.</p>
+    <h2>Shop &amp; Pass</h2><p class="muted">Kaufe Cosmetics mit Cloudy Coins (CC). CC verdienst du beim Spielen (5 CC pro Minute) und mit dem Tagesbonus (50 CC). Neue Konten starten mit 100 CC.</p>
+    <div class="shophub" id="shopHub">
+      <button class="hubcard" type="button" data-go="pass"><span class="hubic"><svg viewBox="0 0 24 24"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/></svg></span><span><b>Battle Pass</b><small>Level, Belohnungen und Cloudy+</small></span><i class="hubgo">›</i></button>
+      <button class="hubcard" type="button" data-go="quests"><span class="hubic"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg></span><span><b>Quests</b><small>Aufgaben erledigen, Stars und CC verdienen</small></span><i class="hubgo">›</i></button>
+    </div>
     <div class="shtop"><div class="glass shp"><div id="shop3d"></div><canvas id="shopPrev" width="256" height="336" style="display:none"></canvas><div class="muted" style="text-align:center">3D-Vorschau mit deinem Skin · ziehen zum Drehen</div></div>
       <div style="flex:1;min-width:0"><div class="tools"><div class="coin"><i></i><b id="shopCC">0 CC</b></div><button class="btn ghost" id="shopDaily">Tagesbonus abholen (+50 CC)</button><button class="btn ghost" id="shopPerf" title="Schaltet Unschärfe und Animationen im Shop ab">Performance: aus</button><button class="btn ghost" id="shopFriends">Freunde &amp; Chat</button></div>
         <div class="glass" id="shopCl" style="padding:14px 16px;margin:6px 0 10px;display:grid;gap:8px"></div>
@@ -134,6 +141,7 @@
   <div class="page" id="p-pass"></div>
   <div class="page" id="p-spotify"></div>
   <div class="page" id="p-quests"></div>
+  <div class="page" id="p-notes"></div>
   <div class="page" id="p-client">
     <h2>Client</h2><p class="muted">Eigene Client-Mods für Cloudy: bau dir deinen Umhang, schalte Anzeigen ein und löse Codes ein.</p>
     <div class="sgrid">
@@ -165,14 +173,24 @@
     <h2>Einstellungen</h2>
     <div class="tools" id="setTabs"><button class="chip on" data-st="gen">Allgemein</button><button class="chip" data-st="adm" id="admTab" style="display:none">Admin</button></div>
     <div class="sgrid">
-      <div class="glass set"><h3>Konto</h3>
-        <p class="muted" id="msOut"></p>
+      <div class="glass set acctcard"><h3>Konto</h3>
+        <div class="acsec" id="acMs">
+          <div class="achead"><span class="acic ms"><svg viewBox="0 0 24 24"><path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z"/></svg></span><div><b>Microsoft-Konto</b><small>Minecraft-Anmeldung auf diesem PC</small></div><span class="acstate" id="acMsState"></span></div>
+          <p class="muted" id="msOut"></p>
+          <p class="muted acnote">„Microsoft-Konto abmelden“ beendet nur die Microsoft-/Minecraft-Anmeldung. Dein Cloudy-Konto bleibt angemeldet, aber Minecraft startet online erst nach erneuter Microsoft-Anmeldung.</p>
+          <div class="acbtns"><button class="btn ghost" id="msBtn" type="button">Mit Microsoft anmelden</button></div>
+        </div>
+        <div class="acsec" id="acCl">
+          <div class="achead"><span class="acic cl"><svg viewBox="0 0 24 24"><path d="M7 18a4.5 4.5 0 0 1-.5-9A6 6 0 0 1 18 7.5a4.3 4.3 0 0 1-.5 10.5z"/></svg></span><div><b>Cloudy-Konto</b><small id="acClSub">Konto im Cloudy-Client</small></div><span class="acstate" id="acClState"></span></div>
+          <p class="muted" id="acClOut"></p>
+          <p class="muted acnote">„Von Cloudy abmelden“ beendet nur die Cloudy-Sitzung auf diesem PC. Deine Microsoft-Anmeldung bleibt bestehen. Danach meldest du dich wieder über ein Microsoft-Konto an.</p>
+          <div class="acbtns"><button class="btn danger" id="authOut" type="button">Von Cloudy abmelden</button></div>
+        </div>
         <label>Spielername (Offline)<input id="name" class="field" maxlength="16" placeholder="Steve" autocomplete="off"></label>
         <label>Anzeigename in Cloudy (Banner, Begrüßung)<input id="dispName" class="field" maxlength="24" placeholder="z. B. Ben" autocomplete="off"></label>
-        
-        <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="msBtn">Mit Microsoft anmelden</button><button class="btn ghost" id="authOut">Cloudy abmelden</button><button class="btn ghost" id="pwBtn">Passwort ändern</button><button class="btn ghost" id="delBtn">Konto löschen</button></div>
-        <div id="pwRow" style="display:none;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px"><input id="pwOld" class="field" type="password" placeholder="Altes Passwort" autocomplete="current-password" style="max-width:220px"><input id="pwNew" class="field" type="password" placeholder="Neues Passwort (mind. 6)" autocomplete="new-password" style="max-width:220px"><button class="btn" id="pwGo">Speichern</button><span class="muted" id="pwMsg" style="color:var(--accent)"></span></div>
-        <div id="delRow" style="display:none;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px"><input id="delPass" class="field" type="password" placeholder="Passwort zur Bestätigung" autocomplete="current-password" style="max-width:260px"><button class="btn" id="delGo">Endgültig löschen</button><span class="muted" id="delMsg" style="color:var(--accent)"></span></div></div>
+        <div hidden><button id="pwBtn" type="button">Passwort ändern</button><button id="delBtn" type="button">Konto löschen</button>
+          <div id="pwRow" style="display:none"><input id="pwOld" type="password"><input id="pwNew" type="password"><button id="pwGo" type="button">Speichern</button><span id="pwMsg"></span></div>
+          <div id="delRow" style="display:none"><input id="delPass" type="password"><button id="delGo" type="button">Endgültig löschen</button><span id="delMsg"></span></div></div></div>
       <div class="glass set" id="redeemCard"><h3>Code einlösen</h3><p class="muted">Hast du einen Code bekommen? Gib ihn hier ein und erhalte Items oder Coins.</p>
         <div style="display:flex;gap:10px;flex-wrap:wrap"><input id="rdCode" class="field" placeholder="z. B. CLD-A1B2C3" autocomplete="off" spellcheck="false" style="flex:1;min-width:160px;text-transform:uppercase"><button class="btn" id="rdGo">Einlösen</button></div>
         <p class="muted" id="rdMsg" style="min-height:18px;margin:6px 0 0"></p></div>
@@ -187,7 +205,7 @@
         <p class="muted" style="font-size:11px;margin:-4px 0 6px">Vulkan braucht „Leistungs-Mods automatisch installieren“, Minecraft 1.17–1.21 mit Fabric und eine Vulkan-fähige Grafikkarte. Läuft es nicht, wieder auf OpenGL stellen.</p>
         <label class="cb"><input type="checkbox" id="min"> Cloudy beim Spielstart minimieren</label>
         <label class="cb"><input type="checkbox" id="sync"> Einstellungen zwischen Versionen übernehmen (Maus, Lautstärke, Tasten …)</label></div>
-      <div class="glass set wide" data-adm id="admCard"><h3>Konten verwalten</h3><p class="muted">Nur für Administratoren. Hier kannst du Konten pausieren, sperren (auch zeitlich), Items entfernen und Coins vergeben.</p><div class="tools" style="margin:0 0 8px"><button class="btn ghost" id="admRef">Aktualisieren</button></div><p class="muted" id="admStat" style="min-height:18px;margin:0 0 6px"></p><div id="admStats" class="muted" style="margin:0 0 10px;line-height:1.7"></div><div class="tools" style="margin:0 0 10px"><input id="annText" class="field" maxlength="300" placeholder="Ankündigung an alle Spieler (z. B. Wartung heute 20 Uhr)" style="flex:1;min-width:220px"><button class="btn" id="annSend">Senden</button><button class="btn ghost" id="annClear">Zurücknehmen</button></div><div id="admBox"><div id="admList" class="muted"></div></div></div>
+      <div class="glass set wide" data-adm id="admCard"><h3>Konten verwalten</h3><p class="muted">Nur für Administratoren. Hier kannst du Konten pausieren, sperren (auch zeitlich), Items entfernen und Coins vergeben.</p><div class="tools" style="margin:0 0 8px"><button class="btn ghost" id="admRef">Aktualisieren</button></div><p class="muted" id="admStat" style="min-height:18px;margin:0 0 6px"></p><div id="admStats" class="muted" style="margin:0 0 10px;line-height:1.7"></div><div class="tools" style="margin:0 0 10px"><input id="annText" class="field" maxlength="300" placeholder="Ankündigung an alle Spieler (z. B. Wartung heute 20 Uhr)" style="flex:1;min-width:220px"><button class="btn" id="annSend">Senden</button><button class="btn ghost" id="annClear">Zurücknehmen</button></div><div class="admsearch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="admQ" class="field" type="search" placeholder="Benutzer nach Namen suchen …" maxlength="32" autocomplete="off" spellcheck="false"><span class="muted" id="admQState"></span></div><div id="admQRes" hidden></div><div id="admBox"><div id="admList" class="muted"></div></div></div>
       <div class="glass set wide" data-adm id="codeCard"><h3>Codes erstellen</h3><p class="muted">Ein Code gibt Coins und/oder Items. Jeder Spieler kann ihn einmal einlösen. „Einlösungen“ 0 = unbegrenzt viele Spieler.</p>
         <div class="tools" style="margin:0 0 8px;gap:8px;flex-wrap:wrap"><input id="cdName" class="field" placeholder="Code (leer = 12 zufällige Zeichen)" maxlength="24" autocomplete="off" style="max-width:190px"><input id="cdCoins" class="field" type="number" min="0" placeholder="Coins" style="max-width:110px"><button class="btn ghost" id="cdRnd" type="button" title="12 zufällige Zeichen">🎲 Zufall</button><input id="cdUses" class="field" type="number" min="0" placeholder="Einlösungen" style="max-width:130px"><label class="muted" style="display:flex;align-items:center;gap:6px;font-size:12px">Läuft ab am <input id="cdExp" class="field" type="date" style="max-width:150px"></label><button class="btn ghost" id="cdItems">Items wählen …</button><button class="btn" id="cdMake">Code erstellen</button></div>
         <p class="muted" id="cdSel" style="margin:0 0 6px"></p><p class="muted" id="cdMsg" style="min-height:18px;margin:0 0 6px"></p><div id="cdList"></div></div>
@@ -222,6 +240,9 @@
         <div class="tools" style="margin:0 0 8px;gap:8px;flex-wrap:wrap"><input id="gcName" class="field" placeholder="Code (leer = 12 zufällige Zeichen)" maxlength="24" autocomplete="off" style="max-width:190px"><button class="btn ghost" id="gcRnd" type="button" title="12 zufällige Zeichen">🎲 Zufall</button><input id="gcUses" class="field" type="number" min="0" placeholder="Einlösungen" style="max-width:130px"><input id="gcDays" class="field" type="number" min="0" placeholder="Tage gültig" style="max-width:120px"><button class="btn" id="gcMake">Zugangscode erstellen</button></div>
         <p class="muted" id="gcMsg" style="min-height:18px;margin:0 0 6px"></p><div id="gcList"></div><h3 style="margin-top:14px">Zugangsanfragen (Request Key)</h3><div id="krList" class="muted">…</div></div>
       <div class="glass set wide" id="srvStat"><h3>Server-Status</h3><p class="muted">Live vom Cloudy-Server. Der Status wird auf dem Server geprüft, nicht geschätzt.</p><div id="srvStatBox" class="muted">…</div></div>
+      <div class="glass set" id="bootCard"><h3>Start mit dem Computer</h3>
+        <div class="setrow2"><div><b>Cloudy beim Hochfahren starten</b><small id="bootSub">Cloudy startet automatisch, wenn du dich an deinem Computer anmeldest.</small></div><label class="sw"><input type="checkbox" id="bootOn"><i></i></label></div>
+        <p class="muted" id="bootMsg" style="min-height:18px"></p></div>
       <div class="glass set wide" id="strCard"><h3>Auf dem Handy spielen (Streaming)</h3><p class="muted">Minecraft läuft auf deinem PC, das Handy zeigt es an und steuert es: volle FPS und alle Cloudy-Funktionen, ohne dass das Handy Java können muss.</p>
         <div class="tools" style="margin:10px 0 4px"><button class="btn" id="strGo">Streaming automatisch einrichten</button><span class="muted" id="strMsg"></span></div>
         <p class="muted" style="margin:4px 0">Das war der PC-Teil. Jetzt am Handy: <b>Moonlight</b> installieren, den PC antippen, dann zeigt Moonlight eine <b>4-stellige PIN</b>. Tippe sie hier ein:</p>
@@ -301,7 +322,15 @@
   <div class="lgbrand"><svg width="40" height="40" viewBox="0 0 32 32"><path d="M9 24a6 6 0 0 1-.6-12A8 8 0 0 1 24 10a7 7 0 0 1-1 14z" fill="#fff"/></svg>Cloudy</div>
   <div class="tools" style="justify-content:center;margin:0"><button class="chip on" data-lt="in">Anmelden</button><button class="chip" data-lt="up">Registrieren</button></div>
   <select id="lgLang" class="field" style="width:auto;justify-self:end;height:34px;padding:0 10px"><option value="de">Deutsch</option><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option></select>
-  <form id="lgForm" autocomplete="off">
+  <div id="lgMsPanel">
+    <p class="muted" style="text-align:center;margin:0 0 4px">Melde dich mit deinem Microsoft-Konto an. Es ist die einzige Anmeldung bei Cloudy.</p>
+    <button class="btn msbtn" id="lgMsBtn" type="button"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z" fill="currentColor"/></svg><span>Mit Microsoft anmelden</span></button>
+    <label class="cb"><input type="checkbox" id="lgMsRem" checked> Angemeldet bleiben</label>
+    <p class="muted" id="lgMsMsg" style="min-height:18px;color:var(--accent);text-align:center"></p>
+    <div id="lgCreate" class="lgbox" hidden><b>Neues Cloudy-Konto</b><small class="muted">Dieses Microsoft-Konto hat noch kein Cloudy-Konto. Wähle einen Namen (3–16 Zeichen: Buchstaben, Zahlen, _).</small><input id="lgNewName" class="field" maxlength="16" autocomplete="off" spellcheck="false" placeholder="Benutzername"><button class="btn" id="lgCreateBtn" type="button">Cloudy-Konto erstellen</button></div>
+    <details id="lgLinkBox" class="lgbox"><summary>Ich habe schon ein Cloudy-Konto (Benutzername + Passwort)</summary><small class="muted">Einmalige Verknüpfung: Dein bisheriges Konto bleibt mit allen Daten erhalten und wird mit dem Microsoft-Konto verbunden, mit dem du dich gerade anmeldest. Es wird nichts zusammengeführt oder überschrieben.</small><input id="lgOldUser" class="field" maxlength="16" autocomplete="username" spellcheck="false" placeholder="Benutzername"><input id="lgOldPass" class="field" type="password" autocomplete="current-password" placeholder="Passwort"><button class="btn" id="lgLinkBtn" type="button">Konto verknüpfen und anmelden</button></details>
+  </div>
+  <form id="lgForm" autocomplete="off" hidden>
     <label id="lgUserRow">Benutzername<input id="lgUser" class="field" maxlength="16" autocomplete="username" spellcheck="false"></label>
     <label>Passwort<input id="lgPass" class="field" type="password" autocomplete="current-password"></label>
     <label id="lgPass2Row" style="display:none">Passwort wiederholen<input id="lgPass2" class="field" type="password" autocomplete="new-password"></label>
@@ -322,7 +351,7 @@ const st={get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{re
 let all=[],filter='release',version=st.get('version',''),servers=st.get('servers',[{name:'Mein Server',host:'localhost',port:25565}]);
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-function go(p){if(window.paintSub)window.paintSub(p);if(p==='home'&&window.restartHero)setTimeout(window.restartHero,60);if(p==='shots')loadShots();if(p==='packs')loadPacks();if(p==='mods')loadMods();if(p==='lib')loadLib();if(p==='client')loadClient();$$('.page').forEach(e=>e.classList.toggle('on',e.id==='p-'+p));$$('.nav').forEach(b=>b.classList.toggle('on',b.dataset.p===({lib:'versions',packs:'mods',shots:'settings',quests:'pass'}[p]||p)))}
+function go(p){if(window.paintSub)window.paintSub(p);if(p==='home'&&window.restartHero)setTimeout(window.restartHero,60);if(p==='shots')loadShots();if(p==='packs')loadPacks();if(p==='mods')loadMods();if(p==='lib')loadLib();if(p==='client')loadClient();$$('.page').forEach(e=>e.classList.toggle('on',e.id==='p-'+p));$$('.nav').forEach(b=>b.classList.toggle('on',b.dataset.p===({lib:'versions',packs:'mods',shots:'settings',quests:'shop',pass:'shop'}[p]||p)))}
 $$('.nav').forEach(b=>b.onclick=()=>go(b.dataset.p));
 const vpop=$('#vpop');
 function vpClose(){vpop.style.display='none'}
@@ -408,7 +437,7 @@ async function refreshAccount(){
   const a=await window.cloudy.accountGet();window._ms=a.ms;if(a.ms)st.set('name',a.name);
   $('#accType').textContent=a.ms?'Microsoft-Konto':'Offline-Konto';
   $('#msOut').textContent=a.ms?`Angemeldet als ${a.name}`:'Nicht angemeldet – du spielst offline.';
-  $('#msBtn').textContent=a.ms?'Abmelden':'Mit Microsoft anmelden';
+  $('#msBtn').textContent=a.ms?'Microsoft-Konto abmelden':'Mit Microsoft anmelden';$('#msBtn').classList.toggle('danger',!!a.ms);try{window.paintAccountCard&&window.paintAccountCard()}catch(e){}
   $('#name').disabled=a.ms;$('#name').value=who();paintUser();
 }
 $('#msBtn').onclick=async()=>{const b=$('#msBtn');b.disabled=true;if(window._ms)await window.cloudy.accountLogout();else{$('#msOut').textContent='Fenster zur Anmeldung geöffnet …';const r=await window.cloudy.msLogin();if(!r.ok)$('#msOut').textContent=r.error}b.disabled=false;if(window._ms||!$('#msOut').textContent.startsWith('Anmeldung')&&!$('#msOut').textContent.startsWith('Paket'))refreshAccount()};
@@ -651,7 +680,11 @@ window.cloudy.versions(true).then(l=>{all=l;if(!version||!all.find(v=>v.id===bvr
 <script src="assets/js/modpacks.js"></script>
 <script src="assets/js/shopskins.js"></script>
 <script src="assets/js/news.js"></script>
+<script src="assets/js/v2.js"></script>
+<script src="assets/js/notes.js"></script>
+<script src="assets/js/ytmusic.js"></script>
 <script src="assets/js/i18n-add.js"></script>
+<script src="assets/js/i18n-v2.js"></script>
 <script src="assets/js/i18n-more.js"></script>
 <script src="assets/js/i18n.js"></script>
 </body></html>

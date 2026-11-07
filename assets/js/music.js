@@ -43,7 +43,7 @@
     $('#mPlay').textContent = S.playing ? L('Pause') : L('Abspielen'); $('#mMute').textContent = S.muted ? L('Ton an') : L('Stumm');
     $('#lgVol').value = Math.round(S.vol * 100); $('#lgMute').classList.toggle('off', S.muted || S.vol === 0);
     $('#mVol').value = Math.round(S.vol * 100); $('#mAuto').checked = S.auto; $('#mNow').textContent = L('Aktuell:') + ' ' + L(t.name);
-    $('#musicBtn span').textContent = S.playing && !S.muted ? L('Musik aus') : L('Musik an');
+    $('#musicBtn span').textContent = S.playing && !S.muted ? L('Musik aus') : L('Musik an'); $('#musicBtn').classList.toggle('on', !!(S.playing && !S.muted));
     $('#mList').innerHTML = tracks().map((x, i) => `<div style="display:flex;gap:8px;align-items:center;margin:4px 0"><button class="chip ${i === S.idx ? 'on' : ''}" data-mi="${i}" style="max-width:100%;overflow:hidden;text-overflow:ellipsis">${esc(x.name)}</button>${x.amb ? '' : `<button class="btn ghost" data-mr="${esc(x.file)}" style="height:32px;padding:0 12px">Entfernen</button>`}</div>`).join('');
     $$('#mList [data-mi]').forEach(b => b.onclick = () => { S.idx = +b.dataset.mi; st.set('mIdx', S.idx); play(); });
     $$('#mList [data-mr]').forEach(b => b.onclick = async () => { await window.cloudy.musicRemove(b.dataset.mr); S.idx = 0; if (S.playing) pause(); await load(); });

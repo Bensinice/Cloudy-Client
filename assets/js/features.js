@@ -35,7 +35,7 @@ function applyTheme0() {
   const id = themeId(), root = document.documentElement;
   root.dataset.theme = id;
   const cs = getComputedStyle(root), dark = (cs.getPropertyValue('--mode').trim() || (id === 'dark' ? 'dark' : 'light')) === 'dark';
-  $('#themeBtn span').textContent = dark ? 'Heller Modus' : 'Dunkler Modus';
+  $('#themeBtn span').textContent = dark ? 'Heller Modus' : 'Dunkler Modus'; root.dataset.mode = dark ? 'dark' : 'light'; $('#themeBtn').classList.toggle('on', dark);
   $$('.th').forEach(b => b.classList.toggle('on', b.dataset.id === st.get('theme', 'light')));
   const th = THEMES.find(x => x.id === id) || THEMES[0];
   window.cloudy.themeColor({ bg: cs.getPropertyValue('--title-bg').trim() || (dark ? '#11244a' : '#cfe8ff'), fg: cs.getPropertyValue('--ink').trim() || (dark ? '#e8f1ff' : '#1d3b66'), id, sky: [th.bg[1], th.bg[0]], accent: th.c, dark }).catch(() => {});
@@ -547,7 +547,8 @@ window.cloudy.on('acctLocked', async msg => { try { await window.cloudy.authLogo
   const t = document.getElementById('admTab'); if (t) t.addEventListener('click', paintGate);
   setTimeout(() => { try { if (admTabOn) paintGate(); } catch {} }, 1600);
 })();
-function lgDone(name, first, admin) {
+function lgDone(name, first, admin, owner) {
+  try { if (window.onOwner) window.onOwner(!!owner); } catch {}
   $('#login').classList.add('off'); $('#lgPass').value = $('#lgPass2').value = '';
   if (first) { st.set('name', name); $('#name').value = name; paintUser(); }
   $('#delBtn').style.display = admin ? 'none' : ''; $('#delRow').style.display = 'none';
@@ -564,7 +565,7 @@ $('#lgForm').onsubmit = async e => {
   $('#lgGo').disabled = false;
   if (!r.ok) { msg.textContent = L(r.error); return; }
   if (r.mustChange) { $('#lgPass').value = ''; lgSet('chg', 'Du nutzt ein vorläufiges Passwort. Lege jetzt ein neues fest.'); return; }
-  lgFresh = false; lgDone(r.user, !!r.first, r.admin);
+  lgFresh = false; lgDone(r.user, !!r.first, r.admin, r.owner);
 };
 window.cloudy.srvGet().then(u => { if (u) $('#lgNote').textContent = L('Dein Cloudy-Konto ist ein Online-Konto. Passwort vergessen? Schreib dem Owner im Chat.'); }).catch(() => {});
 $('#lgForgot').onclick = async e => {
@@ -590,7 +591,7 @@ $('#lgOffline').onclick = async () => {
   $('#login').classList.add('off'); $('#lgPass').value = $('#lgPass2').value = ''; paintAdmin(false); setOffline(true);
 };
 $('#authOut').onclick = async () => { setOffline(false); await window.cloudy.authLogout(); const s = await window.cloudy.authState(); lgFresh = s.fresh; $('#login').classList.remove('off'); lgSet('in', s.fresh ? FRESH_HINT : ''); $('#lgPass').value = ''; paintAdmin(false); };
-window.cloudy.authState().then(s => { lgFresh = s.fresh; if (s.user) lgDone(s.user, false, s.admin); else lgSet('in', s.fresh ? FRESH_HINT : ''); });
+window.cloudy.authState().then(s => { lgFresh = s.fresh; if (s.user) lgDone(s.user, false, s.admin, s.owner); else lgSet('in', s.fresh ? FRESH_HINT : ''); });
 
 // ---------- Notfall: Neu laden / Update erzwingen (auch per F5 bzw. Strg+Umschalt+U) ----------
 $('#reloadBtn').onclick = () => window.cloudy.appReload();
@@ -694,7 +695,7 @@ window.showOnb = showOnb;
 
 // ---------- Wolke / Logo anklicken = alles neu laden (Konto, Shop, Admin, Anzeige) ----------
 (function () {
-  const b = document.querySelector('.brand'); if (!b) return; b.title = 'Refresh'; let busy = false;
+  const b = null; if (!b) return; let busy = false; // ersetzt durch window.cloudyRefresh (assets/js/v2.js)
   b.addEventListener('click', async () => {
     if (busy) return; busy = true; b.classList.add('spinning');
     try { await window.cloudy.accRefresh(); } catch {}
@@ -801,7 +802,7 @@ window.cloudyTags = tags => (tags || []).map(k => { const m = /^clan:([A-Z0-9]{1
   const lock = ok => {
     allowed = ok; if (cb) cb.disabled = !ok;
     const note = document.getElementById('ui2Note'); if (note) note.style.display = ok ? 'none' : '';
-    if (!ok && root.dataset.ui === '2') set(false);
+    // Cloudy 2.0 ist jetzt das Standarddesign für alle: kein Abschalten mehr
   };
   const check = async () => {
     try {
@@ -809,9 +810,8 @@ window.cloudyTags = tags => (tags || []).map(k => { const m = /^clan:([A-Z0-9]{1
       if (r && r.ok) lock(!!r.plus || !!admTabOn);
     } catch {}
   };
-  set(root.dataset.ui === '2');
-  if (cb) { cb.disabled = true; cb.onchange = () => { if (!allowed) { cb.checked = false; return; } set(cb.checked); }; }
-  check(); setInterval(check, 120000); window.addEventListener('cloudy-plus', check);
+  set(true);
+  if (cb) { cb.checked = true; cb.disabled = true; }
 })();
 
 // Marken-Icon: Wolke, mit Plus nur fuer Cloudy+

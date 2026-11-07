@@ -8,7 +8,8 @@
   const nameOf = id => { try { const c = (window.shopCatalog || []).find(x => x.id === id); return c ? c.name : id; } catch { return id; } };
   const left = ms => { const m = Math.max(1, Math.ceil(ms / 60000)), d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60); return d ? d + T(' T ', ' d ') + h + T(' Std', ' h') : h + T(' Std', ' h'); };
   // Reiterleiste: wird oben auf der Pass- und der Quest-Seite eingefügt
-  window.passTabs = cur => `<div class="ptabs"><button class="btn${cur === 'pass' ? '' : ' ghost'}" data-pt="pass">${T('Pass', 'Pass')}</button><button class="btn${cur === 'quests' ? '' : ' ghost'}" data-pt="quests">${T('Quests', 'Quests')}</button></div>`;
+  // Untermenü von „Shop & Pass“: kleiner Zurück-Pfeil zum Shop, Pfad und Umschalter Battle Pass | Quests (gleiche Seiten wie bisher, kein neues Fenster)
+  window.passTabs = cur => `<div class="ptabs subnav"><button class="backarrow" type="button" data-pt="shop" aria-label="${T('Zurück zum Shop', 'Back to the shop')}" title="${T('Zurück zum Shop', 'Back to the shop')}"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><span class="crumb">${T('Shop & Pass', 'Shop & Pass')}<i>›</i><b>${cur === 'pass' ? 'Battle Pass' : 'Quests'}</b></span><span class="grow"></span><button class="btn${cur === 'pass' ? '' : ' ghost'}" type="button" data-pt="pass">Battle Pass</button><button class="btn${cur === 'quests' ? '' : ' ghost'}" type="button" data-pt="quests">Quests</button></div>`;
   window.passTabsBind = el => el.querySelectorAll('[data-pt]').forEach(b => b.onclick = () => { if (window.go) window.go(b.dataset.pt); });
   function cell(r, track) {
     const x = r[track], locked = data.level < r.level, prem = track === 'premium', noPlus = prem && !data.plus;
