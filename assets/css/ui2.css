@@ -157,7 +157,10 @@ html[data-ui="2"] #acCl{border-color:color-mix(in srgb,var(--accent) 40%,var(--u
 .acstate{font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:99px;background:color-mix(in srgb,var(--ink2) 20%,transparent);color:var(--ink2);white-space:nowrap}.acstate.ok{background:color-mix(in srgb,#2fb36d 22%,transparent);color:#2fb36d}
 .acnote{font-size:12.5px;opacity:.9}.acbtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
 .setrow2{display:flex;align-items:center;justify-content:space-between;gap:16px}.setrow2 small{display:block;color:var(--ink2);margin-top:2px;font-size:12.5px}
-.ui2row{display:none}
+.ui2row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 14px;border-radius:14px;border:1px solid var(--gb);background:var(--chip);margin-bottom:12px}
+.ui2row b{display:block;font-size:15px}.ui2row small{display:block;color:var(--ink2);margin-top:2px;font-size:12.5px}
+.ui2st{font-size:12px;font-weight:800;letter-spacing:.06em;margin-right:10px;color:var(--ink2)}
+.ui2st.on{color:#6ff0b0}
 
 /* Shop & Pass: Hub und Untermenü mit Zurück-Pfeil */
 .shophub{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:12px 0 16px}
