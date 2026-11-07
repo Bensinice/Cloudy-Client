@@ -824,3 +824,9 @@ window.cloudyTags = tags => (tags || []).map(k => { const m = /^clan:([A-Z0-9]{1
   check(); setInterval(check, 120000); window.addEventListener('cloudy-plus', check);
   if (window.onLoggedIn) { const o = window.onLoggedIn; window.onLoggedIn = function () { try { check(); } catch {} return o.apply(this, arguments); }; }
 })();
+
+// Sparen: laeuft das Fenster im Hintergrund (minimiert/verdeckt), stehen Animationen und Unschaerfe still
+(() => {
+  const r = document.documentElement, f = () => r.classList.toggle('bgpause', document.hidden);
+  document.addEventListener('visibilitychange', f); f();
+})();

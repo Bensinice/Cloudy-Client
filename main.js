@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, shell, safeStorage, dialog, nativeImage, net, Notification } = require('electron');
+try { app.commandLine.appendSwitch('disk-cache-size', String(32 * 1024 * 1024)); } catch {} // kleinerer Festplatten-Cache
 const REMOTE_H = new Map(); let remoteBus = () => {}; // Handy-Fernsteuerung (lib/remote.js): alle ipcMain.handle-Funktionen merken, damit der Browser sie aufrufen kann
 { const _h0 = ipcMain.handle.bind(ipcMain); ipcMain.handle = (n, f) => { REMOTE_H.set(n, f); return _h0(n, f); }; }
 // Unvollständige Installation (z. B. abgebrochenes Update, Virenscanner): verständliche Meldung statt „JavaScript error in the main process“
