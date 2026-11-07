@@ -97,6 +97,11 @@ async function init() {
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='cquests'"); QS.setCustom(r.length ? parse(r[0].v, []) : []); }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='quests'"); QDATA = r.length ? parse(r[0].v, {}) : {}; if (!QDATA || typeof QDATA !== 'object' || Array.isArray(QDATA)) QDATA = {}; }
   for (const [c, def] of [['owned', 'TEXT'], ['equip', 'TEXT'], ['daily', 'VARCHAR(20)']]) { const [r] = await db.query('SHOW COLUMNS FROM cloudy_users LIKE ?', [c]); if (!r.length) await db.query(`ALTER TABLE cloudy_users ADD COLUMN ${c} ${def} NULL`); }
+  { // Dauerhafte Besitzer: bekommen bei jedem Start Owner-Tag + Admin-Flag (OWNERS="benn,name2"; Standard: benn)
+    const own = String(process.env.OWNERS || 'benn').split(',').map(x => x.trim().toLowerCase()).filter(Boolean); let ch = false;
+    for (const k of own) { const u = await get(k); if (!u) continue; if (!(TAGS[k] || []).includes('owner')) { TAGS[k] = [...(TAGS[k] || []), 'owner']; ch = true; } if (!u.admin) await db.query('UPDATE cloudy_users SET admin=1 WHERE name_key=?', [k]); }
+    if (ch) await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['tags', JSON.stringify(TAGS)]);
+  }
   const a = await get('admin'); if (!a || !okPw(a, ADMIN_PASS)) await put(mk('admin', ADMIN_PASS, { admin: 1, coins: null }));
   await db.query("INSERT IGNORE INTO cloudy_kv (k,v) VALUES ('noInf1','0')"); { const [f] = await db.query("SELECT v FROM cloudy_kv WHERE k='noInf1'"); if (f[0] && f[0].v === '0') { await db.query("UPDATE cloudy_users SET inf_coins=0, coins=100 WHERE name_key='tester' AND inf_coins=1"); await db.query("UPDATE cloudy_kv SET v='1' WHERE k='noInf1'"); } }
   if (!(await get('tester'))) await put(mk('Tester', '12345', { must_change: 1, coins: 100 }));
