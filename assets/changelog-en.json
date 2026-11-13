@@ -1,4 +1,16 @@
 {
+  "0.9.111": [
+    "Cloudify: the music menu (key I) is now called Cloudify – cleaner rounded design, 6 switchable themes (saved) and all lyrics/Spotify settings in one place",
+    "Playlists: open a playlist in Cloudify, see all songs and click one to play it – or type /playlist in chat and click",
+    "Lyrics as 3D chrome letters in the world (position \"Chrome 3D\")",
+    "10 new 3D cosmetics: 5 wings and 5 capes",
+    "Owner badge above the name tag and a small Cloudy cloud before the names of players confirmed to use Cloudy",
+    "Zoom: hold or toggle, zoom level, calmer mouse while zoomed; no more flicker or stuck FOV",
+    "Lyrics: lines no longer overlap, spacing grows with text size, long lines wrap; visible in F5/third person",
+    "Food bar: empty icons clearly visible, hunger effect green",
+    "Auto GG: only on real game ends, once per game, never on player chat; message selectable",
+    "Mods with clearer names and descriptions"
+  ],
   "0.9.110": [
     "Admin: email & Stripe in a clear two-column layout with guides (What is SMTP?, Gmail app password, Stripe) and clickable links",
     "Smaller download: keyboard sounds compressed (3.5 → 1.2 MB), animations and blur pause in the background",

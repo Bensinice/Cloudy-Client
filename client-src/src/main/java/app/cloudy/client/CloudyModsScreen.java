@@ -41,14 +41,6 @@ public class CloudyModsScreen extends Screen {
 		c.fill(0, 0, this.width, this.height, MinecraftClient.getInstance().world == null ? 0x55000000 : 0x77050A16);
 	}
 
-	private static String abbr(String id) {
-		return switch (id) {
-			case "fps" -> "FPS"; case "ping" -> "PING"; case "coords" -> "XYZ"; case "dir" -> "DIR"; case "cps" -> "CPS"; case "keys" -> "KEYS";
-			case "armor" -> "ARMOR"; case "speed" -> "SPEED"; case "clock" -> "TIME"; case "memory" -> "RAM"; case "sprint" -> "SPRINT";
-			case "zoom" -> "ZOOM"; case "totem" -> "TOTEM"; case "hotbar" -> "BAR"; case "sky" -> "SKY"; case "freelook" -> "LOOK"; case "freecam" -> "CAM"; case "lyrics" -> "LYRICS"; case "fullbright" -> "LIGHT"; default -> id.toUpperCase();
-		};
-	}
-
 	private static boolean hasOptions(ModConfig.Def d) { return d.cat().equals("HUD") || d.id().equals("lyrics") || d.id().equals("zoom") || d.id().equals("autogg") || d.id().equals("sky") || d.id().equals("hotbar") || d.id().equals("wingadj") || d.id().equals("crosshair"); }
 
 	private void pill(DrawContext c, int mx, int my, int x, int y, int w, int h, String label, boolean on, Runnable run) {

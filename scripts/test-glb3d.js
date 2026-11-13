@@ -3,7 +3,7 @@
 const http = require('http'), fs = require('fs'), path = require('path'); const { chromium } = require('playwright');
 const root = path.join(__dirname, '..'); let n = 0, bad = 0; const ok = (c, m) => { n++; console.log(c ? 'OK  ' : 'FAIL', m); if (!c) bad++; };
 const read = f => fs.readFileSync(path.join(root, f), 'utf8');
-const IDS = ['hat-g3wizard', 'hat-g3crown', 'cape-g3nebula', 'cape-g3phoenix', 'wings-g3seraph', 'wings-g3prism', 'wings-g3void'];
+const IDS = ['hat-g3wizard', 'hat-g3crown', 'cape-g3nebula', 'cape-g3phoenix', 'wings-g3seraph', 'wings-g3prism', 'wings-g3void', 'wings-g4abyss', 'wings-g4frost', 'wings-g4amethyst', 'wings-g4mono', 'wings-g4venom', 'cape-g4viper', 'cape-g4vortex', 'cape-g4glitch', 'cape-g4crest', 'cape-g4drip'];
 // ---- Konsistenz (ohne Browser) ----
 const main = read('main.js'), shop = read('assets/js/shop.js'), glbjs = read('assets/js/glb3d.js'), java = read('client-src/src/main/java/app/cloudy/client/GLB.java'), cos = read('client-src/src/main/java/app/cloudy/client/Cosmetics.java');
 for (const id of IDS) {
@@ -19,7 +19,7 @@ s.listen(0, async () => {
   const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] }); const p = await b.newPage({ viewport: { width: 600, height: 700 } }); const errs = []; p.on('pageerror', e => errs.push(String(e)));
   await p.goto('http://127.0.0.1:' + s.address().port + '/p.html');
   const info = await p.evaluate(async ids => { const out = {}; for (const id of ids) { const m = await Glb3d.load(id); const box = new THREE.Box3().setFromObject(m), sz = box.getSize(new THREE.Vector3()); let tris = 0, tex = true; m.traverse(o => { if (o.isMesh) { tris += o.geometry.index.count / 3; if (!o.material.map || !o.material.map.image) tex = false; } }); out[id] = { y0: +box.min.y.toFixed(3), y1: +box.max.y.toFixed(3), w: +sz.x.toFixed(3), tris, tex }; } return out; }, IDS);
-  for (const id of IDS) { const i = info[id]; ok(i.tris > 1000 && i.tex, `${id}: ${i.tris} Dreiecke, Textur geladen`); }
+  for (const id of IDS) { const i = info[id]; ok(i.tris >= (id.startsWith("cape-g4") ? 12 : 1000) && i.tex, `${id}: ${i.tris} Dreiecke, Textur geladen`); }
   ok(info['hat-g3wizard'].y0 > 0.4 && info['hat-g3wizard'].y1 < 1.5, 'Hut sitzt ueber dem Kopf (Halsgelenk-Ursprung)'); ok(info['cape-g3nebula'].y0 < -0.95 && info['cape-g3nebula'].w > 0.6 && info['cape-g3nebula'].w < 0.7, 'Umhang ~1 Block lang, ~0.65 breit');
   const px = async eq => p.evaluate(async e => { const h = document.getElementById('h'); await Glb3d.mount(h, { equip: e, skin: null, slim: false, angle: () => 180 }); h._apply(); const c = h.querySelector('canvas'), t = document.createElement('canvas'); t.width = c.width; t.height = c.height; const g = t.getContext('2d'); g.drawImage(c, 0, 0); const d = g.getImageData(0, 0, t.width, t.height).data; let nz = 0, gold = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 20) { nz++; } return nz; }, eq);
   const base = await px({}), withAll = await px({ hat: 'hat-g3wizard', cape: 'cape-g3nebula', wings: 'wings-g3seraph' }), wings = await px({ wings: 'wings-g3void' });

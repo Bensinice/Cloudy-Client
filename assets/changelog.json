@@ -1,5 +1,26 @@
 [
  {
+  "v": "0.9.111",
+  "date": "2026-11-13",
+  "added": [
+   "Cloudify: das Musik-Menü (Taste I) heißt jetzt Cloudify – neues, runderes Design, 6 Themes zum Wechseln (werden gespeichert) und alle Lyrics-/Spotify-Einstellungen an einem Ort",
+   "Playlists: in Cloudify eine Playlist öffnen, alle Songs sehen und einen Song anklicken zum Abspielen – oder im Chat /playlist eingeben und klicken",
+   "Lyrics als 3D-Chrombuchstaben in der Welt (Position „Chrome 3D“)",
+   "10 neue 3D-Cosmetics: 5 Flügel (Abgrund-Fledermaus, Frostfeder, Amethystflammen, Monochrom-Splitter, Gift-Neon) und 5 Umhänge (Zickzack-Viper, Amethyst-Wirbel, Mono-Glitch, Cloudy-Wappen, Gift-Tropfen)",
+   "Owner-Abzeichen über dem Namensschild und eine kleine Cloudy-Wolke vor dem Namen von Spielern, die nachweislich mit Cloudy spielen",
+   "Zoom-Optionen: Taste halten oder umschalten, Zoomstufe, ruhigere Maus beim Zoomen",
+   "Auto-GG-Optionen: eigene Nachricht wählbar",
+   "Mods mit verständlichen Namen und Beschreibungen, Suche findet auch Beschreibungen"
+  ],
+  "fixed": [
+   "Lyrics: Zeilen überlagern sich nicht mehr, Abstände wachsen mit der Textgröße, lange Zeilen werden umgebrochen",
+   "Lyrics in F5-/Third-Person- und Frontansicht sichtbar (richten sich nach der Kamera statt nach dem Spieler)",
+   "Zoom: kein Flackern oder doppelter Zoom mehr, weich bei jeder Bildrate, Zoom endet beim Öffnen von Menüs, FOV bleibt nie verstellt",
+   "Hungerleiste: leere Symbole sind klar sichtbar statt wie fehlende Texturen, Hunger-Effekt grün, Zittern bei leerer Sättigung",
+   "Auto GG: löst nur bei echtem Spielende aus (auch bei Sieg-Titeln), einmal pro Spiel und nie bei Chatnachrichten von Spielern"
+  ]
+ },
+ {
   "v": "0.9.110",
   "date": "2026-11-13",
   "added": [
