@@ -1,5 +1,13 @@
 [
  {
+  "v": "0.9.112",
+  "date": "2026-11-13",
+  "fixed": [
+   "3D-Lyrics in der Welt waren spiegelverkehrt – jetzt richtig herum lesbar (Chrom-Buchstaben und Text)",
+   "Chrom-3D-Lyrics: es erscheinen nur die Wörter, die gerade gesungen werden, mit kurzem Aufploppen – nicht mehr die ganze Zeile auf einmal"
+  ]
+ },
+ {
   "v": "0.9.111",
   "date": "2026-11-13",
   "added": [

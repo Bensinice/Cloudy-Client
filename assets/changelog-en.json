@@ -1,4 +1,8 @@
 {
+  "0.9.112": [
+    "3D lyrics in the world were mirrored – now readable the right way round",
+    "Chrome 3D lyrics: only the words being sung appear, with a small pop – no longer the whole line at once"
+  ],
   "0.9.111": [
     "Cloudify: the music menu (key I) is now called Cloudify – cleaner rounded design, 6 switchable themes (saved) and all lyrics/Spotify settings in one place",
     "Playlists: open a playlist in Cloudify, see all songs and click one to play it – or type /playlist in chat and click",

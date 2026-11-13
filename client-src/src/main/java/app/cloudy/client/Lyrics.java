@@ -473,7 +473,7 @@ public final class Lyrics {
 			ms.push();
 			ms.translate(at.x - cam.x, at.y - cam.y, at.z - cam.z);
 			ms.multiply(new org.joml.Quaternionf().rotationYXZ((float) Math.PI - (float) Math.toRadians(p.yaw), -(float) Math.toRadians(p.pitch), 0f).rotateZ(p.tilt));
-			ms.scale(-p.s, -p.s, p.s);
+			ms.scale(p.s, -p.s, p.s); // wie Namensschilder: x nach rechts (vorher gespiegelt)
 			for (It it : p.items) {
 				float k; int rgb;
 				if (old || p.title) { k = 1f; rgb = old ? oldRgb : 0xFFFFFF; }
@@ -485,10 +485,13 @@ public final class Lyrics {
 				if (chromeNow) { // 3D-Chrombuchstaben: Grundlinie unter der Textzeile, glTF (Y oben, +Z vorne) auf den Textraum (Y unten, Z weg) gedreht
 					ms.push();
 					ms.translate(it.x, it.y + lift + 9f * it.sc, 0);
-					float kk = CHROME_K * it.sc;
-					ms.scale(kk, -kk, -kk);
-					int tint = Math.max(90, Math.min(255, (int) (255 * (old || p.title ? 0.82f : 0.55f + 0.45f * k01(it, p, pos)))));
-					ChromeLetters.draw(ms, vcp, it.s, (al << 24) | (tint << 16) | (tint << 8) | tint, 0xF000F0);
+					float kc = old || p.title ? 1f : k01(it, p, pos);
+					if (kc <= 0.01f) { ms.pop(); continue; } // nur gesungene Woerter erscheinen, nicht die ganze Zeile auf einmal
+					float kk = CHROME_K * it.sc * (0.75f + 0.25f * kc); // kleines Aufploppen beim Erscheinen
+					ms.scale(kk, -kk, kk);
+					int alc = old || p.title ? al : Math.max(0, Math.min(255, (int) (255 * vis * alphaCfg * kc)));
+					int tint = old ? 200 : 255;
+					ChromeLetters.draw(ms, vcp, it.s, (alc << 24) | (tint << 16) | (tint << 8) | tint, 0xF000F0);
 					ms.pop();
 					continue;
 				}
