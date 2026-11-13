@@ -111,7 +111,8 @@ public final class Cosmetics {
 		"cape-zz4", "cape-zz4m", "cape-zz3", "cape-zz3s", "cape-zz5", "cape-zk5", "wings-zz4", "wings-zz4m", "wings-zz3", "wings-zz3s", "wings-zz5", "wings-zk5",
 		"shield-zz4", "shield-zz4m", "shield-zz3", "shield-zz3s", "shield-zz5", "cape-yy", "shield-yy",
 		"wings-zv", "wings-zs", "wings-zf", "wings-zb", "cape-zbs", "cape-ghg",
-		"hat-g3wizard", "hat-g3crown", "cape-g3nebula", "cape-g3phoenix", "wings-g3seraph", "wings-g3prism", "wings-g3void"}; // letzte Zeile: 3D-Modelle aus .glb (GLB.java)
+		"hat-g3wizard", "hat-g3crown", "cape-g3nebula", "cape-g3phoenix", "wings-g3seraph", "wings-g3prism", "wings-g3void",
+		"wings-g4abyss", "wings-g4frost", "wings-g4amethyst", "wings-g4mono", "wings-g4venom", "cape-g4viper", "cape-g4vortex", "cape-g4glitch", "cape-g4crest", "cape-g4drip"}; // letzte Zeile: 3D-Modelle aus .glb (GLB.java)
 
 	/** Umhaenge aus normalen 64x32-Texturen (in den Mod gepackt): fuer dich und fuer andere Cloudy-Spieler. */
 	public static boolean isTexCape(String id) { return false; } // zbs/ghg laufen jetzt ueber das Z4-Umhangmodell (ZZ4)
@@ -223,6 +224,16 @@ public final class Cosmetics {
 			case "wings-g3seraph" -> "Seraph Wings (3D)";
 			case "wings-g3prism" -> "Prism Shard Wings (3D)";
 			case "wings-g3void" -> "Void Dragon Wings (3D)";
+			case "wings-g4abyss" -> "Abyss Bat Wings (3D)";
+			case "wings-g4frost" -> "Frostfeather Wings (3D)";
+			case "wings-g4amethyst" -> "Amethyst Flame Wings (3D)";
+			case "wings-g4mono" -> "Monochrome Shard Wings (3D)";
+			case "wings-g4venom" -> "Venom Neon Wings (3D)";
+			case "cape-g4viper" -> "Zigzag Viper Cape (3D)";
+			case "cape-g4vortex" -> "Amethyst Vortex Cape (3D)";
+			case "cape-g4glitch" -> "Mono Glitch Cape (3D)";
+			case "cape-g4crest" -> "Cloudy Crest Cape (3D)";
+			case "cape-g4drip" -> "Toxic Drip Cape (3D)";
 			default -> id;
 		};
 	}

@@ -11,6 +11,16 @@
     'wings-g3seraph': { file: 'seraph_wings.glb', kind: 'wings', name: 'Seraph-Flügel', view: 'back' },
     'wings-g3prism': { file: 'prism_shard_wings.glb', kind: 'wings', name: 'Prismensplitter-Flügel', view: 'back' },
     'wings-g3void': { file: 'void_dragon_wings.glb', kind: 'wings', name: 'Leere-Drachenflügel', view: 'back' },
+    'wings-g4abyss': { file: 'abyss_bat_wings.glb', kind: 'wings', name: 'Abgrund-Fledermausflügel', view: 'back' },
+    'wings-g4frost': { file: 'frostfeather_wings.glb', kind: 'wings', name: 'Frostfeder-Flügel', view: 'back' },
+    'wings-g4amethyst': { file: 'amethyst_flame_wings.glb', kind: 'wings', name: 'Amethystflammen-Flügel', view: 'back' },
+    'wings-g4mono': { file: 'monochrome_shard_wings.glb', kind: 'wings', name: 'Monochrom-Splitterflügel', view: 'back' },
+    'wings-g4venom': { file: 'venom_neon_wings.glb', kind: 'wings', name: 'Gift-Neon-Flügel', view: 'back' },
+    'cape-g4viper': { file: 'zigzag_viper_cape.glb', kind: 'cape', name: 'Zickzack-Viper-Umhang', view: 'back' },
+    'cape-g4vortex': { file: 'amethyst_vortex_cape.glb', kind: 'cape', name: 'Amethyst-Wirbel-Umhang', view: 'back' },
+    'cape-g4glitch': { file: 'mono_glitch_cape.glb', kind: 'cape', name: 'Mono-Glitch-Umhang', view: 'back' },
+    'cape-g4crest': { file: 'cloudy_crest_cape.glb', kind: 'cape', name: 'Cloudy-Wappen-Umhang', view: 'back' },
+    'cape-g4drip': { file: 'toxic_drip_cape.glb', kind: 'cape', name: 'Gift-Tropfen-Umhang', view: 'back' },
   };
   // Platzierung relativ zum Koerper (Block-Einheiten, Y oben, +Z vorne). Hut am Kopf, Umhang/Fluegel am Koerper (Ursprung = Hals).
   const PLACE = {

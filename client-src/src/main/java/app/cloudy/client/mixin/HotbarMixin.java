@@ -21,6 +21,12 @@ public abstract class HotbarMixin {
 		try { if (Hotbar.status(context)) ci.cancel(); } catch (Throwable ignored) {}
 	}
 
+	/** Auto GG: grosse Titel (z. B. "VICTORY!") pruefen. */
+	@Inject(method = "setTitle", at = @At("HEAD"), require = 0)
+	private void cloudy$title(net.minecraft.text.Text title, CallbackInfo ci) {
+		try { if (title != null) app.cloudy.client.Extras.ggCheck(title.getString(), true); } catch (Throwable ignored) {}
+	}
+
 	@Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true, require = 0)
 	private void cloudy$cross(DrawContext context, net.minecraft.client.render.RenderTickCounter tick, CallbackInfo ci) {
 		try { if (app.cloudy.client.Crosshair.draw(context)) ci.cancel(); } catch (Throwable ignored) {}

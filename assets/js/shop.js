@@ -55,6 +55,16 @@
     'wings-g3seraph': { b: [-9, 0, 34, 24], c: ['#f4ecd8', '#c9a24a'], img: 'assets/cosmetics3d/icons/wings-g3seraph.png', ar: 1, glb: true },
     'wings-g3prism': { b: [-9, 0, 34, 24], c: ['#3be0d0', '#7a5cff'], img: 'assets/cosmetics3d/icons/wings-g3prism.png', ar: 1, glb: true },
     'wings-g3void': { b: [-9, 0, 34, 24], c: ['#5a2aa0', '#14081f'], img: 'assets/cosmetics3d/icons/wings-g3void.png', ar: 1, glb: true },
+    'wings-g4abyss': { b: [-9, 0, 34, 24], c: ['#3a1a5a', '#0a0614'], img: 'assets/cosmetics3d/icons/wings-g4abyss.png', ar: 1, glb: true },
+    'wings-g4frost': { b: [-9, 0, 34, 24], c: ['#bfe8ff', '#4a8ac8'], img: 'assets/cosmetics3d/icons/wings-g4frost.png', ar: 1, glb: true },
+    'wings-g4amethyst': { b: [-9, 0, 34, 24], c: ['#b46cff', '#3a0f6a'], img: 'assets/cosmetics3d/icons/wings-g4amethyst.png', ar: 1, glb: true },
+    'wings-g4mono': { b: [-9, 0, 34, 24], c: ['#f2f2f2', '#1a1a1a'], img: 'assets/cosmetics3d/icons/wings-g4mono.png', ar: 1, glb: true },
+    'wings-g4venom': { b: [-9, 0, 34, 24], c: ['#7dff4a', '#0f2a0a'], img: 'assets/cosmetics3d/icons/wings-g4venom.png', ar: 1, glb: true },
+    'cape-g4viper': { b: [0, 8, 16, 24], c: ['#2ad46a', '#0a1a10'], img: 'assets/cosmetics3d/icons/cape-g4viper.png', ar: 1, glb: true },
+    'cape-g4vortex': { b: [0, 8, 16, 24], c: ['#a05cff', '#1a0a33'], img: 'assets/cosmetics3d/icons/cape-g4vortex.png', ar: 1, glb: true },
+    'cape-g4glitch': { b: [0, 8, 16, 24], c: ['#e8e8e8', '#111111'], img: 'assets/cosmetics3d/icons/cape-g4glitch.png', ar: 1, glb: true },
+    'cape-g4crest': { b: [0, 8, 16, 24], c: ['#4aa3ff', '#0b1a3a'], img: 'assets/cosmetics3d/icons/cape-g4crest.png', ar: 1, glb: true },
+    'cape-g4drip': { b: [0, 8, 16, 24], c: ['#9cff3a', '#16220a'], img: 'assets/cosmetics3d/icons/cape-g4drip.png', ar: 1, glb: true },
     'hat-crown': { b: [3, -6, 10, 6], c: ['#ffd24a', '#e23b3b'] }, 'hat-halo': { b: [3, -9, 10, 5], c: ['#fff7b0', '#ffd24a'] }, 'hat-haloblack': { b: [3, -9, 10, 5], c: ['#7c5cff', '#0b0b12'] }
   };
   const lt = (hex, k) => { const n = parseInt(hex.slice(1), 16), f = c => Math.round(c + (255 - c) * k); return '#' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(f).map(x => x.toString(16).padStart(2, '0')).join(''); };

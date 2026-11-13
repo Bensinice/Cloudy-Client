@@ -21,6 +21,7 @@ public final class CosmeticNet {
 	private static final Map<PlayerEntityRenderState, AbstractClientPlayerEntity> STASH = new WeakHashMap<>();
 	private static volatile Map<String, String[]> others = new HashMap<>(); // Name (klein) -> {cape, hat, wings}
 	private static volatile Map<String, List<String>> tagMap = new HashMap<>(); // Name (klein) -> Tags (owner, manager, clan:TAG:farbe ...)
+	private static volatile java.util.Set<String> live = new java.util.HashSet<>(); // Namen (klein), die gerade nachweislich mit Cloudy spielen (Herzschlag am Konto-Server)
 	private static long lastWant, lastRead, otherMod;
 	private static String lastNames = "";
 
@@ -41,6 +42,11 @@ public final class CosmeticNet {
 		} catch (Throwable t) { return null; }
 	}
 
+	/** Spielt dieser Spieler gerade mit Cloudy? Nur wenn der Konto-Server es bestaetigt (angemeldeter Launcher meldet sich regelmaessig) – nie geraten. */
+	public static boolean isCloudy(String name) { return name != null && live.contains(name.toLowerCase()); }
+	/** Owner laut Konto-Server (Rang am Cloudy-Konto, nicht am Spielernamen festgemacht). */
+	public static boolean isOwner(String name) { List<String> l = tagsOf(name); return l != null && l.contains("owner"); }
+
 	public static List<String> tagsOf(String name) { return name == null ? null : tagMap.get(name.toLowerCase()); }
 	/** Farben wie im Launcher: Owner rot, Admin hellrot, Manager orange, Mod blau, Cloudy+ gelb, Gold kraeftig gold, Tester gruen. */
 	private static int tagColor(String t) {
@@ -50,8 +56,9 @@ public final class CosmeticNet {
 	private static boolean tagBold(String t) { return t.equals("owner") || t.equals("admin") || t.equals("gold"); }
 	/** Vorsatz vor dem Namen, z. B. "[Owner] [CLD] ". Null, wenn der Spieler keine Tags hat. */
 	public static net.minecraft.text.MutableText tagPrefix(String name) {
-		List<String> l = tagsOf(name); if (l == null || l.isEmpty()) return null;
-		net.minecraft.text.MutableText out = null;
+		List<String> l = tagsOf(name);
+		net.minecraft.text.MutableText out = isCloudy(name) ? net.minecraft.text.Text.literal("\u2601 ").styled(st -> st.withColor(0x9FD3FF)) : null; // Cloudy-Wolke: bestaetigter Cloudy-Spieler
+		if (l == null || l.isEmpty()) return out;
 		for (String t : l) {
 			String label; int col;
 			if (t.startsWith("clan:")) { String[] p = t.split(":"); label = p.length > 1 ? p[1] : ""; col = 0x9CC9FF; if (p.length > 2) { try { col = Integer.parseInt(p[2], 16); } catch (Exception ignored) {} } }
@@ -94,16 +101,17 @@ public final class CosmeticNet {
 				if (m != otherMod) {
 					otherMod = m;
 					JsonObject root = JsonParser.parseString(Files.readString(p)).getAsJsonObject(), pl = root.getAsJsonObject("players");
-					Map<String, String[]> nm = new HashMap<>(); Map<String, List<String>> tm = new HashMap<>(); String selfN = mc.player.getName().getString();
+					Map<String, String[]> nm = new HashMap<>(); Map<String, List<String>> tm = new HashMap<>(); java.util.Set<String> lv = new java.util.HashSet<>(); String selfN = mc.player.getName().getString();
 					if (pl != null) for (Map.Entry<String, JsonElement> en : pl.entrySet()) {
 						JsonObject e = en.getValue().getAsJsonObject();
+						try { if (e.has("cl") && e.get("cl").getAsInt() == 1) lv.add(en.getKey().toLowerCase()); } catch (Throwable ignored) {}
 						try { if (e.has("tg") && e.get("tg").isJsonArray()) { List<String> tl = new ArrayList<>(); for (JsonElement x : e.getAsJsonArray("tg")) tl.add(x.getAsString()); if (!tl.isEmpty()) tm.put(en.getKey().toLowerCase(), tl); } } catch (Throwable ignored) {}
 						if (en.getKey().equalsIgnoreCase(selfN)) continue;
 						String c = e.has("cape") ? e.get("cape").getAsString() : null, h = e.has("hat") ? e.get("hat").getAsString() : null, w = e.has("wings") ? e.get("wings").getAsString() : null;
 						nm.put(en.getKey().toLowerCase(), new String[] { okId(c, "cape") ? c : null, okId(h, "hat") ? h : null, okId(w, "wings") ? w : null });
 					}
 					if (nm.size() != others.size()) CloudyClient.LOG.info("Cloudy: Cosmetics von {} Mitspielern geladen", nm.size());
-					others = nm; tagMap = tm;
+					others = nm; tagMap = tm; live = lv;
 				}
 			}
 		} catch (Throwable ignored) {}

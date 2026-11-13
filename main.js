@@ -1477,6 +1477,16 @@ const CATALOG = [
   { id: 'wings-g3seraph', cat: 'wings', name: 'Seraph-Flügel (3D)', price: 1800 },
   { id: 'wings-g3prism', cat: 'wings', name: 'Prismensplitter-Flügel (3D)', price: 1800 },
   { id: 'wings-g3void', cat: 'wings', name: 'Leere-Drachenflügel (3D)', price: 1800 },
+  { id: 'wings-g4abyss', cat: 'wings', name: 'Abgrund-Fledermausflügel (3D)', price: 1800 },
+  { id: 'wings-g4frost', cat: 'wings', name: 'Frostfeder-Flügel (3D)', price: 1800 },
+  { id: 'wings-g4amethyst', cat: 'wings', name: 'Amethystflammen-Flügel (3D)', price: 1800 },
+  { id: 'wings-g4mono', cat: 'wings', name: 'Monochrom-Splitterflügel (3D)', price: 1800 },
+  { id: 'wings-g4venom', cat: 'wings', name: 'Gift-Neon-Flügel (3D)', price: 1800 },
+  { id: 'cape-g4viper', cat: 'cape', name: 'Zickzack-Viper-Umhang (3D)', price: 1500 },
+  { id: 'cape-g4vortex', cat: 'cape', name: 'Amethyst-Wirbel-Umhang (3D)', price: 1500 },
+  { id: 'cape-g4glitch', cat: 'cape', name: 'Mono-Glitch-Umhang (3D)', price: 1500 },
+  { id: 'cape-g4crest', cat: 'cape', name: 'Cloudy-Wappen-Umhang (3D)', price: 1500 },
+  { id: 'cape-g4drip', cat: 'cape', name: 'Gift-Tropfen-Umhang (3D)', price: 1500 },
 ];
 const PACK_FILES = {
   ...Object.fromEntries(['zz4', 'zz4m', 'zz3', 'zz3s', 'zz5', 'yy'].map(k => ['shield-' + k, `cloudy-shield-${k}.zip`])) };

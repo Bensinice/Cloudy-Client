@@ -41,6 +41,16 @@ public final class GLB {
 		FILES.put("wings-g3seraph", "seraph_wings.glb");
 		FILES.put("wings-g3prism", "prism_shard_wings.glb");
 		FILES.put("wings-g3void", "void_dragon_wings.glb");
+		FILES.put("wings-g4abyss", "abyss_bat_wings.glb");
+		FILES.put("wings-g4frost", "frostfeather_wings.glb");
+		FILES.put("wings-g4amethyst", "amethyst_flame_wings.glb");
+		FILES.put("wings-g4mono", "monochrome_shard_wings.glb");
+		FILES.put("wings-g4venom", "venom_neon_wings.glb");
+		FILES.put("cape-g4viper", "zigzag_viper_cape.glb");
+		FILES.put("cape-g4vortex", "amethyst_vortex_cape.glb");
+		FILES.put("cape-g4glitch", "mono_glitch_cape.glb");
+		FILES.put("cape-g4crest", "cloudy_crest_cape.glb");
+		FILES.put("cape-g4drip", "toxic_drip_cape.glb");
 	}
 
 	// Platzierung (glTF-Raum, Ursprung = Halsgelenk). Gleiche Zahlen wie PLACE in assets/js/glb3d.js.
@@ -48,8 +58,8 @@ public final class GLB {
 	public static final float WING_Y = -0.22f, WING_Z = -0.15f, WING_SC = 0.62f;
 	public static final float HALO_Y = 0.66f;
 
-	private static final class Part { String name; float[] v; int[] idx; float tx, ty, tz, yaw; int side; boolean halo; }
-	private static final class Model { Part[] parts; Identifier tex; }
+	private static final class Part { String name; float[] v; int[] idx; float tx, ty, tz, yaw; int side, img; boolean halo; }
+	private static final class Model { Part[] parts; Identifier[] tex; Identifier tex(Part p) { return tex[Math.max(0, Math.min(tex.length - 1, p.img))]; } }
 
 	private static final Map<String, Model> MODELS = new HashMap<>();
 	private static final Set<String> FAILED = new HashSet<>();
@@ -57,11 +67,14 @@ public final class GLB {
 	public static boolean handles(String id) { return id != null && FILES.containsKey(id); }
 
 	// ---------------------------------------------------------------- Laden
-	private static Model model(String id) {
+	private static Model model(String id) { return model(id, "/cloudy-cos/glb/" + FILES.get(id)); }
+
+	/** Laedt ein Modell aus einer Ressource (Schluessel: nur a-z, 0-9, _ - fuer den Texturnamen). */
+	private static Model model(String id, String res) {
 		Model have = MODELS.get(id);
 		if (have != null || FAILED.contains(id)) return have;
-		try (InputStream raw = GLB.class.getResourceAsStream("/cloudy-cos/glb/" + FILES.get(id))) {
-			if (raw == null) throw new java.io.IOException(FILES.get(id) + " fehlt");
+		try (InputStream raw = GLB.class.getResourceAsStream(res)) {
+			if (raw == null) throw new java.io.IOException(res + " fehlt");
 			Model m = parse(id, raw.readAllBytes());
 			MODELS.put(id, m);
 			return m;
@@ -91,6 +104,8 @@ public final class GLB {
 				JsonObject prim = pe.getAsJsonObject(), at = prim.getAsJsonObject("attributes");
 				float[] pos = floats(j, d, bin, at.get("POSITION").getAsInt(), 3), nor = floats(j, d, bin, at.get("NORMAL").getAsInt(), 3), uv = floats(j, d, bin, at.get("TEXCOORD_0").getAsInt(), 2);
 				Part p = new Part();
+				p.img = 0; // Material -> Textur -> Bild (Modelle mit mehreren Texturen, z. B. Vorder- und Kantenseite)
+				try { if (prim.has("material")) { JsonObject mat = j.getAsJsonArray("materials").get(prim.get("material").getAsInt()).getAsJsonObject(); JsonObject pbr = mat.getAsJsonObject("pbrMetallicRoughness"); if (pbr != null && pbr.has("baseColorTexture")) { int ti = pbr.getAsJsonObject("baseColorTexture").get("index").getAsInt(); p.img = j.getAsJsonArray("textures").get(ti).getAsJsonObject().get("source").getAsInt(); } } } catch (Exception ignored) {}
 				p.name = name; p.tx = tx; p.ty = ty; p.tz = tz; p.yaw = yaw; p.side = tx > 0 ? 1 : tx < 0 ? -1 : 0; p.halo = name.toLowerCase().contains("halo");
 				int nv = pos.length / 3;
 				p.v = new float[nv * 8];
@@ -103,15 +118,20 @@ public final class GLB {
 				parts.add(p);
 			}
 		}
-		// eingebettete PNG-Textur
-		JsonObject img = j.getAsJsonArray("images").get(0).getAsJsonObject(), bv = j.getAsJsonArray("bufferViews").get(img.get("bufferView").getAsInt()).getAsJsonObject();
-		int off = bin + (bv.has("byteOffset") ? bv.get("byteOffset").getAsInt() : 0), len = bv.get("byteLength").getAsInt();
-		NativeImage ni = NativeImage.read(new ByteArrayInputStream(d, off, len));
-		Identifier tid = Identifier.of("cloudy-client", "g3/" + id);
-		MinecraftClient.getInstance().getTextureManager().registerTexture(tid, new NativeImageBackedTexture(ni));
+		// eingebettete PNG-Texturen (eine oder mehrere)
+		JsonArray imgs = j.getAsJsonArray("images");
+		Identifier[] texs = new Identifier[Math.max(1, imgs.size())];
+		for (int ii = 0; ii < imgs.size(); ii++) {
+			JsonObject img = imgs.get(ii).getAsJsonObject(), bv = j.getAsJsonArray("bufferViews").get(img.get("bufferView").getAsInt()).getAsJsonObject();
+			int off = bin + (bv.has("byteOffset") ? bv.get("byteOffset").getAsInt() : 0), len = bv.get("byteLength").getAsInt();
+			NativeImage ni = NativeImage.read(new ByteArrayInputStream(d, off, len));
+			Identifier tid = Identifier.of("cloudy-client", "g3/" + id + (ii == 0 ? "" : "_" + ii));
+			MinecraftClient.getInstance().getTextureManager().registerTexture(tid, new NativeImageBackedTexture(ni));
+			texs[ii] = tid;
+		}
 		Model m = new Model();
 		m.parts = parts.toArray(new Part[0]);
-		m.tex = tid;
+		m.tex = texs;
 		return m;
 	}
 
@@ -145,7 +165,9 @@ public final class GLB {
 	}
 
 	// ---------------------------------------------------------------- Zeichnen
-	private static void drawPart(MatrixStack ms, VertexConsumer vc, int light, int ov, Part p, float tx, float ty, float tz, float yaw) {
+	private static void drawPart(MatrixStack ms, VertexConsumer vc, int light, int ov, Part p, float tx, float ty, float tz, float yaw) { drawPart(ms, vc, light, ov, p, tx, ty, tz, yaw, 255, 255, 255, 255); }
+
+	private static void drawPart(MatrixStack ms, VertexConsumer vc, int light, int ov, Part p, float tx, float ty, float tz, float yaw, int cr, int cg, int cb, int ca) {
 		ms.push();
 		ms.translate(tx, ty, tz);
 		if (yaw != 0f) ms.multiply(new Quaternionf().rotationY(yaw));
@@ -155,7 +177,7 @@ public final class GLB {
 		for (int f = 0; f + 3 <= ix.length; f += 3) {
 			for (int k = 0; k < 4; k++) { // Dreieck als Quad mit doppeltem letztem Punkt (wie ZZ4)
 				int o = ix[f + Math.min(k, 2)] * 8;
-				vc.vertex(e, v[o], v[o + 1], v[o + 2]).color(255, 255, 255, 255).texture(v[o + 3], v[o + 4]).overlay(ov).light(light).normal(e, v[o + 5], v[o + 6], v[o + 7]);
+				vc.vertex(e, v[o], v[o + 1], v[o + 2]).color(cr, cg, cb, ca).texture(v[o + 3], v[o + 4]).overlay(ov).light(light).normal(e, v[o + 5], v[o + 6], v[o + 7]);
 			}
 		}
 		ms.pop();
@@ -168,8 +190,7 @@ public final class GLB {
 		Model m = model(id);
 		if (m == null) return;
 		begin(ms);
-		VertexConsumer vc = vcp.getBuffer(RenderLayer.getEntityCutoutNoCull(m.tex));
-		for (Part p : m.parts) drawPart(ms, vc, light, ov, p, p.tx, p.ty, p.tz, p.yaw);
+		for (Part p : m.parts) drawPart(ms, vcp.getBuffer(RenderLayer.getEntityCutoutNoCull(m.tex(p))), light, ov, p, p.tx, p.ty, p.tz, p.yaw);
 		ms.pop();
 	}
 
@@ -181,8 +202,7 @@ public final class GLB {
 		float tilt = CAPE_TILT + 0.03f * (float) Math.sin(System.currentTimeMillis() / 900.0) + Math.min(1f, limb) * 0.25f;
 		ms.translate(0f, 0f, -CAPE_Z);
 		ms.multiply(new Quaternionf().rotationX(tilt));
-		VertexConsumer vc = vcp.getBuffer(RenderLayer.getEntityCutoutNoCull(m.tex));
-		for (Part p : m.parts) drawPart(ms, vc, light, ov, p, p.tx, p.ty, p.tz, p.yaw);
+		for (Part p : m.parts) drawPart(ms, vcp.getBuffer(RenderLayer.getEntityCutoutNoCull(m.tex(p))), light, ov, p, p.tx, p.ty, p.tz, p.yaw);
 		ms.pop();
 	}
 
@@ -191,10 +211,10 @@ public final class GLB {
 		Model m = model(id);
 		if (m == null) return;
 		begin(ms);
-		VertexConsumer vc = vcp.getBuffer(RenderLayer.getEntityCutoutNoCull(m.tex));
 		float flap = 0.12f + 0.17f * (float) Math.sin(System.currentTimeMillis() / 520.0);
 		float sc = WING_SC * ModConfig.wingSize / 100f;
 		for (Part p : m.parts) {
+			VertexConsumer vc = vcp.getBuffer(RenderLayer.getEntityCutoutNoCull(m.tex(p)));
 			if (p.halo) { drawPart(ms, vc, light, ov, p, 0f, HALO_Y, 0f, 0f); continue; }
 			ms.push();
 			ms.translate(0f, WING_Y + ModConfig.wingY * 0.02f, WING_Z);
@@ -203,6 +223,15 @@ public final class GLB {
 			ms.pop();
 		}
 		ms.pop();
+	}
+
+	/** Freies Modell (z. B. 3D-Buchstabe) im aktuellen Raum zeichnen: glTF-Raum unveraendert (Y oben, +Z vorne), mit Farbe/Deckkraft. false = nicht ladbar. */
+	public static boolean drawRes(MatrixStack ms, VertexConsumerProvider vcp, String key, String res, int argb, int light) {
+		Model m = model(key, res);
+		if (m == null) return false;
+		int a = argb >>> 24, r = (argb >> 16) & 255, g = (argb >> 8) & 255, b = argb & 255;
+		for (Part p : m.parts) drawPart(ms, vcp.getBuffer(RenderLayer.getEntityTranslucent(m.tex(p))), light, net.minecraft.client.render.OverlayTexture.DEFAULT_UV, p, p.tx, p.ty, p.tz, p.yaw, r, g, b, a);
+		return true;
 	}
 
 	// ---------------------------------------------------------------- Menue-Bild

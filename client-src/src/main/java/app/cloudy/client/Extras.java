@@ -40,18 +40,43 @@ public final class Extras {
 			} catch (Throwable ignored) {}
 		}
 		try {
-			net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents.GAME.register((msg, overlay) -> {
-				try {
-					if (overlay || !ModConfig.isOn("autogg")) return;
-					String s = msg.getString().toLowerCase(Locale.ROOT);
-					long now = System.currentTimeMillis();
-					if (now - lastGg < 30000) return;
-					if (s.contains("you won") || s.contains("winner") || s.contains("game over") || s.contains("victory")) {
-						MinecraftClient mc = MinecraftClient.getInstance();
-						if (mc.player != null && mc.getNetworkHandler() != null) { lastGg = now; mc.getNetworkHandler().sendChatMessage("gg"); }
-					}
-				} catch (Throwable ignored) {}
-			});
+			net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents.GAME.register((msg, overlay) -> { try { if (!overlay) ggCheck(msg.getString(), false); } catch (Throwable ignored) {} });
+		} catch (Throwable ignored) {}
+	}
+
+	// ---- Auto GG: nur bei echtem Spielende, einmal pro Spiel, nie bei normalem Chat ----
+	private static long ggAt;
+	/** Typische Spielende-Meldungen (Hypixel, Minemen, Mineplex, BlocksMC, viele Minigame-Plugins). Kleingeschrieben. */
+	private static final String[] GG_END = {"you won", "you win", "victory!", "victory royale", "game over", "won the game", "has won the game", "wins the game", "winner:", "winner -", "winners:", "1st killer", "1st place", "#1 -", "reward summary", "game ended", "the game has ended", "match over", "you are the last one standing"};
+	/** Sieht aus wie eine Chatnachricht eines Spielers ("<Name> ...", "[Rang] Name: ...")? Dann nie ausloesen. */
+	private static final java.util.regex.Pattern PLAYER_CHAT = java.util.regex.Pattern.compile("^\\s*(\\[[^\\]]{1,24}\\]\\s*)*<?[a-z0-9_]{3,16}>?\\s*(:|»|>>|->)\\s");
+
+	/** Chat- oder Titelzeile pruefen. title = grosser Titel in der Bildschirmmitte (dort stehen viele Siegmeldungen). */
+	public static void ggCheck(String raw, boolean title) {
+		if (raw == null || !ModConfig.isOn("autogg")) return;
+		MinecraftClient mc = MinecraftClient.getInstance();
+		if (mc.player == null || mc.getNetworkHandler() == null || mc.isInSingleplayer()) return; // nur auf Servern
+		String s = raw.toLowerCase(Locale.ROOT).replaceAll("\u00a7.", "").trim();
+		if (s.isEmpty() || s.length() > 160) return;
+		if (!title && (s.startsWith("<") || PLAYER_CHAT.matcher(s).find())) return;
+		String me = mc.player.getName().getString().toLowerCase(Locale.ROOT);
+		if (!title && s.contains(me + ":")) return; // eigene Nachricht
+		boolean end = false;
+		for (String k : GG_END) if (s.contains(k)) { end = true; break; }
+		if (!end) return;
+		long now = System.currentTimeMillis();
+		if (now - lastGg < 20000 || ggAt != 0) return; // pro Spielende nur einmal (Titel + Chat kommen oft zusammen)
+		lastGg = now;
+		ggAt = now + 900; // kurz warten: viele Server sperren den Chat genau im Moment des Spielendes
+	}
+
+	private static void ggTick(MinecraftClient mc) {
+		if (ggAt == 0 || System.currentTimeMillis() < ggAt) return;
+		ggAt = 0;
+		try {
+			if (mc.player == null || mc.getNetworkHandler() == null || !ModConfig.isOn("autogg")) return;
+			String m = ModConfig.GG_MSGS[Math.max(0, Math.min(ModConfig.GG_MSGS.length - 1, ModConfig.autoggMsg))];
+			mc.getNetworkHandler().sendChatMessage(m);
 		} catch (Throwable ignored) {}
 	}
 
@@ -63,6 +88,7 @@ public final class Extras {
 	}
 
 	private static void tick(MinecraftClient mc) {
+		ggTick(mc);
 		try {
 			if (mc.player == null) { wasDead = false; return; }
 			boolean dead = mc.player.getHealth() <= 0f || mc.player.isDead();

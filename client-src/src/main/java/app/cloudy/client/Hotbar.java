@@ -88,7 +88,7 @@ public final class Hotbar {
 	/** Ein sauberes Symbol: dunkle Kontur, sanfter Farbverlauf oben hell / unten dunkel, optional nur links gefuellt (halb). cols = Anzahl gefuellter Spalten. */
 	private static void icon(DrawContext c, int x, int y, String[] b, int col, int cols, int bone) {
 		// Zeilenweise zu Streifen zusammengefasst: wenige fill()-Aufrufe statt eines pro Pixel (weniger Last pro Bild)
-		int out = 0xCC0A0A12, empty = 0x66202030;
+		int out = 0xE6080A12, empty = 0xC0262B3A; // leerer Platz: gut sichtbare dunkle Fuellung statt fast durchsichtig (wirkte wie fehlende Textur)
 		for (int r = 0; r < b.length; r++) {
 			int w = b[r].length(), run = -1;
 			for (int q = 0; q <= w; q++) {
@@ -165,9 +165,15 @@ public final class Hotbar {
 			int ac = 0xFF000000 | ModConfig.lcol(ModConfig.armCol, 8);
 			for (int i = 0; i < 10; i++) icon(c, x0 + i * 9, y0 - 10 - lift, SHIELD8, ac, armor >= i * 2 + 2 ? 8 : armor == i * 2 + 1 ? 4 : 0, 0);
 		}
-		int food = p.getHungerManager().getFoodLevel();
-		int fc = 0xFF000000 | ModConfig.lcol(ModConfig.foodCol, 9);
-		for (int i = 0; i < 10; i++) icon(c, w / 2 + 91 - 8 - i * 9, y0 + 1, FOOD8, fc, food >= i * 2 + 2 ? 8 : food == i * 2 + 1 ? 4 : 0, Ui.mix(fc, 0xFFFFFFFF, 0.6f));
+		int food = Math.max(0, Math.min(20, p.getHungerManager().getFoodLevel()));
+		boolean hungerFx = p.hasStatusEffect(StatusEffects.HUNGER);
+		int fc = hungerFx ? 0xFF7FA23A : 0xFF000000 | ModConfig.lcol(ModConfig.foodCol, 9); // Hunger-Effekt: gruen wie im Original
+		boolean shake = p.getHungerManager().getSaturationLevel() <= 0f && mc.inGameHud != null; // keine Saettigung: Symbole zittern leicht wie im Original
+		long tk = mc.world != null ? mc.world.getTime() : 0;
+		for (int i = 0; i < 10; i++) {
+			int jy = shake && ((tk * 31 + i * 17) % 7 == 0) ? (int) ((tk + i) % 3) - 1 : 0;
+			icon(c, w / 2 + 91 - 8 - i * 9, y0 + 1 + jy, FOOD8, fc, food >= i * 2 + 2 ? 8 : food == i * 2 + 1 ? 4 : 0, Ui.mix(fc, 0xFFFFFFFF, 0.6f));
+		}
 		if (p.isSubmergedInWater() || p.getAir() < p.getMaxAir()) {
 			int air = Math.max(0, p.getAir()), bubbles = (int) Math.ceil(air * 10f / p.getMaxAir());
 			for (int i = 0; i < 10; i++) if (i < bubbles) icon(c, w / 2 + 91 - 8 - i * 9, y0 - 10, BUBBLE8, 0xFF7FD0FF, 8, 0);

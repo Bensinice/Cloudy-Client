@@ -49,7 +49,7 @@ public class CloudyModsScreen extends Screen {
 		};
 	}
 
-	private static boolean hasOptions(ModConfig.Def d) { return d.cat().equals("HUD") || d.id().equals("lyrics") || d.id().equals("sky") || d.id().equals("hotbar") || d.id().equals("wingadj") || d.id().equals("crosshair"); }
+	private static boolean hasOptions(ModConfig.Def d) { return d.cat().equals("HUD") || d.id().equals("lyrics") || d.id().equals("zoom") || d.id().equals("autogg") || d.id().equals("sky") || d.id().equals("hotbar") || d.id().equals("wingadj") || d.id().equals("crosshair"); }
 
 	private void pill(DrawContext c, int mx, int my, int x, int y, int w, int h, String label, boolean on, Runnable run) {
 		boolean hv = Ui.in(mx, my, x, y, w, h) && optId == null;
@@ -135,7 +135,7 @@ public class CloudyModsScreen extends Screen {
 		int ax = px + 12, ay = py + 62, aw = pw - 24, ah = ph - 62 - 34, gap = 8;
 		int cols = Math.max(1, (aw + gap) / 150), cw = (aw - (cols - 1) * gap) / cols, ch = 100;
 		List<ModConfig.Def> list = new ArrayList<>();
-		for (ModConfig.Def d : ModConfig.DEFS) if ((filter.equals("ALL") || d.cat().equals(filter)) && d.name().toLowerCase().contains(query.toLowerCase())) list.add(d);
+		for (ModConfig.Def d : ModConfig.DEFS) if ((filter.equals("ALL") || d.cat().equals(filter)) && (d.name().toLowerCase().contains(query.toLowerCase()) || d.desc().toLowerCase().contains(query.toLowerCase()))) list.add(d);
 		list.sort((a, b) -> Boolean.compare(ModConfig.favs.contains(b.id()), ModConfig.favs.contains(a.id()))); // Favoriten (Stern) immer oben
 		int rows = (list.size() + cols - 1) / cols, total = rows * (ch + gap) - gap;
 		maxScroll = Math.max(0, total - ah);
@@ -149,10 +149,19 @@ public class CloudyModsScreen extends Screen {
 			c.fill(x, y, x + cw, y + ch, hv ? 0x88283760 : 0x66141E3A);
 			c.fill(x, y, x + cw, y + 1, 0x33FFFFFF); c.fill(x, y + ch - 1, x + cw, y + ch, 0x22FFFFFF); c.fill(x, y, x + 1, y + ch, 0x22FFFFFF); c.fill(x + cw - 1, y, x + cw, y + ch, 0x22FFFFFF);
 			var ms = c.getMatrices();
-			ms.push(); ms.translate(x + cw / 2f, y + 14, 0); ms.scale(1.6f, 1.6f, 1f);
-			Ui.ctr(c, abbr(d.id()), 0, 0, on ? 0xFFFFFFFF : 0xFF8794B8);
-			ms.pop();
-			Ui.ctr(c, d.name(), x + cw / 2, y + 40, on ? 0xFFEAF2FF : 0xFFA9B6D6);
+			{ // Titel: verstaendlicher Name, passend skaliert; darunter die Beschreibung in hoechstens zwei Zeilen
+				float tsc = Math.min(1.3f, (cw - 34) / (float) Math.max(1, Ui.w(d.name())));
+				ms.push(); ms.translate(x + cw / 2f, y + 12, 0); ms.scale(tsc, tsc, 1f);
+				Ui.ctr(c, d.name(), 0, 0, on ? 0xFFFFFFFF : 0xFFB3BEDB);
+				ms.pop();
+				var lines = this.textRenderer.wrapLines(Ui.t(d.desc()), cw - 16);
+				int maxL = hasOptions(d) ? 2 : 3;
+				for (int li = 0; li < Math.min(maxL, lines.size()); li++) {
+					var ln = lines.get(li);
+					int lw = this.textRenderer.getWidth(ln);
+					c.drawText(this.textRenderer, ln, x + (cw - lw) / 2, y + 30 + li * 10, on ? 0xFFC9D4EE : 0xFF8794B8, false);
+				}
+			}
 			{ Integer hk = ModConfig.keys.get(d.id()); if (hk != null) Ui.txt(c, "[" + ModConfig.keyName(hk) + "]", x + 6, y + 6, 0xFF9FB6E8); }
 			{ // Favoriten-Stern oben rechts
 				boolean fav = ModConfig.favs.contains(d.id());
@@ -177,7 +186,7 @@ public class CloudyModsScreen extends Screen {
 				c.fill(x + cw - 21, oy + 2, x + cw - 20, oy + 18, 0x22FFFFFF);
 				Ui.sp(c, "OPTIONS", x + (cw - 20) / 2, oy + 6, 0xFFFFFFFF);
 				for (int k = 0; k < 3; k++) { c.fill(x + cw - 17, oy + 6 + k * 4, x + cw - 4, oy + 7 + k * 4, 0xFFC8D4F0); c.fill(x + cw - 14 + k * 4, oy + 5 + k * 4, x + cw - 11 + k * 4, oy + 8 + k * 4, 0xFFFFFFFF); }
-				if (my >= ay && my < ay + ah) hits.add(new Hit(x + 1, oy, cw - 2, 20, () -> { optId = dd.id(); if (!dd.id().equals("lyrics") && !dd.id().equals("sky") && !dd.id().equals("hotbar") && !dd.id().equals("wingadj") && !dd.id().equals("crosshair")) HudEditorScreen.ensureOne(dd.id(), this.width, this.height); }));
+				if (my >= ay && my < ay + ah) hits.add(new Hit(x + 1, oy, cw - 2, 20, () -> { optId = dd.id(); if (dd.id().equals("lyrics")) { optId = null; if (this.client != null) this.client.setScreen(new SpotifyScreen(this, 2)); return; } if (!dd.id().equals("zoom") && !dd.id().equals("autogg") && !dd.id().equals("sky") && !dd.id().equals("hotbar") && !dd.id().equals("wingadj") && !dd.id().equals("crosshair")) HudEditorScreen.ensureOne(dd.id(), this.width, this.height); }));
 			}
 		}
 		c.disableScissor();
@@ -245,7 +254,8 @@ public class CloudyModsScreen extends Screen {
 	private void modal(DrawContext c, int mx, int my) {
 		c.fill(0, 0, (int) (this.width / uiF), (int) (this.height / uiF), 0x99081022);
 		if (pickT >= 0) { pickerModal(c, mx, my); return; }
-		if (optId.equals("lyrics")) { lyricsModal(c, mx, my); return; }
+		if (optId.equals("zoom")) { zoomModal(c, mx, my); return; }
+		if (optId.equals("autogg")) { ggModal(c, mx, my); return; }
 		if (optId.equals("sky")) { skyModal(c, mx, my); return; }
 		if (optId.equals("hotbar")) { hotbarModal(c, mx, my); return; }
 		if (optId.equals("crosshair")) { crossModal(c, mx, my); return; }
@@ -557,32 +567,21 @@ public class CloudyModsScreen extends Screen {
 		}
 	}
 
-	/** Optionen der Lyrics-Mod: Position, Zeit, Wortdauer, Farben, Schrift, Effekt. */
-	private void lyricsModal(DrawContext c, int mx, int my) {
-		int w = 300, rows = 12, h = 34 + rows * 23 + 34;
+	/** Kleines Optionsfenster mit Zeilen und den Knoepfen RESET/CLOSE (gemeinsam fuer Zoom und AutoGG). */
+	private int[] smallModal(DrawContext c, String title, int rows) {
+		int w = 300, h = 34 + rows * 23 + 34;
 		int x = (int) (this.width / uiF) / 2 - w / 2, y = Math.max(4, (int) (this.height / uiF) / 2 - h / 2);
 		shadow(c, x, y, w, h);
 		c.fill(x, y, x + w, y + h, 0xFF0A1226);
 		c.fill(x, y, x + w, y + 2, Theme.accent);
-		Ui.txt(c, "Spotify lyrics options", x + 12, y + 12, 0xFFFFFFFF);
-		int rx = x + 10, rw = w - 20, ry = y + 30;
-		mrow(c, mx, my, rx, ry, rw, "Position", ModConfig.LPOS[ModConfig.lyricsMode], 0, () -> { ModConfig.lyricsMode = (ModConfig.lyricsMode + 1) % ModConfig.LPOS.length; ModConfig.save(); }); ry += 23;
-		mrow(c, mx, my, rx, ry, rw, "Timing (click = later)", String.format("%+.2f s", ModConfig.lyricsOffset / 1000f), 0, () -> { ModConfig.lyricsOffset -= 250; if (ModConfig.lyricsOffset < -5000) ModConfig.lyricsOffset = 2000; ModConfig.save(); }); ry += 23;
-		mrow(c, mx, my, rx, ry, rw, "Word duration", String.format("%.1f s", ModConfig.lyricsLife / 1000f), 0, () -> { ModConfig.lyricsLife += 400; if (ModConfig.lyricsLife > 4000) ModConfig.lyricsLife = 800; ModConfig.save(); }); ry += 23;
-		mrow(c, mx, my, rx, ry, rw, "Color: current word", ModConfig.colName(ModConfig.lyricsCur, 0), ModConfig.lcol(ModConfig.lyricsCur, 0), () -> openPick(0)); ry += 23;
-		mrow(c, mx, my, rx, ry, rw, "Color: already sung", ModConfig.colName(ModConfig.lyricsOld, 1), ModConfig.lcol(ModConfig.lyricsOld, 1), () -> openPick(1)); ry += 23;
-		mrow(c, mx, my, rx, ry, rw, "Font", ModConfig.LFONT[ModConfig.lyricsFont], 0, () -> { ModConfig.lyricsFont = (ModConfig.lyricsFont + 1) % ModConfig.LFONT.length; ModConfig.save(); }); ry += 23;
-		mrow(c, mx, my, rx, ry, rw, "Effect", ModConfig.LFX[ModConfig.lyricsFx], 0, () -> { ModConfig.lyricsFx = (ModConfig.lyricsFx + 1) % ModConfig.LFX.length; ModConfig.save(); }); ry += 23;
-		mrow(c, mx, my, rx, ry, rw, "Motion (words in world)", ModConfig.LMOTION[ModConfig.lyricsMotion], 0, () -> { ModConfig.lyricsMotion = (ModConfig.lyricsMotion + 1) % ModConfig.LMOTION.length; ModConfig.save(); }); ry += 23;
-		mrow(c, mx, my, rx, ry, rw, "Transparency (opacity)", ModConfig.lyricsAlpha + "%", 0, () -> { ModConfig.lyricsAlpha -= 20; if (ModConfig.lyricsAlpha < 20) ModConfig.lyricsAlpha = 100; ModConfig.save(); }); ry += 23;
-		mrow(c, mx, my, rx, ry, rw, "Lyrics size", ModConfig.lyricsSize + "%", 0, () -> { int[] z = {60, 80, 100, 125, 150, 200}; int k = 0; for (int i = 0; i < z.length; i++) if (z[i] <= ModConfig.lyricsSize) k = i; ModConfig.lyricsSize = z[(k + 1) % z.length]; ModConfig.save(); }); ry += 23;
-		mrow(c, mx, my, rx, ry, rw, "Song card (move in HUD editor)", ModConfig.lyricsCard ? "ON" : "OFF", 0, () -> { ModConfig.lyricsCard = !ModConfig.lyricsCard; ModConfig.save(); }); ry += 23;
-		// Vorschau des Stils
-		c.fill(rx, ry, rx + rw, ry + 20, 0xFF0E1630);
-		Lyrics.sample(c, rx + rw / 2, ry + 10);
+		Ui.txt(c, title, x + 12, y + 12, 0xFFFFFFFF);
+		return new int[] {x, y, w, h};
+	}
+
+	private void modalButtons(DrawContext c, int mx, int my, int x, int y, int w, int h, Runnable reset) {
 		int by = y + h - 28, bw = (w - 20 - 6) / 2;
 		String[] labels = {"RESET", "CLOSE"};
-		Runnable[] runs = {() -> ModConfig.lyricsReset(), () -> { optId = null; ModConfig.save(); }};
+		Runnable[] runs = {reset, () -> { optId = null; ModConfig.save(); }};
 		for (int i = 0; i < 2; i++) {
 			int bx = x + 10 + i * (bw + 6);
 			boolean hv = Ui.in(mx, my, bx, by, bw, 20);
@@ -590,6 +589,28 @@ public class CloudyModsScreen extends Screen {
 			Ui.sp(c, labels[i], bx + bw / 2, by + 6, i == 1 ? 0xFF0B1226 : 0xFFFFFFFF);
 			mhits.add(new Hit(bx, by, bw, 20, runs[i]));
 		}
+	}
+
+	/** Zoom: halten/umschalten, Stufe, ruhigere Maus. */
+	private void zoomModal(DrawContext c, int mx, int my) {
+		int[] r = smallModal(c, "Zoom options", 4);
+		int rx = r[0] + 10, rw = r[2] - 20, ry = r[1] + 30;
+		mrow(c, mx, my, rx, ry, rw, "Key mode", ModConfig.zoomHold ? "Hold key" : "Press to toggle", 0, () -> { ModConfig.zoomHold = !ModConfig.zoomHold; ModConfig.save(); }); ry += 23;
+		mrow(c, mx, my, rx, ry, rw, "Zoom level (scroll while zooming)", String.format("%.1fx", ModConfig.zoomLevel), 0, () -> { float[] z = {2f, 3f, 4f, 6f, 10f}; int k = 0; for (int i = 0; i < z.length; i++) if (z[i] <= ModConfig.zoomLevel + 0.01f) k = i; ModConfig.zoomLevel = z[(k + 1) % z.length]; ModConfig.save(); }); ry += 23;
+		mrow(c, mx, my, rx, ry, rw, "Calmer mouse while zoomed", ModConfig.zoomSens ? "ON" : "OFF", 0, () -> { ModConfig.zoomSens = !ModConfig.zoomSens; ModConfig.save(); }); ry += 23;
+		c.fill(rx, ry, rx + rw, ry + 20, 0xFF0E1630);
+		Ui.txt(c, "Key: change it in Minecraft > Controls > Cloudy Client", rx + 8, ry + 6, 0xFF8794B8);
+		modalButtons(c, mx, my, r[0], r[1], r[2], r[3], () -> { ModConfig.zoomHold = true; ModConfig.zoomLevel = 3f; ModConfig.zoomSens = true; ModConfig.save(); });
+	}
+
+	/** AutoGG: welche Nachricht gesendet wird. */
+	private void ggModal(DrawContext c, int mx, int my) {
+		int[] r = smallModal(c, "Auto GG options", 2);
+		int rx = r[0] + 10, rw = r[2] - 20, ry = r[1] + 30;
+		mrow(c, mx, my, rx, ry, rw, "Message", ModConfig.GG_MSGS[ModConfig.autoggMsg], 0, () -> { ModConfig.autoggMsg = (ModConfig.autoggMsg + 1) % ModConfig.GG_MSGS.length; ModConfig.save(); }); ry += 23;
+		c.fill(rx, ry, rx + rw, ry + 20, 0xFF0E1630);
+		Ui.txt(c, "Sent once when a game really ends, never on normal chat.", rx + 8, ry + 6, 0xFF8794B8);
+		modalButtons(c, mx, my, r[0], r[1], r[2], r[3], () -> { ModConfig.autoggMsg = 0; ModConfig.save(); });
 	}
 
 	private void poll(int mx, int my) {

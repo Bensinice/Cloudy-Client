@@ -335,8 +335,9 @@ app.post('/cos/reg', auth(async (req, res, me) => {
   for (const k of Object.keys(COS)) if (COS[k].u === me.name_key && k !== mc) delete COS[k];
   COS[mc] = { u: me.name_key, equip: eq, t: Date.now() }; await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['cos', JSON.stringify(COS)]); res.json({ ok: true });
 }));
-app.post('/cos/get', auth(async (req, res) => {
-  const out = {}; for (const n of (Array.isArray((req.body || {}).names) ? req.body.names : []).slice(0, 80)) { const k = String(n).toLowerCase(), e = COS[k]; if (!e) continue; const tg = tagsOf(e.u).concat(TAGLIVE(e.u)); if (Object.keys(e.equip).length || tg.length) out[k] = { ...e.equip, tg }; }
+app.post('/cos/get', auth(async (req, res, me) => {
+  const now = Date.now(); for (const k of Object.keys(COS)) if (COS[k].u === me.name_key) COS[k].t = now; // Herzschlag: wer fragt, spielt gerade mit Cloudy (Launcher fragt alle 6 s, solange Minecraft laeuft)
+  const out = {}; for (const n of (Array.isArray((req.body || {}).names) ? req.body.names : []).slice(0, 80)) { const k = String(n).toLowerCase(), e = COS[k]; if (!e) continue; const tg = tagsOf(e.u).concat(TAGLIVE(e.u)), cl = now - (e.t || 0) < 90000 ? 1 : 0; if (Object.keys(e.equip).length || tg.length || cl) out[k] = { ...e.equip, tg, cl }; }
   res.json({ ok: true, players: out });
 }));
 // ---- Quests & Cloudy Stars: Fortschritt, Ziele und Belohnungen entscheidet nur der Server ----
