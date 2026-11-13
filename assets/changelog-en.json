@@ -1,4 +1,12 @@
 {
+  "0.9.110": [
+    "Admin: email & Stripe in a clear two-column layout with guides (What is SMTP?, Gmail app password, Stripe) and clickable links",
+    "Smaller download: keyboard sounds compressed (3.5 → 1.2 MB), animations and blur pause in the background",
+    "Lyrics: words no longer overlap when they turn bold – clean word spacing in lines and the song card",
+    "Lyrics (2D words): motion now runs smoothly at full frame rate instead of stuttering, camera interpolated per frame",
+    "Lyrics (words in the world): extra fallback and no permanent shutdown after a single error",
+    "Test email: longer timeout so it no longer falsely shows \"account server cannot be reached\""
+  ],
   "0.9.103": [
     "New logo top left: the classic white cloud without the dark frame – with a plus inside when you have Cloudy+"
   ],

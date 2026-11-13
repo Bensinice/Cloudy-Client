@@ -1,5 +1,19 @@
 [
  {
+  "v": "0.9.110",
+  "date": "2026-11-13",
+  "added": [
+   "Admin: E-Mail & Stripe übersichtlich in zwei Spalten, mit Anleitung (Was ist SMTP?, Gmail-App-Passwort, Stripe) und anklickbaren Links",
+   "Kleinere Download-Größe: Tastatur-Sounds komprimiert (3,5 → 1,2 MB), im Hintergrund pausieren Animationen und Unschärfe"
+  ],
+  "fixed": [
+   "Lyrics: Wörter überlappten sich nicht mehr, wenn sie fett werden – sauberer Wortabstand in Zeile und Song-Karte",
+   "Lyrics (2D-Wörter): Bewegung läuft jetzt flüssig mit voller Bildrate statt ruckelig, Kamera wird pro Bild interpoliert",
+   "Lyrics (Wörter in der Welt): zusätzlicher Rückfall und kein dauerhaftes Abschalten mehr nach einem einzelnen Fehler",
+   "Test-E-Mail: längeres Zeitlimit, damit nicht fälschlich „Konto-Server nicht erreichbar“ erscheint"
+  ]
+ },
+ {
   "v": "0.9.103",
   "date": "2026-11-07",
   "added": [
