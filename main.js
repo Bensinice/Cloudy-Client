@@ -2470,15 +2470,25 @@ ipcMain.handle('mediaKey', async (_e, k) => { // erst Spotify direkt (Premium + 
 // ---- Chat-Befehle im Spiel (/pause /resume /skip /prev): der Client schreibt sie in eine Datei, hier werden sie ausgeführt ----
 const cmdFile = path.join(app.getPath('userData'), 'cloudy-cmd.txt'); let cmdSeen = 0;
 // Spotify-Menue im Spiel (Taste I): der Launcher schreibt Playlists + Meldungen in eine Datei, die Mod schreibt Befehle in cmdFile (pause/resume/skip/prev/play:<uri>/vol:<0-100>)
-const spListFile = path.join(app.getPath('userData'), 'cloudy-spotify.json'); let spListAt = 0, spMsg = { t: 0, text: '' };
+const spListFile = path.join(app.getPath('userData'), 'cloudy-spotify.json'); let spListAt = 0, spMsg = { t: 0, text: '' }, spTr = null; // spTr: Songs der im Spiel geoeffneten Playlist (/playlist, Cloudify)
 async function spWriteList(force) {
-  if (!mcProc && !force) return; if (!spLoad().refresh) { try { fs.writeFileSync(spListFile, JSON.stringify({ ts: Date.now(), connected: false, playlists: [], msg: spMsg })); } catch {} return; }
+  if (!mcProc && !force) return; if (!spLoad().refresh) { try { fs.writeFileSync(spListFile, JSON.stringify({ ts: Date.now(), connected: false, playlists: [], msg: spMsg, tracks: spTr })); } catch {} return; }
   if (!force && Date.now() - spListAt < 45000) return; spListAt = Date.now();
   const r = await spApi.playlists().catch(() => null), pls = r && r.ok ? r.playlists.slice(0, 100).map(p => ({ name: p.name, uri: p.uri, total: p.total == null ? -1 : p.total })) : [];
-  try { fs.writeFileSync(spListFile, JSON.stringify({ ts: Date.now(), connected: true, error: r && r.ok ? '' : (r && r.error) || 'Spotify nicht erreichbar.', playlists: pls, msg: spMsg })); } catch {}
+  try { fs.writeFileSync(spListFile, JSON.stringify({ ts: Date.now(), connected: true, error: r && r.ok ? '' : (r && r.error) || 'Spotify nicht erreichbar.', playlists: pls, msg: spMsg, tracks: spTr })); } catch {}
 }
 setInterval(() => { spWriteList(false).catch(() => {}); }, 5000);
 async function spotifyControl(cmd) {
+  let m;
+  if ((m = /^tracks:(liked|[A-Za-z0-9]{10,40})$/.exec(cmd))) { // Songs einer Playlist fuer das Spiel holen
+    const r = await spApi.tracks(m[1]).catch(e => ({ ok: false, error: String(e && e.message || e) }));
+    spTr = { id: m[1], t: Date.now(), ok: !!(r && r.ok), error: r && r.ok ? '' : (r && r.error) || 'Spotify nicht erreichbar.', total: r && r.total || 0, items: r && r.ok ? r.tracks.slice(0, 300).map(t => ({ n: t.name, a: t.artist, u: t.uri })) : [] };
+    spListAt = 0; await spWriteList(true).catch(() => {}); return;
+  }
+  if ((m = /^playtrack:(spotify:(?:playlist|album):[A-Za-z0-9]+),(spotify:track:[A-Za-z0-9]+)$/.exec(cmd))) { // einen Song einer Playlist abspielen (Playlist laeuft weiter)
+    const r = await spApi.play({ context: m[1], uri: m[2] }).catch(() => null);
+    spMsg = { t: Date.now(), text: r && r.ok ? 'Playing' : (r && r.error) || 'Spotify nicht erreichbar.', ok: !!(r && r.ok) }; spListAt = 0; spWriteList(true).catch(() => {}); spCache = { t: 0, v: null }; return;
+  }
   if (/^play:spotify:(playlist|album|artist):[A-Za-z0-9]+$/.test(cmd) || /^vol:\d{1,3}$/.test(cmd)) { // neue Befehle aus dem Spiel
     const r = cmd.startsWith('vol:') ? await spApi.volume(+cmd.slice(4)).catch(() => null) : await spApi.play({ context: cmd.slice(5) }).catch(() => null);
     spMsg = { t: Date.now(), text: r && r.ok ? (cmd.startsWith('vol:') ? 'Volume set' : 'Playing') : (r && r.error) || 'Spotify nicht erreichbar.', ok: !!(r && r.ok) }; spListAt = 0; spWriteList(true).catch(() => {}); spCache = { t: 0, v: null }; return;
