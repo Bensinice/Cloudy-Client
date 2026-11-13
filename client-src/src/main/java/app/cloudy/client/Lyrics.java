@@ -33,6 +33,8 @@ public final class Lyrics {
 	private static int shownLine = -2;
 	private static long lastWorldOk;
 	private static boolean worldFailed;
+	private static int worldFails;
+	private static long worldRetryAt;
 	private static float smoothYaw = Float.NaN;
 	private static long lineSince;
 	private static long durMs;
@@ -41,7 +43,7 @@ public final class Lyrics {
 	private static int coverN;
 
 	/** F7: Lyrics-Datei sofort neu einlesen und Anzeige zurücksetzen. */
-	public static void reload() { mtime = -1; loadedAt = 0; shownLine = -2; worldFailed = false; smoothYaw = Float.NaN; lineSince = 0; }
+	public static void reload() { mtime = -1; loadedAt = 0; shownLine = -2; worldFailed = false; worldFails = 0; worldRetryAt = 0; smoothYaw = Float.NaN; lineSince = 0; }
 
 	private static void load() {
 		long now = System.currentTimeMillis();
@@ -208,6 +210,8 @@ public final class Lyrics {
 	}
 	private static final java.util.HashMap<Integer, Integer> FW = new java.util.HashMap<>();
 	private static final java.util.HashMap<Integer, net.minecraft.text.Text> FT = new java.util.HashMap<>();
+	/** Breite eines Wortes in Fett (gesungene Woerter sind fett und breiter als normale). */
+	private static int bw(String s) { return MinecraftClient.getInstance().textRenderer.getWidth(ft(s).copy().formatted(net.minecraft.util.Formatting.BOLD)); }
 	private static int fw(String s) {
 		if (s.length() != 1) return MinecraftClient.getInstance().textRenderer.getWidth(ft(s));
 		int k = ModConfig.lyricsFont * 65536 + s.charAt(0);
@@ -240,7 +244,7 @@ public final class Lyrics {
 	}
 
 	/** Wort mit Buchstabenabstand in Grossbuchstaben, mit dem gewaehlten Effekt (Schein, Schatten, Kontur, keiner). */
-	private static void tracked(DrawContext c, String s, int cx, int cy, float sc, int rgb, int alpha, boolean cur) {
+	private static void tracked(DrawContext c, String s, float cx, float cy, float sc, int rgb, int alpha, boolean cur) {
 		alpha = A(alpha);
 		if (alpha < 5 || s.isEmpty()) return;
 		float gap = ModConfig.lyricsFont == 0 ? 1.0f : 1.6f, w = 0;
@@ -256,8 +260,8 @@ public final class Lyrics {
 		float u = 1f / Math.max(0.5f, sc); // Versatz in Bildschirmpixeln, nicht in Textpixeln: so bleibt der Schein bei grosser Schrift sauber
 		switch (ModConfig.lyricsFx) {
 			case 0 -> { // Schein: weicher Hof in der Textfarbe, feine Schritte
-				int ga = (cur ? al * 2 / 7 : al / 6) << 24 | (rgb & 0xFFFFFF);
-				for (int k = 1; k <= 1; k++) for (int[] d : new int[][] {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {1, 1}, {-1, 1}, {1, -1}}) gl(c, s, x, d[0] * k * 1.1f * u, d[1] * k * 1.1f * u, ga);
+				int ga = (cur ? al / 5 : al / 9) << 24 | (rgb & 0xFFFFFF);
+				for (int[] d : new int[][] {{-1, 0}, {1, 0}, {0, -1}, {0, 1}}) gl(c, s, x, d[0] * 0.9f * u, d[1] * 0.9f * u, ga);
 			}
 			case 1 -> { gl(c, s, x, 1.5f * u, 1.5f * u, (al * 6 / 10) << 24); gl(c, s, x, 0.8f * u, 0.8f * u, (al * 6 / 10) << 24); }
 			case 2 -> { int oa = al * 8 / 10 << 24 | 0x0A1020; for (int[] d : new int[][] {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {1, 1}, {-1, 1}, {1, -1}}) gl(c, s, x, d[0] * 1.1f * u, d[1] * 1.1f * u, oa); }
@@ -420,9 +424,14 @@ public final class Lyrics {
 			for (Ph p : phs) if (!p.title && p.retired == 0) p.retired = now;
 			if (idx >= 0) spawn(mc, idx, now);
 		}
-		MatrixStack ms = ctx.matrixStack();
-		if (ms == null || ctx.camera() == null) { worldFailed = true; return; }
-		try { drawPhrases(mc, ctx, ms, now); } catch (Throwable t) { worldFailed = true; CloudyClient.LOG.warn("Lyrics 3D nicht verfuegbar, nutze 2D", t); }
+		if (now < worldRetryAt) return;
+		MatrixStack ms = null;
+		try { ms = ctx.matrixStack(); } catch (Throwable ignored) {}
+		if (ms == null) { // neuere Fabric-Versionen liefern hier nichts: Matrix selbst aus der Kamera-Matrix bauen
+			try { Object pm = WorldRenderContext.class.getMethod("positionMatrix").invoke(ctx); if (pm instanceof Matrix4f m4) { ms = new MatrixStack(); ms.multiplyPositionMatrix(m4); } } catch (Throwable ignored) {}
+		}
+		if (ms == null || ctx.camera() == null) { worldFails++; worldRetryAt = now + 2000; if (worldFails >= 6) worldFailed = true; return; }
+		try { drawPhrases(mc, ctx, ms, now); worldFails = 0; } catch (Throwable t) { worldFails++; worldRetryAt = now + 1500; CloudyClient.LOG.warn("Lyrics 3D Fehler (" + worldFails + ")", t); if (worldFails >= 6) { worldFailed = true; CloudyClient.LOG.warn("Lyrics 3D nicht verfuegbar, nutze 2D"); } }
 	}
 
 	private static float ease(float t) { t = Math.max(0f, Math.min(1f, t)); return 1f - (1f - t) * (1f - t) * (1f - t); }
@@ -492,25 +501,26 @@ public final class Lyrics {
 		} else if (flat) {
 			updateWords(mc, idx, now);
 			float yaw = mc.player.getYaw(), pitch = mc.player.getPitch();
+			if (mc.options.getPerspective().isFirstPerson() && mc.gameRenderer.getCamera() != null) { yaw = mc.gameRenderer.getCamera().getYaw(); pitch = mc.gameRenderer.getCamera().getPitch(); } // pro Bild interpoliert statt nur pro Tick: gleichmaessige Bewegung
 			double vf = Math.toRadians(mc.options.getFov().getValue()), tv = Math.tan(vf / 2), th = tv * ww / (double) wh;
 			float base = Math.max(1.0f, wh / 300f) * SZ();
 			for (W w : words) {
 				float dyaw = ((w.yaw - yaw + 540f) % 360f) - 180f, dp = w.pitch - pitch;
 				if (Math.abs(dyaw) > 80 || Math.abs(dp) > 80) continue;
-				int sx = (int) (ww / 2.0 + Math.tan(Math.toRadians(dyaw)) / th * ww / 2.0);
-				int sy = (int) (wh / 2.0 + Math.tan(Math.toRadians(dp)) / tv * wh / 2.0);
+				float sx = (float) (ww / 2.0 + Math.tan(Math.toRadians(dyaw)) / th * ww / 2.0);
+				float sy = (float) (wh / 2.0 + Math.tan(Math.toRadians(dp)) / tv * wh / 2.0);
 				long age = now - w.t0;
 				int mo = ModConfig.lyricsMotion, hs = (w.t.hashCode() & 1) == 0 ? 1 : -1;
 				float ft = Math.max(0f, age - 350f) / 1000f, ex = 1f;
 				switch (mo) {
-					case 0 -> { sy -= (int) (age * wh * 0.00005f + Math.sin(age / 420.0 + w.sz * 5) * wh * 0.006); sx += (int) (Math.cos(age / 560.0 + w.sz * 3) * wh * 0.005); } // Schweben
-					case 1 -> sy += (int) (ft * ft * wh * 0.45f); // Fallen
-					case 2 -> sy -= (int) (age * age / 1.0e6 * wh * 0.07f); // Aufsteigen
-					case 3 -> { sx += (int) (hs * age * wh * 0.00011f); sy += (int) (Math.sin(age / 500.0) * wh * 0.01); } // Treiben
+					case 0 -> { sy -= (float) (age * wh * 0.00005f + Math.sin(age / 420.0 + w.sz * 5) * wh * 0.006); sx += (float) (Math.cos(age / 560.0 + w.sz * 3) * wh * 0.005); } // Schweben
+					case 1 -> sy += (float) (ft * ft * wh * 0.45f); // Fallen
+					case 2 -> sy -= (float) (age * age / 1.0e6 * wh * 0.07f); // Aufsteigen
+					case 3 -> { sx += (float) (hs * age * wh * 0.00011f); sy += (float) (Math.sin(age / 500.0) * wh * 0.01); } // Treiben
 					case 4 -> ex = 1f + 0.55f * (float) (Math.exp(-age / 170.0) * Math.cos(age / 55.0)); // Aufploppen mit Nachschwingen
-					case 5 -> { sy += (int) (Math.sin(age / 190.0 + sx * 0.02) * wh * 0.025); sx += (int) (Math.cos(age / 260.0) * wh * 0.008); } // Welle
-					case 6 -> sx += (int) (Math.sin(age * 0.11) * Math.exp(-age / 450.0) * wh * 0.03); // Wackeln
-					default -> { ex = 1f + 1.5f * (float) Math.exp(-age / 130.0); sy += (int) (Math.exp(-age / 90.0) * wh * 0.05); } // Einschlag
+					case 5 -> { sy += (float) (Math.sin(age / 190.0 + sx * 0.02) * wh * 0.025); sx += (float) (Math.cos(age / 260.0) * wh * 0.008); } // Welle
+					case 6 -> sx += (float) (Math.sin(age * 0.11) * Math.exp(-age / 450.0) * wh * 0.03); // Wackeln
+					default -> { ex = 1f + 1.5f * (float) Math.exp(-age / 130.0); sy += (float) (Math.exp(-age / 90.0) * wh * 0.05); } // Einschlag
 				}
 				int life = ModConfig.lyricsLife;
 				float in = Math.min(1f, age / 200f); in = 1f - (1f - in) * (1f - in);
@@ -614,8 +624,11 @@ public final class Lyrics {
 		var tr = MinecraftClient.getInstance().textRenderer;
 		sc *= SZ(); alpha = A(alpha);
 		boolean active = align == 0 || align == 3, left = align == 1 || align == 3;
-		while (true) { int tw = 0; for (String w : ws) tw += fw(w) + fw(" "); if (tw * sc <= maxW || sc < 0.7f) break; sc -= 0.1f; }
-		int tot = 0; for (String w : ws) tot += fw(w) + fw(" ");
+		int sp = Math.max(fw(" "), 4) + 1; // feste Wortluecke: die Schrift rundet Leerzeichen sonst auf fast 0
+		int[] wb = new int[ws.length]; int tot = 0;
+		for (int i = 0; i < ws.length; i++) { wb[i] = Math.max(fw(ws[i]), bw(ws[i])); tot += wb[i] + sp; } // Platz fuer die fette Form: kein Springen und kein Ueberlappen
+		tot -= sp;
+		while (tot * sc > maxW && sc >= 0.7f) sc -= 0.1f;
 		long[] st = active ? starts(idx, ws) : null;
 		long p = pos();
 		var ms = c.getMatrices();
@@ -623,13 +636,14 @@ public final class Lyrics {
 		ms.translate(left ? ax : ax - tot * sc / 2f, y, 0);
 		ms.scale(sc, sc, 1f);
 		int x = 0, al = Math.max(0, Math.min(255, alpha)), cur = ModConfig.lcol(ModConfig.lyricsCur, 0), old = ModConfig.lcol(ModConfig.lyricsOld, 1);
+		int dim = Ui.mix(0xFF000000 | old, 0xFF5A6A88, active ? 0.55f : 0.35f) & 0xFFFFFF;
 		for (int i = 0; i < ws.length; i++) {
-			boolean sung = active ? st[i] <= p : false;
-			int rgb = active ? (sung ? cur : Ui.mix(0xFF000000 | old, 0xFF5A6A88, 0.55f) & 0xFFFFFF) : Ui.mix(0xFF000000 | old, 0xFF5A6A88, 0.35f) & 0xFFFFFF;
-			var t = sung ? ft(ws[i]).copy().formatted(net.minecraft.util.Formatting.BOLD) : ft(ws[i]);
+			float k = active ? ease((p - st[i]) / 200f) : 0f; // weich einfaerben statt hart umschalten
+			int rgb = k <= 0f ? dim : Ui.mix(0xFF000000 | dim, 0xFF000000 | cur, k) & 0xFFFFFF;
+			var t = k > 0f ? ft(ws[i]).copy().formatted(net.minecraft.util.Formatting.BOLD) : ft(ws[i]);
 			if (ModConfig.lyricsFx != 3) c.drawText(tr, t, x + 1, 1, (al * 6 / 10) << 24, false);
 			c.drawText(tr, t, x, 0, al << 24 | rgb, false);
-			x += fw(ws[i]) + fw(" ");
+			x += wb[i] + sp;
 		}
 		ms.pop();
 	}
@@ -659,7 +673,7 @@ public final class Lyrics {
 		int cx = 1, ly = 44;
 		for (int i = 0; i < ws.length; i++) {
 			boolean sung = i < sungN;
-			int wpx = Ui.w(ws[i]) + Math.max(3, Ui.w("a") / 2 + 2);
+			int wpx = Math.max(Ui.w(ws[i]), tr.getWidth(Ui.t(ws[i]).copy().formatted(net.minecraft.util.Formatting.BOLD))) + Math.max(3, Ui.w("a") / 2 + 2);
 			if (cx + wpx > cw + 2 && cx > 1) { cx = 1; ly += 11; }
 			c.drawText(tr, sung ? Ui.t(ws[i]).copy().formatted(net.minecraft.util.Formatting.BOLD) : Ui.t(ws[i]), cx, ly, fa(sung ? (0xFF000000 | ModConfig.lcol(ModConfig.lyricsCur, 0)) : 0xFF7F8CA3), true);
 			cx += wpx;
