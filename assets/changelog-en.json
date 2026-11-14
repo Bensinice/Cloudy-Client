@@ -1,4 +1,10 @@
 {
+  "0.9.115": [
+    "Skybox \"Cloudy Dusk\": a painted evening sky instead of the Minecraft sky (Cloudy Mods → Skybox or Cloudify → Skies)",
+    "Volumetric clouds: soft fluffy 3D clouds drifting in the wind, colored by time of day; amount adjustable",
+    "Lyrics \"Only in the sky\" now look like part of the sky: fixed in the sky, no fog",
+    "Calmer mouse while zooming now works"
+  ],
   "0.9.114": [
     "3D lyrics no longer overlap: new lines move above or below lines that are still visible",
     "Capes: movement is now per player – before, all capes (also other players\u2019) moved with your own camera/movement; now they swing when walking, falling, strafing and lag a little when turning"

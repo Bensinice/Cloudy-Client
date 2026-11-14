@@ -1,5 +1,17 @@
 [
  {
+  "v": "0.9.115",
+  "date": "2026-11-14",
+  "added": [
+   "Skybox „Cloudy Dusk“: echter gemalter Abendhimmel statt des Minecraft-Himmels (Cloudy Mods → Skybox oder Cloudify → Skies), Nebel passt sich der Horizontfarbe an",
+   "Volumetrische Wolken: weiche, aufgetürmte 3D-Wolken, die im Wind treiben, oben hell und unten schattig, Farbe nach Tageszeit; Menge einstellbar (Cloudify → Skies)",
+   "Lyrics „Only in the sky“ wirken jetzt wie ein Teil des Himmels: fest am Himmel, wandern beim Laufen nicht mit, ohne Nebel"
+  ],
+  "fixed": [
+   "Ruhigere Maus beim Zoomen funktioniert jetzt (war nicht aktiviert)"
+  ]
+ },
+ {
   "v": "0.9.114",
   "date": "2026-11-14",
   "fixed": [
