@@ -857,7 +857,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.122'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.123'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1354,7 +1354,7 @@ ipcMain.handle('authDelete', async (_e, { pass }) => {
 const lockMsgL = u => { if (!u || u.admin) return ''; if (u.paused) return 'Konto vorübergehend deaktiviert.'; if (u.banned && (!u.banUntil || u.banUntil > Date.now())) { const r = u.banReason ? ': ' + u.banReason : ''; if (!u.banUntil) return 'Konto dauerhaft gesperrt' + r; const m = Math.ceil((u.banUntil - Date.now()) / 60000); return 'Konto gesperrt für noch ' + (m >= 1440 ? Math.ceil(m / 1440) + ' Tag(e)' : m >= 60 ? Math.ceil(m / 60) + ' Std.' : m + ' Min.') + r; } return ''; };
 const adminOnly = () => { const u = curRec(); return u && u.admin; };
 ipcMain.handle('authList', async () => srvCfg() ? (adminOnly() ? (await srvCall('/admin/users', {}, srvTok).catch(() => ({}))).users?.map(u => u.name) || [] : []) : adminOnly() ? Object.values(readAuth().users).filter(u => !u.admin).map(u => u.name) : []);
-ipcMain.handle('authListFull', async () => srvCfg() ? (adminOnly() ? ((await srvCall('/admin/users', {}, srvTok).catch(() => ({}))).users || []).map(u => ({ name: u.name, inf: !!u.inf, banned: !!u.banned, until: u.until || 0, paused: !!u.paused, items: u.items || [], reason: u.reason || '', coins: u.coins, owned: u.owned || 0, gate: u.gate || '', tags: u.tags || [] })) : []) : adminOnly() ? Object.values(readAuth().users).filter(u => !u.admin).map(u => ({ name: u.name, inf: !!u.infCoins, banned: !!u.banned && (!u.banUntil || u.banUntil > Date.now()), until: u.banUntil || 0, paused: !!u.paused, items: u.owned || [], reason: u.banReason || '', coins: u.infCoins ? '∞' : (u.coins == null ? 100 : u.coins), owned: (u.owned || []).length })) : []);
+ipcMain.handle('authListFull', async () => srvCfg() ? (adminOnly() ? ((await srvCall('/admin/users', {}, srvTok).catch(() => ({}))).users || []).map(u => ({ name: u.name, admin: !!u.admin, inf: !!u.inf, banned: !!u.banned, until: u.until || 0, paused: !!u.paused, items: u.items || [], reason: u.reason || '', coins: u.coins, owned: u.owned || 0, gate: u.gate || '', tags: u.tags || [] })) : []) : adminOnly() ? Object.values(readAuth().users).filter(u => !u.admin).map(u => ({ name: u.name, inf: !!u.infCoins, banned: !!u.banned && (!u.banUntil || u.banUntil > Date.now()), until: u.banUntil || 0, paused: !!u.paused, items: u.owned || [], reason: u.banReason || '', coins: u.infCoins ? '∞' : (u.coins == null ? 100 : u.coins), owned: (u.owned || []).length })) : []);
 ipcMain.handle('authAdminBan', async (_e, { name, banned, reason, until }) => {
   until = +until > Date.now() ? Math.round(+until) : 0;
   if (srvCfg()) return adminOnly() && !!(await srvCall('/admin/ban', { name, banned, reason, until }, srvTok).catch(() => ({}))).ok;
@@ -1447,15 +1447,15 @@ ipcMain.handle('authAdminDelete', async (_e, name) => {
 // ---- Cloudy Coins & Cosmetics-Shop (lokal) ----
 const CATALOG = [
   { id: 'cape-cloud', cat: 'cape', name: 'Wolkenumhang', price: 500, gone: true }, { id: 'cape-aurora', cat: 'cape', name: 'Nordlicht-Umhang', price: 500, gone: true },
-  { id: 'wings-angel', cat: 'wings', name: 'Engelsflügel', price: 800 }, { id: 'wings-neon', cat: 'wings', name: 'Neon-Schwingen', price: 800 },
+  { id: 'wings-angel', cat: 'wings', name: 'Engelsflügel', price: 800, gone: true }, { id: 'wings-neon', cat: 'wings', name: 'Neon-Schwingen', price: 800, gone: true },
   { id: 'shield-cloud', cat: 'shield', name: 'Wolkenschild', price: 200 }, { id: 'shield-sun', cat: 'shield', name: 'Sonnenschild', price: 200 },
   { id: 'hat-top', cat: 'hat', name: 'Zylinder', price: 250, gone: true }, { id: 'hat-wizard', cat: 'hat', name: 'Zauberhut', price: 250, gone: true },
   { id: 'cape-sunset', cat: 'cape', name: 'Sonnenuntergang-Umhang', price: 600, gone: true }, { id: 'cape-galaxy', cat: 'cape', name: 'Galaxie-Umhang', price: 700, gone: true }, { id: 'cape-fire', cat: 'cape', name: 'Feuer-Umhang', price: 700, gone: true },
-  { id: 'wings-fire', cat: 'wings', name: 'Feuerflügel', price: 900 }, { id: 'wings-bat', cat: 'wings', name: 'Fledermausflügel', price: 900 },
+  { id: 'wings-fire', cat: 'wings', name: 'Feuerflügel', price: 900, gone: true }, { id: 'wings-bat', cat: 'wings', name: 'Fledermausflügel', price: 900, gone: true },
   { id: 'shield-dragon', cat: 'shield', name: 'Drachenschild', price: 300 }, { id: 'shield-forest', cat: 'shield', name: 'Waldschild', price: 250 },
   { id: 'hat-gold', cat: 'hat', name: 'Goldzylinder', price: 400, gone: true }, { id: 'hat-santa', cat: 'hat', name: 'Weihnachtsmütze', price: 300, gone: true }, { id: 'hat-witch', cat: 'hat', name: 'Hexenhut', price: 300, gone: true },
   { id: 'cape-ocean', cat: 'cape', name: 'Ozean-Umhang', price: 700, gone: true }, { id: 'cape-sakura', cat: 'cape', name: 'Kirschblüten-Umhang', price: 700, gone: true },
-  { id: 'wings-crystal', cat: 'wings', name: 'Kristallflügel', price: 1000 }, { id: 'wings-shadow', cat: 'wings', name: 'Schattenschwingen', price: 1000 },
+  { id: 'wings-crystal', cat: 'wings', name: 'Kristallflügel', price: 1000, gone: true }, { id: 'wings-shadow', cat: 'wings', name: 'Schattenschwingen', price: 1000, gone: true },
   { id: 'shield-ice', cat: 'shield', name: 'Eisschild', price: 300 }, { id: 'hat-party', cat: 'hat', name: 'Partyhut', price: 250, gone: true }, { id: 'hat-frost', cat: 'hat', name: 'Frostmütze', price: 350, gone: true },
   { id: 'cape-nebula', cat: 'cape', name: 'Nebel-Umhang', price: 700, gone: true }, { id: 'cape-emerald', cat: 'cape', name: 'Smaragd-Umhang', price: 700, gone: true }, { id: 'cape-royal', cat: 'cape', name: 'Königs-Umhang', price: 900, gone: true },
   { id: 'hat-zzv', cat: 'hat', name: 'Zickzack-Hut Violett (3D)', price: 600, gone: true }, { id: 'hat-zzb', cat: 'hat', name: 'Zickzack-Zylinder Blau (3D)', price: 600, gone: true }, { id: 'hat-zsh', cat: 'hat', name: 'Schattenhut (3D)', price: 650, gone: true }, { id: 'hat-zif', cat: 'hat', name: 'Eisfeder-Hut (3D)', price: 650, gone: true },
@@ -1551,6 +1551,7 @@ const CATALOG = [
   { id: 'hat-owhorns', cat: 'hat', name: 'Dämonenhörner (animiert)', price: 0, owner: true },
   { id: 'hat-owarcane', cat: 'hat', name: 'Arkaner Hut (animiert)', price: 0, owner: true },
   { id: 'hat-owcrystal', cat: 'hat', name: 'Kristallkrone (animiert)', price: 0, owner: true },
+  { id: 'hat-adhalo', cat: 'hat', name: 'Admin-Heiligenschein (animiert)', price: 0, owner: true },
 
 ];
 const PACK_FILES = {

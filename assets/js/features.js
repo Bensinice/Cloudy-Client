@@ -429,7 +429,7 @@ async function paintAdmin(on) {
   const box = $('#admList'); box.textContent = L('Lade …');
   const us = await window.cloudy.authListFull().catch(() => []);
   const catName = id => { try { const c = (window.shopCatalog || []).find(x => x.id === id); return c ? c.name : id; } catch { return id; } };
-  const rowHead = u => { const tag = u.paused ? ` · <b>${L('PAUSIERT')}</b>` : u.banned ? ` · <b>${u.until ? L('GESPERRT') : L('PERMANENT GESPERRT')}</b>` : ''; return `<b>${esc(u.name)}</b><small class="muted">${u.coins} CC · ${u.owned} Items${tag}</small>`; };
+  const rowHead = u => { const tag = u.admin ? ` · <b>Admin</b>` : u.paused ? ` · <b>${L('PAUSIERT')}</b>` : u.banned ? ` · <b>${u.until ? L('GESPERRT') : L('PERMANENT GESPERRT')}</b>` : ''; return `<b>${esc(u.name)}</b><small class="muted">${u.coins} CC · ${u.owned} Items${tag}</small>`; };
   box.innerHTML = us.length ? us.map(u => `<div class="arow clk" data-open="${esc(u.name)}" style="${u.banned || u.paused ? 'opacity:.75' : ''}"><span class="arn">${rowHead(u)}</span><span class="aro">›</span></div>`).join('') : L('Keine weiteren Konten.');
   const A = window.cloudy, rp = () => paintAdmin(true), admNote = t => { const e = $('#admStat'); if (e) { e.textContent = L(t); clearTimeout(admNote.t); admNote.t = setTimeout(() => { e.textContent = ''; }, 6000); } };
   const toolHtml = u => { const n = esc(u.name); return { status: `<button class="btn ghost" data-ab="${n}" data-bn="${u.banned ? 0 : 1}">${u.banned ? L('Entsperren') : L('Sperren …')}</button>
@@ -465,7 +465,8 @@ async function paintAdmin(on) {
     const left = u.banned && u.until ? u.until - Date.now() : 0;
     const state = u.paused ? `<b>${L('PAUSIERT')}</b>` : u.banned ? `<b>${u.until ? L('GESPERRT') : L('PERMANENT GESPERRT')}</b>${u.until ? ' (' + fmtLeft(left) + ')' : ''}${u.reason ? ': ' + esc(u.reason) : ''}` : L('Aktiv');
     const d = document.createElement('div'); d.id = 'admModal'; d.className = 'adm-ov';
-    d.innerHTML = `<div class="adm-box glass set"><div class="adm-head"><div><h3>${n}</h3><small class="muted">${u.coins} CC · ${u.owned} Items · ${state}</small></div><button class="btn ghost adm-x" data-close aria-label="${L('Schließen')}">✕</button></div>
+    d.innerHTML = u.admin ? `<div class="adm-box glass set"><div class="adm-head"><div><h3>${n} · Admin</h3><small class="muted">${L('Admin-Konto: hier lassen sich nur die Tags ändern.')}</small></div><button class="btn ghost adm-x" data-close aria-label="${L('Schließen')}">✕</button></div>
+      <div class="adm-sec"><h4>${L('Rollen / Tags')}</h4><div class="adm-btns">${T.tags}</div></div></div>` : `<div class="adm-box glass set"><div class="adm-head"><div><h3>${n}</h3><small class="muted">${u.coins} CC · ${u.owned} Items · ${state}</small></div><button class="btn ghost adm-x" data-close aria-label="${L('Schließen')}">✕</button></div>
       <div class="adm-sec"><h4>${L('Status')}</h4><div class="adm-btns">${T.status}</div></div>
       <div class="adm-sec"><h4>${L('Items')}</h4><div class="adm-btns">${T.items}</div></div>
       <div class="adm-sec"><h4>${L('Coins')}</h4><div class="adm-btns">${T.cc}</div></div>

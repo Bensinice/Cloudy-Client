@@ -115,11 +115,12 @@ public final class Cosmetics {
 		"wings-g4abyss", "wings-g4frost", "wings-g4amethyst", "wings-g4mono", "wings-g4venom", "cape-g4viper", "cape-g4vortex", "cape-g4glitch", "cape-g4crest", "cape-g4drip",
 		"wings-g5seraph", "wings-g5butterfly", "wings-g5wyvern", "wings-g5mecha", "wings-g5dragonfly", "wings-g5phoenix", "wings-g5volt", "wings-g5leaf", "wings-g5bone", "wings-g5pixel", "cape-g5galaxy", "cape-g5sakura", "cape-g5magma", "cape-g5wave", "cape-g5racing", "cape-g5aurora", "cape-g5circuit", "cape-g5royal", "cape-g5synth", "cape-g5rift", "cape-g5aurorafx", "cape-g5warp", "cape-g6pulse", "cape-g6gradient", "cape-g6silk", "cape-g6orbit", "cape-g6scan", "cape-g6rain", "cape-g6fire", "cape-g6ocean", "cape-g6code", "cape-g6galaxy",
 		"wings-pgcrystal", "wings-pgfiligree", "wings-pgdragon", "wings-pgobsidian", "wings-pgcloud", "cape-pgpulse", "cape-pgliquid", "cape-pgnight", "cape-pgprestige", "cape-pgaurora", "hat-pgcrown", "hat-pgtophat", "hat-pghalo", "hat-pglaurel", "hat-pgpuff",
-		"wings-owcrimson", "wings-owphoenix", "wings-owprism", "wings-owstorm", "wings-owvoid", "cape-owthrone", "cape-owblackhole", "cape-owsigil", "cape-owprism", "cape-owstorm", "hat-owcrown", "hat-owinferno", "hat-owhorns", "hat-owarcane", "hat-owcrystal"}; // letzte Zeile: 3D-Modelle aus .glb (GLB.java)
+		"wings-owcrimson", "wings-owphoenix", "wings-owprism", "wings-owstorm", "wings-owvoid", "cape-owthrone", "cape-owblackhole", "cape-owsigil", "cape-owprism", "cape-owstorm", "hat-owcrown", "hat-owinferno", "hat-owhorns", "hat-owarcane", "hat-owcrystal", "hat-adhalo"}; // letzte Zeile: 3D-Modelle aus .glb (GLB.java)
 
 	/** Aus dem Shop genommene einfache Farbverlauf-Umhaenge: im Menue nur noch sichtbar, solange angelegt. */
 	public static final java.util.Set<String> GONE = java.util.Set.of("cape-cloud", "cape-aurora", "cape-sunset", "cape-galaxy", "cape-fire", "cape-ocean", "cape-sakura", "cape-nebula", "cape-emerald", "cape-royal",
-		"hat-top", "hat-gold", "hat-wizard", "hat-santa", "hat-witch", "hat-crown", "hat-halo", "hat-haloblack", "hat-party", "hat-frost", "hat-zzv", "hat-zzb", "hat-zsh", "hat-zif"); // alte Quader-Huete: nur noch sichtbar, solange angelegt
+		"hat-top", "hat-gold", "hat-wizard", "hat-santa", "hat-witch", "hat-crown", "hat-halo", "hat-haloblack", "hat-party", "hat-frost", "hat-zzv", "hat-zzb", "hat-zsh", "hat-zif",
+		"wings-angel", "wings-neon", "wings-fire", "wings-bat", "wings-crystal", "wings-shadow"); // alte Quader-Huete: nur noch sichtbar, solange angelegt
 
 	/** Umhaenge aus normalen 64x32-Texturen (in den Mod gepackt): fuer dich und fuer andere Cloudy-Spieler. */
 	public static boolean isTexCape(String id) { return false; } // zbs/ghg laufen jetzt ueber das Z4-Umhangmodell (ZZ4)
@@ -309,6 +310,7 @@ public final class Cosmetics {
 			case "hat-owhorns" -> "Demon Horns (Owner)";
 			case "hat-owarcane" -> "Arcane Hat (Owner)";
 			case "hat-owcrystal" -> "Crystal Crown (Owner)";
+			case "hat-adhalo" -> "Admin Halo (Admin)";
 
 			default -> id;
 		};

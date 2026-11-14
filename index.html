@@ -167,13 +167,15 @@
     <div class="tools" id="setTabs"><button class="chip on" data-st="gen">Allgemein</button><button class="chip" data-st="adm" id="admTab" style="display:none">Admin</button></div>
     <div class="sgrid">
       <div class="glass set"><h3>Konto</h3>
-        <p class="muted" id="msOut"></p>
-        <label>Spielername (Offline)<input id="name" class="field" maxlength="16" placeholder="Steve" autocomplete="off"></label>
+        <div class="accbox"><div class="acchd"><span class="accic">☁️</span><div><b>Cloudy-Konto</b><small class="muted" id="cloudyWho">Dein Konto für Shop, Freunde und Cloudy+</small></div></div>
         <label>Anzeigename in Cloudy (Banner, Begrüßung)<input id="dispName" class="field" maxlength="24" placeholder="z. B. Ben" autocomplete="off"></label>
-        
-        <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="msBtn">Mit Microsoft anmelden</button><button class="btn ghost" id="authOut">Cloudy abmelden</button><button class="btn ghost" id="pwBtn">Passwort ändern</button><button class="btn ghost" id="delBtn">Konto löschen</button></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost" id="authOut">Von Cloudy abmelden</button><button class="btn ghost" id="pwBtn">Passwort ändern</button><button class="btn ghost" id="delBtn">Konto löschen</button></div>
         <div id="pwRow" style="display:none;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px"><input id="pwOld" class="field" type="password" placeholder="Altes Passwort" autocomplete="current-password" style="max-width:220px"><input id="pwNew" class="field" type="password" placeholder="Neues Passwort (mind. 6)" autocomplete="new-password" style="max-width:220px"><button class="btn" id="pwGo">Speichern</button><span class="muted" id="pwMsg" style="color:var(--accent)"></span></div>
         <div id="delRow" style="display:none;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px"><input id="delPass" class="field" type="password" placeholder="Passwort zur Bestätigung" autocomplete="current-password" style="max-width:260px"><button class="btn" id="delGo">Endgültig löschen</button><span class="muted" id="delMsg" style="color:var(--accent)"></span></div></div>
+        <div class="accbox"><div class="acchd"><span class="accic">🎮</span><div><b>Minecraft-Konto (Microsoft)</b><small class="muted" id="msOut"></small></div></div>
+        <label>Spielername (nur offline)<input id="name" class="field" maxlength="16" placeholder="Steve" autocomplete="off"></label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="msBtn">Bei Microsoft anmelden</button></div>
+        <small class="muted">Microsoft abmelden ändert nur, mit welchem Minecraft-Konto du spielst – dein Cloudy-Konto bleibt angemeldet.</small></div></div>
       <div class="glass set"><h3>Spiel</h3>
         <label>Leistungs-Preset<select id="preset" class="field"><option value="">Eigene Einstellungen</option><option value="lowend">Low-End-PC</option><option value="performance">Leistung</option><option value="balanced">Ausgewogen</option><option value="quality">Qualität</option></select></label>
         <label>Arbeitsspeicher<div class="ram"><input id="ram" type="range" min="2" max="16" value="4"><b id="ramv">4 GB</b></div></label>
@@ -445,7 +447,8 @@ async function refreshAccount(){
   const a=await window.cloudy.accountGet();window._ms=a.ms;if(a.ms)st.set('name',a.name);
   $('#accType').textContent=a.ms?'Microsoft-Konto':'Offline-Konto';
   $('#msOut').textContent=a.ms?`Angemeldet als ${a.name}`:'Nicht angemeldet – du spielst offline.';
-  $('#msBtn').textContent=a.ms?'Abmelden':'Mit Microsoft anmelden';
+  $('#msBtn').textContent=a.ms?'Bei Microsoft abmelden':'Bei Microsoft anmelden';$('#msBtn').className=a.ms?'btn ghost':'btn';
+  window.cloudy.authState().then(x=>{const e=$('#cloudyWho');if(e&&x&&x.user)e.textContent='Angemeldet als '+x.user;}).catch(()=>{});
   $('#name').disabled=a.ms;$('#name').value=who();paintUser();
 }
 $('#msBtn').onclick=async()=>{const b=$('#msBtn');b.disabled=true;if(window._ms)await window.cloudy.accountLogout();else{$('#msOut').textContent='Fenster zur Anmeldung geöffnet …';const r=await window.cloudy.msLogin();if(!r.ok)$('#msOut').textContent=r.error}b.disabled=false;if(window._ms||!$('#msOut').textContent.startsWith('Anmeldung')&&!$('#msOut').textContent.startsWith('Paket'))refreshAccount()};

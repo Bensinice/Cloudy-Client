@@ -113,6 +113,7 @@ public final class GLB {
 		FILES.put("hat-owhorns", "owner_demon_horns_hat.glb");
 		FILES.put("hat-owarcane", "owner_arcane_hat.glb");
 		FILES.put("hat-owcrystal", "owner_crystal_crown_hat.glb");
+		FILES.put("hat-adhalo", "admin_halo_hat.glb");
 	}
 
 	// Platzierung (glTF-Raum, Ursprung = Halsgelenk). Gleiche Zahlen wie PLACE in assets/js/glb3d.js.

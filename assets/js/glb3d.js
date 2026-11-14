@@ -81,6 +81,7 @@
     'hat-owinferno': { file: 'owner_inferno_halo_hat.glb', kind: 'hat', name: 'Inferno-Heiligenschein (animiert)', view: 'front' },
     'hat-owhorns': { file: 'owner_demon_horns_hat.glb', kind: 'hat', name: 'Dämonenhörner (animiert)', view: 'front' },
     'hat-owarcane': { file: 'owner_arcane_hat.glb', kind: 'hat', name: 'Arkaner Hut (animiert)', view: 'front' },
+    'hat-adhalo': { file: 'admin_halo_hat.glb', kind: 'hat', name: 'Admin-Heiligenschein', view: 'front' },
     'hat-owcrystal': { file: 'owner_crystal_crown_hat.glb', kind: 'hat', name: 'Kristallkrone (animiert)', view: 'front' },
     'cape-g6galaxy': { file: 'spiral_galaxy_cape_animated.glb', kind: 'cape', name: 'Spiralgalaxie-Umhang (animiert)', view: 'back' },
   };

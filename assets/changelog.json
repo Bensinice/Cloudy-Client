@@ -1,5 +1,20 @@
 [
  {
+  "v": "0.9.123",
+  "date": "2026-11-14",
+  "added": [
+   "Admin-Heiligenschein (animiert) – nur für Admins",
+   "Admins können jetzt auch bei sich selbst und anderen Admins Tags entfernen oder vergeben; ein selbst entfernter Owner-Tag bleibt auch nach einem Server-Neustart weg (Admin-Rechte bleiben)"
+  ],
+  "changed": [
+   "Konto-Einstellungen klar getrennt: „Cloudy-Konto“ (Von Cloudy abmelden, Passwort, Konto löschen) und „Minecraft-Konto (Microsoft)“ (Bei Microsoft an-/abmelden)",
+   "Alte flache Flügel (Engel, Neon, Feuer, Fledermaus, Kristall, Schatten) aus Shop und Spielmenü entfernt (wer sie trägt, behält sie)"
+  ],
+  "fixed": [
+   "Neue 3D-Modelle für Cloudy+-Krone, Goldener Zylinder, Lorbeerkranz, Owner-Krone und Kristallkrone, dazu saubere Vorschaubilder"
+  ]
+ },
+ {
   "v": "0.9.122",
   "date": "2026-11-14",
   "added": [

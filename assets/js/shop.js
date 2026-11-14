@@ -127,6 +127,7 @@
     'hat-owhorns': { b: [0, -12, 16, 14], c: ['#ff3b5c', '#1a0610'], img: 'assets/cosmetics3d/icons/hat-owhorns.png', ar: 1, glb: true },
     'hat-owarcane': { b: [0, -12, 16, 14], c: ['#ff3b5c', '#1a0610'], img: 'assets/cosmetics3d/icons/hat-owarcane.png', ar: 1, glb: true },
     'hat-owcrystal': { b: [0, -12, 16, 14], c: ['#ff3b5c', '#1a0610'], img: 'assets/cosmetics3d/icons/hat-owcrystal.png', ar: 1, glb: true },
+    'hat-adhalo': { b: [0, -12, 16, 14], c: ['#ff3b5c', '#1a0610'], img: 'assets/cosmetics3d/icons/hat-adhalo.png', ar: 1, glb: true },
     'hat-crown': { b: [3, -6, 10, 6], c: ['#ffd24a', '#e23b3b'] }, 'hat-halo': { b: [3, -9, 10, 5], c: ['#fff7b0', '#ffd24a'] }, 'hat-haloblack': { b: [3, -9, 10, 5], c: ['#7c5cff', '#0b0b12'] }
   };
   const lt = (hex, k) => { const n = parseInt(hex.slice(1), 16), f = c => Math.round(c + (255 - c) * k); return '#' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(f).map(x => x.toString(16).padStart(2, '0')).join(''); };

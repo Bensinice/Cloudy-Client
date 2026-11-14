@@ -1,4 +1,11 @@
 {
+  "0.9.123": [
+    "Admin halo (animated) – admins only",
+    "Admins can add/remove tags on themselves and other admins",
+    "Account settings split clearly into Cloudy account and Minecraft (Microsoft) account",
+    "Old flat wings removed (kept if equipped)",
+    "Fixed 3D models for five Cloudy+/Owner hats with clean thumbnails"
+  ],
   "0.9.122": [
     "Clouds: density, size and length adjustable (Cloudify → Skies)",
     "Home with time, date and a greeting by time of day",
