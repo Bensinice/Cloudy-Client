@@ -1,4 +1,8 @@
 {
+  "0.9.114": [
+    "3D lyrics no longer overlap: new lines move above or below lines that are still visible",
+    "Capes: movement is now per player – before, all capes (also other players\u2019) moved with your own camera/movement; now they swing when walking, falling, strafing and lag a little when turning"
+  ],
   "0.9.113": [
     "3D lyrics word by word: each word spawns when it is sung, with your chosen motion; the old line despawns right away",
     "Setting \"Words appear\": word by word (new) or whole line (classic)",

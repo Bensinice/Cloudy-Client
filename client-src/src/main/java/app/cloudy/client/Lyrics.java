@@ -360,6 +360,27 @@ public final class Lyrics {
 
 	private static float rnd2() { wRng = wRng * 6364136223846793005L + 1442695040888963407L; return ((wRng >>> 33) & 0xFFFFF) / (float) 0xFFFFF; }
 
+	/** Hoehe suchen, in der die neue Zeile keine noch sichtbare Zeile ueberdeckt. Eine Zeile ist ~70 Grad breit und ~15 Grad hoch,
+	 *  deshalb wird nach oben/unten ausgewichen (mind. 19 Grad Abstand), solange es im Himmel bleibt. */
+	private static float freePitch(float yaw, float pitch, long now) {
+		float[] tries = {0f, -19f, 19f, -38f, 38f};
+		float best = pitch, bestScore = -1f;
+		for (float off : tries) {
+			float pc = pitch + off; // negativ = hoeher
+			if (-pc < SKY_MIN_UP || -pc > SKY_MAX_UP) continue;
+			float minD = 999f;
+			for (Ph o : phs) {
+				if (o.retired != 0 && now - o.retired > 600 && ModConfig.lyricsReveal == 0) continue; // verschwindet gleich
+				float dy = Math.abs(((yaw - o.yaw + 540f) % 360f) - 180f);
+				if (dy > 75f) continue; // weit genug seitlich daneben
+				minD = Math.min(minD, Math.abs(pc - o.pitch));
+			}
+			if (minD >= 19f) return pc;
+			if (minD > bestScore) { bestScore = minD; best = pc; }
+		}
+		return best;
+	}
+
 	private static Ph newPh(MinecraftClient mc, long now, float upAngleDeg, float tilt, boolean title, int line) {
 		Ph p = new Ph();
 		p.eye = camPos(mc); p.born = now; p.title = title; p.line = line; p.tilt = tilt;
@@ -367,6 +388,7 @@ public final class Lyrics {
 		p.yaw = camYaw(mc) + (rnd2() * 2f - 1f) * (sky ? 40f : 20f);
 		if (sky) upAngleDeg = (title ? 30f : 34f) + rnd2() * 14f; // nur im Himmel: hoch ueber dem Horizont, egal wohin man schaut
 		p.pitch = -Math.max(SKY_MIN_UP, Math.min(SKY_MAX_UP, upAngleDeg)); // Minecraft: negative Neigung = nach oben
+		p.pitch = freePitch(p.yaw, p.pitch, now); // nicht auf noch sichtbare Zeilen legen (sonst ueberlappen sie)
 		double yr = Math.toRadians(p.yaw), pr = Math.toRadians(p.pitch);
 		p.dir = new Vec3d(-Math.sin(yr) * Math.cos(pr), -Math.sin(pr), Math.cos(yr) * Math.cos(pr));
 		p.d0 = (sky ? 30f : 20f) + rnd2() * 6f;

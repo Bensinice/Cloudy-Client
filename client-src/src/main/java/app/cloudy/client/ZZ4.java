@@ -175,8 +175,6 @@ public final class ZZ4 {
 		return (lo + hi) / 2f;
 	}
 
-	private static float capeSwing, capeSide, capeLast;
-	private static long capeT;
 
 	/** Umhang: haengt am Koerper, weht nach hinten wenn man vorwaerts laeuft, faellt in Ruhe zurueck, kippt beim Schleichen. */
 	public static void cloak(MatrixStack ms, VertexConsumerProvider vcp, int light, int ov, String id, float limb) {
@@ -184,25 +182,8 @@ public final class ZZ4 {
 		Mesh[] meshes = load(pack(id));
 		if (meshes == null) return;
 		long now = System.currentTimeMillis();
-		float dt = Math.min(0.1f, (now - capeT) / 1000f);
-		if (now != capeT) {
-			capeT = now;
-			float fwd = 0, side = 0, sneak = 0;
-			var pl = net.minecraft.client.MinecraftClient.getInstance().player;
-			if (pl != null && !CosmeticFeature.PREVIEW) {
-				var v = pl.getVelocity();
-				double yaw = Math.toRadians(pl.bodyYaw);
-				double fx = -Math.sin(yaw), fz = Math.cos(yaw);
-				fwd = (float) (v.x * fx + v.z * fz) * 6f;      // + = vorwaerts
-				side = (float) (v.x * fz - v.z * fx) * 6f;
-				if (!pl.isOnGround()) fwd += (float) Math.max(-0.5, Math.min(0.5, -v.y)) * 0.8f;
-				if (pl.isSneaking()) sneak = 0.18f;
-			} else if (pl == null || CosmeticFeature.PREVIEW) fwd = 0.35f + 0.25f * (float) Math.sin(now / 700.0);
-			float target = Math.max(-0.4f, Math.min(1.2f, fwd)) + sneak;
-			float k = 1f - (float) Math.exp(-dt * 7f);
-			capeSwing += (target - capeSwing) * k;
-			capeSide += (Math.max(-1f, Math.min(1f, side)) - capeSide) * k;
-		}
+		float[] ph = CapePhys.now(); // je Spieler (vorher gemeinsam fuer alle)
+		float capeSwing = ph[0], capeSide = ph[1];
 		float idle = (float) Math.sin(now / 900.0) * 0.03f;
 		ms.push();
 		ms.translate(0, 0, 0.15f);

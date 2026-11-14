@@ -23,6 +23,7 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 			net.minecraft.client.network.AbstractClientPlayerEntity who = CosmeticNet.entityOf(state);
 			net.minecraft.client.network.ClientPlayerEntity self0 = net.minecraft.client.MinecraftClient.getInstance().player;
 			boolean mine = who != null ? who == self0 : Cosmetics.isSelf(state.skinTextures);
+			CapePhys.cur = mine ? self0 : who; // Umhang-Physik fuer genau diesen Spieler
 			if (!mine) { renderOther(matrices, vertexConsumers, light, who, limbDistance); return; }
 			if (!Cosmetics.any() || !Cosmetics.ensure()) return;
 			PlayerEntityModel m = this.getContextModel();

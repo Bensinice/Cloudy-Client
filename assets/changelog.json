@@ -1,5 +1,13 @@
 [
  {
+  "v": "0.9.114",
+  "date": "2026-11-14",
+  "fixed": [
+   "3D-Lyrics überlappen nicht mehr: neue Zeilen weichen noch sichtbaren Zeilen nach oben oder unten aus",
+   "Umhänge: Bewegung jetzt je Spieler – vorher bewegten sich alle Umhänge (auch die anderer Spieler) mit deiner eigenen Kamera/Bewegung; jetzt schwingen sie beim Laufen, Fallen, Seitwärtslaufen und hängen beim Drehen kurz nach (auch die neuen 3D-Umhänge)"
+  ]
+ },
+ {
   "v": "0.9.113",
   "date": "2026-11-14",
   "added": [

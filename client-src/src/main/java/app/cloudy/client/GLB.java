@@ -199,9 +199,10 @@ public final class GLB {
 		Model m = model(id);
 		if (m == null) return;
 		begin(ms);
-		float tilt = CAPE_TILT + 0.03f * (float) Math.sin(System.currentTimeMillis() / 900.0) + Math.min(1f, limb) * 0.25f;
+		float[] ph = CapePhys.now(); // je Spieler: Laufen, Fallen, Seitwaerts, Drehen
+		float tilt = CAPE_TILT + 0.03f * (float) Math.sin(System.currentTimeMillis() / 900.0) + Math.max(0f, ph[0]) * 0.32f + Math.min(1f, limb) * 0.08f;
 		ms.translate(0f, 0f, -CAPE_Z);
-		ms.multiply(new Quaternionf().rotationX(tilt));
+		ms.multiply(new Quaternionf().rotationX(tilt).rotateZ(ph[1] * 0.12f));
 		for (Part p : m.parts) drawPart(ms, vcp.getBuffer(RenderLayer.getEntityCutoutNoCull(m.tex(p))), light, ov, p, p.tx, p.ty, p.tz, p.yaw);
 		ms.pop();
 	}
