@@ -1,4 +1,7 @@
 {
+  "0.9.116": [
+    "3D shop preview: with skins that have transparent pixels you could see capes and wings through the body – the base skin layer is now always solid like in Minecraft"
+  ],
   "0.9.115": [
     "Skybox \"Cloudy Dusk\": a painted evening sky instead of the Minecraft sky (Cloudy Mods → Skybox or Cloudify → Skies)",
     "Volumetric clouds: soft fluffy 3D clouds drifting in the wind, colored by time of day; amount adjustable",

@@ -56,7 +56,7 @@
     // BoxGeometry-Flaechen: +x,-x,+y,-y,+z,-z. Spieler schaut nach +Z, sein Links ist +X.
     const R = [[u + d + w, v + d, u + d + w + d, v + d + h], [u, v + d, u + d, v + d + h], [u + d, v, u + d + w, v + d], [u + d + w, v, u + 2 * d + w, v + d], [u + d, v + d, u + d + w, v + d + h], [u + 2 * d + w, v + d, u + 2 * d + 2 * w, v + d + h]];
     R.forEach((r, i) => faceUV(g, flip ? r[2] : r[0], r[1], flip ? r[0] : r[2], r[3], W, H, i));
-    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: tex, alphaTest: 0.5, transparent: false, side: grow ? THREE.DoubleSide : THREE.FrontSide }));
+    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: tex, alphaTest: grow ? 0.5 : 0, transparent: false, side: grow ? THREE.DoubleSide : THREE.FrontSide })); // Grundschicht immer deckend wie in Minecraft (sonst sieht man Umhang/Fluegel durch durchsichtige Skin-Pixel)
     m.position.set(cx / 16, cy / 16, cz / 16); return m;
   }
   function buildPlayer(skin, slim) {

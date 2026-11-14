@@ -1,5 +1,12 @@
 [
  {
+  "v": "0.9.116",
+  "date": "2026-11-14",
+  "fixed": [
+   "3D-Vorschau im Shop: bei Skins mit durchsichtigen Pixeln sah man Umhänge und Flügel durch den Körper – die Grundschicht des Skins ist jetzt immer deckend wie in Minecraft"
+  ]
+ },
+ {
   "v": "0.9.115",
   "date": "2026-11-14",
   "added": [
