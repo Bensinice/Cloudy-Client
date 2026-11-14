@@ -36,8 +36,8 @@ exports.init = function init({ app, ipcMain, shell, auto }) {
       const pj = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
       if (!fs.existsSync(path.join(root, 'main.js')) || pj.name !== 'cloudy') throw new Error('Das ist keine Cloudy-Update-Datei.');
       const ep = n => { try { return +n.versionEpoch || 0; } catch { return 0; } }, myEp = ep(require('../package.json')); // Versions-Neustart (1.9.0 -> 0.2.1): höhere Epoche gilt immer als neuer
-      const pe = ep(pj), isNewer = pe > myEp || (pe === myEp && newer(pj.version, app.getVersion())); // Downgrades sind nie erlaubt (auch nicht erzwungen)
-      if (!isNewer && !anyVer) { mark('uebersprungen'); return { ok: false, msg: `Update ${pj.version} ist nicht neuer als die installierte Version ${app.getVersion()} – zurück auf ältere Versionen geht nicht.` }; }
+      const pe = ep(pj), isNewer = pe > myEp || (pe === myEp && newer(pj.version, app.getVersion()));
+      void isNewer; void anyVer; // aeltere ZIPs sind erlaubt: eine aeltere Update-Datei in den Ordner legen = auf diese Version zurueck (Downgrade)
       fs.cpSync(root, appDir, { recursive: true, force: true, filter: src => { // vorhandene Konfiguration (z. B. Update-Quelle) nicht überschreiben
         const rel = path.relative(root, src);
         return !(rel.startsWith('config' + path.sep) && fs.existsSync(path.join(appDir, rel)));

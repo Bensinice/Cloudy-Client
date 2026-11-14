@@ -1,7 +1,7 @@
 // Cloudy – Startseite anpassen: Banner-Text (z. B. „Hallo Ben“), Farbe/Bild, Höhe, Buttons und Bereiche ein-/ausblenden
 (function () {
   const L = s => (window.t ? window.t(s) : s);
-  const DEF = { title: 'Hallo, {name}!', sub: '', eyebrow: 'Minecraft Launcher', tint: 'default', color: '#4aa3ff', img: '', size: 'normal', cloud: true, b: { ver: true, mods: true, upd: true }, s: { qa: true, sys: true, srv: true } };
+  const DEF = { title: '{gruss}, {name}!', sub: '', eyebrow: 'Minecraft Launcher', tint: 'default', color: '#4aa3ff', img: '', size: 'normal', cloud: true, b: { ver: true, mods: true, upd: true }, s: { qa: true, sys: true, srv: true } };
   const TINTS = { default: null, sunset: ['#ffb36b', '#ff4f8b'], forest: ['#5be4a0', '#1b8f6a'], night: ['#6f7dff', '#2a2f6f'], mono: ['#9fb2c8', '#53647a'] };
   const TG = { versions: ['Versionen', 'Version wählen', '🧊'], lib: ['Bibliothek', 'Versionen & Mods verwalten', '📚'], servers: ['Server', 'Beitreten & hosten', '🖥️'], friends: ['Freunde', 'Chat & hinzufügen', '👥'], mods: ['Mods', 'Fabric & Modrinth', '📦'], packs: ['Ressourcen', 'Packs & Shader', '🎨'], skins: ['Skins', 'Skin wählen', '🧍'], shop: ['Shop', 'Cosmetics kaufen', '🛒'], settings: ['Einstellungen', 'Konto, Themes, Sound', '⚙️'], shots: ['Screenshots', 'Deine Bilder', '📷'] };
   const DEF_TILES = [{ t: 'lib' }, { t: 'mods' }, { t: 'packs' }, { t: 'settings', n: 'Themes', d: '8 Farbwelten', e: '🎨' }];
@@ -11,7 +11,9 @@
   function goTile(t) { const k = String(t.t || 'settings'); go(k.split('#')[0]); const s = k.split('#')[1]; if (s) setTimeout(() => { const hs = h3s(), h = /^\d+$/.test(s) ? hs[+s] : hs.find(x => x.firstChild.textContent.trim() === s); if (h) { h.scrollIntoView({ block: 'start', behavior: 'smooth' }); const c = h.closest('.set'); if (c) { c.style.outline = '3px solid var(--accent)'; setTimeout(() => c.style.outline = '', 1600); } } }, 120); }
   const get = () => { const h = st.get('home', {}); return { ...DEF, ...h, b: { ...DEF.b, ...(h.b || {}) }, s: { ...DEF.s, ...(h.s || {}) } }; };
   const mix = (hex, k) => { const n = parseInt(hex.slice(1), 16), f = c => Math.max(0, Math.min(255, Math.round(c + (255 - c) * k))); return '#' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(f).map(x => x.toString(16).padStart(2, '0')).join(''); };
-  const fill = (s, h) => String(s || '').replace(/\{name\}/gi, (window.dispName ? dispName() : '') || L('Spieler')).replace(/\{version\}/gi, (typeof version !== 'undefined' && version) || '');
+  const greet = () => { const h = new Date().getHours(), e = (document.documentElement.lang || 'de') !== 'de'; return h < 5 ? (e ? 'Good night' : 'Gute Nacht') : h < 11 ? (e ? 'Good morning' : 'Guten Morgen') : h < 17 ? (e ? 'Good afternoon' : 'Guten Tag') : h < 22 ? (e ? 'Good evening' : 'Guten Abend') : (e ? 'Good night' : 'Gute Nacht'); };
+  window.cloudyGreet = greet;
+  const fill = (s, h) => String(s === 'Hallo, {name}!' ? '{gruss}, {name}!' : s || '').replace(/\{gruss\}/gi, greet()).replace(/\{name\}/gi, (window.dispName ? dispName() : '') || L('Spieler')).replace(/\{version\}/gi, (typeof version !== 'undefined' && version) || '');
 
   window.paintHome = function () {
     const h = get(), hero = $('.hero'); if (!hero) return;
@@ -44,7 +46,7 @@
     dlg = document.createElement('div'); dlg.style.cssText = 'position:fixed;inset:0;z-index:70;display:grid;place-items:center;background:rgba(10,25,50,.38);backdrop-filter:blur(6px)';
     const cb = (id, label, on) => `<label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="${id}" ${on ? 'checked' : ''}> ${label}</label>`;
     dlg.innerHTML = `<div class="glass set" style="width:min(560px,94%);max-height:88vh;overflow:auto;display:grid;gap:10px"><h3>Startseite anpassen</h3>
-      <label class="muted">Banner-Titel <small>({name} = dein Name, {version} = Version)</small><input id="hdT" class="field" value="${esc(h.title)}" maxlength="60"></label>
+      <label class="muted">Banner-Titel <small>({gruss} = Guten Morgen/Tag/Abend, {name} = dein Name, {version} = Version)</small><input id="hdT" class="field" value="${esc(h.title)}" maxlength="60"></label>
       <label class="muted">Untertitel (leer = Standard)<input id="hdS" class="field" value="${esc(h.sub)}" maxlength="90"></label>
       <label class="muted">Kleines Label über dem Titel<input id="hdE" class="field" value="${esc(h.eyebrow)}" maxlength="30"></label>
       <div class="muted">Banner-Farbe</div><div class="tools" id="hdTint" style="margin:0">${['default', 'sunset', 'forest', 'night', 'mono', 'custom'].map(k => `<button class="chip ${h.tint === k ? 'on' : ''}" data-k="${k}">${{ default: 'Standard', sunset: 'Sonnenuntergang', forest: 'Wald', night: 'Nacht', mono: 'Grau', custom: 'Eigene' }[k]}</button>`).join('')}<input type="color" id="hdC" value="${h.color}" style="width:44px;height:36px;border:0;background:none"></div>

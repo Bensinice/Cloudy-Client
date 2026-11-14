@@ -1,5 +1,24 @@
 [
  {
+  "v": "0.9.122",
+  "date": "2026-11-14",
+  "added": [
+   "Wolken: Dichte, Größe und Länge einstellbar (Cloudify → Skies)",
+   "Startseite mit Uhrzeit, Datum und Begrüßung nach Tageszeit (Guten Morgen/Tag/Abend)",
+   "Cloudy Pass: Vorschaubilder der Belohnungs-Cosmetics, Klick probiert sie im Shop an",
+   "Ältere Update-ZIPs lassen sich jetzt installieren (Downgrade)"
+  ],
+  "changed": [
+   "Shop neu sortiert: Reiter für Umhänge, Flügel, Hüte, Schilde, Pakete, Limited, Cloudy+, Skins und Quests, dazu Suche und Filter – es wird nur noch eine Kategorie auf einmal gezeigt",
+   "Cloudy+-Kollektion ist nicht mehr kaufbar: mit Cloudy+ gehört sie dir automatisch; sie steht mit Vorschau im Reiter „Cloudy+“",
+   "Owner-Items kann man nicht kaufen; der Owner hat sie automatisch",
+   "Quests sind jetzt im Shop (Reiter „Quests“), Code einlösen auch (Knopf „Code einlösen“)",
+   "Musik- und Hell/Dunkel-Knopf sitzen oben neben dem Logo; der Spotify-Reiter ist weg (Spotify verbinden: Einstellungen → Sound & Musik)",
+   "Einstellungen nach Bereichen sortiert (Konto, Spiel, Aussehen, Sound & Musik, Verbindungen, Updates) mit Suche",
+   "Alte Quader-Hüte aus dem Shop und dem Spielmenü entfernt (wer einen angelegt hat, behält ihn)"
+  ]
+ },
+ {
   "v": "0.9.121",
   "date": "2026-11-14",
   "added": [

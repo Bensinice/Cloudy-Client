@@ -87,21 +87,22 @@ public final class CloudyClouds {
 		double t = (mc.world.getTime() + ctx.tickCounter().getTickDelta(false)) / 20.0;
 		double wind = t * 1.3; // Bloecke pro Sekunde nach Osten
 		float R = Math.min(720f, Math.max(320f, mc.options.getClampedViewDistance() * 16f * 1.7f));
-		int cell = 72, rc = (int) Math.ceil(R / cell) + 1;
+		float SZ = ModConfig.cloudsSize / 100f, LEN = ModConfig.cloudsLength / 100f; // Groesse und Laenge (in Windrichtung gestreckt)
+		int cell = Math.max(48, Math.round(72 * Math.max(SZ, SZ * (0.5f + 0.5f * LEN)))), rc = (int) Math.ceil(R / cell) + 1;
 		long cx0 = (long) Math.floor((cam.x - wind) / cell), cz0 = (long) Math.floor(cam.z / cell);
 		float cover = ModConfig.cloudsAmount / 100f;
 		// Baelle sammeln
 		int cnt = 0;
 		for (long gx = cx0 - rc; gx <= cx0 + rc; gx++) for (long gz = cz0 - rc; gz <= cz0 + rc; gz++) {
 			if (hash(gx, gz, 1) > cover) continue;
-			float s = 16f + hash(gx, gz, 2) * 30f;
+			float s = (16f + hash(gx, gz, 2) * 30f) * SZ;
 			double ccx = gx * cell + hash(gx, gz, 3) * cell + wind, ccz = gz * cell + hash(gx, gz, 4) * cell, ccy = H + hash(gx, gz, 5) * 14f;
 			double ddx = ccx - cam.x, ddz = ccz - cam.z;
-			if (ddx * ddx + ddz * ddz > (R + s) * (R + s)) continue;
-			int puffs = 8 + (int) (hash(gx, gz, 6) * 9);
+			if (ddx * ddx + ddz * ddz > (R + s * LEN) * (R + s * LEN)) continue;
+			int puffs = Math.min(48, (int) ((8 + (int) (hash(gx, gz, 6) * 9)) * Math.max(1f, LEN)));
 			for (int i = 0; i < puffs; i++) {
-				float px = (hash(gx, gz, 10 + i) * 2f - 1f) * s, pz = (hash(gx, gz, 40 + i) * 2f - 1f) * s * 0.75f;
-				float edge = 1f - Math.min(1f, (float) Math.sqrt(px * px + pz * pz) / (s * 1.1f));
+				float px = (hash(gx, gz, 10 + i) * 2f - 1f) * s * LEN, pz = (hash(gx, gz, 40 + i) * 2f - 1f) * s * 0.75f;
+				float qx = px / LEN, edge = 1f - Math.min(1f, (float) Math.sqrt(qx * qx + pz * pz) / (s * 1.1f));
 				float py = hash(gx, gz, 70 + i) * s * 0.55f * (0.35f + edge); // in der Mitte hoeher aufgetuermt
 				float pr = s * (0.32f + 0.38f * hash(gx, gz, 100 + i)) * (0.6f + 0.4f * edge);
 				if (cnt * 7 + 7 > buf.length) buf = Arrays.copyOf(buf, Math.max(7 * 1024, buf.length * 2));

@@ -1,4 +1,17 @@
 {
+  "0.9.122": [
+    "Clouds: density, size and length adjustable (Cloudify → Skies)",
+    "Home with time, date and a greeting by time of day",
+    "Cloudy Pass: preview images of reward cosmetics",
+    "Older update ZIPs can be installed (downgrade)",
+    "Shop reorganised into tabs with search and filters",
+    "Cloudy+ collection can't be bought – it comes with Cloudy+ (shown in the Cloudy+ tab)",
+    "Owner items can't be bought",
+    "Quests and code redeeming moved into the shop",
+    "Music and light/dark buttons moved next to the logo; Spotify tab removed",
+    "Settings sorted into sections with search",
+    "Old block hats removed (kept if equipped)"
+  ],
   "0.9.121": [
     "Admins can remove tags from users again (including Tester and fixed roles)",
     "Volumetric clouds are now on by default",

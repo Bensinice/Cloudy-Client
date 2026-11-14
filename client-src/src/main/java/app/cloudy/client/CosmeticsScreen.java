@@ -38,7 +38,7 @@ public class CosmeticsScreen extends Screen {
 
 	private List<String> items() {
 		List<String> l = new ArrayList<>();
-		for (String id : Cosmetics.ALL) if (CATS[tab].equals(Cosmetics.catOf(id)) && (!Cosmetics.GONE.contains(id) || id.equals(Cosmetics.cape))) l.add(id);
+		for (String id : Cosmetics.ALL) if (CATS[tab].equals(Cosmetics.catOf(id)) && (!Cosmetics.GONE.contains(id) || id.equals(Cosmetics.get(CATS[tab]))) && (!id.matches("^[a-z]+-ow[a-z]+$") || owned(id))) l.add(id); // Owner-Items nur fuer den Owner
 		return l;
 	}
 

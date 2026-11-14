@@ -1,0 +1,50 @@
+/* Cloudy 0.9.122 – Aufräumen: Logo-Knöpfe, Startseiten-Uhr, Shop-Reiter, Einstellungs-Bereiche, Pass-Vorschau */
+
+/* Logo-Zeile: Name + kleine Knöpfe (Musik, Hell/Dunkel) */
+.brand{position:relative}
+.brand .bname{flex:none}
+.brand .bbtns{display:inline-flex;gap:6px;margin-left:auto;padding-left:8px}
+.brand .bbtn{width:32px;height:32px;display:grid;place-items:center;padding:0;border-radius:11px;border:1px solid var(--gb);background:var(--chip);color:var(--accent);text-shadow:none;cursor:pointer;transition:background .2s,transform .2s;font-size:0}
+.brand .bbtn:hover{background:var(--accent);color:#fff;transform:translateY(-1px)}
+.brand .bbtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;filter:none!important;transform:none!important}
+.brand .bbtn span{display:none}
+:root[data-layout="lunar"] .brand .bbtn{color:var(--ink);border-color:var(--gb);background:var(--chip)}
+:root[data-layout="lunar"] .brand .bbtn svg path{fill:none!important}
+:root[data-layout="compact"] .brand .bbtns,:root[data-layout="top"] .brand .bbtns{margin-left:8px}
+@media (max-width:900px){.brand .bbtns{display:none}}
+
+/* Startseite: Uhr + Datum über der Begrüßung */
+.hclock{position:relative;display:flex;align-items:baseline;gap:12px;margin:0 0 2px;color:#fff;text-shadow:0 4px 18px rgba(0,0,0,.18)}
+.hclock b{font-size:34px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.hclock span{font-size:15px;font-weight:600;opacity:.88}
+
+/* Shop: Reiter + Unterfilter */
+#shopNav{margin:4px 0 10px;display:grid;gap:8px}
+.shnav{display:flex;gap:6px;flex-wrap:wrap;padding:6px;border-radius:18px;background:var(--chip);border:1px solid var(--gb)}
+.shtab{height:36px;padding:0 14px;border:0;border-radius:13px;background:transparent;font:inherit;font-weight:700;font-size:13.5px;color:var(--ink2);cursor:pointer;white-space:nowrap;transition:background .2s,color .2s}
+.shtab:hover{background:rgba(127,127,127,.12)}
+.shtab.on{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;box-shadow:0 6px 16px -6px var(--accent)}
+.shsub{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.shsub .seg{display:inline-flex;padding:3px;border-radius:12px;background:var(--chip);border:1px solid var(--gb)}
+.shsub .seg button{height:30px;padding:0 12px;border:0;border-radius:9px;background:transparent;font:inherit;font-weight:600;font-size:13px;color:var(--ink2);cursor:pointer}
+.shsub .seg button.on{background:var(--accent);color:#fff}
+.shsub .shq{flex:1;min-width:160px;max-width:320px;height:36px}
+.shempty{padding:24px 6px}
+.shintro{margin-top:-4px}
+.plushero{display:flex;align-items:center;gap:16px;justify-content:space-between;padding:18px 20px;margin:0 0 12px;border-radius:22px;background:linear-gradient(135deg,rgba(255,210,74,.22),rgba(255,140,40,.12))!important;border:1px solid rgba(255,210,74,.55)}
+.plushero b{display:block;font-size:20px;margin-bottom:4px}
+.plushero span{color:var(--ink2);font-size:14px;line-height:1.45}
+.plushero.on{background:linear-gradient(135deg,rgba(120,220,140,.22),rgba(255,210,74,.14))!important}
+#shopQuests .qrow,#shopQuests .glass{max-width:none}
+
+/* Einstellungen: Bereiche + Suche */
+.setcats{display:flex;gap:6px;flex-wrap:wrap;align-items:center;width:100%;margin:0 0 4px}
+.setcats .field{height:36px;max-width:260px;flex:1;min-width:160px;margin-left:auto}
+#p-settings .sgrid>.schide{display:none!important}
+#setTabs{flex-wrap:wrap}
+
+/* Cloudy Pass: Vorschau der Belohnungen */
+.pitem{display:inline-flex!important;align-items:center;gap:8px}
+.pthumb{width:46px;height:46px;flex:none;border-radius:12px;background:rgba(127,127,127,.12);overflow:hidden;position:relative;cursor:pointer;display:inline-block}
+.pthumb .i3{position:absolute;inset:0;transform:scale(.36);transform-origin:50% 50%;width:128px;height:128px;left:calc(50% - 64px);top:calc(50% - 64px)}
+.pthumb:hover{outline:2px solid var(--accent)}

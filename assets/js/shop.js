@@ -452,7 +452,8 @@
     }
   }
   async function rawCape(id) { const im = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = ITEMS[id].raw; }); const cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height; cv.getContext('2d').drawImage(im, 0, 0); return cv.toDataURL('image/png'); }
-  let shopFilt = 'all'; try { shopFilt = localStorage.getItem('cloudy.shopFilt') || 'all'; } catch {}
+  let shopFilt = 'all', shopTab = 'cape', shopQ = ''; try { shopFilt = localStorage.getItem('cloudy.shopFilt') || 'all'; shopTab = localStorage.getItem('cloudy.shopTab') || 'cape'; } catch {}
+  window.shopGoTab = t => { shopTab = t; try { localStorage.setItem('cloudy.shopTab', t); } catch {} if (shop) paintShop(); };
 
   // ---------- Limited-Items (Admin legt fest: Coins oder Code, Anzahl, Preis, Dauer) ----------
   const escL = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -536,6 +537,7 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
     sum();
     const sv = $('#bndSave'); if (sv) sv.onclick = async () => { const items = [...bndSel]; if (items.length < 2) { $('#bndMsg').textContent = L('Wähle mindestens 2 Items.'); return; } sv.disabled = true; const r = await window.cloudy.bundleAdmin({ name: bndDraft.name, price: +bndDraft.price, items, stock: +bndDraft.stock || 0, hours: +bndDraft.hours || 0, hidden: bndDraft.hidden, codes: bndDraft.codes }); if (r && r.ok) { bndSel.clear(); Object.assign(bndDraft, { name: '', price: '', stock: '', hours: '', hidden: false, codes: '' }); } take(r); };
   }
+  window.shopTryOn = id => { const c = shop && shop.catalog.find(x => x.id === id); if (!c) return; if (window.shopGoTab) window.shopGoTab(c.plus ? 'plus' : c.owner ? 'owner' : c.cat); startTry([id]); };
   function startTry(ids) { // mehrere Items gleichzeitig anprobieren (Paket) oder eins
     const t = {}; for (const id of ids) { const c = shop.catalog.find(x => x.id === id); if (c) t[c.cat] = id; }
     if (t.cape || t.wings) ang3 = 200; // Umhang/Fluegel: mit dem Ruecken zur Kamera anfangen
@@ -553,23 +555,38 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
     paintCoins(); paintCl(); const box = $('#shopItems'); if (!box || !shop) return; regCustom();
     const adm = $('#shopAdmin'); if (adm) adm.style.display = shop.admin ? '' : 'none';
     paint3d(eqView()); loop3(); paintHero(); tryBar();
-    let fb = $('#shopFilt'); if (!fb) { fb = document.createElement('div'); fb.id = 'shopFilt'; fb.className = 'tools'; fb.style.margin = '4px 0 6px'; fb.innerHTML = '<button class="chip" data-sf="all">Alle</button><button class="chip" data-sf="new">Nicht gekauft</button><button class="chip" data-sf="own">Gekauft</button><button class="chip" data-sf="lim">⏳ Limited</button>'; box.parentNode.insertBefore(fb, box); fb.querySelectorAll('[data-sf]').forEach(b => b.onclick = () => { shopFilt = b.dataset.sf; try { localStorage.setItem('cloudy.shopFilt', shopFilt); } catch {} paintShop(); }); if (window.setLang) window.setLang(document.documentElement.lang || 'de'); }
-    fb.querySelectorAll('[data-sf]').forEach(b => b.classList.toggle('on', b.dataset.sf === shopFilt));
-    const fl = cat => shopFilt === 'lim' ? [] : shop.catalog.filter(i => i.cat === cat && (shopFilt === 'all' || (shopFilt === 'own') === shop.owned.includes(i.id)));
-    box.innerHTML = CATS.filter(([cat]) => shopFilt === 'all' || fl(cat).length).map(([cat, name]) => `<h3 class="shc">${name}</h3><div class="row shrow">${fl(cat).map(i => {
+    // ---- Navigation: eine Kategorie auf einmal (statt alles untereinander), Suche, Filter ----
+    let nav = $('#shopNav'); if (!nav) { nav = document.createElement('div'); nav.id = 'shopNav'; box.parentNode.insertBefore(nav, box); }
+    const TABS = [['cape', '🧥 ' + L('Umhänge')], ['wings', '🪽 ' + L('Flügel')], ['hat', '🎩 ' + L('Hüte')], ['shield', '🛡 ' + L('Schilde')], ['bundles', '🎁 ' + L('Pakete')], ['lim', '⏳ Limited'], ['plus', '✨ Cloudy+'], ['skins', '👤 Skins'], ['quests', '🎯 Quests']].concat(shop.admin ? [['owner', '👑 Owner']] : []);
+    if (!TABS.some(t => t[0] === shopTab)) shopTab = 'cape';
+    const itemTab = ['cape', 'wings', 'hat', 'shield', 'owner'].includes(shopTab), side = ['plus', 'skins', 'quests'].includes(shopTab);
+    nav.innerHTML = `<div class="shnav">${TABS.map(([k, l]) => `<button class="shtab ${k === shopTab ? 'on' : ''}" data-stab="${k}">${l}</button>`).join('')}</div>` +
+      (itemTab ? `<div class="shsub"><div class="seg">${[['all', L('Alle')], ['new', L('Nicht gekauft')], ['own', L('Gekauft')]].map(([k, l]) => `<button class="${shopFilt === k ? 'on' : ''}" data-sf2="${k}">${l}</button>`).join('')}</div><input class="field shq" id="shopQ" placeholder="🔎 ${L('Suchen …')}" value="${escL(shopQ)}" autocomplete="off" spellcheck="false"></div>` : '');
+    nav.querySelectorAll('[data-stab]').forEach(b => b.onclick = () => { shopTab = b.dataset.stab; try { localStorage.setItem('cloudy.shopTab', shopTab); } catch {} paintShop(); });
+    nav.querySelectorAll('[data-sf2]').forEach(b => b.onclick = () => { shopFilt = b.dataset.sf2; try { localStorage.setItem('cloudy.shopFilt', shopFilt); } catch {} paintShop(); });
+    { const q = nav.querySelector('#shopQ'); if (q) { q.oninput = () => { shopQ = q.value; clearTimeout(q._t); q._t = setTimeout(() => { paintShop(); const n = $('#shopQ'); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }, 180); }; } }
+    try { window.shopOpenTab && window.shopOpenTab(side ? shopTab : null); } catch {}
+    if (shopFilt !== 'all' && shopFilt !== 'new' && shopFilt !== 'own') shopFilt = 'all';
+    const qq = shopQ.trim().toLowerCase();
+    const fl = cat => shop.catalog.filter(i => (cat === 'owner' ? i.owner : i.cat === cat && !i.plus && !i.owner) && (shopFilt === 'all' || (shopFilt === 'own') === shop.owned.includes(i.id)) && (!qq || String(i.name).toLowerCase().includes(qq)));
+    const card = (i, cat) => {
       const own = shop.owned.includes(i.id), on = shop.equip[cat] === i.id;
-      return `<div class="glass shi ${on ? 'sel' : ''}"><div class="i3h" data-i3="${i.id}"></div><b ${shop.admin ? `contenteditable="plaintext-only" spellcheck="false" title="Admin: Namen anklicken und ändern" data-rn="${i.id}"` : ''}>${i.name}</b><small>${shop.admin ? `<span contenteditable="plaintext-only" spellcheck="false" title="Admin: Preis anklicken und ändern (leer = Standardpreis)" data-pr="${i.id}" style="border-bottom:1px dashed currentColor;padding:0 2px">${i.price}</span> CC · gratis (Admin)` : i.plus ? '👑 Cloudy+ · inklusive' : cc(i.price)}</small>
-        ${shop.admin ? `<button class="btn ghost ${i.hidden ? 'tagon' : ''}" data-hide="${i.id}|${i.hidden ? 0 : 1}" title="Admin: ${i.hidden ? 'Wieder im Shop anzeigen' : 'Im Shop verstecken (niemand kann es mehr kaufen)'}">${i.hidden ? '🙈 Versteckt – zeigen' : '👁 Verstecken'}</button>` : ''}        ${shop.admin && i.custom ? `<button class="btn ghost" data-ci-del="${i.id}">Löschen</button>` : ''}${own ? `<button class="btn ${on ? 'ghost' : ''}" data-eq="${i.id}" data-cat="${cat}">${on ? 'Ablegen' : 'Anlegen'}</button>${!shop.admin && !i.custom && !i.plus && !i.owner ? `<button class="btn ghost" data-gift="${i.id}">🎁 Verschenken</button>` : ''}` : (canPay(i.price) ? `<button class="btn" data-buy="${i.id}">Kaufen</button>` : `<button class="btn ghost" disabled>${L('Dir fehlen')} ${i.price - shop.coins} CC</button>`) + `<button class="btn ghost" data-try="${i.id}">👁 ${L('Anprobieren')}</button>`}</div>`;
-    }).join('')}</div>`).join('');
-    box.insertAdjacentHTML('afterbegin', bundlesHtml());
-    if (shopFilt === 'all' || shopFilt === 'lim') box.insertAdjacentHTML('beforeend', limHtml());
+      return `<div class="glass shi ${on ? 'sel' : ''}"><div class="i3h" data-i3="${i.id}"></div><b ${shop.admin ? `contenteditable="plaintext-only" spellcheck="false" title="Admin: Namen anklicken und ändern" data-rn="${i.id}"` : ''}>${i.name}</b><small>${i.owner ? '👑 Owner' : i.plus ? '✨ ' + L('Mit Cloudy+ inklusive') : shop.admin ? `<span contenteditable="plaintext-only" spellcheck="false" title="Admin: Preis anklicken und ändern (leer = Standardpreis)" data-pr="${i.id}" style="border-bottom:1px dashed currentColor;padding:0 2px">${i.price}</span> CC · gratis (Admin)` : cc(i.price)}</small>
+        ${shop.admin && !i.plus && !i.owner ? `<button class="btn ghost ${i.hidden ? 'tagon' : ''}" data-hide="${i.id}|${i.hidden ? 0 : 1}" title="Admin: ${i.hidden ? 'Wieder im Shop anzeigen' : 'Im Shop verstecken (niemand kann es mehr kaufen)'}">${i.hidden ? '🙈 Versteckt – zeigen' : '👁 Verstecken'}</button>` : ''}        ${shop.admin && i.custom ? `<button class="btn ghost" data-ci-del="${i.id}">Löschen</button>` : ''}${own ? `<button class="btn ${on ? 'ghost' : ''}" data-eq="${i.id}" data-cat="${i.cat}">${on ? 'Ablegen' : 'Anlegen'}</button>${!shop.admin && !i.custom && !i.plus && !i.owner ? `<button class="btn ghost" data-gift="${i.id}">🎁 Verschenken</button>` : ''}` : i.plus || i.owner ? `<button class="btn ghost" disabled>${i.plus ? '✨ ' + L('Kommt mit Cloudy+') : '👑 Owner'}</button><button class="btn ghost" data-try="${i.id}">👁 ${L('Anprobieren')}</button>` : (canPay(i.price) ? `<button class="btn" data-buy="${i.id}">Kaufen</button>` : `<button class="btn ghost" disabled>${L('Dir fehlen')} ${i.price - shop.coins} CC</button>`) + `<button class="btn ghost" data-try="${i.id}">👁 ${L('Anprobieren')}</button>`}</div>`;
+    };
+    window.__shopCard = card;
+    if (itemTab) { const L0 = fl(shopTab); box.innerHTML = L0.length ? `<div class="row shrow">${L0.map(i => card(i, i.cat)).join('')}</div>` : `<p class="muted shempty">${qq ? L('Nichts gefunden.') : shopFilt === 'own' ? L('Hier besitzt du noch nichts.') : shopFilt === 'new' ? L('Du hast schon alles aus dieser Kategorie 🎉') : L('Hier gibt es gerade nichts.')}</p>`; }
+    else if (shopTab === 'bundles') box.innerHTML = bundlesHtml() || `<p class="muted shempty">${L('Gerade gibt es keine Pakete.')}</p>`;
+    else if (shopTab === 'lim') box.innerHTML = limHtml();
+    else box.innerHTML = '';
+    if (shopTab === 'plus') { try { window.paintPlusTab && window.paintPlusTab(shop, card); } catch (e) { console.warn(e); } }
     wireLim();
     wireBundles();
     // 3D-Vorschauen erst bauen, wenn sie ins Bild scrollen (sonst hunderte 3D-Elemente auf einmal = Ruckeln)
     if (window._i3io) window._i3io.disconnect();
     const mk = h => { if (h._done) return; h._done = 1; try { const w = item3d(h.dataset.i3); h.appendChild(w); i3s.add(w.firstChild); } catch {} };
-    if ('IntersectionObserver' in window) { const io = window._i3io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { mk(e.target); io.unobserve(e.target); } }), { root: null, rootMargin: '300px 0px' }); $$('#shopItems [data-i3]').forEach(h => io.observe(h)); }
-    else $$('#shopItems [data-i3]').forEach(mk);
+    if ('IntersectionObserver' in window) { const io = window._i3io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { mk(e.target); io.unobserve(e.target); } }), { root: null, rootMargin: '300px 0px' }); $$('#shopItems [data-i3], #shopPlus [data-i3]').forEach(h => io.observe(h)); }
+    else $$('#shopItems [data-i3], #shopPlus [data-i3]').forEach(mk);
     $$('[data-pr]').forEach(b => { b.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); b.blur(); } }; b.onblur = async () => { const t = b.textContent.replace(/[^0-9]/g, ''), it = shop.catalog.find(c => c.id === b.dataset.pr); if (!it) return; if (t !== '' && +t === it.price) { b.textContent = it.price; return; } const r = await window.cloudy.shopPrice({ id: it.id, price: t === '' ? null : +t }); if (r.state) { shop = r.state; window.shopCatalog = shop.catalog; } $('#shopMsg').textContent = r.ok ? '' : L(r.error); paintShop(); }; });
     $$('[data-rn]').forEach(b => { b.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); b.blur(); } }; b.onblur = async () => { const n = b.textContent.trim(), it = shop.catalog.find(c => c.id === b.dataset.rn); if (!it || n === it.name) return; const r = await window.cloudy.shopRename({ id: it.id, name: n }); if (r.state) { shop = r.state; window.shopCatalog = shop.catalog; } $('#shopMsg').textContent = r.ok ? '' : L(r.error); paintShop(); }; });
     $$('[data-hide]').forEach(b => b.onclick = async () => { const [id, on] = b.dataset.hide.split('|'); const r = await window.cloudy.shopHide({ id, on: on === '1' }); if (r.state) { shop = r.state; window.shopCatalog = shop.catalog; } $('#shopMsg').textContent = r.ok ? '' : L(r.error); paintShop(); });

@@ -474,10 +474,18 @@ public class SpotifyScreen extends Screen {
 		toggle(c, mx, my, y, ModConfig.isOn("skybox"), () -> ModConfig.set("skybox", !ModConfig.isOn("skybox")));
 		y = row(c, "Volumetric clouds", "Soft 3D clouds instead of the flat block clouds");
 		toggle(c, mx, my, y, ModConfig.isOn("clouds3d"), () -> ModConfig.set("clouds3d", !ModConfig.isOn("clouds3d")));
-		y = row(c, "Cloud amount", ModConfig.cloudsAmount + " %", 230);
+		y = row(c, "Cloud density", ModConfig.cloudsAmount + " % of the sky", 230);
 		int[] ca = {25, 35, 45, 60, 75};
 		int csel = -1; for (int i = 0; i < ca.length; i++) if (ca[i] == ModConfig.cloudsAmount) csel = i;
 		seg(c, mx, my, y, new String[] {"Few", "Some", "Normal", "Many", "Overcast"}, csel, i -> { ModConfig.cloudsAmount = ca[i]; ModConfig.save(); });
+		y = row(c, "Cloud size", ModConfig.cloudsSize + " %", 230);
+		int[] cs = {60, 80, 100, 140, 200};
+		int ssel = -1; for (int i = 0; i < cs.length; i++) if (cs[i] == ModConfig.cloudsSize) ssel = i;
+		seg(c, mx, my, y, new String[] {"Tiny", "Small", "Normal", "Big", "Huge"}, ssel, i -> { ModConfig.cloudsSize = cs[i]; ModConfig.save(); });
+		y = row(c, "Cloud length", ModConfig.cloudsLength + " % (stretched with the wind)", 230);
+		int[] cl = {70, 100, 150, 220, 320};
+		int lsel = -1; for (int i = 0; i < cl.length; i++) if (cl[i] == ModConfig.cloudsLength) lsel = i;
+		seg(c, mx, my, y, new String[] {"Round", "Normal", "Long", "Longer", "Bands"}, lsel, i -> { ModConfig.cloudsLength = cl[i]; ModConfig.save(); });
 		y = row(c, "Pulse to the song beat", "The sky reacts to the music", 200);
 		seg(c, mx, my, y, ModConfig.BEAT, ModConfig.skyBeat, i -> { ModConfig.skyBeat = i; ModConfig.save(); });
 	}

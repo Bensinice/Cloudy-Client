@@ -118,7 +118,8 @@ public final class Cosmetics {
 		"wings-owcrimson", "wings-owphoenix", "wings-owprism", "wings-owstorm", "wings-owvoid", "cape-owthrone", "cape-owblackhole", "cape-owsigil", "cape-owprism", "cape-owstorm", "hat-owcrown", "hat-owinferno", "hat-owhorns", "hat-owarcane", "hat-owcrystal"}; // letzte Zeile: 3D-Modelle aus .glb (GLB.java)
 
 	/** Aus dem Shop genommene einfache Farbverlauf-Umhaenge: im Menue nur noch sichtbar, solange angelegt. */
-	public static final java.util.Set<String> GONE = java.util.Set.of("cape-cloud", "cape-aurora", "cape-sunset", "cape-galaxy", "cape-fire", "cape-ocean", "cape-sakura", "cape-nebula", "cape-emerald", "cape-royal");
+	public static final java.util.Set<String> GONE = java.util.Set.of("cape-cloud", "cape-aurora", "cape-sunset", "cape-galaxy", "cape-fire", "cape-ocean", "cape-sakura", "cape-nebula", "cape-emerald", "cape-royal",
+		"hat-top", "hat-gold", "hat-wizard", "hat-santa", "hat-witch", "hat-crown", "hat-halo", "hat-haloblack", "hat-party", "hat-frost", "hat-zzv", "hat-zzb", "hat-zsh", "hat-zif"); // alte Quader-Huete: nur noch sichtbar, solange angelegt
 
 	/** Umhaenge aus normalen 64x32-Texturen (in den Mod gepackt): fuer dich und fuer andere Cloudy-Spieler. */
 	public static boolean isTexCape(String id) { return false; } // zbs/ghg laufen jetzt ueber das Z4-Umhangmodell (ZZ4)
