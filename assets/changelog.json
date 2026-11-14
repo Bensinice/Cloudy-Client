@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.118",
+  "date": "2026-11-14",
+  "added": [
+   "32 neue 3D-Cosmetics: 10 Flügel (Seraph-Gold, Nebel-Schmetterling, Karmesin-Wyvern, Mecha-Düsen, Libellen-Prisma, Phönix-Flammen, Volt-Neon, Herbstlaub, Knochen-Sensenmann, Pixel-Regenbogen), 10 Umhänge und 12 animierte Umhänge (z. B. Lagerfeuer, Code-Regen, Spiralgalaxie, Regen auf Glas)",
+   "Animierte Umhänge laufen im Spiel und in der Shop-Vorschau",
+   "Neue Vorschaubilder und Farben für die Cosmetics vom letzten Update"
+  ]
+ },
+ {
   "v": "0.9.117",
   "date": "2026-11-14",
   "fixed": [

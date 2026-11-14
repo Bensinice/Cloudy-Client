@@ -21,6 +21,38 @@
     'cape-g4glitch': { file: 'mono_glitch_cape.glb', kind: 'cape', name: 'Mono-Glitch-Umhang', view: 'back' },
     'cape-g4crest': { file: 'cloudy_crest_cape.glb', kind: 'cape', name: 'Cloudy-Wappen-Umhang', view: 'back' },
     'cape-g4drip': { file: 'toxic_drip_cape.glb', kind: 'cape', name: 'Gift-Tropfen-Umhang', view: 'back' },
+    'wings-g5seraph': { file: 'seraph_gold_wings.glb', kind: 'wings', name: 'Seraph-Gold-Flügel', view: 'back' },
+    'wings-g5butterfly': { file: 'nebula_butterfly_wings.glb', kind: 'wings', name: 'Nebel-Schmetterlingsflügel', view: 'back' },
+    'wings-g5wyvern': { file: 'crimson_wyvern_wings.glb', kind: 'wings', name: 'Karmesin-Wyvern-Flügel', view: 'back' },
+    'wings-g5mecha': { file: 'mecha_thruster_wings.glb', kind: 'wings', name: 'Mecha-Düsenflügel', view: 'back' },
+    'wings-g5dragonfly': { file: 'dragonfly_prism_wings.glb', kind: 'wings', name: 'Libellen-Prisma-Flügel', view: 'back' },
+    'wings-g5phoenix': { file: 'phoenix_blaze_wings.glb', kind: 'wings', name: 'Phönix-Flammenflügel', view: 'back' },
+    'wings-g5volt': { file: 'volt_outline_wings.glb', kind: 'wings', name: 'Volt-Neonflügel', view: 'back' },
+    'wings-g5leaf': { file: 'autumn_leaf_wings.glb', kind: 'wings', name: 'Herbstlaub-Flügel', view: 'back' },
+    'wings-g5bone': { file: 'bone_reaper_wings.glb', kind: 'wings', name: 'Knochen-Sensenmann-Flügel', view: 'back' },
+    'wings-g5pixel': { file: 'pixel_prism_wings.glb', kind: 'wings', name: 'Pixel-Regenbogen-Flügel', view: 'back' },
+    'cape-g5galaxy': { file: 'galaxy_orbit_cape.glb', kind: 'cape', name: 'Galaxie-Orbit-Umhang', view: 'back' },
+    'cape-g5sakura': { file: 'sakura_night_cape.glb', kind: 'cape', name: 'Sakura-Nacht-Umhang', view: 'back' },
+    'cape-g5magma': { file: 'magma_core_cape.glb', kind: 'cape', name: 'Magmakern-Umhang', view: 'back' },
+    'cape-g5wave': { file: 'ocean_wave_cape.glb', kind: 'cape', name: 'Ozeanwellen-Umhang', view: 'back' },
+    'cape-g5racing': { file: 'racing_stripe_cape.glb', kind: 'cape', name: 'Rennstreifen-Umhang', view: 'back' },
+    'cape-g5aurora': { file: 'aurora_peaks_cape.glb', kind: 'cape', name: 'Polarlicht-Gipfel-Umhang', view: 'back' },
+    'cape-g5circuit': { file: 'circuit_core_cape.glb', kind: 'cape', name: 'Platinen-Umhang', view: 'back' },
+    'cape-g5royal': { file: 'royal_crest_cape.glb', kind: 'cape', name: 'Königswappen-Umhang', view: 'back' },
+    'cape-g5synth': { file: 'retro_sunset_cape.glb', kind: 'cape', name: 'Retro-Sonnenuntergang-Umhang', view: 'back' },
+    'cape-g5rift': { file: 'void_rift_cape.glb', kind: 'cape', name: 'Leere-Riss-Umhang', view: 'back' },
+    'cape-g5aurorafx': { file: 'aurora_flow_cape_animated.glb', kind: 'cape', name: 'Polarlicht-Fluss-Umhang (animiert)', view: 'back' },
+    'cape-g5warp': { file: 'hyperdrive_cape_animated.glb', kind: 'cape', name: 'Hyperantrieb-Umhang (animiert)', view: 'back' },
+    'cape-g6pulse': { file: 'cloudy_pulse_cape_animated.glb', kind: 'cape', name: 'Cloudy-Puls-Umhang (animiert)', view: 'back' },
+    'cape-g6gradient': { file: 'gradient_flow_cape_animated.glb', kind: 'cape', name: 'Farbverlauf-Umhang (animiert)', view: 'back' },
+    'cape-g6silk': { file: 'silk_lines_cape_animated.glb', kind: 'cape', name: 'Seidenlinien-Umhang (animiert)', view: 'back' },
+    'cape-g6orbit': { file: 'orbit_dots_cape_animated.glb', kind: 'cape', name: 'Orbit-Punkte-Umhang (animiert)', view: 'back' },
+    'cape-g6scan': { file: 'neon_scan_cape_animated.glb', kind: 'cape', name: 'Neon-Scan-Umhang (animiert)', view: 'back' },
+    'cape-g6rain': { file: 'rain_glass_cape_animated.glb', kind: 'cape', name: 'Regen-auf-Glas-Umhang (animiert)', view: 'back' },
+    'cape-g6fire': { file: 'campfire_cape_animated.glb', kind: 'cape', name: 'Lagerfeuer-Umhang (animiert)', view: 'back' },
+    'cape-g6ocean': { file: 'moonlit_ocean_cape_animated.glb', kind: 'cape', name: 'Mondmeer-Umhang (animiert)', view: 'back' },
+    'cape-g6code': { file: 'matrix_code_cape_animated.glb', kind: 'cape', name: 'Code-Regen-Umhang (animiert)', view: 'back' },
+    'cape-g6galaxy': { file: 'spiral_galaxy_cape_animated.glb', kind: 'cape', name: 'Spiralgalaxie-Umhang (animiert)', view: 'back' },
   };
   // Platzierung relativ zum Koerper (Block-Einheiten, Y oben, +Z vorne). Hut am Kopf, Umhang/Fluegel am Koerper (Ursprung = Hals).
   const PLACE = {
@@ -87,6 +119,9 @@
       (k === 'hat' ? parts.head : parts.body).add(g);
       if (k === 'wings') m.traverse(o => { if (o.name && /halo/i.test(o.name)) { const h = new THREE.Group(); o.parent.remove(o); h.add(o); o.position.set(0, 0, 0); h.position.set(PLACE.halo[0], PLACE.halo[1], PLACE.halo[2]); parts.head.add(h); } }); // Heiligenschein haengt am Kopf, nicht an den Fluegeln
       if (k === 'cape') anim.push(now => { g.rotation.x = P.tilt + 0.03 * Math.sin(now / 900); g.position.z = P.pos[2]; });
+      if (k === 'cape') m.traverse(o => { const A = o.userData && o.userData.cloudyAnim; if (!A) return; // animierte Umhaenge: Bilder im 4x4-Raster durchschalten
+        o.traverse(x => { if (!x.isMesh || !x.material || !x.material.map) return; const map = x.material.map;
+          anim.push(now => { const f = Math.floor(now / A.frameMs) % A.frames; map.offset.set((f % A.cols) / A.cols, Math.floor(f / A.cols) / A.rows); }); }); });
       if (k === 'wings') { const w = []; m.traverse(o => { if (o.name && /wing/i.test(o.name) && o.parent && o.position.x !== 0 && !/halo/i.test(o.name)) { o.userData.base = o.rotation.y; o.userData.side = Math.sign(o.position.x); w.push(o); } });
         anim.push(now => { for (let i = 0; i < w.length; i++) { const o = w[i], f = Math.sin(now / 520); o.rotation.y = o.userData.base + o.userData.side * (0.12 + 0.17 * f); } }); }
     })).then(() => now => anim.forEach(a => a(now)));

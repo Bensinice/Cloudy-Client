@@ -857,7 +857,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.117'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.118'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1487,6 +1487,38 @@ const CATALOG = [
   { id: 'cape-g4glitch', cat: 'cape', name: 'Mono-Glitch-Umhang (3D)', price: 1500 },
   { id: 'cape-g4crest', cat: 'cape', name: 'Cloudy-Wappen-Umhang (3D)', price: 1500 },
   { id: 'cape-g4drip', cat: 'cape', name: 'Gift-Tropfen-Umhang (3D)', price: 1500 },
+  { id: 'wings-g5seraph', cat: 'wings', name: 'Seraph-Gold-Flügel (3D)', price: 1800 },
+  { id: 'wings-g5butterfly', cat: 'wings', name: 'Nebel-Schmetterlingsflügel (3D)', price: 1800 },
+  { id: 'wings-g5wyvern', cat: 'wings', name: 'Karmesin-Wyvern-Flügel (3D)', price: 1800 },
+  { id: 'wings-g5mecha', cat: 'wings', name: 'Mecha-Düsenflügel (3D)', price: 1800 },
+  { id: 'wings-g5dragonfly', cat: 'wings', name: 'Libellen-Prisma-Flügel (3D)', price: 1800 },
+  { id: 'wings-g5phoenix', cat: 'wings', name: 'Phönix-Flammenflügel (3D)', price: 1800 },
+  { id: 'wings-g5volt', cat: 'wings', name: 'Volt-Neonflügel (3D)', price: 1800 },
+  { id: 'wings-g5leaf', cat: 'wings', name: 'Herbstlaub-Flügel (3D)', price: 1800 },
+  { id: 'wings-g5bone', cat: 'wings', name: 'Knochen-Sensenmann-Flügel (3D)', price: 1800 },
+  { id: 'wings-g5pixel', cat: 'wings', name: 'Pixel-Regenbogen-Flügel (3D)', price: 1800 },
+  { id: 'cape-g5galaxy', cat: 'cape', name: 'Galaxie-Orbit-Umhang (3D)', price: 1500 },
+  { id: 'cape-g5sakura', cat: 'cape', name: 'Sakura-Nacht-Umhang (3D)', price: 1500 },
+  { id: 'cape-g5magma', cat: 'cape', name: 'Magmakern-Umhang (3D)', price: 1500 },
+  { id: 'cape-g5wave', cat: 'cape', name: 'Ozeanwellen-Umhang (3D)', price: 1500 },
+  { id: 'cape-g5racing', cat: 'cape', name: 'Rennstreifen-Umhang (3D)', price: 1500 },
+  { id: 'cape-g5aurora', cat: 'cape', name: 'Polarlicht-Gipfel-Umhang (3D)', price: 1500 },
+  { id: 'cape-g5circuit', cat: 'cape', name: 'Platinen-Umhang (3D)', price: 1500 },
+  { id: 'cape-g5royal', cat: 'cape', name: 'Königswappen-Umhang (3D)', price: 1500 },
+  { id: 'cape-g5synth', cat: 'cape', name: 'Retro-Sonnenuntergang-Umhang (3D)', price: 1500 },
+  { id: 'cape-g5rift', cat: 'cape', name: 'Leere-Riss-Umhang (3D)', price: 1500 },
+  { id: 'cape-g5aurorafx', cat: 'cape', name: 'Polarlicht-Fluss-Umhang (animiert)', price: 2000 },
+  { id: 'cape-g5warp', cat: 'cape', name: 'Hyperantrieb-Umhang (animiert)', price: 2000 },
+  { id: 'cape-g6pulse', cat: 'cape', name: 'Cloudy-Puls-Umhang (animiert)', price: 2000 },
+  { id: 'cape-g6gradient', cat: 'cape', name: 'Farbverlauf-Umhang (animiert)', price: 2000 },
+  { id: 'cape-g6silk', cat: 'cape', name: 'Seidenlinien-Umhang (animiert)', price: 2000 },
+  { id: 'cape-g6orbit', cat: 'cape', name: 'Orbit-Punkte-Umhang (animiert)', price: 2000 },
+  { id: 'cape-g6scan', cat: 'cape', name: 'Neon-Scan-Umhang (animiert)', price: 2000 },
+  { id: 'cape-g6rain', cat: 'cape', name: 'Regen-auf-Glas-Umhang (animiert)', price: 2000 },
+  { id: 'cape-g6fire', cat: 'cape', name: 'Lagerfeuer-Umhang (animiert)', price: 2000 },
+  { id: 'cape-g6ocean', cat: 'cape', name: 'Mondmeer-Umhang (animiert)', price: 2000 },
+  { id: 'cape-g6code', cat: 'cape', name: 'Code-Regen-Umhang (animiert)', price: 2000 },
+  { id: 'cape-g6galaxy', cat: 'cape', name: 'Spiralgalaxie-Umhang (animiert)', price: 2000 },
 ];
 const PACK_FILES = {
   ...Object.fromEntries(['zz4', 'zz4m', 'zz3', 'zz3s', 'zz5', 'yy'].map(k => ['shield-' + k, `cloudy-shield-${k}.zip`])) };

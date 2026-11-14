@@ -1,4 +1,9 @@
 {
+  "0.9.118": [
+    "32 new 3D cosmetics: 10 wings, 10 capes and 12 animated capes",
+    "Animated capes play in game and in the shop preview",
+    "New preview images and colors for the cosmetics from the last update"
+  ],
   "0.9.117": [
     "Shop preview with 3D cosmetics: the figure is now as big as in the normal preview and the skin has the correct colors"
   ],

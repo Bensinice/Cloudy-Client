@@ -112,7 +112,8 @@ public final class Cosmetics {
 		"shield-zz4", "shield-zz4m", "shield-zz3", "shield-zz3s", "shield-zz5", "cape-yy", "shield-yy",
 		"wings-zv", "wings-zs", "wings-zf", "wings-zb", "cape-zbs", "cape-ghg",
 		"hat-g3wizard", "hat-g3crown", "cape-g3nebula", "cape-g3phoenix", "wings-g3seraph", "wings-g3prism", "wings-g3void",
-		"wings-g4abyss", "wings-g4frost", "wings-g4amethyst", "wings-g4mono", "wings-g4venom", "cape-g4viper", "cape-g4vortex", "cape-g4glitch", "cape-g4crest", "cape-g4drip"}; // letzte Zeile: 3D-Modelle aus .glb (GLB.java)
+		"wings-g4abyss", "wings-g4frost", "wings-g4amethyst", "wings-g4mono", "wings-g4venom", "cape-g4viper", "cape-g4vortex", "cape-g4glitch", "cape-g4crest", "cape-g4drip",
+		"wings-g5seraph", "wings-g5butterfly", "wings-g5wyvern", "wings-g5mecha", "wings-g5dragonfly", "wings-g5phoenix", "wings-g5volt", "wings-g5leaf", "wings-g5bone", "wings-g5pixel", "cape-g5galaxy", "cape-g5sakura", "cape-g5magma", "cape-g5wave", "cape-g5racing", "cape-g5aurora", "cape-g5circuit", "cape-g5royal", "cape-g5synth", "cape-g5rift", "cape-g5aurorafx", "cape-g5warp", "cape-g6pulse", "cape-g6gradient", "cape-g6silk", "cape-g6orbit", "cape-g6scan", "cape-g6rain", "cape-g6fire", "cape-g6ocean", "cape-g6code", "cape-g6galaxy"}; // letzte Zeile: 3D-Modelle aus .glb (GLB.java)
 
 	/** Umhaenge aus normalen 64x32-Texturen (in den Mod gepackt): fuer dich und fuer andere Cloudy-Spieler. */
 	public static boolean isTexCape(String id) { return false; } // zbs/ghg laufen jetzt ueber das Z4-Umhangmodell (ZZ4)
@@ -234,6 +235,38 @@ public final class Cosmetics {
 			case "cape-g4glitch" -> "Mono Glitch Cape (3D)";
 			case "cape-g4crest" -> "Cloudy Crest Cape (3D)";
 			case "cape-g4drip" -> "Toxic Drip Cape (3D)";
+			case "wings-g5seraph" -> "Seraph Gold Wings (3D)";
+			case "wings-g5butterfly" -> "Nebula Butterfly Wings (3D)";
+			case "wings-g5wyvern" -> "Crimson Wyvern Wings (3D)";
+			case "wings-g5mecha" -> "Mecha Thruster Wings (3D)";
+			case "wings-g5dragonfly" -> "Dragonfly Prism Wings (3D)";
+			case "wings-g5phoenix" -> "Phoenix Blaze Wings (3D)";
+			case "wings-g5volt" -> "Volt Outline Wings (3D)";
+			case "wings-g5leaf" -> "Autumn Leaf Wings (3D)";
+			case "wings-g5bone" -> "Bone Reaper Wings (3D)";
+			case "wings-g5pixel" -> "Pixel Prism Wings (3D)";
+			case "cape-g5galaxy" -> "Galaxy Orbit Cape (3D)";
+			case "cape-g5sakura" -> "Sakura Night Cape (3D)";
+			case "cape-g5magma" -> "Magma Core Cape (3D)";
+			case "cape-g5wave" -> "Ocean Wave Cape (3D)";
+			case "cape-g5racing" -> "Racing Stripe Cape (3D)";
+			case "cape-g5aurora" -> "Aurora Peaks Cape (3D)";
+			case "cape-g5circuit" -> "Circuit Core Cape (3D)";
+			case "cape-g5royal" -> "Royal Crest Cape (3D)";
+			case "cape-g5synth" -> "Retro Sunset Cape (3D)";
+			case "cape-g5rift" -> "Void Rift Cape (3D)";
+			case "cape-g5aurorafx" -> "Aurora Flow Cape (animated)";
+			case "cape-g5warp" -> "Hyperdrive Cape (animated)";
+			case "cape-g6pulse" -> "Cloudy Pulse Cape (animated)";
+			case "cape-g6gradient" -> "Gradient Flow Cape (animated)";
+			case "cape-g6silk" -> "Silk Lines Cape (animated)";
+			case "cape-g6orbit" -> "Orbit Dots Cape (animated)";
+			case "cape-g6scan" -> "Neon Scan Cape (animated)";
+			case "cape-g6rain" -> "Rain Glass Cape (animated)";
+			case "cape-g6fire" -> "Campfire Cape (animated)";
+			case "cape-g6ocean" -> "Moonlit Ocean Cape (animated)";
+			case "cape-g6code" -> "Matrix Code Cape (animated)";
+			case "cape-g6galaxy" -> "Spiral Galaxy Cape (animated)";
 			default -> id;
 		};
 	}

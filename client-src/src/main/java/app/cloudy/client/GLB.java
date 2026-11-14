@@ -51,6 +51,38 @@ public final class GLB {
 		FILES.put("cape-g4glitch", "mono_glitch_cape.glb");
 		FILES.put("cape-g4crest", "cloudy_crest_cape.glb");
 		FILES.put("cape-g4drip", "toxic_drip_cape.glb");
+		FILES.put("wings-g5seraph", "seraph_gold_wings.glb");
+		FILES.put("wings-g5butterfly", "nebula_butterfly_wings.glb");
+		FILES.put("wings-g5wyvern", "crimson_wyvern_wings.glb");
+		FILES.put("wings-g5mecha", "mecha_thruster_wings.glb");
+		FILES.put("wings-g5dragonfly", "dragonfly_prism_wings.glb");
+		FILES.put("wings-g5phoenix", "phoenix_blaze_wings.glb");
+		FILES.put("wings-g5volt", "volt_outline_wings.glb");
+		FILES.put("wings-g5leaf", "autumn_leaf_wings.glb");
+		FILES.put("wings-g5bone", "bone_reaper_wings.glb");
+		FILES.put("wings-g5pixel", "pixel_prism_wings.glb");
+		FILES.put("cape-g5galaxy", "galaxy_orbit_cape.glb");
+		FILES.put("cape-g5sakura", "sakura_night_cape.glb");
+		FILES.put("cape-g5magma", "magma_core_cape.glb");
+		FILES.put("cape-g5wave", "ocean_wave_cape.glb");
+		FILES.put("cape-g5racing", "racing_stripe_cape.glb");
+		FILES.put("cape-g5aurora", "aurora_peaks_cape.glb");
+		FILES.put("cape-g5circuit", "circuit_core_cape.glb");
+		FILES.put("cape-g5royal", "royal_crest_cape.glb");
+		FILES.put("cape-g5synth", "retro_sunset_cape.glb");
+		FILES.put("cape-g5rift", "void_rift_cape.glb");
+		FILES.put("cape-g5aurorafx", "aurora_flow_cape_animated.glb");
+		FILES.put("cape-g5warp", "hyperdrive_cape_animated.glb");
+		FILES.put("cape-g6pulse", "cloudy_pulse_cape_animated.glb");
+		FILES.put("cape-g6gradient", "gradient_flow_cape_animated.glb");
+		FILES.put("cape-g6silk", "silk_lines_cape_animated.glb");
+		FILES.put("cape-g6orbit", "orbit_dots_cape_animated.glb");
+		FILES.put("cape-g6scan", "neon_scan_cape_animated.glb");
+		FILES.put("cape-g6rain", "rain_glass_cape_animated.glb");
+		FILES.put("cape-g6fire", "campfire_cape_animated.glb");
+		FILES.put("cape-g6ocean", "moonlit_ocean_cape_animated.glb");
+		FILES.put("cape-g6code", "matrix_code_cape_animated.glb");
+		FILES.put("cape-g6galaxy", "spiral_galaxy_cape_animated.glb");
 	}
 
 	// Platzierung (glTF-Raum, Ursprung = Halsgelenk). Gleiche Zahlen wie PLACE in assets/js/glb3d.js.
@@ -58,7 +90,7 @@ public final class GLB {
 	public static final float WING_Y = -0.22f, WING_Z = -0.15f, WING_SC = 0.62f;
 	public static final float HALO_Y = 0.66f;
 
-	private static final class Part { String name; float[] v; int[] idx; float tx, ty, tz, yaw; int side, img; boolean halo; }
+	private static final class Part { String name; float[] v; int[] idx; float tx, ty, tz, yaw; int side, img; boolean halo; int aFrames, aCols = 1, aRows = 1, aMs = 100; }
 	private static final class Model { Part[] parts; Identifier[] tex; Identifier tex(Part p) { return tex[Math.max(0, Math.min(tex.length - 1, p.img))]; } }
 
 	private static final Map<String, Model> MODELS = new HashMap<>();
@@ -100,10 +132,12 @@ public final class GLB {
 			if (n.has("translation")) { JsonArray t = n.getAsJsonArray("translation"); tx = t.get(0).getAsFloat(); ty = t.get(1).getAsFloat(); tz = t.get(2).getAsFloat(); }
 			if (n.has("rotation")) { JsonArray q = n.getAsJsonArray("rotation"); yaw = 2f * (float) Math.atan2(q.get(1).getAsDouble(), q.get(3).getAsDouble()); } // die Modelle drehen nur um Y
 			String name = n.has("name") ? n.get("name").getAsString() : "";
+			JsonObject anim = n.has("extras") && n.getAsJsonObject("extras").has("cloudyAnim") ? n.getAsJsonObject("extras").getAsJsonObject("cloudyAnim") : null; // animierter Umhang: Bilder im Raster
 			for (var pe : meshes.get(n.get("mesh").getAsInt()).getAsJsonObject().getAsJsonArray("primitives")) {
 				JsonObject prim = pe.getAsJsonObject(), at = prim.getAsJsonObject("attributes");
 				float[] pos = floats(j, d, bin, at.get("POSITION").getAsInt(), 3), nor = floats(j, d, bin, at.get("NORMAL").getAsInt(), 3), uv = floats(j, d, bin, at.get("TEXCOORD_0").getAsInt(), 2);
 				Part p = new Part();
+				if (anim != null) try { p.aFrames = anim.get("frames").getAsInt(); p.aCols = Math.max(1, anim.get("cols").getAsInt()); p.aRows = Math.max(1, anim.get("rows").getAsInt()); p.aMs = Math.max(20, anim.get("frameMs").getAsInt()); } catch (Exception ignored) {}
 				p.img = 0; // Material -> Textur -> Bild (Modelle mit mehreren Texturen, z. B. Vorder- und Kantenseite)
 				try { if (prim.has("material")) { JsonObject mat = j.getAsJsonArray("materials").get(prim.get("material").getAsInt()).getAsJsonObject(); JsonObject pbr = mat.getAsJsonObject("pbrMetallicRoughness"); if (pbr != null && pbr.has("baseColorTexture")) { int ti = pbr.getAsJsonObject("baseColorTexture").get("index").getAsInt(); p.img = j.getAsJsonArray("textures").get(ti).getAsJsonObject().get("source").getAsInt(); } } } catch (Exception ignored) {}
 				p.name = name; p.tx = tx; p.ty = ty; p.tz = tz; p.yaw = yaw; p.side = tx > 0 ? 1 : tx < 0 ? -1 : 0; p.halo = name.toLowerCase().contains("halo");
@@ -168,6 +202,8 @@ public final class GLB {
 	private static void drawPart(MatrixStack ms, VertexConsumer vc, int light, int ov, Part p, float tx, float ty, float tz, float yaw) { drawPart(ms, vc, light, ov, p, tx, ty, tz, yaw, 255, 255, 255, 255); }
 
 	private static void drawPart(MatrixStack ms, VertexConsumer vc, int light, int ov, Part p, float tx, float ty, float tz, float yaw, int cr, int cg, int cb, int ca) {
+		float du = 0f, dv = 0f;
+		if (p.aFrames > 1) { int fr = (int) ((System.currentTimeMillis() / p.aMs) % p.aFrames); du = (fr % p.aCols) / (float) p.aCols; dv = (fr / p.aCols) / (float) p.aRows; } // animierter Umhang: Bild im Raster waehlen
 		ms.push();
 		ms.translate(tx, ty, tz);
 		if (yaw != 0f) ms.multiply(new Quaternionf().rotationY(yaw));
@@ -177,7 +213,7 @@ public final class GLB {
 		for (int f = 0; f + 3 <= ix.length; f += 3) {
 			for (int k = 0; k < 4; k++) { // Dreieck als Quad mit doppeltem letztem Punkt (wie ZZ4)
 				int o = ix[f + Math.min(k, 2)] * 8;
-				vc.vertex(e, v[o], v[o + 1], v[o + 2]).color(cr, cg, cb, ca).texture(v[o + 3], v[o + 4]).overlay(ov).light(light).normal(e, v[o + 5], v[o + 6], v[o + 7]);
+				vc.vertex(e, v[o], v[o + 1], v[o + 2]).color(cr, cg, cb, ca).texture(v[o + 3] + du, v[o + 4] + dv).overlay(ov).light(light).normal(e, v[o + 5], v[o + 6], v[o + 7]);
 			}
 		}
 		ms.pop();
