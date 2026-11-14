@@ -1,4 +1,9 @@
 {
+  "0.9.113": [
+    "3D lyrics word by word: each word spawns when it is sung, with your chosen motion; the old line despawns right away",
+    "Setting \"Words appear\": word by word (new) or whole line (classic)",
+    "Setting \"Only in the sky\": lyrics float high in the sky instead of in front of you"
+  ],
   "0.9.112": [
     "3D lyrics in the world were mirrored – now readable the right way round",
     "Chrome 3D lyrics: only the words being sung appear, with a small pop – no longer the whole line at once"

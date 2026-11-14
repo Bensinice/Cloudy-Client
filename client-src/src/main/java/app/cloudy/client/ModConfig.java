@@ -75,7 +75,7 @@ public final class ModConfig {
 	public static void skyReset() { skyBeat = 0; skySrc = 0; skyCol = 3; skyStr = 100; cloudMode = 0; cloudCol = 0; fogMode = 0; fogCol = 9; fogDist = 2; save(); }
 	public static final String[] LPOS = {"Words in world (3D sky)", "Near hotbar", "Top center", "Screen center", "Left list", "Words (flat)", "Chrome letters (3D)"};
 	public static final String[] LFONT = {"Extended", "Poppins", "Minecraft", "Montserrat", "Kanit", "Fredoka", "Unbounded", "Bebas Neue", "Pacifico", "Caveat"}, LFX = {"Glow", "Shadow", "Outline", "None"};
-	public static void lyricsReset() { lyricsMode = 0; lyricsOffset = 0; lyricsLife = 1600; lyricsCur = 0; lyricsOld = 3; lyricsFont = 0; lyricsFx = 0; lyricsMotion = 0; lyricsAlpha = 100; lyricsSize = 100; lyricsCard = true; save(); }
+	public static void lyricsReset() { lyricsMode = 0; lyricsOffset = 0; lyricsLife = 1600; lyricsCur = 0; lyricsOld = 3; lyricsFont = 0; lyricsFx = 0; lyricsMotion = 0; lyricsAlpha = 100; lyricsSize = 100; lyricsCard = true; lyricsReveal = 0; lyricsSkyOnly = false; save(); }
 	/** Farbauswahl fuer die Lyrics (Index): 0 Weiss, 1 Theme, 2 Gelb, 3 Hellblau, 4 Rosa, 5 Mint, 6 Orange, 7 Violett, 8 Rot */
 	public static final String[] LCOL_NAMES = {"White", "Theme", "Yellow", "Sky blue", "Pink", "Mint", "Orange", "Violet", "Red", "Custom"};
 	public static final int[] LCOL = {0xFFFFFF, -1, 0xFFE866, 0x9FD3FF, 0xFF9ECF, 0x8CF5C8, 0xFFA45C, 0xC09CFF, 0xFF6B6B, -2};
@@ -94,6 +94,10 @@ public final class ModConfig {
 	public static final String[] HEART_STYLE = {"Classic", "Round", "Pixel", "Bar"}, HEART_ANIM = {"Off", "Wave", "Pulse", "Low HP shake"}, TIMER_MODE = {"Stopwatch", "Countdown"};
 	/** Zoom: halten oder umschalten, Stufe (wird gespeichert), Mausempfindlichkeit beim Zoomen verringern. AutoGG: Nachricht. Cloudify: Theme. */
 	public static boolean zoomHold = true, zoomSens = true;
+	/** 3D-Lyrics: 0 = Woerter erscheinen einzeln beim Singen (mit Bewegung) und verschwinden danach direkt, 1 = klassisch (ganze Zeile, weicht zurueck). skyOnly = Phrasen nur hoch im Himmel. */
+	public static int lyricsReveal = 0;
+	public static boolean lyricsSkyOnly = false;
+	public static final String[] LREVEAL = {"Word by word", "Whole line (classic)"};
 	public static float zoomLevel = 3f;
 	public static int autoggMsg = 0, cfTheme = 0;
 	public static final String[] GG_MSGS = {"gg", "GG", "gg wp", "Good game!"};
@@ -179,6 +183,8 @@ public final class ModConfig {
 				if (o.has("lyricsCur")) lyricsCur = o.get("lyricsCur").getAsInt();
 				if (o.has("lyricsOld")) lyricsOld = o.get("lyricsOld").getAsInt();
 				if (o.has("zoomHold")) zoomHold = o.get("zoomHold").getAsBoolean();
+				if (o.has("lyricsReveal")) lyricsReveal = Math.max(0, Math.min(LREVEAL.length - 1, o.get("lyricsReveal").getAsInt()));
+				if (o.has("lyricsSkyOnly")) lyricsSkyOnly = o.get("lyricsSkyOnly").getAsBoolean();
 				if (o.has("zoomSens")) zoomSens = o.get("zoomSens").getAsBoolean();
 				if (o.has("zoomLevel")) zoomLevel = Math.max(1.2f, Math.min(30f, o.get("zoomLevel").getAsFloat()));
 				if (o.has("autoggMsg")) autoggMsg = Math.max(0, Math.min(GG_MSGS.length - 1, o.get("autoggMsg").getAsInt()));
@@ -200,7 +206,7 @@ public final class ModConfig {
 			for (var e : pos.entrySet()) { var a = new com.google.gson.JsonArray(); for (float v : e.getValue()) a.add(v); pp.add(e.getKey(), a); }
 			o.add("pos", pp);
 			o.add("on", m); o.addProperty("scale", scale); o.addProperty("top", top); o.addProperty("menu", menu); o.addProperty("lyricsMode", lyricsMode); o.addProperty("lyricsOffset", lyricsOffset); { var pa = new com.google.gson.JsonArray(); for (int v : pick) pa.add(v); o.add("pickCols", pa); } o.addProperty("bgStyle", bgStyle); { var ko = new com.google.gson.JsonObject(); for (var e : keys.entrySet()) ko.addProperty(e.getKey(), e.getValue()); o.add("keys", ko); } o.addProperty("hbStyle", hbStyle); o.addProperty("hbCol", hbCol); o.addProperty("hbSel", hbSel); o.addProperty("heartMode", heartMode); o.addProperty("heartCol", heartCol); o.addProperty("lyricsMotion", lyricsMotion); o.addProperty("lyricsAlpha", lyricsAlpha); o.addProperty("lyricsSize", lyricsSize); o.addProperty("lyricsCard", lyricsCard); o.addProperty("skyBeat", skyBeat); o.addProperty("armCol", armCol); o.addProperty("wingSize", wingSize); o.addProperty("crossStyle", crossStyle); o.addProperty("crossSize", crossSize); o.addProperty("crossThick", crossThick); o.addProperty("crossGap", crossGap); o.addProperty("crossCol", crossCol); o.addProperty("crossOutline", crossOutline); o.addProperty("crossDyn", crossDyn); o.addProperty("wingY", wingY); o.addProperty("heartStyle", heartStyle); o.addProperty("heartAnim", heartAnim); o.addProperty("heartScale", heartScale); o.addProperty("heartDx", heartDx); o.addProperty("heartDy", heartDy); o.addProperty("timerMode", timerMode); o.addProperty("timerCount", timerCount); o.addProperty("timerTenths", timerTenths); o.addProperty("timerMs", Timer.elapsed()); o.addProperty("foodCol", foodCol); o.addProperty("fogMode", fogMode); o.addProperty("fogCol", fogCol); o.addProperty("fogDist", fogDist); { var fa = new com.google.gson.JsonArray(); for (String s : favs) fa.add(s); o.add("favs", fa); } o.addProperty("cloudMode", cloudMode); o.addProperty("cloudCol", cloudCol); o.addProperty("skySrc", skySrc); o.addProperty("skyCol", skyCol); o.addProperty("skyStr", skyStr); o.addProperty("lyricsLife", lyricsLife); o.addProperty("lyricsFont", lyricsFont); o.addProperty("lyricsFx", lyricsFx); o.addProperty("lyricsCur", lyricsCur); o.addProperty("lyricsOld", lyricsOld);
-			o.addProperty("zoomHold", zoomHold); o.addProperty("zoomSens", zoomSens); o.addProperty("zoomLevel", zoomLevel); o.addProperty("autoggMsg", autoggMsg); o.addProperty("cfTheme", cfTheme);
+			o.addProperty("lyricsReveal", lyricsReveal); o.addProperty("lyricsSkyOnly", lyricsSkyOnly); o.addProperty("zoomHold", zoomHold); o.addProperty("zoomSens", zoomSens); o.addProperty("zoomLevel", zoomLevel); o.addProperty("autoggMsg", autoggMsg); o.addProperty("cfTheme", cfTheme);
 			Files.createDirectories(file().getParent());
 			Files.writeString(file(), o.toString());
 		} catch (Exception e) { CloudyClient.LOG.warn("cloudy-mods.json konnte nicht gespeichert werden", e); }

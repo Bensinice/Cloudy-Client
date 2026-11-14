@@ -409,6 +409,12 @@ public class SpotifyScreen extends Screen {
 		toggle(c, mx, my, y, ModConfig.isOn("lyrics"), () -> ModConfig.set("lyrics", !ModConfig.isOn("lyrics")));
 		section(c, "Position");
 		grid(c, mx, my, POS_SHORT.length, 4, 26, i -> Ui.t(POS_SHORT[i]), i -> ModConfig.lyricsMode == i, i -> { ModConfig.lyricsMode = i; ModConfig.save(); });
+		if (ModConfig.lyricsMode == 0 || ModConfig.lyricsMode == 6) {
+			y = row(c, "Words appear", ModConfig.lyricsReveal == 0 ? "Each word spawns when sung (with your motion)" : "Whole line at once, drifts back (old style)", 260);
+			seg(c, mx, my, y, ModConfig.LREVEAL, ModConfig.lyricsReveal, i -> { ModConfig.lyricsReveal = i; ModConfig.save(); });
+			y = row(c, "Only in the sky", "Lyrics float high above you instead of in front of you");
+			toggle(c, mx, my, y, ModConfig.lyricsSkyOnly, () -> { ModConfig.lyricsSkyOnly = !ModConfig.lyricsSkyOnly; ModConfig.save(); });
+		}
 		y = row(c, "Effect", "Behind the words", 230);
 		seg(c, mx, my, y, ModConfig.LFX, ModConfig.lyricsFx, i -> { ModConfig.lyricsFx = i; ModConfig.save(); });
 		section(c, "Font");
@@ -427,7 +433,7 @@ public class SpotifyScreen extends Screen {
 	}
 
 	private void tabStyles(DrawContext c, int mx, int my) {
-		section(c, "Motion of the words");
+		section(c, "Motion of the words (also how 3D words spawn)");
 		grid(c, mx, my, ModConfig.LMOTION.length, 4, 28, i -> Lyrics.fontText(ModConfig.lyricsFont, ModConfig.LMOTION[i]), i -> ModConfig.lyricsMotion == i, i -> { ModConfig.lyricsMotion = i; ModConfig.save(); });
 		colorRow(c, mx, my, "Color: current word", 0);
 		colorRow(c, mx, my, "Color: already sung", 1);

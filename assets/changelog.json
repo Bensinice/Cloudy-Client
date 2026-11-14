@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.113",
+  "date": "2026-11-14",
+  "added": [
+   "3D-Lyrics „Wort für Wort“: jedes Wort spawnt erst, wenn es gesungen wird – mit der gewählten Bewegung (Float, Fall, Rise, Drift, Pop, Wave, Shake, Slam); die alte Zeile verschwindet danach direkt",
+   "Einstellung „Words appear“: Wort für Wort (neu) oder ganze Zeile wie früher (klassisch)",
+   "Einstellung „Only in the sky“: Lyrics schweben hoch im Himmel statt vor dir"
+  ]
+ },
+ {
   "v": "0.9.112",
   "date": "2026-11-13",
   "fixed": [

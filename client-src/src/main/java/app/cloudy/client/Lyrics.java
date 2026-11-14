@@ -363,11 +363,13 @@ public final class Lyrics {
 	private static Ph newPh(MinecraftClient mc, long now, float upAngleDeg, float tilt, boolean title, int line) {
 		Ph p = new Ph();
 		p.eye = camPos(mc); p.born = now; p.title = title; p.line = line; p.tilt = tilt;
-		p.yaw = camYaw(mc) + (rnd2() * 2f - 1f) * 20f;
+		boolean sky = ModConfig.lyricsSkyOnly;
+		p.yaw = camYaw(mc) + (rnd2() * 2f - 1f) * (sky ? 40f : 20f);
+		if (sky) upAngleDeg = (title ? 30f : 34f) + rnd2() * 14f; // nur im Himmel: hoch ueber dem Horizont, egal wohin man schaut
 		p.pitch = -Math.max(SKY_MIN_UP, Math.min(SKY_MAX_UP, upAngleDeg)); // Minecraft: negative Neigung = nach oben
 		double yr = Math.toRadians(p.yaw), pr = Math.toRadians(p.pitch);
 		p.dir = new Vec3d(-Math.sin(yr) * Math.cos(pr), -Math.sin(pr), Math.cos(yr) * Math.cos(pr));
-		p.d0 = 20f + rnd2() * 6f;
+		p.d0 = (sky ? 30f : 20f) + rnd2() * 6f;
 		p.s = p.d0 * 0.011f * SZ(); // Weltgroesse eines Textpixels: gleiche Winkelgroesse wie im Video
 		return p;
 	}
@@ -450,12 +452,13 @@ public final class Lyrics {
 
 	private static void drawPhrases(MinecraftClient mc, WorldRenderContext ctx, MatrixStack ms, long now) {
 		float dt = phFrame == 0 ? 0.016f : Math.min(0.1f, (now - phFrame) / 1000f); phFrame = now;
-		phs.removeIf(p -> p.retired != 0 && now - p.retired > ModConfig.lyricsLife + 2600);
+		boolean classic = ModConfig.lyricsReveal == 1;
+		phs.removeIf(p -> p.retired != 0 && now - p.retired > (classic ? ModConfig.lyricsLife + 2600 : 420)); // neu: abgeloeste Zeile verschwindet direkt
 		// Rang der abgeloesten Phrasen: neueste = 1 (gleich hinter der aktuellen), aeltere weiter hinten
 		int rank = 0;
 		for (int i = phs.size() - 1; i >= 0; i--) {
 			Ph p = phs.get(i);
-			if (p.retired != 0 && now >= p.retired) { rank++; float target = 15f * rank; p.extra += (target - p.extra) * Math.min(1f, dt * 2.6f); }
+			if (classic && p.retired != 0 && now >= p.retired) { rank++; float target = 15f * rank; p.extra += (target - p.extra) * Math.min(1f, dt * 2.6f); }
 		}
 		Vec3d cam = ctx.camera().getPos();
 		var tr = mc.textRenderer;
@@ -466,7 +469,7 @@ public final class Lyrics {
 		boolean chromeNow = chrome();
 		for (Ph p : phs) {
 			boolean old = p.retired != 0 && now >= p.retired;
-			float vis = old ? Math.max(0f, 1f - (now - p.retired) / (float) (ModConfig.lyricsLife + 2300)) : Math.min(1f, (now - p.born) / 250f);
+			float vis = old ? Math.max(0f, 1f - (now - p.retired) / (classic ? (float) (ModConfig.lyricsLife + 2300) : 380f)) : Math.min(1f, (now - p.born) / 250f);
 			if (vis <= 0.02f) continue;
 			double d = p.d0 + p.extra;
 			Vec3d at = p.eye.add(p.dir.multiply(d)).add(0, p.extra * 0.10, 0);
@@ -478,26 +481,35 @@ public final class Lyrics {
 				float k; int rgb;
 				if (old || p.title) { k = 1f; rgb = old ? oldRgb : 0xFFFFFF; }
 				else { long t0 = p.st[Math.max(0, Math.min(p.st.length - 1, it.w))]; k = pos >= t0 ? ease((pos - t0) / 230f) : 0f; rgb = Ui.mix(0xFF000000 | dimRgb, 0xFF000000 | curRgb, k) & 0xFFFFFF; }
-				float a = vis * alphaCfg * (old || p.title ? (p.title ? 0.85f : 0.9f) : (0.30f + 0.70f * k));
+				float kA = 1f; // Einflug-Fortschritt des Wortes (0 = noch nicht gesungen)
+				if (!old && !p.title && p.st != null && it.w >= 0) { long t0 = p.st[Math.max(0, Math.min(p.st.length - 1, it.w))]; kA = pos >= t0 ? Math.min(1f, (pos - t0) / 380f) : 0f; }
+				if (!classic && kA <= 0f) continue; // Wort fuer Wort: noch nicht gesungene Woerter gibt es noch nicht
+				float a = vis * alphaCfg * (old || p.title ? (p.title ? 0.85f : 0.9f) : classic ? (0.30f + 0.70f * k) : Math.min(1f, kA * 2.4f));
 				int al = Math.max(0, Math.min(255, (int) (a * 255)));
 				if (al < 6) continue;
-				float lift = (!old && !p.title && it.w >= 0 && k < 1f) ? (1f - k) * 2.5f : 0f; // Wort steigt beim Einblenden leicht auf
+				float lift = classic && (!old && !p.title && it.w >= 0 && k < 1f) ? (1f - k) * 2.5f : 0f; // klassisch: Wort steigt beim Einblenden leicht auf
+				float[] mv = classic || kA >= 1f ? null : motion(ModConfig.lyricsMotion, kA, it.s.hashCode()); // neu: Einflug mit der gewaehlten Bewegung
+				float mdx = mv == null ? 0f : mv[0], mdy = mv == null ? 0f : mv[1], msc = mv == null ? 1f : mv[2];
 				if (chromeNow) { // 3D-Chrombuchstaben: Grundlinie unter der Textzeile, glTF (Y oben, +Z vorne) auf den Textraum (Y unten, Z weg) gedreht
-					ms.push();
-					ms.translate(it.x, it.y + lift + 9f * it.sc, 0);
 					float kc = old || p.title ? 1f : k01(it, p, pos);
-					if (kc <= 0.01f) { ms.pop(); continue; } // nur gesungene Woerter erscheinen, nicht die ganze Zeile auf einmal
-					float kk = CHROME_K * it.sc * (0.75f + 0.25f * kc); // kleines Aufploppen beim Erscheinen
+					if (classic && kc <= 0.01f) continue; // klassisch: Chrom erscheint auch erst beim Singen
+					float cwid = ChromeLetters.width(it.s) * CHROME_K * it.sc;
+					ms.push();
+					ms.translate(it.x + mdx + cwid / 2f, it.y + lift + mdy + 9f * it.sc, 0);
+					float kk = CHROME_K * it.sc * msc * (classic ? 0.75f + 0.25f * kc : 1f);
 					ms.scale(kk, -kk, kk);
-					int alc = old || p.title ? al : Math.max(0, Math.min(255, (int) (255 * vis * alphaCfg * kc)));
+					ms.translate(-cwid / 2f / (CHROME_K * it.sc), 0f, 0f);
+					int alc = old || p.title || !classic ? al : Math.max(0, Math.min(255, (int) (255 * vis * alphaCfg * kc)));
 					int tint = old ? 200 : 255;
 					ChromeLetters.draw(ms, vcp, it.s, (alc << 24) | (tint << 16) | (tint << 8) | tint, 0xF000F0);
 					ms.pop();
 					continue;
 				}
 				ms.push();
-				ms.translate(it.x, it.y + lift, 0);
-				ms.scale(it.sc, it.sc, 1f);
+				float tw2 = tr.getWidth(it.t) * it.sc / 2f;
+				ms.translate(it.x + mdx + tw2, it.y + lift + mdy + 4.5f * it.sc, 0);
+				ms.scale(it.sc * msc, it.sc * msc, 1f);
+				ms.translate(-tw2 / it.sc, -4.5f, 0f);
 				Matrix4f m = ms.peek().getPositionMatrix();
 				tr.draw(it.t, 0f, 0f, ((al * 6 / 10) << 24), false, new Matrix4f(m).translate(1f, 1f, -0.6f), vcp, TextRenderer.TextLayerType.NORMAL, 0, 0xF000F0);
 				tr.draw(it.t, 0f, 0f, (al << 24) | rgb, false, new Matrix4f(m), vcp, TextRenderer.TextLayerType.NORMAL, 0, 0xF000F0);
@@ -506,6 +518,21 @@ public final class Lyrics {
 			ms.pop();
 		}
 		vcp.draw();
+	}
+
+	/** Einflug eines Wortes je nach gewaehlter Bewegung: {dx, dy, Groesse}. t = 0..1 seit dem Singen. */
+	private static float[] motion(int mo, float t, int seed) {
+		float e = ease(t), r = 1f - e, side = (seed & 1) == 0 ? 1f : -1f;
+		return switch (mo) {
+			case 1 -> new float[] {0f, -14f * r, 1f};                                   // Fall: von oben
+			case 2 -> new float[] {0f, 14f * r, 1f};                                    // Rise: von unten
+			case 3 -> new float[] {16f * r * side, 0f, 1f};                             // Drift: von der Seite
+			case 4 -> new float[] {0f, 0f, 0.35f + 0.65f * e + 0.28f * (float) Math.sin(t * Math.PI)}; // Pop: aufploppen
+			case 5 -> new float[] {0f, 7f * r * (float) Math.sin(t * 9f), 1f};          // Wave: wellig
+			case 6 -> new float[] {3f * r * (float) Math.sin(t * 42f), 2f * r * (float) Math.cos(t * 37f), 1f}; // Shake: zittern
+			case 7 -> new float[] {0f, 0f, 1f + 1.3f * r * r};                          // Slam: gross rein
+			default -> new float[] {0f, 5f * r, 1f};                                    // Float: sanft schweben
+		};
 	}
 
 	/** Fortschritt 0..1, wie weit ein Wort schon gesungen ist (fuer die Helligkeit der Chrombuchstaben). */
