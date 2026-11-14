@@ -857,7 +857,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.118'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.119'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1519,6 +1519,23 @@ const CATALOG = [
   { id: 'cape-g6ocean', cat: 'cape', name: 'Mondmeer-Umhang (animiert)', price: 2000 },
   { id: 'cape-g6code', cat: 'cape', name: 'Code-Regen-Umhang (animiert)', price: 2000 },
   { id: 'cape-g6galaxy', cat: 'cape', name: 'Spiralgalaxie-Umhang (animiert)', price: 2000 },
+  // Cloudy+-Kollektion: nur mit aktivem Cloudy+, dafuer ohne CC (im Abo enthalten)
+  { id: 'wings-pgcrystal', cat: 'wings', name: 'Goldkristall-Flügel', price: 0, plus: true },
+  { id: 'wings-pgfiligree', cat: 'wings', name: 'Gold-Filigran-Flügel', price: 0, plus: true },
+  { id: 'wings-pgdragon', cat: 'wings', name: 'Vergoldete Drachenflügel', price: 0, plus: true },
+  { id: 'wings-pgobsidian', cat: 'wings', name: 'Obsidian-Gold-Flügel', price: 0, plus: true },
+  { id: 'wings-pgcloud', cat: 'wings', name: 'Cloudy+-Wolkenflügel', price: 0, plus: true },
+  { id: 'cape-pgpulse', cat: 'cape', name: 'Cloudy+-Puls-Umhang (animiert)', price: 0, plus: true },
+  { id: 'cape-pgliquid', cat: 'cape', name: 'Flüssiggold-Umhang (animiert)', price: 0, plus: true },
+  { id: 'cape-pgnight', cat: 'cape', name: 'Goldene-Nacht-Umhang (animiert)', price: 0, plus: true },
+  { id: 'cape-pgprestige', cat: 'cape', name: 'Prestige-Glanz-Umhang (animiert)', price: 0, plus: true },
+  { id: 'cape-pgaurora', cat: 'cape', name: 'Goldpolarlicht-Umhang (animiert)', price: 0, plus: true },
+  { id: 'hat-pgcrown', cat: 'hat', name: 'Cloudy+-Krone', price: 0, plus: true },
+  { id: 'hat-pgtophat', cat: 'hat', name: 'Goldener Zylinder', price: 0, plus: true },
+  { id: 'hat-pghalo', cat: 'hat', name: 'Goldener Heiligenschein', price: 0, plus: true },
+  { id: 'hat-pglaurel', cat: 'hat', name: 'Goldener Lorbeerkranz', price: 0, plus: true },
+  { id: 'hat-pgpuff', cat: 'hat', name: 'Wolken-Mütze', price: 0, plus: true },
+
 ];
 const PACK_FILES = {
   ...Object.fromEntries(['zz4', 'zz4m', 'zz3', 'zz3s', 'zz5', 'yy'].map(k => ['shield-' + k, `cloudy-shield-${k}.zip`])) };
@@ -1813,7 +1830,16 @@ ipcMain.handle('shopRename', async (_e, { id, name }) => {
 });
 ipcMain.handle('shopState', async () => { await srvPull(); await limPull(); const r = shopWrite(() => ({}), true); return r.ok ? r.state : null; });
 { const _ih = ipcMain.handle.bind(ipcMain); ipcMain.handle = (n, f) => _ih(n, ['shopBuy', 'shopEquip', 'shopDaily', 'shopGift', 'limClaim'].includes(n) ? async (...a) => { await srvPull(); return f(...a); } : f); } // vor jeder Shop-Aktion den neuesten Stand vom Server holen (Geschenke, Admin-Änderungen)
-ipcMain.handle('shopBuy', (_e, id) => shopWrite(u => {
+async function plusNow() { // hat das angemeldete Konto gerade Cloudy+? (Server entscheidet)
+  if (!currentUser || !srvCfg() || !srvTok) return false;
+  const r = await srvCall('/pass/state', {}, srvTok).catch(() => null); return !!(r && r.ok && r.plus);
+}
+ipcMain.handle('shopBuy', async (_e, id) => {
+  const pit = CATALOG.find(c => c.id === id), cu = currentUser && readAuth().users[currentUser.toLowerCase()];
+  if (pit && pit.plus && !(cu && cu.admin) && !(await plusNow())) return { ok: false, error: 'Dieses Item gehört zur Cloudy+-Kollektion – hol dir Cloudy+, dann ist es kostenlos.' };
+  return shopBuyWrite(id);
+});
+const shopBuyWrite = id => shopWrite(u => {
   const it = CATALOG.find(c => c.id === id); if (!it) return { ok: false, error: 'Unbekanntes Item.' };
   if (u.admin) return {}; if (u.owned.includes(id)) return { ok: false, error: 'Das besitzt du schon.' };
   if (shopHidden.includes(id)) return { ok: false, error: 'Dieses Item ist nicht mehr erhältlich.' };
@@ -1822,7 +1848,7 @@ ipcMain.handle('shopBuy', (_e, id) => shopWrite(u => {
   if (u.infCoins) { u.owned.push(id); return {}; } // Tester: unendlich Coins, nichts wird abgezogen
   if (u.coins < price) return { ok: false, error: `Dir fehlen ${price - u.coins} CC.` };
   u.coins -= price; u.owned.push(id);
-}));
+});
 ipcMain.handle('bundleBuy', async (_e, id, code) => { // Limited-Pakete: Der Server zählt den Bestand (erst reservieren, bei Fehlschlag wieder freigeben)
   const bb = shopBundles()[id]; let claimed = false;
   const cu0 = currentUser && readAuth().users[currentUser.toLowerCase()];
@@ -1862,6 +1888,7 @@ ipcMain.handle('shopEquip', (_e, { cat, id }) => shopWrite(u => {
 ipcMain.handle('shopDaily', () => shopWrite(u => { if (u.admin || u.infCoins || u.daily === todayStr()) return { ok: false, error: 'Heute schon abgeholt.' }; u.daily = todayStr(); u.coins += 50; }));
 ipcMain.handle('shopGift', async (_e, { to, id }) => {
   to = String(to || '').trim(); id = String(id || '');
+  if ((CATALOG.find(c => c.id === id) || {}).plus) return { ok: false, error: 'Cloudy+-Items kann man nicht verschenken.' };
   const a0 = readAuth(), me0 = currentUser && a0.users[currentUser.toLowerCase()];
   if (!me0) return { ok: false, error: 'Bitte zuerst bei Cloudy anmelden.' };
   if (srvCfg()) {

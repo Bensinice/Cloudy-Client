@@ -1,4 +1,8 @@
 {
+  "0.9.119": [
+    "Cloudy+ collection: 5 gold wings, 5 animated capes and 5 hats",
+    "All collection items are free with active Cloudy+ – they can't be claimed without it or gifted"
+  ],
   "0.9.118": [
     "32 new 3D cosmetics: 10 wings, 10 capes and 12 animated capes",
     "Animated capes play in game and in the shop preview",
@@ -18,7 +22,7 @@
   ],
   "0.9.114": [
     "3D lyrics no longer overlap: new lines move above or below lines that are still visible",
-    "Capes: movement is now per player – before, all capes (also other players\u2019) moved with your own camera/movement; now they swing when walking, falling, strafing and lag a little when turning"
+    "Capes: movement is now per player – before, all capes (also other players’) moved with your own camera/movement; now they swing when walking, falling, strafing and lag a little when turning"
   ],
   "0.9.113": [
     "3D lyrics word by word: each word spawns when it is sung, with your chosen motion; the old line despawns right away",

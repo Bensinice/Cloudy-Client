@@ -83,6 +83,21 @@ public final class GLB {
 		FILES.put("cape-g6ocean", "moonlit_ocean_cape_animated.glb");
 		FILES.put("cape-g6code", "matrix_code_cape_animated.glb");
 		FILES.put("cape-g6galaxy", "spiral_galaxy_cape_animated.glb");
+		FILES.put("wings-pgcrystal", "gold_crystal_wings.glb");
+		FILES.put("wings-pgfiligree", "gold_filigree_wings.glb");
+		FILES.put("wings-pgdragon", "gilded_dragon_wings.glb");
+		FILES.put("wings-pgobsidian", "obsidian_gold_wings.glb");
+		FILES.put("wings-pgcloud", "cloud_plus_wings.glb");
+		FILES.put("cape-pgpulse", "plus_pulse_cape.glb");
+		FILES.put("cape-pgliquid", "liquid_gold_cape.glb");
+		FILES.put("cape-pgnight", "golden_night_cape.glb");
+		FILES.put("cape-pgprestige", "prestige_shine_cape.glb");
+		FILES.put("cape-pgaurora", "golden_aurora_cape.glb");
+		FILES.put("hat-pgcrown", "plus_crown_hat.glb");
+		FILES.put("hat-pgtophat", "gold_tophat_hat.glb");
+		FILES.put("hat-pghalo", "golden_halo_hat.glb");
+		FILES.put("hat-pglaurel", "golden_laurel_hat.glb");
+		FILES.put("hat-pgpuff", "cloud_puff_hat.glb");
 	}
 
 	// Platzierung (glTF-Raum, Ursprung = Halsgelenk). Gleiche Zahlen wie PLACE in assets/js/glb3d.js.

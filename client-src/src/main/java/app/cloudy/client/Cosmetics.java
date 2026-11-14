@@ -113,7 +113,8 @@ public final class Cosmetics {
 		"wings-zv", "wings-zs", "wings-zf", "wings-zb", "cape-zbs", "cape-ghg",
 		"hat-g3wizard", "hat-g3crown", "cape-g3nebula", "cape-g3phoenix", "wings-g3seraph", "wings-g3prism", "wings-g3void",
 		"wings-g4abyss", "wings-g4frost", "wings-g4amethyst", "wings-g4mono", "wings-g4venom", "cape-g4viper", "cape-g4vortex", "cape-g4glitch", "cape-g4crest", "cape-g4drip",
-		"wings-g5seraph", "wings-g5butterfly", "wings-g5wyvern", "wings-g5mecha", "wings-g5dragonfly", "wings-g5phoenix", "wings-g5volt", "wings-g5leaf", "wings-g5bone", "wings-g5pixel", "cape-g5galaxy", "cape-g5sakura", "cape-g5magma", "cape-g5wave", "cape-g5racing", "cape-g5aurora", "cape-g5circuit", "cape-g5royal", "cape-g5synth", "cape-g5rift", "cape-g5aurorafx", "cape-g5warp", "cape-g6pulse", "cape-g6gradient", "cape-g6silk", "cape-g6orbit", "cape-g6scan", "cape-g6rain", "cape-g6fire", "cape-g6ocean", "cape-g6code", "cape-g6galaxy"}; // letzte Zeile: 3D-Modelle aus .glb (GLB.java)
+		"wings-g5seraph", "wings-g5butterfly", "wings-g5wyvern", "wings-g5mecha", "wings-g5dragonfly", "wings-g5phoenix", "wings-g5volt", "wings-g5leaf", "wings-g5bone", "wings-g5pixel", "cape-g5galaxy", "cape-g5sakura", "cape-g5magma", "cape-g5wave", "cape-g5racing", "cape-g5aurora", "cape-g5circuit", "cape-g5royal", "cape-g5synth", "cape-g5rift", "cape-g5aurorafx", "cape-g5warp", "cape-g6pulse", "cape-g6gradient", "cape-g6silk", "cape-g6orbit", "cape-g6scan", "cape-g6rain", "cape-g6fire", "cape-g6ocean", "cape-g6code", "cape-g6galaxy",
+		"wings-pgcrystal", "wings-pgfiligree", "wings-pgdragon", "wings-pgobsidian", "wings-pgcloud", "cape-pgpulse", "cape-pgliquid", "cape-pgnight", "cape-pgprestige", "cape-pgaurora", "hat-pgcrown", "hat-pgtophat", "hat-pghalo", "hat-pglaurel", "hat-pgpuff"}; // letzte Zeile: 3D-Modelle aus .glb (GLB.java)
 
 	/** Umhaenge aus normalen 64x32-Texturen (in den Mod gepackt): fuer dich und fuer andere Cloudy-Spieler. */
 	public static boolean isTexCape(String id) { return false; } // zbs/ghg laufen jetzt ueber das Z4-Umhangmodell (ZZ4)
@@ -267,6 +268,22 @@ public final class Cosmetics {
 			case "cape-g6ocean" -> "Moonlit Ocean Cape (animated)";
 			case "cape-g6code" -> "Matrix Code Cape (animated)";
 			case "cape-g6galaxy" -> "Spiral Galaxy Cape (animated)";
+			case "wings-pgcrystal" -> "Gold Crystal Wings (Cloudy+)";
+			case "wings-pgfiligree" -> "Gold Filigree Wings (Cloudy+)";
+			case "wings-pgdragon" -> "Gilded Dragon Wings (Cloudy+)";
+			case "wings-pgobsidian" -> "Obsidian Gold Wings (Cloudy+)";
+			case "wings-pgcloud" -> "Cloud Plus Wings (Cloudy+)";
+			case "cape-pgpulse" -> "Plus Pulse Cape (animated) (Cloudy+)";
+			case "cape-pgliquid" -> "Liquid Gold Cape (animated) (Cloudy+)";
+			case "cape-pgnight" -> "Golden Night Cape (animated) (Cloudy+)";
+			case "cape-pgprestige" -> "Prestige Shine Cape (animated) (Cloudy+)";
+			case "cape-pgaurora" -> "Golden Aurora Cape (animated) (Cloudy+)";
+			case "hat-pgcrown" -> "Plus Crown (Cloudy+)";
+			case "hat-pgtophat" -> "Gold Top Hat (Cloudy+)";
+			case "hat-pghalo" -> "Golden Halo (Cloudy+)";
+			case "hat-pglaurel" -> "Golden Laurel (Cloudy+)";
+			case "hat-pgpuff" -> "Cloud Puff Hat (Cloudy+)";
+
 			default -> id;
 		};
 	}
