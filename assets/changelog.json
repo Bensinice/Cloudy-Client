@@ -1,5 +1,13 @@
 [
  {
+  "v": "0.9.120",
+  "date": "2026-11-14",
+  "added": [
+   "Owner-Kollektion: 5 Flügel, 5 animierte Umhänge und 5 animierte Hüte – nur für den Owner sichtbar und nutzbar, nicht verschenkbar",
+   "Animierte Flügel und Hüte bewegen sich jetzt auch in der Shop-Vorschau"
+  ]
+ },
+ {
   "v": "0.9.119",
   "date": "2026-11-14",
   "added": [

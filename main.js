@@ -857,7 +857,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.119'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.120'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1535,6 +1535,22 @@ const CATALOG = [
   { id: 'hat-pghalo', cat: 'hat', name: 'Goldener Heiligenschein', price: 0, plus: true },
   { id: 'hat-pglaurel', cat: 'hat', name: 'Goldener Lorbeerkranz', price: 0, plus: true },
   { id: 'hat-pgpuff', cat: 'hat', name: 'Wolken-Mütze', price: 0, plus: true },
+  // Owner-Kollektion: nur fuer Owner/Admins sichtbar und nutzbar
+  { id: 'wings-owcrimson', cat: 'wings', name: 'Karmesin-Klingen-Flügel', price: 0, owner: true },
+  { id: 'wings-owphoenix', cat: 'wings', name: 'Owner-Phönixflügel (animiert)', price: 0, owner: true },
+  { id: 'wings-owprism', cat: 'wings', name: 'Prisma-Seraph-Flügel (animiert)', price: 0, owner: true },
+  { id: 'wings-owstorm', cat: 'wings', name: 'Sturmflügel (animiert)', price: 0, owner: true },
+  { id: 'wings-owvoid', cat: 'wings', name: 'Leere-Flügel (animiert)', price: 0, owner: true },
+  { id: 'cape-owthrone', cat: 'cape', name: 'Owner-Thron-Umhang (animiert)', price: 0, owner: true },
+  { id: 'cape-owblackhole', cat: 'cape', name: 'Schwarzes-Loch-Umhang (animiert)', price: 0, owner: true },
+  { id: 'cape-owsigil', cat: 'cape', name: 'Siegel-Umhang (animiert)', price: 0, owner: true },
+  { id: 'cape-owprism', cat: 'cape', name: 'Prisma-Umhang (animiert)', price: 0, owner: true },
+  { id: 'cape-owstorm', cat: 'cape', name: 'Gewitter-Umhang (animiert)', price: 0, owner: true },
+  { id: 'hat-owcrown', cat: 'hat', name: 'Owner-Krone (animiert)', price: 0, owner: true },
+  { id: 'hat-owinferno', cat: 'hat', name: 'Inferno-Heiligenschein (animiert)', price: 0, owner: true },
+  { id: 'hat-owhorns', cat: 'hat', name: 'Dämonenhörner (animiert)', price: 0, owner: true },
+  { id: 'hat-owarcane', cat: 'hat', name: 'Arkaner Hut (animiert)', price: 0, owner: true },
+  { id: 'hat-owcrystal', cat: 'hat', name: 'Kristallkrone (animiert)', price: 0, owner: true },
 
 ];
 const PACK_FILES = {
@@ -1751,7 +1767,7 @@ const namesFile = path.join(app.getPath('userData'), 'shop-names.json'); // vom 
 const pricesFile = path.join(app.getPath('userData'), 'shop-prices.json'); // vom Admin geaenderte Preise
 const bundlesFile = path.join(app.getPath('userData'), 'shop-bundles.json');
 const shopBundles = () => { try { const j = JSON.parse(fs.readFileSync(bundlesFile, 'utf8')); return j && typeof j === 'object' && !Array.isArray(j) ? j : {}; } catch { return {}; } };
-const bundlesView = u => Object.entries(shopBundles()).map(([id, b]) => { const items = (b.items || []).filter(x => CATALOG.some(c => c.id === x)), stock = Math.max(0, +b.stock || 0), until = +b.until || 0, left = stock ? Math.max(0, stock - (+b.sold || 0)) : 0, over = !!((until && until < Date.now()) || (stock && left <= 0)), pr0 = shopPrices(), worth = items.reduce((a, x) => { const c = CATALOG.find(q => q.id === x); return a + (c ? priceOf(c, pr0) : 0); }, 0), ownedAll = items.length > 0 && items.every(x => (u.owned || []).includes(x)); return { id, name: String(b.name || id), price: Math.max(0, +b.price || 0), items, ownedAll, hidden: !!b.hidden, stock, left, until, over, worth, needCode: !!(b.needCode || (b.codes && b.codes.length)), codes: u.admin ? (b.codes || []) : undefined }; }).filter(b => b.items.length >= 2 && (u.admin || (!b.hidden && (!b.over || b.ownedAll))));
+const bundlesView = u => Object.entries(shopBundles()).map(([id, b]) => { const items = (b.items || []).filter(x => CATALOG.some(c => c.id === x && !c.owner)), stock = Math.max(0, +b.stock || 0), until = +b.until || 0, left = stock ? Math.max(0, stock - (+b.sold || 0)) : 0, over = !!((until && until < Date.now()) || (stock && left <= 0)), pr0 = shopPrices(), worth = items.reduce((a, x) => { const c = CATALOG.find(q => q.id === x); return a + (c ? priceOf(c, pr0) : 0); }, 0), ownedAll = items.length > 0 && items.every(x => (u.owned || []).includes(x)); return { id, name: String(b.name || id), price: Math.max(0, +b.price || 0), items, ownedAll, hidden: !!b.hidden, stock, left, until, over, worth, needCode: !!(b.needCode || (b.codes && b.codes.length)), codes: u.admin ? (b.codes || []) : undefined }; }).filter(b => b.items.length >= 2 && (u.admin || (!b.hidden && (!b.over || b.ownedAll))));
 const shopPrices = () => { try { const j = JSON.parse(fs.readFileSync(pricesFile, 'utf8')); return j && typeof j === 'object' ? j : {}; } catch { return {}; } };
 const priceOf = (c, pr) => Number.isFinite(+pr[c.id]) && pr[c.id] !== null ? Math.max(0, Math.round(+pr[c.id])) : c.price;
 const shopNames = () => { try { const j = JSON.parse(fs.readFileSync(namesFile, 'utf8')); return j && typeof j === 'object' ? j : {}; } catch { return {}; } };
@@ -1759,7 +1775,7 @@ function shopOf(u) {
   if (u.coins == null) u.coins = 100; if (!u.owned) u.owned = []; if (!u.equip) u.equip = {};
   for (const k of Object.keys(u.equip)) if (!CATALOG.some(c => c.id === u.equip[k])) delete u.equip[k]; // entfernte Items (alte Z4-/Galaxie-Sachen) nicht mehr ausrüsten
   const nm = shopNames(), pr = shopPrices();
-  return { limited: limList.map(l => { const c = CATALOG.find(x => x.id === l.id); return { ...l, name: nm[l.id] || (c && c.name) || l.id, cat: c ? c.cat : l.id.split('-')[0] }; }), catalog: CATALOG.filter(c => (u.admin || !shopHidden.includes(c.id) || (u.owned || []).includes(c.id)) && (u.admin || !limList.some(l => l.id === c.id) || (u.owned || []).includes(c.id))).map(c => { const o = nm[c.id] ? { ...c, name: nm[c.id] } : { ...c }; o.price = priceOf(c, pr); if (shopHidden.includes(c.id)) o.hidden = true; return o; }), admin: !!u.admin, bundles: bundlesView(u), coins: u.admin || u.infCoins ? null : u.coins, owned: u.admin ? CATALOG.map(c => c.id) : u.owned, equip: u.equip, dailyReady: !u.admin && !u.infCoins && u.daily !== todayStr() };
+  return { limited: limList.map(l => { const c = CATALOG.find(x => x.id === l.id); return { ...l, name: nm[l.id] || (c && c.name) || l.id, cat: c ? c.cat : l.id.split('-')[0] }; }), catalog: CATALOG.filter(c => (!c.owner || u.admin) && (u.admin || !shopHidden.includes(c.id) || (u.owned || []).includes(c.id)) && (u.admin || !limList.some(l => l.id === c.id) || (u.owned || []).includes(c.id))).map(c => { const o = nm[c.id] ? { ...c, name: nm[c.id] } : { ...c }; o.price = priceOf(c, pr); if (shopHidden.includes(c.id)) o.hidden = true; return o; }), admin: !!u.admin, bundles: bundlesView(u), coins: u.admin || u.infCoins ? null : u.coins, owned: u.admin ? CATALOG.map(c => c.id) : u.owned, equip: u.equip, dailyReady: !u.admin && !u.infCoins && u.daily !== todayStr() };
 }
 function syncCosFromGame() { // im Spiel geänderte Auswahl (Cosmetics-Menü) in dein Konto übernehmen
   try {
@@ -1836,6 +1852,7 @@ async function plusNow() { // hat das angemeldete Konto gerade Cloudy+? (Server 
 }
 ipcMain.handle('shopBuy', async (_e, id) => {
   const pit = CATALOG.find(c => c.id === id), cu = currentUser && readAuth().users[currentUser.toLowerCase()];
+  if (pit && pit.owner && !(cu && cu.admin)) return { ok: false, error: 'Dieses Item gibt es nur für den Owner.' };
   if (pit && pit.plus && !(cu && cu.admin) && !(await plusNow())) return { ok: false, error: 'Dieses Item gehört zur Cloudy+-Kollektion – hol dir Cloudy+, dann ist es kostenlos.' };
   return shopBuyWrite(id);
 });
@@ -1861,7 +1878,7 @@ ipcMain.handle('bundleBuy', async (_e, id, code) => { // Limited-Pakete: Der Ser
   }
   const res = shopWrite(u => {
   const b = shopBundles()[id]; if (!b) return { ok: false, error: 'Dieses Paket gibt es nicht mehr.' };
-  const items = (b.items || []).filter(x => CATALOG.some(c => c.id === x)); if (u.admin) return {};
+  const items = (b.items || []).filter(x => CATALOG.some(c => c.id === x && !c.owner)); if (u.admin) return {};
   const missing = items.filter(x => !u.owned.includes(x)); if (!missing.length) return { ok: false, error: 'Du besitzt schon alles aus diesem Paket.' };
   if (missing.some(x => shopHidden.includes(x) || limList.some(l => l.id === x))) return { ok: false, error: 'Ein Item aus dem Paket ist nicht mehr erhältlich.' };
   const price = Math.max(0, Math.round(+b.price || 0));
@@ -1888,7 +1905,7 @@ ipcMain.handle('shopEquip', (_e, { cat, id }) => shopWrite(u => {
 ipcMain.handle('shopDaily', () => shopWrite(u => { if (u.admin || u.infCoins || u.daily === todayStr()) return { ok: false, error: 'Heute schon abgeholt.' }; u.daily = todayStr(); u.coins += 50; }));
 ipcMain.handle('shopGift', async (_e, { to, id }) => {
   to = String(to || '').trim(); id = String(id || '');
-  if ((CATALOG.find(c => c.id === id) || {}).plus) return { ok: false, error: 'Cloudy+-Items kann man nicht verschenken.' };
+  { const gc = CATALOG.find(c => c.id === id) || {}; if (gc.plus || gc.owner) return { ok: false, error: gc.owner ? 'Owner-Items kann man nicht verschenken.' : 'Cloudy+-Items kann man nicht verschenken.' }; }
   const a0 = readAuth(), me0 = currentUser && a0.users[currentUser.toLowerCase()];
   if (!me0) return { ok: false, error: 'Bitte zuerst bei Cloudy anmelden.' };
   if (srvCfg()) {

@@ -112,6 +112,21 @@
     'hat-pghalo': { b: [0, -12, 16, 14], c: ['#ffd24a', '#3a2a06'], img: 'assets/cosmetics3d/icons/hat-pghalo.png', ar: 1, glb: true },
     'hat-pglaurel': { b: [0, -12, 16, 14], c: ['#ffd24a', '#3a2a06'], img: 'assets/cosmetics3d/icons/hat-pglaurel.png', ar: 1, glb: true },
     'hat-pgpuff': { b: [0, -12, 16, 14], c: ['#ffd24a', '#3a2a06'], img: 'assets/cosmetics3d/icons/hat-pgpuff.png', ar: 1, glb: true },
+    'wings-owcrimson': { b: [-9, 0, 34, 24], c: ['#ff3b5c', '#1a0610'], img: 'assets/cosmetics3d/icons/wings-owcrimson.png', ar: 1, glb: true },
+    'wings-owphoenix': { b: [-9, 0, 34, 24], c: ['#ff3b5c', '#1a0610'], img: 'assets/cosmetics3d/icons/wings-owphoenix.png', ar: 1, glb: true },
+    'wings-owprism': { b: [-9, 0, 34, 24], c: ['#ff3b5c', '#1a0610'], img: 'assets/cosmetics3d/icons/wings-owprism.png', ar: 1, glb: true },
+    'wings-owstorm': { b: [-9, 0, 34, 24], c: ['#ff3b5c', '#1a0610'], img: 'assets/cosmetics3d/icons/wings-owstorm.png', ar: 1, glb: true },
+    'wings-owvoid': { b: [-9, 0, 34, 24], c: ['#ff3b5c', '#1a0610'], img: 'assets/cosmetics3d/icons/wings-owvoid.png', ar: 1, glb: true },
+    'cape-owthrone': { b: [0, 8, 16, 24], c: ['#ff3b5c', '#1a0610'], img: 'assets/cosmetics3d/icons/cape-owthrone.png', ar: 1, glb: true },
+    'cape-owblackhole': { b: [0, 8, 16, 24], c: ['#ff3b5c', '#1a0610'], img: 'assets/cosmetics3d/icons/cape-owblackhole.png', ar: 1, glb: true },
+    'cape-owsigil': { b: [0, 8, 16, 24], c: ['#ff3b5c', '#1a0610'], img: 'assets/cosmetics3d/icons/cape-owsigil.png', ar: 1, glb: true },
+    'cape-owprism': { b: [0, 8, 16, 24], c: ['#ff3b5c', '#1a0610'], img: 'assets/cosmetics3d/icons/cape-owprism.png', ar: 1, glb: true },
+    'cape-owstorm': { b: [0, 8, 16, 24], c: ['#ff3b5c', '#1a0610'], img: 'assets/cosmetics3d/icons/cape-owstorm.png', ar: 1, glb: true },
+    'hat-owcrown': { b: [0, -12, 16, 14], c: ['#ff3b5c', '#1a0610'], img: 'assets/cosmetics3d/icons/hat-owcrown.png', ar: 1, glb: true },
+    'hat-owinferno': { b: [0, -12, 16, 14], c: ['#ff3b5c', '#1a0610'], img: 'assets/cosmetics3d/icons/hat-owinferno.png', ar: 1, glb: true },
+    'hat-owhorns': { b: [0, -12, 16, 14], c: ['#ff3b5c', '#1a0610'], img: 'assets/cosmetics3d/icons/hat-owhorns.png', ar: 1, glb: true },
+    'hat-owarcane': { b: [0, -12, 16, 14], c: ['#ff3b5c', '#1a0610'], img: 'assets/cosmetics3d/icons/hat-owarcane.png', ar: 1, glb: true },
+    'hat-owcrystal': { b: [0, -12, 16, 14], c: ['#ff3b5c', '#1a0610'], img: 'assets/cosmetics3d/icons/hat-owcrystal.png', ar: 1, glb: true },
     'hat-crown': { b: [3, -6, 10, 6], c: ['#ffd24a', '#e23b3b'] }, 'hat-halo': { b: [3, -9, 10, 5], c: ['#fff7b0', '#ffd24a'] }, 'hat-haloblack': { b: [3, -9, 10, 5], c: ['#7c5cff', '#0b0b12'] }
   };
   const lt = (hex, k) => { const n = parseInt(hex.slice(1), 16), f = c => Math.round(c + (255 - c) * k); return '#' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(f).map(x => x.toString(16).padStart(2, '0')).join(''); };
@@ -520,7 +535,7 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
     box.innerHTML = CATS.filter(([cat]) => shopFilt === 'all' || fl(cat).length).map(([cat, name]) => `<h3 class="shc">${name}</h3><div class="row shrow">${fl(cat).map(i => {
       const own = shop.owned.includes(i.id), on = shop.equip[cat] === i.id;
       return `<div class="glass shi ${on ? 'sel' : ''}"><div class="i3h" data-i3="${i.id}"></div><b ${shop.admin ? `contenteditable="plaintext-only" spellcheck="false" title="Admin: Namen anklicken und ändern" data-rn="${i.id}"` : ''}>${i.name}</b><small>${shop.admin ? `<span contenteditable="plaintext-only" spellcheck="false" title="Admin: Preis anklicken und ändern (leer = Standardpreis)" data-pr="${i.id}" style="border-bottom:1px dashed currentColor;padding:0 2px">${i.price}</span> CC · gratis (Admin)` : i.plus ? '👑 Cloudy+ · inklusive' : cc(i.price)}</small>
-        ${shop.admin ? `<button class="btn ghost ${i.hidden ? 'tagon' : ''}" data-hide="${i.id}|${i.hidden ? 0 : 1}" title="Admin: ${i.hidden ? 'Wieder im Shop anzeigen' : 'Im Shop verstecken (niemand kann es mehr kaufen)'}">${i.hidden ? '🙈 Versteckt – zeigen' : '👁 Verstecken'}</button>` : ''}        ${shop.admin && i.custom ? `<button class="btn ghost" data-ci-del="${i.id}">Löschen</button>` : ''}${own ? `<button class="btn ${on ? 'ghost' : ''}" data-eq="${i.id}" data-cat="${cat}">${on ? 'Ablegen' : 'Anlegen'}</button>${!shop.admin && !i.custom && !i.plus ? `<button class="btn ghost" data-gift="${i.id}">🎁 Verschenken</button>` : ''}` : (canPay(i.price) ? `<button class="btn" data-buy="${i.id}">Kaufen</button>` : `<button class="btn ghost" disabled>${L('Dir fehlen')} ${i.price - shop.coins} CC</button>`) + `<button class="btn ghost" data-try="${i.id}">👁 ${L('Anprobieren')}</button>`}</div>`;
+        ${shop.admin ? `<button class="btn ghost ${i.hidden ? 'tagon' : ''}" data-hide="${i.id}|${i.hidden ? 0 : 1}" title="Admin: ${i.hidden ? 'Wieder im Shop anzeigen' : 'Im Shop verstecken (niemand kann es mehr kaufen)'}">${i.hidden ? '🙈 Versteckt – zeigen' : '👁 Verstecken'}</button>` : ''}        ${shop.admin && i.custom ? `<button class="btn ghost" data-ci-del="${i.id}">Löschen</button>` : ''}${own ? `<button class="btn ${on ? 'ghost' : ''}" data-eq="${i.id}" data-cat="${cat}">${on ? 'Ablegen' : 'Anlegen'}</button>${!shop.admin && !i.custom && !i.plus && !i.owner ? `<button class="btn ghost" data-gift="${i.id}">🎁 Verschenken</button>` : ''}` : (canPay(i.price) ? `<button class="btn" data-buy="${i.id}">Kaufen</button>` : `<button class="btn ghost" disabled>${L('Dir fehlen')} ${i.price - shop.coins} CC</button>`) + `<button class="btn ghost" data-try="${i.id}">👁 ${L('Anprobieren')}</button>`}</div>`;
     }).join('')}</div>`).join('');
     box.insertAdjacentHTML('afterbegin', bundlesHtml());
     if (shopFilt === 'all' || shopFilt === 'lim') box.insertAdjacentHTML('beforeend', limHtml());

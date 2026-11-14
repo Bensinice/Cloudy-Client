@@ -67,6 +67,21 @@
     'hat-pghalo': { file: 'golden_halo_hat.glb', kind: 'hat', name: 'Goldener Heiligenschein', view: 'front' },
     'hat-pglaurel': { file: 'golden_laurel_hat.glb', kind: 'hat', name: 'Goldener Lorbeerkranz', view: 'front' },
     'hat-pgpuff': { file: 'cloud_puff_hat.glb', kind: 'hat', name: 'Wolken-Mütze', view: 'front' },
+    'wings-owcrimson': { file: 'owner_crimson_blades_wings.glb', kind: 'wings', name: 'Karmesin-Klingen-Flügel', view: 'back' },
+    'wings-owphoenix': { file: 'owner_phoenix_wings.glb', kind: 'wings', name: 'Owner-Phönixflügel (animiert)', view: 'back' },
+    'wings-owprism': { file: 'owner_prism_seraph_wings.glb', kind: 'wings', name: 'Prisma-Seraph-Flügel (animiert)', view: 'back' },
+    'wings-owstorm': { file: 'owner_storm_wings.glb', kind: 'wings', name: 'Sturmflügel (animiert)', view: 'back' },
+    'wings-owvoid': { file: 'owner_void_wings.glb', kind: 'wings', name: 'Leere-Flügel (animiert)', view: 'back' },
+    'cape-owthrone': { file: 'owner_throne_cape.glb', kind: 'cape', name: 'Owner-Thron-Umhang (animiert)', view: 'back' },
+    'cape-owblackhole': { file: 'owner_blackhole_cape.glb', kind: 'cape', name: 'Schwarzes-Loch-Umhang (animiert)', view: 'back' },
+    'cape-owsigil': { file: 'owner_sigil_cape.glb', kind: 'cape', name: 'Siegel-Umhang (animiert)', view: 'back' },
+    'cape-owprism': { file: 'owner_prism_cape.glb', kind: 'cape', name: 'Prisma-Umhang (animiert)', view: 'back' },
+    'cape-owstorm': { file: 'owner_storm_cape.glb', kind: 'cape', name: 'Gewitter-Umhang (animiert)', view: 'back' },
+    'hat-owcrown': { file: 'owner_crown_hat.glb', kind: 'hat', name: 'Owner-Krone (animiert)', view: 'front' },
+    'hat-owinferno': { file: 'owner_inferno_halo_hat.glb', kind: 'hat', name: 'Inferno-Heiligenschein (animiert)', view: 'front' },
+    'hat-owhorns': { file: 'owner_demon_horns_hat.glb', kind: 'hat', name: 'Dämonenhörner (animiert)', view: 'front' },
+    'hat-owarcane': { file: 'owner_arcane_hat.glb', kind: 'hat', name: 'Arkaner Hut (animiert)', view: 'front' },
+    'hat-owcrystal': { file: 'owner_crystal_crown_hat.glb', kind: 'hat', name: 'Kristallkrone (animiert)', view: 'front' },
     'cape-g6galaxy': { file: 'spiral_galaxy_cape_animated.glb', kind: 'cape', name: 'Spiralgalaxie-Umhang (animiert)', view: 'back' },
   };
   // Platzierung relativ zum Koerper (Block-Einheiten, Y oben, +Z vorne). Hut am Kopf, Umhang/Fluegel am Koerper (Ursprung = Hals).
@@ -134,7 +149,7 @@
       (k === 'hat' ? parts.head : parts.body).add(g);
       if (k === 'wings') m.traverse(o => { if (o.name && /halo/i.test(o.name)) { const h = new THREE.Group(); o.parent.remove(o); h.add(o); o.position.set(0, 0, 0); h.position.set(PLACE.halo[0], PLACE.halo[1], PLACE.halo[2]); parts.head.add(h); } }); // Heiligenschein haengt am Kopf, nicht an den Fluegeln
       if (k === 'cape') anim.push(now => { g.rotation.x = P.tilt + 0.03 * Math.sin(now / 900); g.position.z = P.pos[2]; });
-      if (k === 'cape') m.traverse(o => { const A = o.userData && o.userData.cloudyAnim; if (!A) return; // animierte Umhaenge: Bilder im 4x4-Raster durchschalten
+      m.traverse(o => { const A = o.userData && o.userData.cloudyAnim; if (!A) return; // animierte Umhaenge/Fluegel/Huete: Bilder im 4x4-Raster durchschalten
         o.traverse(x => { if (!x.isMesh || !x.material || !x.material.map) return; const map = x.material.map;
           anim.push(now => { const f = Math.floor(now / A.frameMs) % A.frames; map.offset.set((f % A.cols) / A.cols, Math.floor(f / A.cols) / A.rows); }); }); });
       if (k === 'wings') { const w = []; m.traverse(o => { if (o.name && /wing/i.test(o.name) && o.parent && o.position.x !== 0 && !/halo/i.test(o.name)) { o.userData.base = o.rotation.y; o.userData.side = Math.sign(o.position.x); w.push(o); } });

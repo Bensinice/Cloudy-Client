@@ -114,7 +114,8 @@ public final class Cosmetics {
 		"hat-g3wizard", "hat-g3crown", "cape-g3nebula", "cape-g3phoenix", "wings-g3seraph", "wings-g3prism", "wings-g3void",
 		"wings-g4abyss", "wings-g4frost", "wings-g4amethyst", "wings-g4mono", "wings-g4venom", "cape-g4viper", "cape-g4vortex", "cape-g4glitch", "cape-g4crest", "cape-g4drip",
 		"wings-g5seraph", "wings-g5butterfly", "wings-g5wyvern", "wings-g5mecha", "wings-g5dragonfly", "wings-g5phoenix", "wings-g5volt", "wings-g5leaf", "wings-g5bone", "wings-g5pixel", "cape-g5galaxy", "cape-g5sakura", "cape-g5magma", "cape-g5wave", "cape-g5racing", "cape-g5aurora", "cape-g5circuit", "cape-g5royal", "cape-g5synth", "cape-g5rift", "cape-g5aurorafx", "cape-g5warp", "cape-g6pulse", "cape-g6gradient", "cape-g6silk", "cape-g6orbit", "cape-g6scan", "cape-g6rain", "cape-g6fire", "cape-g6ocean", "cape-g6code", "cape-g6galaxy",
-		"wings-pgcrystal", "wings-pgfiligree", "wings-pgdragon", "wings-pgobsidian", "wings-pgcloud", "cape-pgpulse", "cape-pgliquid", "cape-pgnight", "cape-pgprestige", "cape-pgaurora", "hat-pgcrown", "hat-pgtophat", "hat-pghalo", "hat-pglaurel", "hat-pgpuff"}; // letzte Zeile: 3D-Modelle aus .glb (GLB.java)
+		"wings-pgcrystal", "wings-pgfiligree", "wings-pgdragon", "wings-pgobsidian", "wings-pgcloud", "cape-pgpulse", "cape-pgliquid", "cape-pgnight", "cape-pgprestige", "cape-pgaurora", "hat-pgcrown", "hat-pgtophat", "hat-pghalo", "hat-pglaurel", "hat-pgpuff",
+		"wings-owcrimson", "wings-owphoenix", "wings-owprism", "wings-owstorm", "wings-owvoid", "cape-owthrone", "cape-owblackhole", "cape-owsigil", "cape-owprism", "cape-owstorm", "hat-owcrown", "hat-owinferno", "hat-owhorns", "hat-owarcane", "hat-owcrystal"}; // letzte Zeile: 3D-Modelle aus .glb (GLB.java)
 
 	/** Umhaenge aus normalen 64x32-Texturen (in den Mod gepackt): fuer dich und fuer andere Cloudy-Spieler. */
 	public static boolean isTexCape(String id) { return false; } // zbs/ghg laufen jetzt ueber das Z4-Umhangmodell (ZZ4)
@@ -283,6 +284,21 @@ public final class Cosmetics {
 			case "hat-pghalo" -> "Golden Halo (Cloudy+)";
 			case "hat-pglaurel" -> "Golden Laurel (Cloudy+)";
 			case "hat-pgpuff" -> "Cloud Puff Hat (Cloudy+)";
+			case "wings-owcrimson" -> "Crimson Blade Wings (Owner)";
+			case "wings-owphoenix" -> "Phoenix Wings (Owner)";
+			case "wings-owprism" -> "Prismatic Seraph Wings (Owner)";
+			case "wings-owstorm" -> "Storm Wings (Owner)";
+			case "wings-owvoid" -> "Void Wings (Owner)";
+			case "cape-owthrone" -> "Throne Cape (Owner)";
+			case "cape-owblackhole" -> "Black Hole Cape (Owner)";
+			case "cape-owsigil" -> "Sigil Cape (Owner)";
+			case "cape-owprism" -> "Prism Cape (Owner)";
+			case "cape-owstorm" -> "Storm Cape (Owner)";
+			case "hat-owcrown" -> "Owner Crown (Owner)";
+			case "hat-owinferno" -> "Inferno Halo (Owner)";
+			case "hat-owhorns" -> "Demon Horns (Owner)";
+			case "hat-owarcane" -> "Arcane Hat (Owner)";
+			case "hat-owcrystal" -> "Crystal Crown (Owner)";
 
 			default -> id;
 		};

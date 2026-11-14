@@ -98,6 +98,21 @@ public final class GLB {
 		FILES.put("hat-pghalo", "golden_halo_hat.glb");
 		FILES.put("hat-pglaurel", "golden_laurel_hat.glb");
 		FILES.put("hat-pgpuff", "cloud_puff_hat.glb");
+		FILES.put("wings-owcrimson", "owner_crimson_blades_wings.glb");
+		FILES.put("wings-owphoenix", "owner_phoenix_wings.glb");
+		FILES.put("wings-owprism", "owner_prism_seraph_wings.glb");
+		FILES.put("wings-owstorm", "owner_storm_wings.glb");
+		FILES.put("wings-owvoid", "owner_void_wings.glb");
+		FILES.put("cape-owthrone", "owner_throne_cape.glb");
+		FILES.put("cape-owblackhole", "owner_blackhole_cape.glb");
+		FILES.put("cape-owsigil", "owner_sigil_cape.glb");
+		FILES.put("cape-owprism", "owner_prism_cape.glb");
+		FILES.put("cape-owstorm", "owner_storm_cape.glb");
+		FILES.put("hat-owcrown", "owner_crown_hat.glb");
+		FILES.put("hat-owinferno", "owner_inferno_halo_hat.glb");
+		FILES.put("hat-owhorns", "owner_demon_horns_hat.glb");
+		FILES.put("hat-owarcane", "owner_arcane_hat.glb");
+		FILES.put("hat-owcrystal", "owner_crystal_crown_hat.glb");
 	}
 
 	// Platzierung (glTF-Raum, Ursprung = Halsgelenk). Gleiche Zahlen wie PLACE in assets/js/glb3d.js.
