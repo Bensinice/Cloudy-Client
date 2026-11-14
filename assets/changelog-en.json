@@ -1,4 +1,7 @@
 {
+  "0.9.117": [
+    "Shop preview with 3D cosmetics: the figure is now as big as in the normal preview and the skin has the correct colors"
+  ],
   "0.9.116": [
     "3D shop preview: with skins that have transparent pixels you could see capes and wings through the body – the base skin layer is now always solid like in Minecraft"
   ],

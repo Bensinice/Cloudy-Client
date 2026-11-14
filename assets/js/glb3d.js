@@ -61,7 +61,7 @@
   }
   function buildPlayer(skin, slim) {
     const root = new THREE.Group(), W = 64, tall = !skin || (skin.naturalHeight || 64) >= 64, H = tall ? 64 : 32;
-    const tex = new THREE.Texture(skin || undefined); tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter; tex.generateMipmaps = false; tex.needsUpdate = true; if (!skin) tex.image = fallbackSkin();
+    const tex = new THREE.Texture(skin || undefined); tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter; tex.generateMipmaps = false; tex.encoding = THREE.sRGBEncoding; tex.needsUpdate = true; if (!skin) tex.image = fallbackSkin(); // sRGB: gleiche Farben wie die normale Vorschau (vorher blass/grau)
     const aw = slim ? 3 : 4, head = new THREE.Group(), body = new THREE.Group();
     head.position.set(0, NECK, 0); body.position.set(0, NECK, 0); root.add(head, body);
     head.add(skinBox(tex, W, H, 0, 0, 8, 8, 8, 0, 4, 0, 0)); head.add(skinBox(tex, W, H, 32, 0, 8, 8, 8, 0, 4, 0, 1.2));
@@ -101,7 +101,7 @@
   async function mount(host, o) { // o: { equip, skin (Image|null), slim, angle: () => grad }
     host.innerHTML = ''; host._apply = null; const w = host.clientWidth || 260, h = host.clientHeight || 340; const G = renderer(host, w, h), r = G.r, my = ++G.token; host.appendChild(G.cv);
     const scene = new THREE.Scene(), pl = buildPlayer(o.skin, o.slim); scene.add(pl.root);
-    const cam = new THREE.PerspectiveCamera(30, w / h, 0.1, 50); cam.position.set(0, 1.4, 7.4); cam.lookAt(0, 1.38, 0);
+    const cam = new THREE.PerspectiveCamera(30, w / h, 0.1, 50); cam.position.set(0, 1.12, 5.3); cam.lookAt(0, 1.06, 0); // Figur so gross wie in der normalen Vorschau (vorher viel zu weit weg)
     let tick = () => {}; try { tick = await dress(pl, o.equip || {}); } catch (e) { console.warn('GLB-Vorschau:', e); }
     if (my !== G.token) return;
     const draw = () => { if (my !== G.token || !host.isConnected) return; const a = (o.angle ? o.angle() : 28) * Math.PI / 180; pl.root.rotation.y = -a; tick(performance.now()); r.render(scene, cam); };

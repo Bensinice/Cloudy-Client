@@ -1,5 +1,12 @@
 [
  {
+  "v": "0.9.117",
+  "date": "2026-11-14",
+  "fixed": [
+   "Shop-Vorschau mit 3D-Cosmetics: Figur ist jetzt so groß wie in der normalen Vorschau (war viel zu weit weg) und der Skin hat die richtigen Farben (war blass/grau)"
+  ]
+ },
+ {
   "v": "0.9.116",
   "date": "2026-11-14",
   "fixed": [
