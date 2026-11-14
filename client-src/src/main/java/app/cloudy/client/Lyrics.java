@@ -353,7 +353,7 @@ public final class Lyrics {
 	private static final class It { net.minecraft.text.Text t; String s = ""; float x, y, sc; int w = -1; }
 	private static final class Ph {
 		final List<It> items = new ArrayList<>(); long[] st; Vec3d eye; Vec3d dir; float yaw, pitch, tilt, s, d0, extra; long born, retired; boolean title; int line;
-	}
+	 boolean skyLock; }
 	private static final List<Ph> phs = new ArrayList<>();
 	private static int phLine = -9, phMode = -1; private static String phTitle = ""; private static long phFrame;
 	private static final float SKY_MIN_UP = 13f, SKY_MAX_UP = 52f; // Grad ueber dem Horizont: nur im Himmel, nie am Boden
@@ -391,7 +391,8 @@ public final class Lyrics {
 		p.pitch = freePitch(p.yaw, p.pitch, now); // nicht auf noch sichtbare Zeilen legen (sonst ueberlappen sie)
 		double yr = Math.toRadians(p.yaw), pr = Math.toRadians(p.pitch);
 		p.dir = new Vec3d(-Math.sin(yr) * Math.cos(pr), -Math.sin(pr), Math.cos(yr) * Math.cos(pr));
-		p.d0 = (sky ? 30f : 20f) + rnd2() * 6f;
+		p.d0 = sky ? 88f + rnd2() * 10f : 20f + rnd2() * 6f;
+		p.skyLock = sky; // nur im Himmel: wie ein Teil der Skybox – fest am Himmel, wandert beim Laufen nicht mit
 		p.s = p.d0 * 0.011f * SZ(); // Weltgroesse eines Textpixels: gleiche Winkelgroesse wie im Video
 		return p;
 	}
@@ -494,7 +495,7 @@ public final class Lyrics {
 			float vis = old ? Math.max(0f, 1f - (now - p.retired) / (classic ? (float) (ModConfig.lyricsLife + 2300) : 380f)) : Math.min(1f, (now - p.born) / 250f);
 			if (vis <= 0.02f) continue;
 			double d = p.d0 + p.extra;
-			Vec3d at = p.eye.add(p.dir.multiply(d)).add(0, p.extra * 0.10, 0);
+			Vec3d at = p.skyLock ? cam.add(p.dir.multiply(d)) : p.eye.add(p.dir.multiply(d)).add(0, p.extra * 0.10, 0);
 			ms.push();
 			ms.translate(at.x - cam.x, at.y - cam.y, at.z - cam.z);
 			ms.multiply(new org.joml.Quaternionf().rotationYXZ((float) Math.PI - (float) Math.toRadians(p.yaw), -(float) Math.toRadians(p.pitch), 0f).rotateZ(p.tilt));
@@ -539,7 +540,12 @@ public final class Lyrics {
 			}
 			ms.pop();
 		}
-		vcp.draw();
+		boolean anySky = false; for (Ph p : phs) if (p.skyLock) { anySky = true; break; }
+		if (anySky) { // Himmel-Lyrics weit weg: ohne Nebel, sonst verschwinden sie im Dunst
+			var oldFog = com.mojang.blaze3d.systems.RenderSystem.getShaderFog();
+			com.mojang.blaze3d.systems.RenderSystem.setShaderFog(net.minecraft.client.render.Fog.DUMMY);
+			try { vcp.draw(); } finally { com.mojang.blaze3d.systems.RenderSystem.setShaderFog(oldFog); }
+		} else vcp.draw();
 	}
 
 	/** Einflug eines Wortes je nach gewaehlter Bewegung: {dx, dy, Groesse}. t = 0..1 seit dem Singen. */

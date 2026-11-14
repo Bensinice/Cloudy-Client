@@ -470,6 +470,14 @@ public class SpotifyScreen extends Screen {
 	private void tabSkies(DrawContext c, int mx, int my) {
 		int y = row(c, "Sky", "The Cloudy sky in the game world");
 		toggle(c, mx, my, y, ModConfig.isOn("sky"), () -> ModConfig.set("sky", !ModConfig.isOn("sky")));
+		y = row(c, "Skybox: " + SkyBox.NAMES[Math.max(0, Math.min(SkyBox.NAMES.length - 1, ModConfig.skyboxId))], "A painted sky instead of the Minecraft sky");
+		toggle(c, mx, my, y, ModConfig.isOn("skybox"), () -> ModConfig.set("skybox", !ModConfig.isOn("skybox")));
+		y = row(c, "Volumetric clouds", "Soft 3D clouds instead of the flat block clouds");
+		toggle(c, mx, my, y, ModConfig.isOn("clouds3d"), () -> ModConfig.set("clouds3d", !ModConfig.isOn("clouds3d")));
+		y = row(c, "Cloud amount", ModConfig.cloudsAmount + " %", 230);
+		int[] ca = {25, 35, 45, 60, 75};
+		int csel = -1; for (int i = 0; i < ca.length; i++) if (ca[i] == ModConfig.cloudsAmount) csel = i;
+		seg(c, mx, my, y, new String[] {"Few", "Some", "Normal", "Many", "Overcast"}, csel, i -> { ModConfig.cloudsAmount = ca[i]; ModConfig.save(); });
 		y = row(c, "Pulse to the song beat", "The sky reacts to the music", 200);
 		seg(c, mx, my, y, ModConfig.BEAT, ModConfig.skyBeat, i -> { ModConfig.skyBeat = i; ModConfig.save(); });
 	}

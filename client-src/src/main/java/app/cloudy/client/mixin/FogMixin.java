@@ -42,6 +42,7 @@ public abstract class FogMixin {
 	@Inject(method = "getFogColor", at = @At("RETURN"), require = 0)
 	private static void cloudy$fogColor(CallbackInfoReturnable<Object> cir) {
 		try {
+			if (app.cloudy.client.SkyBox.active() && cir.getReturnValue() instanceof org.joml.Vector4f sv) { int c = app.cloudy.client.SkyBox.horizon; sv.set((c >> 16 & 255) / 255f, (c >> 8 & 255) / 255f, (c & 255) / 255f, sv.w); return; } // Skybox: Nebel in der Horizontfarbe, keine Kante
 			if (!ModConfig.isOn("sky") || ModConfig.fogMode != 2) return;
 			if (cir.getReturnValue() instanceof org.joml.Vector4f v) {
 				int c = ModConfig.lcol(ModConfig.fogCol, 4);

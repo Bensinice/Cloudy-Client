@@ -60,7 +60,9 @@ public final class ModConfig {
 		new Def("tooltips", "Better tooltips", "QoL", "Item tooltips also show durability and the item ID"),
 		new Def("deathpos", "Death point in chat", "QoL", "Writes your death coordinates into your chat (only you see it)"),
 		new Def("autogg", "Auto GG", "QoL", "Writes your GG message once when a game ends (set the message in Options)"),
-		new Def("fullbright", "Fullbright", "QoL", "Lets you see clearly in caves and at night"));
+		new Def("fullbright", "Fullbright", "QoL", "Lets you see clearly in caves and at night"),
+		new Def("skybox", "Skybox", "QoL", "Replaces the sky with a painted sky (Cloudy Dusk). Sun and moon are part of the picture"),
+		new Def("clouds3d", "Volumetric clouds", "QoL", "Soft, fluffy 3D clouds that drift in the wind instead of the flat block clouds"));
 	private static final Map<String, Boolean> on = new HashMap<>();
 	/** Eigene Position je Widget: {x, y} als Anteil der Fenstergroesse (0..1, linke obere Ecke), {s} Groesse. */
 	public static final Map<String, float[]> pos = new HashMap<>();
@@ -95,7 +97,7 @@ public final class ModConfig {
 	/** Zoom: halten oder umschalten, Stufe (wird gespeichert), Mausempfindlichkeit beim Zoomen verringern. AutoGG: Nachricht. Cloudify: Theme. */
 	public static boolean zoomHold = true, zoomSens = true;
 	/** 3D-Lyrics: 0 = Woerter erscheinen einzeln beim Singen (mit Bewegung) und verschwinden danach direkt, 1 = klassisch (ganze Zeile, weicht zurueck). skyOnly = Phrasen nur hoch im Himmel. */
-	public static int lyricsReveal = 0;
+	public static int lyricsReveal = 0, skyboxId = 0, cloudsAmount = 45;
 	public static boolean lyricsSkyOnly = false;
 	public static final String[] LREVEAL = {"Word by word", "Whole line (classic)"};
 	public static float zoomLevel = 3f;
@@ -184,6 +186,8 @@ public final class ModConfig {
 				if (o.has("lyricsOld")) lyricsOld = o.get("lyricsOld").getAsInt();
 				if (o.has("zoomHold")) zoomHold = o.get("zoomHold").getAsBoolean();
 				if (o.has("lyricsReveal")) lyricsReveal = Math.max(0, Math.min(LREVEAL.length - 1, o.get("lyricsReveal").getAsInt()));
+				if (o.has("skyboxId")) skyboxId = Math.max(0, o.get("skyboxId").getAsInt());
+				if (o.has("cloudsAmount")) cloudsAmount = Math.max(10, Math.min(90, o.get("cloudsAmount").getAsInt()));
 				if (o.has("lyricsSkyOnly")) lyricsSkyOnly = o.get("lyricsSkyOnly").getAsBoolean();
 				if (o.has("zoomSens")) zoomSens = o.get("zoomSens").getAsBoolean();
 				if (o.has("zoomLevel")) zoomLevel = Math.max(1.2f, Math.min(30f, o.get("zoomLevel").getAsFloat()));
@@ -206,7 +210,7 @@ public final class ModConfig {
 			for (var e : pos.entrySet()) { var a = new com.google.gson.JsonArray(); for (float v : e.getValue()) a.add(v); pp.add(e.getKey(), a); }
 			o.add("pos", pp);
 			o.add("on", m); o.addProperty("scale", scale); o.addProperty("top", top); o.addProperty("menu", menu); o.addProperty("lyricsMode", lyricsMode); o.addProperty("lyricsOffset", lyricsOffset); { var pa = new com.google.gson.JsonArray(); for (int v : pick) pa.add(v); o.add("pickCols", pa); } o.addProperty("bgStyle", bgStyle); { var ko = new com.google.gson.JsonObject(); for (var e : keys.entrySet()) ko.addProperty(e.getKey(), e.getValue()); o.add("keys", ko); } o.addProperty("hbStyle", hbStyle); o.addProperty("hbCol", hbCol); o.addProperty("hbSel", hbSel); o.addProperty("heartMode", heartMode); o.addProperty("heartCol", heartCol); o.addProperty("lyricsMotion", lyricsMotion); o.addProperty("lyricsAlpha", lyricsAlpha); o.addProperty("lyricsSize", lyricsSize); o.addProperty("lyricsCard", lyricsCard); o.addProperty("skyBeat", skyBeat); o.addProperty("armCol", armCol); o.addProperty("wingSize", wingSize); o.addProperty("crossStyle", crossStyle); o.addProperty("crossSize", crossSize); o.addProperty("crossThick", crossThick); o.addProperty("crossGap", crossGap); o.addProperty("crossCol", crossCol); o.addProperty("crossOutline", crossOutline); o.addProperty("crossDyn", crossDyn); o.addProperty("wingY", wingY); o.addProperty("heartStyle", heartStyle); o.addProperty("heartAnim", heartAnim); o.addProperty("heartScale", heartScale); o.addProperty("heartDx", heartDx); o.addProperty("heartDy", heartDy); o.addProperty("timerMode", timerMode); o.addProperty("timerCount", timerCount); o.addProperty("timerTenths", timerTenths); o.addProperty("timerMs", Timer.elapsed()); o.addProperty("foodCol", foodCol); o.addProperty("fogMode", fogMode); o.addProperty("fogCol", fogCol); o.addProperty("fogDist", fogDist); { var fa = new com.google.gson.JsonArray(); for (String s : favs) fa.add(s); o.add("favs", fa); } o.addProperty("cloudMode", cloudMode); o.addProperty("cloudCol", cloudCol); o.addProperty("skySrc", skySrc); o.addProperty("skyCol", skyCol); o.addProperty("skyStr", skyStr); o.addProperty("lyricsLife", lyricsLife); o.addProperty("lyricsFont", lyricsFont); o.addProperty("lyricsFx", lyricsFx); o.addProperty("lyricsCur", lyricsCur); o.addProperty("lyricsOld", lyricsOld);
-			o.addProperty("lyricsReveal", lyricsReveal); o.addProperty("lyricsSkyOnly", lyricsSkyOnly); o.addProperty("zoomHold", zoomHold); o.addProperty("zoomSens", zoomSens); o.addProperty("zoomLevel", zoomLevel); o.addProperty("autoggMsg", autoggMsg); o.addProperty("cfTheme", cfTheme);
+			o.addProperty("lyricsReveal", lyricsReveal); o.addProperty("skyboxId", skyboxId); o.addProperty("cloudsAmount", cloudsAmount); o.addProperty("lyricsSkyOnly", lyricsSkyOnly); o.addProperty("zoomHold", zoomHold); o.addProperty("zoomSens", zoomSens); o.addProperty("zoomLevel", zoomLevel); o.addProperty("autoggMsg", autoggMsg); o.addProperty("cfTheme", cfTheme);
 			Files.createDirectories(file().getParent());
 			Files.writeString(file(), o.toString());
 		} catch (Exception e) { CloudyClient.LOG.warn("cloudy-mods.json konnte nicht gespeichert werden", e); }
