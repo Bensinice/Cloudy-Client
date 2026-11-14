@@ -224,7 +224,7 @@
   function paint3d(equip, hostSel) {
     const host = $(hostSel || '#shop3d'); if (!host) return; host.innerHTML = ''; const rig = document.createElement('div'); rig.className = 'rig3'; host.appendChild(rig);
     const sk = skins.find(x => x.id === sel) || skins[0], im0 = sk && load(sk.data), ok = im0 && im0.complete && im0.naturalWidth, im = ok ? im0 : steve(), tall = ok ? im0.naturalHeight >= 64 : true, slim = sk && sk.model === 'slim', aw = slim ? 3 : 4;
-    if (window.Glb3d && Glb3d.usesGlb(equip)) { Glb3d.mount(host, { equip, skin: ok ? im0 : null, slim, angle: hostSel === '#heroSkin' ? () => heroAng : () => ang3 }); return; } // 3D-Modelle (.glb) brauchen echtes 3D (three.js)
+    if (window.Glb3d && Glb3d.usesGlb(equip)) { Glb3d.mount(host, { equip, extra: glbExtra, skin: ok ? im0 : null, slim, angle: hostSel === '#heroSkin' ? () => heroAng : () => ang3 }); return; } // 3D-Modelle (.glb) brauchen echtes 3D (three.js)
     const add = e => rig.appendChild(e);
     add(skinBox(im, 0, 0, 8, 8, 8, 0, 4, 0)); add(skinBox(im, 16, 16, 8, 12, 4, 0, 14, 0));
     add(skinBox(im, 40, 16, aw, 12, 4, -(4 + aw / 2), 14, 0)); add(skinBox(im, tall ? 32 : 40, tall ? 48 : 16, aw, 12, 4, 4 + aw / 2, 14, 0));
@@ -242,6 +242,29 @@
     if (false && equip.shield) { const g = grp(`translate3d(${(4 + aw / 2) * S3}px,${-3.5 * S3}px,${3.9 * S3}px) scale(${ITEMS[equip.shield].img ? .5 : .62})`); shield3(equip.shield, e => g.appendChild(e)); add(g); } // wie in Minecraft: vor dem Arm gehalten
     hat3(equip.hat, add);
     const apply = () => { rig.style.transform = `rotateX(-10deg) rotateY(${ang3}deg)`; }; apply(); host._apply = apply;
+  }
+  // Items ohne .glb in der three.js-Vorschau (wenn z. B. ein 3D-Umhang und ein normaler Heiligenschein zusammen angelegt sind)
+  async function glbExtra(pl, eq) {
+    const T = window.THREE, M = window.Glb3d.MODELS, px = v => v / 16, col = c => { const k = new T.Color(c); return k.convertSRGBToLinear ? k.convertSRGBToLinear() : k; };
+    const texOf = src => { const t = new T.Texture(src); t.magFilter = T.NearestFilter; t.minFilter = T.LinearFilter; t.generateMipmaps = false; t.encoding = T.sRGBEncoding; t.needsUpdate = true; return t; };
+    const imgOf = u => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = u; });
+    const crop = (cv, x, y, w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(cv, x, y, w, h, 0, 0, w, h); return c; };
+    const free = k => eq[k] && ITEMS[eq[k]] && !M[eq[k]];
+    if (free('hat')) { // gleiche Quader wie in der CSS-Vorschau (Kopf oben = 0, y nach unten)
+      hat3(eq.hat, m => pl.head.add(m), (w, h, d, cx, cy, cz, f) => { const m = new T.Mesh(new T.BoxGeometry(px(w), px(h), px(d)), new T.MeshBasicMaterial({ color: col(f.front) })); m.position.set(px(cx), px(8 - cy), px(cz)); return m; });
+    }
+    if (free('cape')) {
+      const I = ITEMS[eq.cape]; let outer, inner, hpx = 16;
+      if (I.img) { const im = await imgOf(I.img); outer = inner = im; hpx = 10 * (I.ar || 1.6); } else { const cv = capeCv(eq.cape); outer = crop(cv, 1, 1, 10, 16); inner = crop(cv, 12, 1, 10, 16); }
+      const side = new T.MeshBasicMaterial({ color: col(I.c[1]) }), mats = [side, side, side, side, new T.MeshBasicMaterial({ map: texOf(inner) }), new T.MeshBasicMaterial({ map: texOf(outer), transparent: true, alphaTest: 0.3 })];
+      const g = new T.Group(), m = new T.Mesh(new T.BoxGeometry(px(10), px(hpx), px(1)), mats); m.position.set(0, -px(hpx) / 2, 0); g.add(m); g.position.set(0, 0, -px(2.6)); g.rotation.x = 0.08; pl.body.add(g);
+    }
+    if (free('wings')) {
+      const I = ITEMS[eq.wings]; let src, W, H, cy;
+      if (I.img) { src = await imgOf(I.img); W = 41.6 * (I.sc || 1); H = W * I.ar; cy = 12; }
+      else { const [bx0, by0, bw, bh] = I.b, k = 8, c = document.createElement('canvas'); c.width = bw * k; c.height = bh * k; const g2 = c.getContext('2d'); g2.setTransform(k, 0, 0, k, -bx0 * k, -by0 * k); drawItem(g2, eq.wings); src = c; W = bw; H = bh; cy = by0 + bh / 2; }
+      const m = new T.Mesh(new T.PlaneGeometry(px(W), px(H)), new T.MeshBasicMaterial({ map: texOf(src), side: T.DoubleSide, transparent: true, alphaTest: 0.3 })); m.position.set(0, px(8 - cy), -px(3.2)); m.rotation.y = Math.PI; pl.body.add(m);
+    }
   }
   // ---------- Start-Banner: dein Skin mit Cosmetics, schaut dem Mauszeiger nach und dreht sich sonst langsam hin und her ----------
   let heroOn = true, heroAng = -18, heroTgt = -18, heroMouse = 0, heroRaf = 0, heroT = 0;
@@ -262,12 +285,12 @@
   document.addEventListener('visibilitychange', () => { if (!document.hidden) loopHero(); });
   window.paintHero = paintHero; window.restartHero = loopHero;
   setTimeout(() => { const cb = $('#heroSkinOn'); if (cb) { cb.checked = heroOn; cb.onchange = () => { heroOn = cb.checked; try { localStorage.setItem('cloudy.heroSkin', heroOn ? '1' : '0'); } catch {} paintHero(); }; } }, 0);
-  function hat3(H, add) {
+  function hat3(H, add, bx = box3) {
     const hc = H && ITEMS[H] && ITEMS[H].c;
-    if (H === 'hat-top' || H === 'hat-gold' || H === 'hat-zzb') { add(box3(7, 7, 7, 0, -3.9, 0, solid(hc[0]))); add(box3(7.2, 1.6, 7.2, 0, -2.4, 0, solid(hc[1]))); add(box3(11, 1.2, 11, 0, -0.5, 0, solid(hc[0]))); }
-    else if (H === 'hat-wizard' || H === 'hat-santa' || H === 'hat-witch' || H === 'hat-party' || H === 'hat-frost' || H === 'hat-zzv' || H === 'hat-zsh' || H === 'hat-zif') { const brim = ITEMS[H].brim || hc[0]; add(box3(14, 1, 14, 0, -0.5, 0, solid(brim))); let y = -1; [[9, 3, hc[0]], [7, 3, lt(hc[0], .15)], [5, 3, lt(hc[0], .3)], [3, 3, lt(hc[0], .45)], [1.6, 2, H === 'hat-santa' || H === 'hat-frost' ? '#ffffff' : hc[1]]].forEach(([w, h, col]) => { add(box3(w, h, w, 0, y - h / 2, 0, solid(col))); y -= h; }); if (H !== 'hat-santa' && H !== 'hat-frost') add(box3(9.2, 0.9, 9.2, 0, -1.9, 0, solid(hc[1]))); }
-    else if (H === 'hat-crown') { add(box3(8.6, 2, 8.6, 0, -1.2, 0, solid(hc[0]))); [[-3.3, -3.3], [3.3, -3.3], [-3.3, 3.3], [3.3, 3.3]].forEach(([x, z]) => add(box3(2, 3, 2, x, -3.7, z, solid(hc[0])))); add(box3(1.2, 1.2, 0.3, 0, -1.2, 4.4, solid(hc[1]))); }
-    else if (H === 'hat-halo' || H === 'hat-haloblack') { [[0, 3.6, 8, 0.8], [0, -3.6, 8, 0.8], [3.6, 0, 0.8, 8], [-3.6, 0, 0.8, 8]].forEach(([x, z, w, d]) => add(box3(w, 0.7, d, x, -6.5, z, solid(hc[1])))); }
+    if (H === 'hat-top' || H === 'hat-gold' || H === 'hat-zzb') { add(bx(7, 7, 7, 0, -3.9, 0, solid(hc[0]))); add(bx(7.2, 1.6, 7.2, 0, -2.4, 0, solid(hc[1]))); add(bx(11, 1.2, 11, 0, -0.5, 0, solid(hc[0]))); }
+    else if (H === 'hat-wizard' || H === 'hat-santa' || H === 'hat-witch' || H === 'hat-party' || H === 'hat-frost' || H === 'hat-zzv' || H === 'hat-zsh' || H === 'hat-zif') { const brim = ITEMS[H].brim || hc[0]; add(bx(14, 1, 14, 0, -0.5, 0, solid(brim))); let y = -1; [[9, 3, hc[0]], [7, 3, lt(hc[0], .15)], [5, 3, lt(hc[0], .3)], [3, 3, lt(hc[0], .45)], [1.6, 2, H === 'hat-santa' || H === 'hat-frost' ? '#ffffff' : hc[1]]].forEach(([w, h, col]) => { add(bx(w, h, w, 0, y - h / 2, 0, solid(col))); y -= h; }); if (H !== 'hat-santa' && H !== 'hat-frost') add(bx(9.2, 0.9, 9.2, 0, -1.9, 0, solid(hc[1]))); }
+    else if (H === 'hat-crown') { add(bx(8.6, 2, 8.6, 0, -1.2, 0, solid(hc[0]))); [[-3.3, -3.3], [3.3, -3.3], [-3.3, 3.3], [3.3, 3.3]].forEach(([x, z]) => add(bx(2, 3, 2, x, -3.7, z, solid(hc[0])))); add(bx(1.2, 1.2, 0.3, 0, -1.2, 4.4, solid(hc[1]))); }
+    else if (H === 'hat-halo' || H === 'hat-haloblack') { [[0, 3.6, 8, 0.8], [0, -3.6, 8, 0.8], [3.6, 0, 0.8, 8], [-3.6, 0, 0.8, 8]].forEach(([x, z, w, d]) => add(bx(w, 0.7, d, x, -6.5, z, solid(hc[1])))); }
   }
   // ---------- 3D-Karten: jedes Item als drehbares Objekt (Hüte aus Quadern, Flaches mit echter Tiefe durch Schichten) ----------
 
@@ -515,6 +538,7 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
   }
   function startTry(ids) { // mehrere Items gleichzeitig anprobieren (Paket) oder eins
     const t = {}; for (const id of ids) { const c = shop.catalog.find(x => x.id === id); if (c) t[c.cat] = id; }
+    if (t.cape || t.wings) ang3 = 200; // Umhang/Fluegel: mit dem Ruecken zur Kamera anfangen
     tryOn = Object.keys(t).length ? t : null; paint3d(eqView()); tryBar();
     try { $('#shop3d').scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch {}
   }

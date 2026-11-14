@@ -1,4 +1,13 @@
 {
+  "0.9.121": [
+    "Admins can remove tags from users again (including Tester and fixed roles)",
+    "Volumetric clouds are now on by default",
+    "Old simple gradient capes removed from shop and in-game menu (kept if equipped)",
+    "In-game menu: hovering a cape previews it and turns the figure around (also for wings)",
+    "Shop try-on of capes and wings starts from the back",
+    "New thumbnails for the Cloudy+ and Owner hats",
+    "Home: skin looks toward the mouse again, no longer stretched thin, 3D cape + normal hat/halo shown together"
+  ],
   "0.9.120": [
     "Owner collection: 5 wings, 5 animated capes and 5 animated hats – owner only, can't be gifted",
     "Animated wings and hats now also move in the shop preview"

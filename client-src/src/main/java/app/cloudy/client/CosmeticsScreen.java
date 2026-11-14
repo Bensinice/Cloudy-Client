@@ -38,7 +38,7 @@ public class CosmeticsScreen extends Screen {
 
 	private List<String> items() {
 		List<String> l = new ArrayList<>();
-		for (String id : Cosmetics.ALL) if (CATS[tab].equals(Cosmetics.catOf(id))) l.add(id);
+		for (String id : Cosmetics.ALL) if (CATS[tab].equals(Cosmetics.catOf(id)) && (!Cosmetics.GONE.contains(id) || id.equals(Cosmetics.cape))) l.add(id);
 		return l;
 	}
 
@@ -103,12 +103,14 @@ public class CosmeticsScreen extends Screen {
 		Ui.glass(c, prevX, py + 28, prevW, ph - 28 - 36);
 		int pcx = prevX + prevW / 2, feet = py + ph - 36 - 34, sc = Math.max(40, (ph - 28 - 36 - 50) / 2.0f > 0 ? (int) ((ph - 28 - 36 - 56) / 1.95f) : 40);
 		long now = System.currentTimeMillis();
-		if (!drag && now - lastInput > 1500) spin += 0.012f;
-		String h = Cosmetics.hat, w = Cosmetics.wings, s = Cosmetics.shield;
-		if (hover != null) { String cat = Cosmetics.catOf(hover); if ("hat".equals(cat)) h = hover; else if ("wings".equals(cat)) w = hover; else if ("shield".equals(cat)) s = hover; }
+		String h = Cosmetics.hat, w = Cosmetics.wings, s = Cosmetics.shield, cp = Cosmetics.cape;
+		String hcat = hover != null ? Cosmetics.catOf(hover) : null;
+		if (hover != null) { if ("hat".equals(hcat)) h = hover; else if ("wings".equals(hcat)) w = hover; else if ("shield".equals(hcat)) s = hover; else if ("cape".equals(hcat)) cp = hover; }
+		if (!drag && ("cape".equals(hcat) || "wings".equals(hcat))) { float tgt = (float) (Math.PI + Math.round((spin - Math.PI) / (2 * Math.PI)) * 2 * Math.PI); spin += (tgt - spin) * 0.15f; lastInput = now; } // Umhang/Fluegel: Figur zeigt den Ruecken
+		else if (!drag && now - lastInput > 1500) spin += 0.012f;
 		boolean ok = false;
 		c.enableScissor(prevX, py + 28, prevX + prevW, py + ph - 8);
-		ok = PlayerPreview.draw(c, pcx, feet, sc, spin, h, w, s);
+		ok = PlayerPreview.draw(c, pcx, feet, sc, spin, h, w, s, cp);
 		c.disableScissor();
 		if (!ok) { Ui.avatar(c, pcx, py + 56, 3); }
 		String line = hover != null ? Cosmetics.nameOf(hover) : "Drag to rotate";

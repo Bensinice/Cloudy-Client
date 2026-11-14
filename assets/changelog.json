@@ -1,5 +1,21 @@
 [
  {
+  "v": "0.9.121",
+  "date": "2026-11-14",
+  "added": [
+   "Admins können Tags von Usern jetzt auch wieder entfernen (auch Tester und feste Rollen)",
+   "Volumetrische Wolken sind jetzt standardmäßig an (Cloudy Mods → QoL → Volumetric clouds)"
+  ],
+  "fixed": [
+   "Alte einfache Farbverlauf-Umhänge sind aus Shop und Spielmenü raus (wer einen angelegt hat, behält ihn)",
+   "Zickzack-Schlangen- und GHG-Umhang haben im Spiel wieder Namen und Vorschaubild",
+   "Spielmenü: beim Drüberfahren über einen Umhang zeigt die Vorschau ihn jetzt an und dreht die Figur mit dem Rücken nach vorn (auch bei Flügeln)",
+   "Shop-Anprobe von Umhängen und Flügeln startet mit Blick auf den Rücken",
+   "Neue Vorschaubilder für die Cloudy+- und Owner-Hüte (ohne dunklen Kasten)",
+   "Startseite: Skin schaut wieder zum Mauszeiger, ist nicht mehr verzerrt/dünn, und 3D-Umhang + normaler Hut/Heiligenschein werden zusammen angezeigt"
+  ]
+ },
+ {
   "v": "0.9.120",
   "date": "2026-11-14",
   "added": [

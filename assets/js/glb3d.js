@@ -96,6 +96,7 @@
 
   const has = id => !!MODELS[id];
   const usesGlb = eq => !!eq && ['hat', 'cape', 'wings'].some(k => eq[k] && MODELS[eq[k]]);
+  const NONGLB = (eq, k) => !!(eq && eq[k] && !MODELS[eq[k]]);
 
   async function bytes(file) {
     if (window.cloudy && window.cloudy.glbRead) { const b = await window.cloudy.glbRead(file); if (b) return b.buffer ? b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) : b; throw new Error('glb ' + file); }
@@ -168,8 +169,12 @@
     const scene = new THREE.Scene(), pl = buildPlayer(o.skin, o.slim); scene.add(pl.root);
     const cam = new THREE.PerspectiveCamera(30, w / h, 0.1, 50); cam.position.set(0, 1.12, 5.3); cam.lookAt(0, 1.06, 0); // Figur so gross wie in der normalen Vorschau (vorher viel zu weit weg)
     let tick = () => {}; try { tick = await dress(pl, o.equip || {}); } catch (e) { console.warn('GLB-Vorschau:', e); }
+    let tick2 = () => {}; if (o.extra) try { tick2 = (await o.extra(pl, o.equip || {})) || tick2; } catch (e) { console.warn('Vorschau (Nicht-3D-Items):', e); } // Items ohne .glb (z. B. Heiligenschein) zusaetzlich zeichnen
     if (my !== G.token) return;
-    const draw = () => { if (my !== G.token || !host.isConnected) return; const a = (o.angle ? o.angle() : 28) * Math.PI / 180; pl.root.rotation.y = -a; tick(performance.now()); r.render(scene, cam); };
+    let lw = w, lh = h;
+    const draw = () => { if (my !== G.token || !host.isConnected) return;
+      const cw = host.clientWidth, ch = host.clientHeight; if (cw && ch && (cw !== lw || ch !== lh)) { lw = cw; lh = ch; r.setSize(cw, ch, false); cam.aspect = cw / ch; cam.updateProjectionMatrix(); } // Feld war beim Aufbau noch unsichtbar/anders gross -> sonst verzerrt (duenne Figur)
+      const a = (o.angle ? o.angle() : 28) * Math.PI / 180; pl.root.rotation.y = a; const now = performance.now(); tick(now); tick2(now); r.render(scene, cam); }; // gleiche Drehrichtung wie die CSS-Vorschau (schaut zum Mauszeiger)
     host._apply = draw; draw();
   }
 

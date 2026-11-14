@@ -857,7 +857,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.120'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.121'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1446,18 +1446,18 @@ ipcMain.handle('authAdminDelete', async (_e, name) => {
 
 // ---- Cloudy Coins & Cosmetics-Shop (lokal) ----
 const CATALOG = [
-  { id: 'cape-cloud', cat: 'cape', name: 'Wolkenumhang', price: 500 }, { id: 'cape-aurora', cat: 'cape', name: 'Nordlicht-Umhang', price: 500 },
+  { id: 'cape-cloud', cat: 'cape', name: 'Wolkenumhang', price: 500, gone: true }, { id: 'cape-aurora', cat: 'cape', name: 'Nordlicht-Umhang', price: 500, gone: true },
   { id: 'wings-angel', cat: 'wings', name: 'Engelsflügel', price: 800 }, { id: 'wings-neon', cat: 'wings', name: 'Neon-Schwingen', price: 800 },
   { id: 'shield-cloud', cat: 'shield', name: 'Wolkenschild', price: 200 }, { id: 'shield-sun', cat: 'shield', name: 'Sonnenschild', price: 200 },
   { id: 'hat-top', cat: 'hat', name: 'Zylinder', price: 250 }, { id: 'hat-wizard', cat: 'hat', name: 'Zauberhut', price: 250 },
-  { id: 'cape-sunset', cat: 'cape', name: 'Sonnenuntergang-Umhang', price: 600 }, { id: 'cape-galaxy', cat: 'cape', name: 'Galaxie-Umhang', price: 700 }, { id: 'cape-fire', cat: 'cape', name: 'Feuer-Umhang', price: 700 },
+  { id: 'cape-sunset', cat: 'cape', name: 'Sonnenuntergang-Umhang', price: 600, gone: true }, { id: 'cape-galaxy', cat: 'cape', name: 'Galaxie-Umhang', price: 700, gone: true }, { id: 'cape-fire', cat: 'cape', name: 'Feuer-Umhang', price: 700, gone: true },
   { id: 'wings-fire', cat: 'wings', name: 'Feuerflügel', price: 900 }, { id: 'wings-bat', cat: 'wings', name: 'Fledermausflügel', price: 900 },
   { id: 'shield-dragon', cat: 'shield', name: 'Drachenschild', price: 300 }, { id: 'shield-forest', cat: 'shield', name: 'Waldschild', price: 250 },
   { id: 'hat-gold', cat: 'hat', name: 'Goldzylinder', price: 400 }, { id: 'hat-santa', cat: 'hat', name: 'Weihnachtsmütze', price: 300 }, { id: 'hat-witch', cat: 'hat', name: 'Hexenhut', price: 300 },
-  { id: 'cape-ocean', cat: 'cape', name: 'Ozean-Umhang', price: 700 }, { id: 'cape-sakura', cat: 'cape', name: 'Kirschblüten-Umhang', price: 700 },
+  { id: 'cape-ocean', cat: 'cape', name: 'Ozean-Umhang', price: 700, gone: true }, { id: 'cape-sakura', cat: 'cape', name: 'Kirschblüten-Umhang', price: 700, gone: true },
   { id: 'wings-crystal', cat: 'wings', name: 'Kristallflügel', price: 1000 }, { id: 'wings-shadow', cat: 'wings', name: 'Schattenschwingen', price: 1000 },
   { id: 'shield-ice', cat: 'shield', name: 'Eisschild', price: 300 }, { id: 'hat-party', cat: 'hat', name: 'Partyhut', price: 250 }, { id: 'hat-frost', cat: 'hat', name: 'Frostmütze', price: 350 },
-  { id: 'cape-nebula', cat: 'cape', name: 'Nebel-Umhang', price: 700 }, { id: 'cape-emerald', cat: 'cape', name: 'Smaragd-Umhang', price: 700 }, { id: 'cape-royal', cat: 'cape', name: 'Königs-Umhang', price: 900 },
+  { id: 'cape-nebula', cat: 'cape', name: 'Nebel-Umhang', price: 700, gone: true }, { id: 'cape-emerald', cat: 'cape', name: 'Smaragd-Umhang', price: 700, gone: true }, { id: 'cape-royal', cat: 'cape', name: 'Königs-Umhang', price: 900, gone: true },
   { id: 'hat-zzv', cat: 'hat', name: 'Zickzack-Hut Violett (3D)', price: 600 }, { id: 'hat-zzb', cat: 'hat', name: 'Zickzack-Zylinder Blau (3D)', price: 600 }, { id: 'hat-zsh', cat: 'hat', name: 'Schattenhut (3D)', price: 650 }, { id: 'hat-zif', cat: 'hat', name: 'Eisfeder-Hut (3D)', price: 650 },
   { id: 'hat-crown', cat: 'hat', name: 'Krone', price: 700 }, { id: 'hat-halo', cat: 'hat', name: 'Heiligenschein', price: 600 }, { id: 'hat-haloblack', cat: 'hat', name: 'Heiligenschein – Black Edition', price: 900 },
   { id: 'wings-zv', cat: 'wings', name: 'Zickzack-Flügel Violett (3D)', price: 1800 }, { id: 'wings-zb', cat: 'wings', name: 'Zickzack-Flügel Blau (3D)', price: 1800 }, { id: 'wings-zs', cat: 'wings', name: 'Schattenflügel (3D)', price: 1800 }, { id: 'wings-zf', cat: 'wings', name: 'Eisfeder-Flügel (3D)', price: 1800 },
@@ -1775,7 +1775,7 @@ function shopOf(u) {
   if (u.coins == null) u.coins = 100; if (!u.owned) u.owned = []; if (!u.equip) u.equip = {};
   for (const k of Object.keys(u.equip)) if (!CATALOG.some(c => c.id === u.equip[k])) delete u.equip[k]; // entfernte Items (alte Z4-/Galaxie-Sachen) nicht mehr ausrüsten
   const nm = shopNames(), pr = shopPrices();
-  return { limited: limList.map(l => { const c = CATALOG.find(x => x.id === l.id); return { ...l, name: nm[l.id] || (c && c.name) || l.id, cat: c ? c.cat : l.id.split('-')[0] }; }), catalog: CATALOG.filter(c => (!c.owner || u.admin) && (u.admin || !shopHidden.includes(c.id) || (u.owned || []).includes(c.id)) && (u.admin || !limList.some(l => l.id === c.id) || (u.owned || []).includes(c.id))).map(c => { const o = nm[c.id] ? { ...c, name: nm[c.id] } : { ...c }; o.price = priceOf(c, pr); if (shopHidden.includes(c.id)) o.hidden = true; return o; }), admin: !!u.admin, bundles: bundlesView(u), coins: u.admin || u.infCoins ? null : u.coins, owned: u.admin ? CATALOG.map(c => c.id) : u.owned, equip: u.equip, dailyReady: !u.admin && !u.infCoins && u.daily !== todayStr() };
+  return { limited: limList.map(l => { const c = CATALOG.find(x => x.id === l.id); return { ...l, name: nm[l.id] || (c && c.name) || l.id, cat: c ? c.cat : l.id.split('-')[0] }; }), catalog: CATALOG.filter(c => (!c.owner || u.admin) && (!c.gone || (u.equip || {})[c.cat] === c.id) && (u.admin || !shopHidden.includes(c.id) || (u.owned || []).includes(c.id)) && (u.admin || !limList.some(l => l.id === c.id) || (u.owned || []).includes(c.id))).map(c => { const o = nm[c.id] ? { ...c, name: nm[c.id] } : { ...c }; o.price = priceOf(c, pr); if (shopHidden.includes(c.id)) o.hidden = true; return o; }), admin: !!u.admin, bundles: bundlesView(u), coins: u.admin || u.infCoins ? null : u.coins, owned: u.admin ? CATALOG.map(c => c.id) : u.owned, equip: u.equip, dailyReady: !u.admin && !u.infCoins && u.daily !== todayStr() };
 }
 function syncCosFromGame() { // im Spiel geänderte Auswahl (Cosmetics-Menü) in dein Konto übernehmen
   try {
@@ -1852,6 +1852,7 @@ async function plusNow() { // hat das angemeldete Konto gerade Cloudy+? (Server 
 }
 ipcMain.handle('shopBuy', async (_e, id) => {
   const pit = CATALOG.find(c => c.id === id), cu = currentUser && readAuth().users[currentUser.toLowerCase()];
+  if (pit && pit.gone) return { ok: false, error: 'Dieses Item gibt es nicht mehr im Shop.' };
   if (pit && pit.owner && !(cu && cu.admin)) return { ok: false, error: 'Dieses Item gibt es nur für den Owner.' };
   if (pit && pit.plus && !(cu && cu.admin) && !(await plusNow())) return { ok: false, error: 'Dieses Item gehört zur Cloudy+-Kollektion – hol dir Cloudy+, dann ist es kostenlos.' };
   return shopBuyWrite(id);

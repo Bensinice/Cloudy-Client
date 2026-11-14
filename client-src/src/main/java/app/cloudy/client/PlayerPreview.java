@@ -41,7 +41,9 @@ public final class PlayerPreview {
 	}
 
 	/** Zeichnet die Figur: cx = Mitte, feetY = Fusshoehe, scale = Pixel pro Block, yaw = Drehung in Radiant (0 = von vorn). Gibt false zurueck, wenn der Skin fehlt. */
-	public static boolean draw(DrawContext c, int cx, int feetY, float scale, float yaw, String hat, String wings, String shield) {
+	public static boolean draw(DrawContext c, int cx, int feetY, float scale, float yaw, String hat, String wings, String shield) { return draw(c, cx, feetY, scale, yaw, hat, wings, shield, Cosmetics.cape); }
+	/** capeId: angelegter oder (beim Drueberfahren im Menue) angesehener Umhang. */
+	public static boolean draw(DrawContext c, int cx, int feetY, float scale, float yaw, String hat, String wings, String shield, String capeId) {
 		MinecraftClient mc = MinecraftClient.getInstance();
 		try {
 			SkinTextures st = mc.getSkinProvider().getSkinTextures(mc.getGameProfile());
@@ -62,8 +64,8 @@ public final class PlayerPreview {
 			VertexConsumerProvider.Immediate vcp = mc.getBufferBuilders().getEntityVertexConsumers();
 			int light = 0xF000F0, ov = OverlayTexture.DEFAULT_UV;
 			root.render(ms, vcp.getBuffer(RenderLayer.getEntityTranslucent(skin)), light, ov);
-			boolean meshCape = ZZ4.handles(Cosmetics.cape);
-			Identifier capeTex = Cosmetics.cape != null && !meshCape ? CapeManager.get() : null;
+			boolean meshCape = ZZ4.handles(capeId);
+			Identifier capeTex = capeId != null && !meshCape && capeId.equals(Cosmetics.cape) ? CapeManager.get() : null;
 			if (capeTex != null) {
 				ms.push();
 				body.rotate(ms);
@@ -73,7 +75,7 @@ public final class PlayerPreview {
 				ms.pop();
 			}
 			CosmeticFeature.PREVIEW = true;
-			try { CosmeticFeature.drawAll(ms, vcp, light, ov, head, body, lArm, rArm, hat, wings, shield, shield != null ? 1 : 0, meshCape ? Cosmetics.cape : null, 0f); } finally { CosmeticFeature.PREVIEW = false; }
+			try { CosmeticFeature.drawAll(ms, vcp, light, ov, head, body, lArm, rArm, hat, wings, shield, shield != null ? 1 : 0, meshCape ? capeId : null, 0f); } finally { CosmeticFeature.PREVIEW = false; }
 			vcp.draw();
 			ms.pop();
 			return true;

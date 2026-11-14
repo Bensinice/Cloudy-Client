@@ -117,6 +117,9 @@ public final class Cosmetics {
 		"wings-pgcrystal", "wings-pgfiligree", "wings-pgdragon", "wings-pgobsidian", "wings-pgcloud", "cape-pgpulse", "cape-pgliquid", "cape-pgnight", "cape-pgprestige", "cape-pgaurora", "hat-pgcrown", "hat-pgtophat", "hat-pghalo", "hat-pglaurel", "hat-pgpuff",
 		"wings-owcrimson", "wings-owphoenix", "wings-owprism", "wings-owstorm", "wings-owvoid", "cape-owthrone", "cape-owblackhole", "cape-owsigil", "cape-owprism", "cape-owstorm", "hat-owcrown", "hat-owinferno", "hat-owhorns", "hat-owarcane", "hat-owcrystal"}; // letzte Zeile: 3D-Modelle aus .glb (GLB.java)
 
+	/** Aus dem Shop genommene einfache Farbverlauf-Umhaenge: im Menue nur noch sichtbar, solange angelegt. */
+	public static final java.util.Set<String> GONE = java.util.Set.of("cape-cloud", "cape-aurora", "cape-sunset", "cape-galaxy", "cape-fire", "cape-ocean", "cape-sakura", "cape-nebula", "cape-emerald", "cape-royal");
+
 	/** Umhaenge aus normalen 64x32-Texturen (in den Mod gepackt): fuer dich und fuer andere Cloudy-Spieler. */
 	public static boolean isTexCape(String id) { return false; } // zbs/ghg laufen jetzt ueber das Z4-Umhangmodell (ZZ4)
 	private static final java.util.Map<String, Identifier> CAPETEX = new java.util.HashMap<>();
@@ -201,6 +204,12 @@ public final class Cosmetics {
 			case "cape-zz3s" -> "ZZ3 1M Cape";
 			case "cape-zz5" -> "ZZ5 2M Cape";
 			case "cape-zk5" -> "500K Cape";
+			case "cape-zbs" -> "Zigzag Snake Cape";
+			case "cape-ghg" -> "GHG Cape";
+			case "wings-zv" -> "Zigzag Wings Violet";
+			case "wings-zb" -> "Zigzag Wings Blue";
+			case "wings-zs" -> "Shadow Wings 3D";
+			case "wings-zf" -> "Ice Feather Wings";
 			case "cape-yy" -> "Yin Yang Cape";
 			case "shield-yy" -> "Yin Yang Shield";
 			case "wings-zz4" -> "ZZ4 Wings";

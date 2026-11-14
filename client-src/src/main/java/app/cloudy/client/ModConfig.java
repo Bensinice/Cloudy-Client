@@ -119,7 +119,7 @@ public final class ModConfig {
 
 	private static Path file() { return FabricLoader.getInstance().getConfigDir().resolve("cloudy-mods.json"); }
 
-	public static boolean isOn(String id) { load(); Boolean b = on.get(id); return b == null ? (id.equals("lyrics") || id.equals("sky") || id.equals("freelook") || id.equals("freecam") || id.startsWith("mousefx") || id.equals("itemphysics") || id.equals("lyricscard") || id.equals("playerhead")) : b; } // Lyrics sind standardmaessig an
+	public static boolean isOn(String id) { load(); Boolean b = on.get(id); return b == null ? (id.equals("lyrics") || id.equals("sky") || id.equals("freelook") || id.equals("freecam") || id.startsWith("mousefx") || id.equals("itemphysics") || id.equals("lyricscard") || id.equals("playerhead") || id.equals("clouds3d")) : b; } // Lyrics und die volumetrischen Wolken sind standardmaessig an
 	public static void set(String id, boolean v) { load(); on.put(id, v); save(); }
 	public static boolean anyHud() { for (Def d : DEFS) if (d.cat().equals("HUD") && isOn(d.id())) return true; return false; }
 
