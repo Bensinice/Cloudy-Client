@@ -81,7 +81,7 @@ const uiPref = () => { try { return JSON.parse(fs.readFileSync(uiPrefFile, 'utf8
 function createWindow() {
   const TR = uiPref().transparent === true && !IS_MAC; // Glas-Theme: durchsichtiges Fenster (geht nur beim Erstellen des Fensters)
   const platformOpts = TR ? { frame: false, transparent: true, hasShadow: false, autoHideMenuBar: true } : IS_MAC
-    ? { titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 20, y: 20 }, vibrancy: 'under-window', visualEffectState: 'active' }
+    ? { titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 20, y: 20 } } // ohne vibrancy: das Fenster ist eh deckend, die macOS-Unschärfe dahinter kostete auf Retina-Displays viel Leistung
     : IS_WIN
       // Windows: eigene Titelleiste, die System-Knöpfe (–, □, ×) bleiben oben rechts
       ? { titleBarStyle: 'hidden', autoHideMenuBar: true } // eigene, theme-passende Fensterknöpfe im Fenster (siehe .wc)
@@ -401,6 +401,7 @@ ipcMain.handle('cfgImport', async () => {
 // ---- Leistungsanzeige (CPU, RAM, GPU, Minecraft) ----
 let cpuPrev = os.cpus(), gpuCache = { t: 0, v: null }, mcProc = null;
 function gpuStats() {
+  if (IS_MAC) return null; // Macs haben kein nvidia-smi – nicht alle paar Sekunden vergeblich (und blockierend) starten
   if (Date.now() - gpuCache.t < 3000) return gpuCache.v;
   let v = null;
   try {
@@ -813,11 +814,26 @@ require('./update/updater').init({ app, ipcMain, shell, send, gameRunning: () =>
 // ---- Microsoft-Konto ----
 const accFile = path.join(app.getPath('userData'), 'account.json');
 const readAcc = () => { try { return JSON.parse(fs.readFileSync(accFile, 'utf8')); } catch { return null; } };
-const enc = t => safeStorage.isEncryptionAvailable() ? 'e:' + safeStorage.encryptString(t).toString('base64') : 'p:' + t;
-const dec = t => t.startsWith('e:') ? safeStorage.decryptString(Buffer.from(t.slice(2), 'base64')) : t.slice(2);
+// Anmeldedaten verschlüsseln: auf dem Mac mit eigenem Schlüssel in den Cloudy-Daten statt Schlüsselbund. Cloudy ist nicht signiert –
+// nach jedem Update sperrt macOS den Schlüsselbund-Eintrag (oder fragt nach dem Passwort) und die Microsoft-Anmeldung war weg.
+const keyFile = path.join(app.getPath('userData'), '.cloudy-key');
+function locKey() {
+  try { const k = fs.readFileSync(keyFile); if (k.length === 32) return k; } catch {}
+  const k = crypto.randomBytes(32); try { fs.writeFileSync(keyFile, k, { mode: 0o600 }); } catch {} return k;
+}
+const encK = t => { const iv = crypto.randomBytes(12), c = crypto.createCipheriv('aes-256-gcm', locKey(), iv), d = Buffer.concat([c.update(String(t), 'utf8'), c.final()]); return 'k:' + Buffer.concat([iv, c.getAuthTag(), d]).toString('base64'); };
+const decK = t => { const b = Buffer.from(t.slice(2), 'base64'), dc = crypto.createDecipheriv('aes-256-gcm', locKey(), b.subarray(0, 12)); dc.setAuthTag(b.subarray(12, 28)); return Buffer.concat([dc.update(b.subarray(28)), dc.final()]).toString('utf8'); };
+const enc = t => IS_MAC || !safeStorage.isEncryptionAvailable() ? encK(t) : 'e:' + safeStorage.encryptString(t).toString('base64');
+const dec = t => t.startsWith('k:') ? decK(t) : t.startsWith('e:') ? safeStorage.decryptString(Buffer.from(t.slice(2), 'base64')) : t.slice(2);
 const saveAcc = (name, uuid, refresh) => fs.writeFileSync(accFile, JSON.stringify({ name, uuid, refresh: enc(refresh) }));
 let msmc; try { msmc = require('msmc'); } catch {}
-ipcMain.handle('accountGet', () => { const a = readAcc(); return a ? { ms: true, name: a.name } : { ms: false }; });
+ipcMain.handle('accountGet', () => {
+  const a = readAcc(); if (!a) return { ms: false };
+  if (IS_MAC && a.refresh && a.refresh.startsWith('e:')) { // alter Mac-Stand (Schlüsselbund): einmal umschreiben, solange er noch lesbar ist
+    try { saveAcc(a.name, a.uuid, dec(a.refresh)); } catch { fs.rmSync(accFile, { force: true }); return { ms: false, lost: true }; }
+  }
+  return { ms: true, name: a.name };
+});
 ipcMain.handle('accountLogout', () => fs.rmSync(accFile, { force: true }));
 ipcMain.handle('msLogin', async () => {
   if (!msmc) { try { msmc = require('msmc'); } catch {} }
@@ -857,7 +873,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.127'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.128'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1148,10 +1164,11 @@ function cosNetStart(mcName) {
       if (busy) return; busy = true;
       try {
         const w = JSON.parse(fs.readFileSync(cosWant, 'utf8')), names = (w.names || []).filter(n => typeof n === 'string' && /^\w{3,16}$/.test(n)).slice(0, 80);
-        const r = names.length ? await srvCall('/cos/get', { names }, srvTok) : { ok: true, players: {} };
+        const em = w.em && /^emote-[a-z0-9]+$/.test(String(w.em.id)) && Date.now() - (+w.em.t || 0) < 15000 ? { id: String(w.em.id), age: Math.max(0, Date.now() - (+w.em.t || 0)) } : null; // eigenes Emote fuer die Mitspieler
+        const r = names.length ? await srvCall('/cos/get', { names, em }, srvTok) : { ok: true, players: {} };
         if (r && r.ok === true) { const nn = Object.keys(r.players || {}).length; if (nn !== cosPrev) { cosPrev = nn; cosLog('get ' + names.length + ' Namen -> ' + nn + ' mit Cosmetics'); } const tmp = cosOth + '.tmp'; fs.writeFileSync(tmp, JSON.stringify({ ts: Date.now(), players: r.players || {} })); fs.renameSync(tmp, cosOth); }
       } catch (e) { if (!/ENOENT/.test(String(e && e.message))) cosLog('get Fehler: ' + (e && e.message)); } finally { busy = false; }
-    }, 6000);
+    }, 2500); // kurz, damit Emotes bei den Mitspielern fast gleichzeitig laufen
   } catch {}
 }
 function cosNetStop() { if (cosTimer) clearInterval(cosTimer); cosTimer = null; cosMc = ''; cosLast = ''; }
@@ -1176,7 +1193,11 @@ async function accSrvState() {
       const u = s.key && readAuth().users[s.key]; if (u) { currentUser = u.name; srvTok = s.srv; return { fresh: false, user: u.name, admin: !!u.admin, offline: true }; }
       currentUser = null; return { fresh: false, user: null };
     }
-    if (!r || !r.user) return { fresh: false, user: null }; // eindeutig abgelehnt (Token ungueltig oder Konto gesperrt)
+    if (!r || !r.user) { // nur bei eindeutiger Ablehnung abmelden (Token ungueltig / Konto gesperrt); alles andere (seltsame Antwort, Proxy, 404) = angemeldet bleiben
+      if (r && (r.status === 401 || r.status === 403)) return { fresh: false, user: null };
+      const u = s.key && readAuth().users[s.key]; if (u) { currentUser = u.name; srvTok = s.srv; return { fresh: false, user: u.name, admin: !!u.admin, offline: true }; }
+      return { fresh: false, user: null };
+    }
     const key = srvMirror(r.user); currentUser = r.user.name; srvTok = s.srv; return { fresh: false, user: r.user.name, admin: !!r.user.admin };
   } catch { currentUser = null; return { fresh: false, user: null }; }
 }
@@ -1477,6 +1498,17 @@ const CATALOG = [
   { id: 'wings-g3seraph', cat: 'wings', name: 'Seraph-Flügel (3D)', price: 1800 },
   { id: 'wings-g3prism', cat: 'wings', name: 'Prismensplitter-Flügel (3D)', price: 1800 },
   { id: 'wings-g3void', cat: 'wings', name: 'Leere-Drachenflügel (3D)', price: 1800 },
+  // Emotes (Bewegungen in assets/emotes.json; im Spiel mit B). Preis 0 = fuer alle frei
+  { id: 'emote-wave', cat: 'emote', name: 'Winken', price: 0 },
+  { id: 'emote-clap', cat: 'emote', name: 'Klatschen', price: 0 },
+  { id: 'emote-cheer', cat: 'emote', name: 'Jubeln', price: 300 },
+  { id: 'emote-dance', cat: 'emote', name: 'Disco-Tanz', price: 600 },
+  { id: 'emote-dab', cat: 'emote', name: 'Dab', price: 400 },
+  { id: 'emote-facepalm', cat: 'emote', name: 'Facepalm', price: 300 },
+  { id: 'emote-salute', cat: 'emote', name: 'Salutieren', price: 300 },
+  { id: 'emote-shrug', cat: 'emote', name: 'Schulterzucken', price: 300 },
+  { id: 'emote-point', cat: 'emote', name: 'Zeigen', price: 300 },
+  { id: 'emote-floss', cat: 'emote', name: 'Floss', price: 600 },
   { id: 'pet-chameleon', cat: 'pet', name: 'Chamäleon', price: 1500 },
   { id: 'pet-devil', cat: 'pet', name: 'Kleiner Teufel', price: 1500 },
   { id: 'pet-cat', cat: 'pet', name: 'Tigerkatze', price: 1200 },
@@ -1801,7 +1833,7 @@ async function plusFresh(force) {
 const plusKnown = u => plusSt.user && u && plusSt.user.toLowerCase() === String(u.name).toLowerCase() && plusSt.t > 0;
 const plusOn = u => plusKnown(u) && plusSt.on;
 // Besitz inkl. automatischer Items: Admin/Owner hat alles, Cloudy+ hat die Cloudy+-Kollektion (nicht kaufbar, kommt mit dem Abo)
-const ownedEff = u => u.admin ? CATALOG.map(c => c.id) : [...new Set([...(u.owned || []).filter(id => !(CATALOG.find(c => c.id === id) || {}).owner), ...(plusOn(u) ? CATALOG.filter(c => c.plus).map(c => c.id) : [])])];
+const ownedEff = u => u.admin ? CATALOG.map(c => c.id) : [...new Set([...(u.owned || []).filter(id => !(CATALOG.find(c => c.id === id) || {}).owner), ...(plusOn(u) ? CATALOG.filter(c => c.plus).map(c => c.id) : []), ...CATALOG.filter(c => c.cat === 'emote' && !c.price).map(c => c.id)])];
 function syncCosFromGame() { // im Spiel geänderte Auswahl (Cosmetics-Menü) in dein Konto übernehmen
   try {
     const g = JSON.parse(fs.readFileSync(cosFile, 'utf8')), a = readAuth(), u = currentUser && a.users[currentUser.toLowerCase()]; if (!u || g.user !== u.name) return;

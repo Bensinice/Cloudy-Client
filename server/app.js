@@ -336,8 +336,8 @@ app.post('/cos/reg', auth(async (req, res, me) => {
   COS[mc] = { u: me.name_key, equip: eq, t: Date.now() }; await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['cos', JSON.stringify(COS)]); res.json({ ok: true });
 }));
 app.post('/cos/get', auth(async (req, res, me) => {
-  const now = Date.now(); for (const k of Object.keys(COS)) if (COS[k].u === me.name_key) COS[k].t = now; // Herzschlag: wer fragt, spielt gerade mit Cloudy (Launcher fragt alle 6 s, solange Minecraft laeuft)
-  const out = {}; for (const n of (Array.isArray((req.body || {}).names) ? req.body.names : []).slice(0, 80)) { const k = String(n).toLowerCase(), e = COS[k]; if (!e) continue; const tg = tagsOf(e.u).concat(TAGLIVE(e.u)), cl = now - (e.t || 0) < 90000 ? 1 : 0; if (Object.keys(e.equip).length || tg.length || cl) out[k] = { ...e.equip, tg, cl }; }
+  const now = Date.now(), em = (req.body || {}).em; for (const k of Object.keys(COS)) if (COS[k].u === me.name_key) { COS[k].t = now; COS[k].em = em && /^emote-[a-z0-9]{1,24}$/.test(String(em.id)) && +em.age >= 0 && +em.age < 15000 ? { id: String(em.id), s: now - Math.round(+em.age) } : null; } // Emote: Startzeit auf Server-Uhr // Herzschlag: wer fragt, spielt gerade mit Cloudy (Launcher fragt alle 6 s, solange Minecraft laeuft)
+  const out = {}; for (const n of (Array.isArray((req.body || {}).names) ? req.body.names : []).slice(0, 80)) { const k = String(n).toLowerCase(), e = COS[k]; if (!e) continue; const tg = tagsOf(e.u).concat(TAGLIVE(e.u)), cl = now - (e.t || 0) < 90000 ? 1 : 0; const ea = e.em && now - e.em.s < 15000 ? { id: e.em.id, a: now - e.em.s } : null; if (Object.keys(e.equip).length || tg.length || cl || ea) out[k] = { ...e.equip, tg, cl, ...(ea ? { em: ea } : {}) }; }
   res.json({ ok: true, players: out });
 }));
 // ---- Quests & Cloudy Stars: Fortschritt, Ziele und Belohnungen entscheidet nur der Server ----

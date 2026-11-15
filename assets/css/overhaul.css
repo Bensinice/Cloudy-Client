@@ -53,3 +53,11 @@
 .accbox{display:grid;gap:10px;padding:14px;margin:6px 0 10px;border-radius:16px;border:1px solid var(--gb);background:var(--chip)}
 .acchd{display:flex;align-items:center;gap:12px}.acchd b{display:block;font-size:15px}.acchd small{display:block;margin-top:2px}
 .accic{width:38px;height:38px;flex:none;display:grid;place-items:center;border-radius:12px;background:var(--accent);font-size:19px}
+
+/* Mac: gleiche Optik, aber deutlich weniger Weichzeichner-Arbeit (große Blur-Radien sind auf Retina-Displays sehr teuer und ließen den Launcher ruckeln) */
+html.os-darwin{--glass-blur:14px}
+html.os-darwin .glass,html.os-darwin .lgbar,html.os-darwin .sppanel{-webkit-backdrop-filter:blur(14px) saturate(150%)!important;backdrop-filter:blur(14px) saturate(150%)!important}
+html.os-darwin .hero .orb,html.os-darwin .hero .chip,html.os-darwin .wc,html.os-darwin .shnav,html.os-darwin .shi{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html.os-darwin .glass .glass{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html.os-darwin .sky .blob{animation:none!important} /* weiche Farbflecken bleiben, werden aber nicht mehr jedes Bild neu weichgezeichnet */
+html.perf.os-darwin .glass{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}

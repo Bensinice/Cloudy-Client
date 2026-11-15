@@ -32,7 +32,33 @@ public final class CloudyClouds {
 	private static Identifier tex;
 	private static boolean failed;
 	private static float[] buf = new float[0]; // je Ball: x, y, z, r, dist2, shade, seed
-	private static Integer[] order = new Integer[0];
+	private static long[] keys = new long[0];
+	private static float[] pw = new float[0]; // zwischengespeicherte Baelle (Welt, ohne Wind): x, y, z, r, shade, wolkeX, wolkeZ
+	private static int pn; private static String cacheKey = "";
+	private static final boolean MAC = System.getProperty("os.name", "").toLowerCase().contains("mac");
+
+	private static void build(long cx0, long cz0, int cell, int rc, float cover, float SZ, float LEN, float H, float R) {
+		int n = 0;
+		for (long gx = cx0 - rc; gx <= cx0 + rc; gx++) for (long gz = cz0 - rc; gz <= cz0 + rc; gz++) {
+			if (hash(gx, gz, 1) > cover) continue;
+			float s = (16f + hash(gx, gz, 2) * 30f) * SZ;
+			double ccx = gx * cell + hash(gx, gz, 3) * cell, ccz = gz * cell + hash(gx, gz, 4) * cell, ccy = H + hash(gx, gz, 5) * 14f;
+			int puffs = Math.min(48, (int) ((8 + (int) (hash(gx, gz, 6) * 9)) * Math.max(1f, LEN)));
+			for (int i = 0; i < puffs; i++) {
+				float px = (hash(gx, gz, 10 + i) * 2f - 1f) * s * LEN, pz = (hash(gx, gz, 40 + i) * 2f - 1f) * s * 0.75f;
+				float qx = px / LEN, edge = 1f - Math.min(1f, (float) Math.sqrt(qx * qx + pz * pz) / (s * 1.1f));
+				float py = hash(gx, gz, 70 + i) * s * 0.55f * (0.35f + edge); // in der Mitte hoeher aufgetuermt
+				float pr = s * (0.32f + 0.38f * hash(gx, gz, 100 + i)) * (0.6f + 0.4f * edge);
+				if (n * 7 + 7 > pw.length) pw = Arrays.copyOf(pw, Math.max(7 * 1024, pw.length * 2));
+				int o = n * 7;
+				pw[o] = (float) (ccx + px); pw[o + 1] = (float) (ccy + py); pw[o + 2] = (float) (ccz + pz); pw[o + 3] = pr;
+				pw[o + 4] = Math.max(0f, Math.min(1f, py / (s * 0.55f))); // weiter oben = heller
+				pw[o + 5] = (float) ccx; pw[o + 6] = (float) ccz;
+				n++;
+			}
+		}
+		pn = n;
+	}
 
 	public static boolean active() {
 		MinecraftClient mc = MinecraftClient.getInstance();
@@ -86,40 +112,31 @@ public final class CloudyClouds {
 		H += 8f;
 		double t = (mc.world.getTime() + ctx.tickCounter().getTickDelta(false)) / 20.0;
 		double wind = t * 1.3; // Bloecke pro Sekunde nach Osten
-		float R = Math.min(720f, Math.max(320f, mc.options.getClampedViewDistance() * 16f * 1.7f));
+		float R = Math.min(MAC ? 480f : 720f, Math.max(320f, mc.options.getClampedViewDistance() * 16f * 1.7f));
 		float SZ = ModConfig.cloudsSize / 100f, LEN = ModConfig.cloudsLength / 100f; // Groesse und Laenge (in Windrichtung gestreckt)
 		int cell = Math.max(48, Math.round(72 * Math.max(SZ, SZ * (0.5f + 0.5f * LEN)))), rc = (int) Math.ceil(R / cell) + 1;
 		long cx0 = (long) Math.floor((cam.x - wind) / cell), cz0 = (long) Math.floor(cam.z / cell);
 		float cover = ModConfig.cloudsAmount / 100f;
-		// Baelle sammeln
-		int cnt = 0;
-		for (long gx = cx0 - rc; gx <= cx0 + rc; gx++) for (long gz = cz0 - rc; gz <= cz0 + rc; gz++) {
-			if (hash(gx, gz, 1) > cover) continue;
-			float s = (16f + hash(gx, gz, 2) * 30f) * SZ;
-			double ccx = gx * cell + hash(gx, gz, 3) * cell + wind, ccz = gz * cell + hash(gx, gz, 4) * cell, ccy = H + hash(gx, gz, 5) * 14f;
-			double ddx = ccx - cam.x, ddz = ccz - cam.z;
-			if (ddx * ddx + ddz * ddz > (R + s * LEN) * (R + s * LEN)) continue;
-			int puffs = Math.min(48, (int) ((8 + (int) (hash(gx, gz, 6) * 9)) * Math.max(1f, LEN)));
-			for (int i = 0; i < puffs; i++) {
-				float px = (hash(gx, gz, 10 + i) * 2f - 1f) * s * LEN, pz = (hash(gx, gz, 40 + i) * 2f - 1f) * s * 0.75f;
-				float qx = px / LEN, edge = 1f - Math.min(1f, (float) Math.sqrt(qx * qx + pz * pz) / (s * 1.1f));
-				float py = hash(gx, gz, 70 + i) * s * 0.55f * (0.35f + edge); // in der Mitte hoeher aufgetuermt
-				float pr = s * (0.32f + 0.38f * hash(gx, gz, 100 + i)) * (0.6f + 0.4f * edge);
-				if (cnt * 7 + 7 > buf.length) buf = Arrays.copyOf(buf, Math.max(7 * 1024, buf.length * 2));
-				double x = ccx + px - cam.x, y = ccy + py - cam.y, z = ccz + pz - cam.z;
-				int o = cnt * 7;
-				buf[o] = (float) x; buf[o + 1] = (float) y; buf[o + 2] = (float) z; buf[o + 3] = pr;
-				buf[o + 4] = (float) (x * x + y * y + z * z);
-				buf[o + 5] = Math.max(0f, Math.min(1f, py / (s * 0.55f))); // weiter oben = heller
-				buf[o + 6] = (float) Math.sqrt(ddx * ddx + ddz * ddz);
-				cnt++;
-			}
+		// Baelle nur neu berechnen, wenn sich das Raster/die Einstellungen aendern (vorher: jedes Bild tausende Hash-Rechnungen + Objekte)
+		String key = cx0 + "," + cz0 + "," + cell + "," + rc + "," + cover + "," + SZ + "," + LEN + "," + H;
+		if (!key.equals(cacheKey)) { build(cx0, cz0, cell, rc, cover, SZ, LEN, H, R); cacheKey = key; }
+		int n0 = pn, cnt = 0;
+		if (n0 == 0) return;
+		if (buf.length < n0 * 7) buf = new float[n0 * 7];
+		if (keys.length < n0) keys = new long[n0];
+		for (int i = 0; i < n0; i++) {
+			int q = i * 7;
+			double ddx = pw[q + 5] + wind - cam.x, ddz = pw[q + 6] - cam.z; float cd = (float) Math.sqrt(ddx * ddx + ddz * ddz);
+			if (cd > R + pw[q + 3] * 2f) continue;
+			double x = pw[q] + wind - cam.x, y = pw[q + 1] - cam.y, z = pw[q + 2] - cam.z;
+			int o = cnt * 7; float d2 = (float) (x * x + y * y + z * z);
+			buf[o] = (float) x; buf[o + 1] = (float) y; buf[o + 2] = (float) z; buf[o + 3] = pw[q + 3]; buf[o + 4] = d2; buf[o + 5] = pw[q + 4]; buf[o + 6] = cd;
+			keys[cnt] = ((long) Float.floatToIntBits(d2) << 32) | cnt; cnt++; // positive floats sortieren als Bits richtig
 		}
 		if (cnt == 0) return;
-		if (order.length < cnt) order = new Integer[Math.max(cnt, order.length * 2)];
-		for (int i = 0; i < cnt; i++) order[i] = i;
+		Arrays.sort(keys, 0, cnt); // nah -> fern, ohne Objekte
+		int draw = Math.min(cnt, MAC ? 1800 : 3600); // ganz ferne Baelle weglassen, wenn es sehr viele sind (Fuellrate)
 		final float[] b = buf;
-		Arrays.sort(order, 0, cnt, (p, q) -> Float.compare(b[q * 7 + 4], b[p * 7 + 4])); // hinten zuerst
 		// Kamera-Achsen fuer Billboards
 		Vector3f right = new Vector3f(1, 0, 0), up = new Vector3f(0, 1, 0);
 		try { ctx.camera().getRotation().transform(right); ctx.camera().getRotation().transform(up); } catch (Throwable ignored) {}
@@ -139,8 +156,8 @@ public final class CloudyClouds {
 			RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);
 			RenderSystem.setShaderTexture(0, tex);
 			BufferBuilder bb = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
-			for (int k = 0; k < cnt; k++) {
-				int o = order[k] * 7;
+			for (int k = draw - 1; k >= 0; k--) { // hinten zuerst
+				int o = (int) (keys[k] & 0xFFFFFFFFL) * 7;
 				float x = b[o], y = b[o + 1], z = b[o + 2], r = b[o + 3], sh = b[o + 5], dist = b[o + 6];
 				float fade = Math.max(0f, Math.min(1f, (R - dist) / (R * 0.3f)));
 				float near = Math.max(0f, Math.min(1f, ((float) Math.sqrt(b[o + 4]) - r * 0.6f) / (r * 0.8f))); // in der Wolke: durchsichtig statt Wand

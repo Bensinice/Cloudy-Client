@@ -204,12 +204,13 @@
     const root = document.documentElement;
     const frame = now => {
       if (!np.playing || document.hidden) { raf = 0; root.style.removeProperty('--beat'); root.style.removeProperty('--energy'); return; }
+      if (now - (frame.d || 0) < 33) { raf = requestAnimationFrame(frame); return; } frame.d = now; // ~30x/s: --beat am <html> laesst die ganze Seite neu berechnen
       const t = (now - bt0) / 1000, bpm = 84 + seed % 60, ph = t * bpm / 60, f = ph % 1;
       const kick = Math.pow(1 - f, 3), snare = Math.pow(1 - ((ph + .5) % 1), 6) * .5;
       energy += (0.45 + 0.4 * Math.sin(t / 7 + seed) + 0.15 * Math.sin(t / 2.3) - energy) * 0.02;
       const beat = Math.min(1, (kick * .8 + snare) * (.55 + energy * .6));
       root.style.setProperty('--beat', beat.toFixed(3)); root.style.setProperty('--energy', Math.max(0, Math.min(1, energy)).toFixed(3));
-      if ((fr = (fr + 1) & 1) === 0) for (let i = 0; i < eqs.length; i++) { const w = .35 + .65 * Math.abs(Math.sin(t * (1.3 + (i % 7) * .37) + i * 1.9 + seed)); eqs[i].style.transform = 'scaleY(' + (.08 + w * (.25 + beat * .75) * (.5 + energy * .5)).toFixed(3) + ')'; }
+      for (let i = 0; i < eqs.length; i++) { const w = .35 + .65 * Math.abs(Math.sin(t * (1.3 + (i % 7) * .37) + i * 1.9 + seed)); eqs[i].style.transform = 'scaleY(' + (.08 + w * (.25 + beat * .75) * (.5 + energy * .5)).toFixed(3) + ')'; }
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);

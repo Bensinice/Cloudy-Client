@@ -1,5 +1,22 @@
 [
  {
+  "v": "0.9.128",
+  "date": "2026-11-15",
+  "added": [
+   "Emotes: im Spiel B gedrückt halten → Emote-Rad, Emote wählen und loslassen (oder klicken). Andere Cloudy-Spieler sehen dein Emote. 10 Emotes: Winken und Klatschen für alle kostenlos, dazu Jubeln, Disco-Tanz, Dab, Facepalm, Salutieren, Schulterzucken, Zeigen und Floss",
+   "Shop-Reiter „Emotes“ mit animierter Vorschau"
+  ],
+  "fixed": [
+   "Mac: Die Microsoft-Anmeldung bleibt jetzt gespeichert – vorher hat macOS sie nach jedem Update gesperrt (Cloudy ist nicht signiert)",
+   "Cloudy-Anmeldung: Du wirst nur noch abgemeldet, wenn der Server dein Konto wirklich ablehnt – nicht mehr bei Netz- oder Proxy-Fehlern"
+  ],
+  "changed": [
+   "Mac: deutlich weniger Weichzeichner-Arbeit und keine macOS-Unschärfe hinter dem Fenster mehr – der Launcher ruckelt nicht mehr",
+   "3D-Vorschauen und Beat-Effekt laufen mit höchstens 30 Bildern/s (120-Hz-Displays rechneten vorher 4x so viel)",
+   "Volumetrische Wolken im Spiel viel sparsamer: werden nur noch neu berechnet, wenn du dich weit bewegst, auf dem Mac mit kleinerer Sichtweite"
+  ]
+ },
+ {
   "v": "0.9.127",
   "date": "2026-11-15",
   "fixed": [

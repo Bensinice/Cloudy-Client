@@ -109,7 +109,7 @@
   const cache = new Map(); // id -> Promise<gltf scene>
 
   const has = id => !!MODELS[id];
-  const usesGlb = eq => !!eq && ['hat', 'cape', 'wings', 'pet'].some(k => eq[k] && MODELS[eq[k]]);
+  const usesGlb = eq => !!eq && (!!eq.emote || ['hat', 'cape', 'wings', 'pet'].some(k => eq[k] && MODELS[eq[k]]));
   const NONGLB = (eq, k) => !!(eq && eq[k] && !MODELS[eq[k]]);
 
   async function bytes(file) {
@@ -144,10 +144,13 @@
     head.add(skinBox(tex, W, H, 0, 0, 8, 8, 8, 0, 4, 0, 0)); head.add(skinBox(tex, W, H, 32, 0, 8, 8, 8, 0, 4, 0, 1.2));
     const y = NECK * 16; // Pixel ueber dem Boden
     body.add(skinBox(tex, W, H, 16, 16, 8, 12, 4, 0, -6, 0, 0));
-    root.add(skinBox(tex, W, H, 40, 16, aw, 12, 4, -(4 + aw / 2), y - 6, 0, 0)); root.add(skinBox(tex, W, H, tall ? 32 : 40, tall ? 48 : 16, aw, 12, 4, 4 + aw / 2, y - 6, 0, 0));
-    root.add(skinBox(tex, W, H, 0, 16, 4, 12, 4, -2, 6, 0, 0)); root.add(skinBox(tex, W, H, tall ? 16 : 0, tall ? 48 : 16, 4, 12, 4, 2, 6, 0, 0));
-    if (tall) { body.add(skinBox(tex, W, H, 16, 32, 8, 12, 4, 0, -6, 0, 0.8)); root.add(skinBox(tex, W, H, 40, 32, aw, 12, 4, -(4 + aw / 2), y - 6, 0, 0.8)); root.add(skinBox(tex, W, H, 48, 48, aw, 12, 4, 4 + aw / 2, y - 6, 0, 0.8)); root.add(skinBox(tex, W, H, 0, 32, 4, 12, 4, -2, 6, 0, 0.8)); root.add(skinBox(tex, W, H, 0, 48, 4, 12, 4, 2, 6, 0, 0.8)); }
-    return { root, head, body, tex };
+    // Arme/Beine in Gelenk-Gruppen (Schulter/Huefte wie in Minecraft), damit Emotes sie drehen koennen
+    const grp = (x, yy) => { const g = new THREE.Group(); g.position.set(x / 16, yy / 16, 0); root.add(g); return g; };
+    const armR = grp(-5, y - 2), armL = grp(5, y - 2), legR = grp(-2, 12), legL = grp(2, 12), ax = 4 + aw / 2 - 5;
+    armR.add(skinBox(tex, W, H, 40, 16, aw, 12, 4, -ax, -4, 0, 0)); armL.add(skinBox(tex, W, H, tall ? 32 : 40, tall ? 48 : 16, aw, 12, 4, ax, -4, 0, 0));
+    legR.add(skinBox(tex, W, H, 0, 16, 4, 12, 4, 0, -6, 0, 0)); legL.add(skinBox(tex, W, H, tall ? 16 : 0, tall ? 48 : 16, 4, 12, 4, 0, -6, 0, 0));
+    if (tall) { body.add(skinBox(tex, W, H, 16, 32, 8, 12, 4, 0, -6, 0, 0.8)); armR.add(skinBox(tex, W, H, 40, 32, aw, 12, 4, -ax, -4, 0, 0.8)); armL.add(skinBox(tex, W, H, 48, 48, aw, 12, 4, ax, -4, 0, 0.8)); legR.add(skinBox(tex, W, H, 0, 32, 4, 12, 4, 0, -6, 0, 0.8)); legL.add(skinBox(tex, W, H, 0, 48, 4, 12, 4, 0, -6, 0, 0.8)); }
+    return { root, head, body, tex, armR, armL, legR, legL };
   }
   function fallbackSkin() { // einfache Steve-aehnliche Figur, falls noch kein Skin geladen ist
     const c = document.createElement('canvas'); c.width = 64; c.height = 64; const g = c.getContext('2d');
@@ -157,15 +160,30 @@
   }
 
   // ---- Platzierung + Animation ----
+  // ---- Emotes (gleiche Datei wie die Mod: assets/emotes.json) ----
+  let EMO = null; const emotes = () => EMO || (EMO = fetch('assets/emotes.json').then(r => r.json()).then(j => { const m = {}; for (const e of j.emotes || []) m[e.id] = e; return m; }).catch(() => { EMO = null; return {}; }));
+  const D = Math.PI / 180;
+  function sample(k, t) { if (!k || !k.length) return [0, 0, 0, 0]; if (t <= k[0][0]) return k[0]; for (let i = 1; i < k.length; i++) if (t <= k[i][0]) { const a = k[i - 1][0], b = k[i][0]; let f = b > a ? (t - a) / (b - a) : 1; f = f * f * (3 - 2 * f); return k[i].map((v, j) => j ? k[i - 1][j] + (v - k[i - 1][j]) * f : t); } return k[k.length - 1]; }
+  // Minecraft-Winkel -> three.js (Y oben, vorne +Z): pitch bleibt, yaw/roll drehen das Vorzeichen; Reihenfolge wie ModelPart (ZYX)
+  function emotePose(parts, e, t) {
+    const set = (g, v, side) => { if (!g) return; g.rotation.set(v[1] * D, side * v[2] * D, -side * v[3] * D, 'ZYX'); };
+    for (const k of ['armR', 'armL', 'legR', 'legL']) { const g = parts[k]; if (g) g.rotation.set(0, 0, 0); }
+    if (parts.head) parts.head.rotation.set(0, 0, 0);
+    if (!e || t < 0 || t > 1) return;
+    const P = e.parts || {};
+    if (P.head) { const v = sample(P.head, t); parts.head.rotation.set(v[1] * D, -v[2] * D, -v[3] * D, 'ZYX'); }
+    set(parts.armR, sample(P.armR, t), 1); set(parts.armL, sample(P.armL, t), -1); set(parts.legR, sample(P.legR, t), 1); set(parts.legL, sample(P.legL, t), -1);
+  }
   function dress(parts, eq, t) { // haengt die Modelle an Kopf/Koerper; gibt Animations-Funktion zurueck
     const anim = [];
+    if (eq.emote) anim.push(((id, t0) => { let e = null; emotes().then(m => { e = m[id] || null; }); return now => { if (!e) return; const cyc = e.dur + 900, tt = eq.emoteT != null ? eq.emoteT : ((now - t0) % cyc) / e.dur; emotePose(parts, e, tt); }; })(eq.emote, performance.now()));
     return Promise.all(['hat', 'cape', 'wings', 'pet'].filter(k => eq[k] && MODELS[eq[k]]).map(async k => {
       const m = await clone(eq[k]), P = PLACE[k], g = new THREE.Group(); g.add(m); g.position.set(P.pos[0], P.pos[1], P.pos[2]); g.scale.setScalar(P.scale);
       (k === 'hat' ? parts.head : parts.body).add(g);
       if (k === 'pet') { // Pets: Befestigung aus extras.cloudyPet, Bewegung je Teil (cloudyMove), Mini-Ich mit dem Skin des Spielers (cloudySkin)
         let mt = 'float', off = [0, 0, 0]; m.traverse(o => { const c = o.userData && o.userData.cloudyPet; if (c) { if (c.mount) mt = c.mount; if (c.offset) off = c.offset; } });
         if (mt === 'shoulder') g.position.set(PLACE.shoulder.pos[0], PLACE.shoulder.pos[1], PLACE.shoulder.pos[2]);
-        else if (mt === 'arm_left') g.position.set(PLACE.armL[0] + off[0], PLACE.armL[1] + off[1], PLACE.armL[2] + off[2]);
+        else if (mt === 'arm_left') { if (parts.armL) { parts.armL.add(g); g.position.set(off[0], off[1], off[2]); } else g.position.set(PLACE.armL[0] + off[0], PLACE.armL[1] + off[1], PLACE.armL[2] + off[2]); } // am Arm-Gelenk: geht bei Emotes mit
         if (parts.tex) { const st = parts.tex.clone(); st.flipY = false; st.needsUpdate = true; m.traverse(o => { if (o.userData && o.userData.cloudySkin) o.traverse(x => { if (x.isMesh) { x.material = x.material.clone(); x.material.map = st; x.material.alphaTest = 0.5; } }); }); } // glTF-UVs: Bild nicht spiegeln
         const L = []; m.traverse(o => { if (o.userData && o.userData.cloudyMove) { o.matrixAutoUpdate = false; L.push(o); } });
         if (L.length) anim.push(now => { for (const o of L) { const W = o.userData.cloudyMove, Pv = W.pivot || [0, 0, 0], per = W.periodMs || 2000, t = (now % per) / per * Math.PI * 2;

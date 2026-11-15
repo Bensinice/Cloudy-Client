@@ -1,4 +1,13 @@
 {
+  "0.9.128": [
+    "Emotes: hold B in game for the emote wheel; other Cloudy players see your emote. 10 emotes, Wave and Clap free",
+    "Shop tab “Emotes” with animated preview",
+    "Mac: Microsoft sign-in is now remembered after updates",
+    "Cloudy sign-in: only signed out when the server really rejects the account",
+    "Mac: much less blur work and no window vibrancy – no more launcher lag",
+    "3D previews capped at 30 fps",
+    "Volumetric clouds much cheaper in game"
+  ],
   "0.9.127": [
     "Client mod setup: the fallback build without optional parts no longer fails on “Hotbar”",
     "A release without a working client mod (like 0.9.125) can no longer be published"

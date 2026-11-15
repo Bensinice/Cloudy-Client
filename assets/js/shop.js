@@ -55,6 +55,16 @@
     'wings-g3seraph': { b: [-9, 0, 34, 24], c: ['#f4ecd8', '#c9a24a'], img: 'assets/cosmetics3d/icons/wings-g3seraph.png', ar: 1, glb: true },
     'wings-g3prism': { b: [-9, 0, 34, 24], c: ['#3be0d0', '#7a5cff'], img: 'assets/cosmetics3d/icons/wings-g3prism.png', ar: 1, glb: true },
     'wings-g3void': { b: [-9, 0, 34, 24], c: ['#5a2aa0', '#14081f'], img: 'assets/cosmetics3d/icons/wings-g3void.png', ar: 1, glb: true },
+    'emote-wave': { b: [0, 0, 16, 16], c: ['#ff8ad8', '#2a1030'], img: 'assets/cosmetics3d/icons/emote-wave.png', ar: 1, glb: true },
+    'emote-clap': { b: [0, 0, 16, 16], c: ['#ff8ad8', '#2a1030'], img: 'assets/cosmetics3d/icons/emote-clap.png', ar: 1, glb: true },
+    'emote-cheer': { b: [0, 0, 16, 16], c: ['#ff8ad8', '#2a1030'], img: 'assets/cosmetics3d/icons/emote-cheer.png', ar: 1, glb: true },
+    'emote-dance': { b: [0, 0, 16, 16], c: ['#ff8ad8', '#2a1030'], img: 'assets/cosmetics3d/icons/emote-dance.png', ar: 1, glb: true },
+    'emote-dab': { b: [0, 0, 16, 16], c: ['#ff8ad8', '#2a1030'], img: 'assets/cosmetics3d/icons/emote-dab.png', ar: 1, glb: true },
+    'emote-facepalm': { b: [0, 0, 16, 16], c: ['#ff8ad8', '#2a1030'], img: 'assets/cosmetics3d/icons/emote-facepalm.png', ar: 1, glb: true },
+    'emote-salute': { b: [0, 0, 16, 16], c: ['#ff8ad8', '#2a1030'], img: 'assets/cosmetics3d/icons/emote-salute.png', ar: 1, glb: true },
+    'emote-shrug': { b: [0, 0, 16, 16], c: ['#ff8ad8', '#2a1030'], img: 'assets/cosmetics3d/icons/emote-shrug.png', ar: 1, glb: true },
+    'emote-point': { b: [0, 0, 16, 16], c: ['#ff8ad8', '#2a1030'], img: 'assets/cosmetics3d/icons/emote-point.png', ar: 1, glb: true },
+    'emote-floss': { b: [0, 0, 16, 16], c: ['#ff8ad8', '#2a1030'], img: 'assets/cosmetics3d/icons/emote-floss.png', ar: 1, glb: true },
     'pet-chameleon': { b: [0, 0, 16, 16], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/pet-chameleon.png', ar: 1, glb: true },
     'pet-devil': { b: [0, 0, 16, 16], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/pet-devil.png', ar: 1, glb: true },
     'pet-cat': { b: [0, 0, 16, 16], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/pet-cat.png', ar: 1, glb: true },
@@ -291,8 +301,8 @@
     cancelAnimationFrame(heroRaf); const host = $('#heroSkin'); if (!host || !heroOn || !host.offsetParent || document.hidden) return;
     const now = performance.now(); heroT = now;
     if (now - heroMouse > 2500) heroTgt = -18 + Math.sin(now / 2600) * 32; // ohne Maus: langsam umschauen
-    heroAng += (heroTgt - heroAng) * 0.07; if (!(perfOn && (perfN = (perfN + 1) % 3))) { if (host._apply) host._apply(); }
-    heroRaf = requestAnimationFrame(loopHero);
+    heroRaf = requestAnimationFrame(loopHero); if (now - (loopHero.d || 0) < (perfOn ? 66 : 33)) return; loopHero.d = now; // ~30 Bilder/s reichen fuer die Figur
+    heroAng += (heroTgt - heroAng) * 0.14; if (host._apply) host._apply();
   }
   document.addEventListener('pointermove', e => { const w = window.innerWidth || 1; heroTgt = -18 + Math.max(-1, Math.min(1, (e.clientX / w - 0.62) * 2.2)) * 55; heroMouse = performance.now(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) loopHero(); });
@@ -393,7 +403,8 @@
   setTimeout(() => { const b = $('#shopPerf'), pg = $('#p-shop'); if (!b || !pg) return; const paint = () => { pg.classList.toggle('perf', perfOn); b.textContent = 'Performance: ' + (perfOn ? 'an' : 'aus'); if (window.setLang) window.setLang(document.documentElement.lang || 'de'); }; paint(); b.onclick = () => { perfOn = !perfOn; try { localStorage.setItem('cloudy.shopPerf', perfOn ? '1' : '0'); } catch {} paint(); }; }, 0);
   function loop3() {
     cancelAnimationFrame(raf3); const host = $('#shop3d'); if (!host || !host.offsetParent || document.hidden) return;
-    if (!drag3) ang3 = (ang3 + 0.5) % 360; if (!(perfOn && (perfN = (perfN + 1) % 6))) { if (host._apply) host._apply(); } raf3 = requestAnimationFrame(loop3);
+    const now3 = performance.now(), dt3 = Math.min(100, now3 - (loop3.t || now3)); raf3 = requestAnimationFrame(loop3); if (!drag3 && now3 - (loop3.d || 0) < (perfOn ? 66 : 33)) return; // hoechstens ~30 Bilder/s (120-Hz-Displays zeichneten sonst 4x so oft)
+    loop3.t = now3; loop3.d = now3; if (!drag3) ang3 = (ang3 + dt3 * 0.03) % 360; if (host._apply) host._apply();
   }
   (function () {
     const host = $('#shop3d'); if (!host) return; let lx = 0;
@@ -448,7 +459,7 @@
   $$('[data-skn]').forEach(b => b.onclick = () => add(window.cloudy.skinAddName(b.dataset.skn)));
 
   // ---------- Shop ----------
-  const CATS = [['cape', 'Umhänge'], ['wings', 'Flügel'], ['shield', 'Schilde'], ['hat', 'Hüte'], ['pet', 'Pets']];
+  const CATS = [['cape', 'Umhänge'], ['wings', 'Flügel'], ['shield', 'Schilde'], ['hat', 'Hüte'], ['pet', 'Pets'], ['emote', 'Emotes']];
   function paintCoins() {
     const t = shop ? cc(shop.coins) : ''; const a = $('#accCC'); if (a) a.textContent = t; const b = $('#shopCC'); if (b) b.textContent = t;
     const d = $('#shopDaily'); if (d) { d.style.display = shop && !shop.admin ? '' : 'none'; d.disabled = !shop || !shop.dailyReady; }
@@ -554,6 +565,7 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
   function startTry(ids) { // mehrere Items gleichzeitig anprobieren (Paket) oder eins
     const t = {}; for (const id of ids) { const c = shop.catalog.find(x => x.id === id); if (c) t[c.cat] = id; }
     if (t.cape || t.wings) ang3 = 200; // Umhang/Fluegel: mit dem Ruecken zur Kamera anfangen
+    if (t.emote) ang3 = 20; // Emote: von vorne
     tryOn = Object.keys(t).length ? t : null; paint3d(eqView()); tryBar();
     try { $('#shop3d').scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch {}
   }
@@ -570,9 +582,9 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
     paint3d(eqView()); loop3(); paintHero(); tryBar();
     // ---- Navigation: eine Kategorie auf einmal (statt alles untereinander), Suche, Filter ----
     let nav = $('#shopNav'); if (!nav) { nav = document.createElement('div'); nav.id = 'shopNav'; box.parentNode.insertBefore(nav, box); }
-    const TABS = [['cape', '🧥 ' + L('Umhänge')], ['wings', '🪽 ' + L('Flügel')], ['hat', '🎩 ' + L('Hüte')], ['shield', '🛡 ' + L('Schilde')], ['pet', '🐾 Pets'], ['bundles', '🎁 ' + L('Pakete')], ['lim', '⏳ Limited'], ['plus', '✨ Cloudy+'], ['skins', '👤 Skins'], ['quests', '🎯 Quests']].concat(shop.admin ? [['owner', '👑 Owner']] : []);
+    const TABS = [['cape', '🧥 ' + L('Umhänge')], ['wings', '🪽 ' + L('Flügel')], ['hat', '🎩 ' + L('Hüte')], ['shield', '🛡 ' + L('Schilde')], ['pet', '🐾 Pets'], ['emote', '💃 Emotes'], ['bundles', '🎁 ' + L('Pakete')], ['lim', '⏳ Limited'], ['plus', '✨ Cloudy+'], ['skins', '👤 Skins'], ['quests', '🎯 Quests']].concat(shop.admin ? [['owner', '👑 Owner']] : []);
     if (!TABS.some(t => t[0] === shopTab)) shopTab = 'cape';
-    const itemTab = ['cape', 'wings', 'hat', 'shield', 'pet', 'owner'].includes(shopTab), side = ['plus', 'skins', 'quests'].includes(shopTab);
+    const itemTab = ['cape', 'wings', 'hat', 'shield', 'pet', 'emote', 'owner'].includes(shopTab), side = ['plus', 'skins', 'quests'].includes(shopTab);
     nav.innerHTML = `<div class="shnav">${TABS.map(([k, l]) => `<button class="shtab ${k === shopTab ? 'on' : ''}" data-stab="${k}">${l}</button>`).join('')}</div>` +
       (itemTab ? `<div class="shsub"><div class="seg">${[['all', L('Alle')], ['new', L('Nicht gekauft')], ['own', L('Gekauft')]].map(([k, l]) => `<button class="${shopFilt === k ? 'on' : ''}" data-sf2="${k}">${l}</button>`).join('')}</div><input class="field shq" id="shopQ" placeholder="🔎 ${L('Suchen …')}" value="${escL(shopQ)}" autocomplete="off" spellcheck="false"></div>` : '');
     nav.querySelectorAll('[data-stab]').forEach(b => b.onclick = () => { shopTab = b.dataset.stab; try { localStorage.setItem('cloudy.shopTab', shopTab); } catch {} paintShop(); });
@@ -584,8 +596,8 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
     const fl = cat => shop.catalog.filter(i => (cat === 'owner' ? i.owner : i.cat === cat && !i.plus && !i.owner) && (shopFilt === 'all' || (shopFilt === 'own') === shop.owned.includes(i.id)) && (!qq || String(i.name).toLowerCase().includes(qq)));
     const card = (i, cat) => {
       const own = shop.owned.includes(i.id), on = shop.equip[cat] === i.id;
-      return `<div class="glass shi ${on ? 'sel' : ''}"><div class="i3h" data-i3="${i.id}"></div><b ${shop.admin ? `contenteditable="plaintext-only" spellcheck="false" title="Admin: Namen anklicken und ändern" data-rn="${i.id}"` : ''}>${i.name}</b><small>${i.owner ? '👑 Owner' : i.plus ? '✨ ' + L('Mit Cloudy+ inklusive') : shop.admin ? `<span contenteditable="plaintext-only" spellcheck="false" title="Admin: Preis anklicken und ändern (leer = Standardpreis)" data-pr="${i.id}" style="border-bottom:1px dashed currentColor;padding:0 2px">${i.price}</span> CC · gratis (Admin)` : cc(i.price)}</small>
-        ${shop.admin && !i.plus && !i.owner ? `<button class="btn ghost ${i.hidden ? 'tagon' : ''}" data-hide="${i.id}|${i.hidden ? 0 : 1}" title="Admin: ${i.hidden ? 'Wieder im Shop anzeigen' : 'Im Shop verstecken (niemand kann es mehr kaufen)'}">${i.hidden ? '🙈 Versteckt – zeigen' : '👁 Verstecken'}</button>` : ''}        ${shop.admin && i.custom ? `<button class="btn ghost" data-ci-del="${i.id}">Löschen</button>` : ''}${own ? `<button class="btn ${on ? 'ghost' : ''}" data-eq="${i.id}" data-cat="${i.cat}">${on ? 'Ablegen' : 'Anlegen'}</button>${!shop.admin && !i.custom && !i.plus && !i.owner ? `<button class="btn ghost" data-gift="${i.id}">🎁 Verschenken</button>` : ''}` : i.plus || i.owner ? `<button class="btn ghost" disabled>${i.plus ? '✨ ' + L('Kommt mit Cloudy+') : '👑 Owner'}</button><button class="btn ghost" data-try="${i.id}">👁 ${L('Anprobieren')}</button>` : (canPay(i.price) ? `<button class="btn" data-buy="${i.id}">Kaufen</button>` : `<button class="btn ghost" disabled>${L('Dir fehlen')} ${i.price - shop.coins} CC</button>`) + `<button class="btn ghost" data-try="${i.id}">👁 ${L('Anprobieren')}</button>`}</div>`;
+      return `<div class="glass shi ${on ? 'sel' : ''}"><div class="i3h" data-i3="${i.id}"></div><b ${shop.admin ? `contenteditable="plaintext-only" spellcheck="false" title="Admin: Namen anklicken und ändern" data-rn="${i.id}"` : ''}>${i.name}</b><small>${i.owner ? '👑 Owner' : i.plus ? '✨ ' + L('Mit Cloudy+ inklusive') : i.cat === 'emote' && !i.price ? L('Für alle kostenlos') : shop.admin ? `<span contenteditable="plaintext-only" spellcheck="false" title="Admin: Preis anklicken und ändern (leer = Standardpreis)" data-pr="${i.id}" style="border-bottom:1px dashed currentColor;padding:0 2px">${i.price}</span> CC · gratis (Admin)` : cc(i.price)}</small>
+        ${shop.admin && !i.plus && !i.owner ? `<button class="btn ghost ${i.hidden ? 'tagon' : ''}" data-hide="${i.id}|${i.hidden ? 0 : 1}" title="Admin: ${i.hidden ? 'Wieder im Shop anzeigen' : 'Im Shop verstecken (niemand kann es mehr kaufen)'}">${i.hidden ? '🙈 Versteckt – zeigen' : '👁 Verstecken'}</button>` : ''}        ${shop.admin && i.custom ? `<button class="btn ghost" data-ci-del="${i.id}">Löschen</button>` : ''}${own && i.cat === 'emote' ? `<button class="btn ghost" disabled title="${L('Im Spiel B gedrückt halten und das Emote wählen')}">🎮 ${L('Im Spiel: Taste B')}</button><button class="btn ghost" data-try="${i.id}">▶ ${L('Ansehen')}</button>` : own ? `<button class="btn ${on ? 'ghost' : ''}" data-eq="${i.id}" data-cat="${i.cat}">${on ? 'Ablegen' : 'Anlegen'}</button>${!shop.admin && !i.custom && !i.plus && !i.owner ? `<button class="btn ghost" data-gift="${i.id}">🎁 Verschenken</button>` : ''}` : i.plus || i.owner ? `<button class="btn ghost" disabled>${i.plus ? '✨ ' + L('Kommt mit Cloudy+') : '👑 Owner'}</button><button class="btn ghost" data-try="${i.id}">👁 ${L('Anprobieren')}</button>` : (canPay(i.price) ? `<button class="btn" data-buy="${i.id}">Kaufen</button>` : `<button class="btn ghost" disabled>${L('Dir fehlen')} ${i.price - shop.coins} CC</button>`) + `<button class="btn ghost" data-try="${i.id}">👁 ${L('Anprobieren')}</button>`}</div>`;
     };
     window.__shopCard = card;
     if (itemTab) { const L0 = fl(shopTab); box.innerHTML = L0.length ? `<div class="row shrow">${L0.map(i => card(i, i.cat)).join('')}</div>` : `<p class="muted shempty">${qq ? L('Nichts gefunden.') : shopFilt === 'own' ? L('Hier besitzt du noch nichts.') : shopFilt === 'new' ? L('Du hast schon alles aus dieser Kategorie 🎉') : L('Hier gibt es gerade nichts.')}</p>`; }

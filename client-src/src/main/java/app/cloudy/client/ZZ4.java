@@ -78,9 +78,9 @@ public final class ZZ4 {
 	/** Sauberes Vorschaubild (Rueckansicht des 3D-Modells) fuer Menues; null wenn nicht vorhanden. Groesse in out[0..1]. */
 	public static Identifier ico(String id, int[] out) {
 		if (GLB.handles(id)) return GLB.ico(id, out);
-		String pk = pack(id);
+		String pk = id != null && id.startsWith("emote-") ? "" : pack(id); // Emotes: Bild ico-emote-xyz.png
 		if (pk == null) return null;
-		String name = "ico-" + pk + "-" + id.substring(0, id.indexOf('-'));
+		String name = pk.isEmpty() ? "ico-" + id : "ico-" + pk + "-" + id.substring(0, id.indexOf('-'));
 		Identifier ident = TEX.get(name);
 		if (ident == null) {
 			try (InputStream in = ZZ4.class.getResourceAsStream("/cloudy-cos/" + name + ".png")) {

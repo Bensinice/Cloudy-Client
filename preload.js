@@ -99,3 +99,5 @@ contextBridge.exposeInMainWorld('cloudy', {
   capeClear: () => inv('capeClear'),
   on: (ch, fn) => ipcRenderer.on(ch, (_e, d) => fn(d))
 });
+// Betriebssystem als Klasse am <html> (z. B. os-darwin): der Mac bekommt sparsamere Effekte (siehe overhaul.css)
+try { const add = () => document.documentElement && document.documentElement.classList.add('os-' + process.platform); add(); window.addEventListener('DOMContentLoaded', add); } catch {}

@@ -19,7 +19,7 @@ public class CloudyClient implements ClientModInitializer {
 	public static boolean TITLE = !"0".equals(System.getProperty("cloudy.title"));
 	private static boolean shiftDown;
 	public static boolean CAPE, HUD, CHEATS, HUD_FPS, HUD_PING, HUD_ARMOR, HUD_COORDS;
-	private static KeyBinding menuKey, reloadKey, cosKey, zoomKey, modsKey;
+	private static KeyBinding menuKey, reloadKey, cosKey, zoomKey, modsKey, emoteKey;
 	static KeyBinding spotKey;
 	public static boolean STYLE = true;
 
@@ -83,6 +83,12 @@ public class CloudyClient implements ClientModInitializer {
 		});
 		Cosmetics.init();
 		ClientTickEvents.END_CLIENT_TICK.register(mc -> { try { CosmeticNet.tick(mc); } catch (Throwable ignored) {} });
+		// B: Emote-Rad (gedrueckt halten, Maus auf ein Emote, loslassen – oder klicken)
+		emoteKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.cloudy.emotes", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_B, "category.cloudy"));
+		ClientTickEvents.END_CLIENT_TICK.register(mc -> {
+			try { Emotes.tick(mc); } catch (Throwable ignored) {}
+			while (emoteKey.wasPressed()) if (mc.currentScreen == null && mc.player != null) mc.setScreen(new EmoteWheelScreen(emoteKey));
+		});
 		CreamHeist.init();
 		HudRenderCallback.EVENT.register(Hud::render);
 		try { net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents.AFTER_TRANSLUCENT.register(ctx -> { try { Lyrics.world(ctx); } catch (Throwable ignored) {} }); } catch (Throwable t) { LOG.warn("3D-Lyrics nicht verfuegbar", t); }
