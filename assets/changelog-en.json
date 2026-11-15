@@ -1,4 +1,7 @@
 {
+  "0.9.126": [
+    "Client mod builds again (0.9.125 had a compile error, so pets and new capes didn't reach the game)"
+  ],
   "0.9.125": [
     "New category: Pets – Chameleon (on your left arm), Little Devil, Tabby Cat, Shadow Dragon (breathes fire) and Mini Me (with your own skin)",
     "New animated capes: Cloudy Glitch, Storm Chain, Frostbound Chains, plus the Comic Cape",

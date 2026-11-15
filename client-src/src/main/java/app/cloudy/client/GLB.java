@@ -174,9 +174,9 @@ public final class GLB {
 		int bin = 20 + jl + 8; // Anfang der BIN-Daten
 		JsonArray nodes = j.getAsJsonArray("nodes"), meshes = j.getAsJsonArray("meshes");
 		java.util.ArrayList<Part> parts = new java.util.ArrayList<>();
-		String mount = "float"; float[] off = null; // Pets: Befestigung aus extras.cloudyPet (Wurzelknoten)
+		String mount = "float"; float[] petOff = null; // Pets: Befestigung aus extras.cloudyPet (Wurzelknoten)
 		for (int ni = 0; ni < nodes.size(); ni++) { JsonObject n = nodes.get(ni).getAsJsonObject();
-			try { if (n.has("extras") && n.getAsJsonObject("extras").has("cloudyPet")) { JsonObject cp = n.getAsJsonObject("extras").getAsJsonObject("cloudyPet"); if (cp.has("mount")) mount = cp.get("mount").getAsString(); if (cp.has("offset")) off = vec3(cp.getAsJsonArray("offset")); } } catch (Exception ignored) {} }
+			try { if (n.has("extras") && n.getAsJsonObject("extras").has("cloudyPet")) { JsonObject cp = n.getAsJsonObject("extras").getAsJsonObject("cloudyPet"); if (cp.has("mount")) mount = cp.get("mount").getAsString(); if (cp.has("offset")) petOff = vec3(cp.getAsJsonArray("offset")); } } catch (Exception ignored) {} }
 		for (int ni = 0; ni < nodes.size(); ni++) {
 			JsonObject n = nodes.get(ni).getAsJsonObject();
 			if (!n.has("mesh")) continue;
@@ -232,7 +232,7 @@ public final class GLB {
 		}
 		Model m = new Model();
 		m.parts = parts.toArray(new Part[0]);
-		m.tex = texs; m.mount = mount; m.off = off;
+		m.tex = texs; m.mount = mount; m.off = petOff;
 		return m;
 	}
 
