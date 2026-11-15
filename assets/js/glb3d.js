@@ -81,6 +81,7 @@
     'hat-owinferno': { file: 'owner_inferno_halo_hat.glb', kind: 'hat', name: 'Inferno-Heiligenschein (animiert)', view: 'front' },
     'hat-owhorns': { file: 'owner_demon_horns_hat.glb', kind: 'hat', name: 'Dämonenhörner (animiert)', view: 'front' },
     'hat-owarcane': { file: 'owner_arcane_hat.glb', kind: 'hat', name: 'Arkaner Hut (animiert)', view: 'front' },
+    'wings-g7azure': { file: 'azure_eclipse_wings.glb', kind: 'wings', name: 'Azure Eclipse Wings', view: 'back' },
     'hat-adhalo': { file: 'admin_halo_hat.glb', kind: 'hat', name: 'Admin-Heiligenschein', view: 'front' },
     'hat-owcrystal': { file: 'owner_crystal_crown_hat.glb', kind: 'hat', name: 'Kristallkrone (animiert)', view: 'front' },
     'cape-g6galaxy': { file: 'spiral_galaxy_cape_animated.glb', kind: 'cape', name: 'Spiralgalaxie-Umhang (animiert)', view: 'back' },
@@ -156,6 +157,13 @@
           anim.push(now => { const f = Math.floor(now / A.frameMs) % A.frames; map.offset.set((f % A.cols) / A.cols, Math.floor(f / A.cols) / A.rows); }); }); });
       if (k === 'wings') { const w = []; m.traverse(o => { if (o.name && /wing/i.test(o.name) && o.parent && o.position.x !== 0 && !/halo/i.test(o.name)) { o.userData.base = o.rotation.y; o.userData.side = Math.sign(o.position.x); w.push(o); } });
         anim.push(now => { for (let i = 0; i < w.length; i++) { const o = w[i], f = Math.sin(now / 520); o.rotation.y = o.userData.base + o.userData.side * (0.12 + 0.17 * f); } }); }
+      if (k === 'wings') { const cw = []; m.traverse(o => { if (!o.userData || !o.userData.cloudyWing) return; o.userData.p0 = o.position.clone(); o.userData.q0 = o.quaternion.clone(); o.userData.cs = Math.sign(o.position.x) || 1; o.matrixAutoUpdate = false; cw.push(o); }); // Flügelschlag aus dem Modell (wie GLB.java)
+        if (cw.length) anim.push(now => { const T = (x, y, z) => new THREE.Matrix4().makeTranslation(x, y, z), RZ = a => new THREE.Matrix4().makeRotationZ(a);
+          for (const o of cw) { const W = o.userData.cloudyWing, s = o.userData.cs, t = (now % W.periodMs) / W.periodMs * Math.PI * 2, roll = W.roll[0] + W.roll[1] * Math.sin(t), P = W.pivot;
+            const M = T(o.userData.p0.x, o.userData.p0.y, o.userData.p0.z).multiply(new THREE.Matrix4().makeRotationFromQuaternion(o.userData.q0)).multiply(new THREE.Matrix4().makeRotationY(s * (W.yaw || 0) * Math.sin(t + 0.6)));
+            M.multiply(T(P[0], P[1], P[2])).multiply(RZ(s * roll)).multiply(T(-P[0], -P[1], -P[2]));
+            if (W.chain) { const C = W.chain, late = W.roll[0] + W.roll[1] * Math.sin(t - C.lag), sw = -s * C.follow * late + C.sway * Math.sin(t - C.lag - 0.8); M.multiply(T(C.pivot[0], C.pivot[1], C.pivot[2])).multiply(RZ(sw)).multiply(T(-C.pivot[0], -C.pivot[1], -C.pivot[2])); }
+            o.matrix.copy(M); o.matrixWorldNeedsUpdate = true; } }); }
     })).then(() => now => anim.forEach(a => a(now)));
   }
 

@@ -112,7 +112,7 @@ public final class Cosmetics {
 		"shield-zz4", "shield-zz4m", "shield-zz3", "shield-zz3s", "shield-zz5", "cape-yy", "shield-yy",
 		"wings-zv", "wings-zs", "wings-zf", "wings-zb", "cape-zbs", "cape-ghg",
 		"hat-g3wizard", "hat-g3crown", "cape-g3nebula", "cape-g3phoenix", "wings-g3seraph", "wings-g3prism", "wings-g3void",
-		"wings-g4abyss", "wings-g4frost", "wings-g4amethyst", "wings-g4mono", "wings-g4venom", "cape-g4viper", "cape-g4vortex", "cape-g4glitch", "cape-g4crest", "cape-g4drip",
+		"wings-g7azure", "wings-g4abyss", "wings-g4frost", "wings-g4amethyst", "wings-g4mono", "wings-g4venom", "cape-g4viper", "cape-g4vortex", "cape-g4glitch", "cape-g4crest", "cape-g4drip",
 		"wings-g5seraph", "wings-g5butterfly", "wings-g5wyvern", "wings-g5mecha", "wings-g5dragonfly", "wings-g5phoenix", "wings-g5volt", "wings-g5leaf", "wings-g5bone", "wings-g5pixel", "cape-g5galaxy", "cape-g5sakura", "cape-g5magma", "cape-g5wave", "cape-g5racing", "cape-g5aurora", "cape-g5circuit", "cape-g5royal", "cape-g5synth", "cape-g5rift", "cape-g5aurorafx", "cape-g5warp", "cape-g6pulse", "cape-g6gradient", "cape-g6silk", "cape-g6orbit", "cape-g6scan", "cape-g6rain", "cape-g6fire", "cape-g6ocean", "cape-g6code", "cape-g6galaxy",
 		"wings-pgcrystal", "wings-pgfiligree", "wings-pgdragon", "wings-pgobsidian", "wings-pgcloud", "cape-pgpulse", "cape-pgliquid", "cape-pgnight", "cape-pgprestige", "cape-pgaurora", "hat-pgcrown", "hat-pgtophat", "hat-pghalo", "hat-pglaurel", "hat-pgpuff",
 		"wings-owcrimson", "wings-owphoenix", "wings-owprism", "wings-owstorm", "wings-owvoid", "cape-owthrone", "cape-owblackhole", "cape-owsigil", "cape-owprism", "cape-owstorm", "hat-owcrown", "hat-owinferno", "hat-owhorns", "hat-owarcane", "hat-owcrystal", "hat-adhalo"}; // letzte Zeile: 3D-Modelle aus .glb (GLB.java)
@@ -238,6 +238,7 @@ public final class Cosmetics {
 			case "wings-g3seraph" -> "Seraph Wings (3D)";
 			case "wings-g3prism" -> "Prism Shard Wings (3D)";
 			case "wings-g3void" -> "Void Dragon Wings (3D)";
+			case "wings-g7azure" -> "Azure Eclipse Wings (3D)";
 			case "wings-g4abyss" -> "Abyss Bat Wings (3D)";
 			case "wings-g4frost" -> "Frostfeather Wings (3D)";
 			case "wings-g4amethyst" -> "Amethyst Flame Wings (3D)";

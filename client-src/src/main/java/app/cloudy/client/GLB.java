@@ -41,6 +41,7 @@ public final class GLB {
 		FILES.put("wings-g3seraph", "seraph_wings.glb");
 		FILES.put("wings-g3prism", "prism_shard_wings.glb");
 		FILES.put("wings-g3void", "void_dragon_wings.glb");
+		FILES.put("wings-g7azure", "azure_eclipse_wings.glb");
 		FILES.put("wings-g4abyss", "abyss_bat_wings.glb");
 		FILES.put("wings-g4frost", "frostfeather_wings.glb");
 		FILES.put("wings-g4amethyst", "amethyst_flame_wings.glb");
@@ -121,7 +122,10 @@ public final class GLB {
 	public static final float WING_Y = -0.22f, WING_Z = -0.15f, WING_SC = 0.62f;
 	public static final float HALO_Y = 0.66f;
 
-	private static final class Part { String name; float[] v; int[] idx; float tx, ty, tz, yaw; int side, img; boolean halo; int aFrames, aCols = 1, aRows = 1, aMs = 100; }
+	private static final class Part { String name; float[] v; int[] idx; float tx, ty, tz, yaw; int side, img; boolean halo; int aFrames, aCols = 1, aRows = 1, aMs = 100;
+		// Fluegelschlag aus dem Modell (extras.cloudyWing): Rollen um die Fluegelwurzel, Ketten pendeln nach
+		boolean mot, chain; float[] piv, cpiv; float roll0, rollA, yawA, follow, lag, sway; int per = 3000; }
+	private static float[] vec3(JsonArray a) { return new float[] {a.get(0).getAsFloat(), a.get(1).getAsFloat(), a.get(2).getAsFloat()}; }
 	private static final class Model { Part[] parts; Identifier[] tex; Identifier tex(Part p) { return tex[Math.max(0, Math.min(tex.length - 1, p.img))]; } }
 
 	private static final Map<String, Model> MODELS = new HashMap<>();
@@ -164,10 +168,18 @@ public final class GLB {
 			if (n.has("rotation")) { JsonArray q = n.getAsJsonArray("rotation"); yaw = 2f * (float) Math.atan2(q.get(1).getAsDouble(), q.get(3).getAsDouble()); } // die Modelle drehen nur um Y
 			String name = n.has("name") ? n.get("name").getAsString() : "";
 			JsonObject anim = n.has("extras") && n.getAsJsonObject("extras").has("cloudyAnim") ? n.getAsJsonObject("extras").getAsJsonObject("cloudyAnim") : null; // animierter Umhang: Bilder im Raster
+			JsonObject cw = n.has("extras") && n.getAsJsonObject("extras").has("cloudyWing") ? n.getAsJsonObject("extras").getAsJsonObject("cloudyWing") : null;
 			for (var pe : meshes.get(n.get("mesh").getAsInt()).getAsJsonObject().getAsJsonArray("primitives")) {
 				JsonObject prim = pe.getAsJsonObject(), at = prim.getAsJsonObject("attributes");
 				float[] pos = floats(j, d, bin, at.get("POSITION").getAsInt(), 3), nor = floats(j, d, bin, at.get("NORMAL").getAsInt(), 3), uv = floats(j, d, bin, at.get("TEXCOORD_0").getAsInt(), 2);
 				Part p = new Part();
+				if (cw != null) try {
+					p.piv = vec3(cw.getAsJsonArray("pivot")); JsonArray r = cw.getAsJsonArray("roll");
+					p.roll0 = r.get(0).getAsFloat(); p.rollA = r.get(1).getAsFloat(); p.yawA = cw.has("yaw") ? cw.get("yaw").getAsFloat() : 0f;
+					p.per = Math.max(200, cw.has("periodMs") ? cw.get("periodMs").getAsInt() : 3000);
+					if (cw.has("chain")) { JsonObject c = cw.getAsJsonObject("chain"); p.cpiv = vec3(c.getAsJsonArray("pivot")); p.follow = c.get("follow").getAsFloat(); p.lag = c.get("lag").getAsFloat(); p.sway = c.get("sway").getAsFloat(); p.chain = true; }
+					p.mot = true;
+				} catch (Exception ignored) { p.mot = false; p.chain = false; }
 				if (anim != null) try { p.aFrames = anim.get("frames").getAsInt(); p.aCols = Math.max(1, anim.get("cols").getAsInt()); p.aRows = Math.max(1, anim.get("rows").getAsInt()); p.aMs = Math.max(20, anim.get("frameMs").getAsInt()); } catch (Exception ignored) {}
 				p.img = 0; // Material -> Textur -> Bild (Modelle mit mehreren Texturen, z. B. Vorder- und Kantenseite)
 				try { if (prim.has("material")) { JsonObject mat = j.getAsJsonArray("materials").get(prim.get("material").getAsInt()).getAsJsonObject(); JsonObject pbr = mat.getAsJsonObject("pbrMetallicRoughness"); if (pbr != null && pbr.has("baseColorTexture")) { int ti = pbr.getAsJsonObject("baseColorTexture").get("index").getAsInt(); p.img = j.getAsJsonArray("textures").get(ti).getAsJsonObject().get("source").getAsInt(); } } } catch (Exception ignored) {}
@@ -287,7 +299,18 @@ public final class GLB {
 			ms.push();
 			ms.translate(0f, WING_Y + ModConfig.wingY * 0.02f, WING_Z);
 			ms.scale(sc, sc, sc);
-			drawPart(ms, vc, light, ov, p, p.tx, p.ty, p.tz, p.yaw + p.side * flap);
+			if (p.mot) { // Fluegelschlag aus dem Modell
+				double t = (System.currentTimeMillis() % p.per) / (double) p.per * Math.PI * 2;
+				float roll = p.roll0 + p.rollA * (float) Math.sin(t);
+				ms.translate(p.tx, p.ty, p.tz);
+				ms.multiply(new Quaternionf().rotationY(p.yaw + p.side * p.yawA * (float) Math.sin(t + 0.6)));
+				ms.translate(p.piv[0], p.piv[1], p.piv[2]); ms.multiply(new Quaternionf().rotationZ(p.side * roll)); ms.translate(-p.piv[0], -p.piv[1], -p.piv[2]);
+				if (p.chain) { // Kette bleibt haengen und schwingt verzoegert nach
+					float late = p.roll0 + p.rollA * (float) Math.sin(t - p.lag), sw = -p.side * p.follow * late + p.sway * (float) Math.sin(t - p.lag - 0.8);
+					ms.translate(p.cpiv[0], p.cpiv[1], p.cpiv[2]); ms.multiply(new Quaternionf().rotationZ(sw)); ms.translate(-p.cpiv[0], -p.cpiv[1], -p.cpiv[2]);
+				}
+				drawPart(ms, vc, light, ov, p, 0f, 0f, 0f, 0f);
+			} else drawPart(ms, vc, light, ov, p, p.tx, p.ty, p.tz, p.yaw + p.side * flap);
 			ms.pop();
 		}
 		ms.pop();

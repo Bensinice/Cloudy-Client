@@ -857,7 +857,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.123'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.124'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1477,6 +1477,7 @@ const CATALOG = [
   { id: 'wings-g3seraph', cat: 'wings', name: 'Seraph-Flügel (3D)', price: 1800 },
   { id: 'wings-g3prism', cat: 'wings', name: 'Prismensplitter-Flügel (3D)', price: 1800 },
   { id: 'wings-g3void', cat: 'wings', name: 'Leere-Drachenflügel (3D)', price: 1800 },
+  { id: 'wings-g7azure', cat: 'wings', name: 'Azure-Eclipse-Flügel (3D, animiert)', price: 2400 },
   { id: 'wings-g4abyss', cat: 'wings', name: 'Abgrund-Fledermausflügel (3D)', price: 1800 },
   { id: 'wings-g4frost', cat: 'wings', name: 'Frostfeder-Flügel (3D)', price: 1800 },
   { id: 'wings-g4amethyst', cat: 'wings', name: 'Amethystflammen-Flügel (3D)', price: 1800 },

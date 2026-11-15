@@ -55,6 +55,7 @@
     'wings-g3seraph': { b: [-9, 0, 34, 24], c: ['#f4ecd8', '#c9a24a'], img: 'assets/cosmetics3d/icons/wings-g3seraph.png', ar: 1, glb: true },
     'wings-g3prism': { b: [-9, 0, 34, 24], c: ['#3be0d0', '#7a5cff'], img: 'assets/cosmetics3d/icons/wings-g3prism.png', ar: 1, glb: true },
     'wings-g3void': { b: [-9, 0, 34, 24], c: ['#5a2aa0', '#14081f'], img: 'assets/cosmetics3d/icons/wings-g3void.png', ar: 1, glb: true },
+    'wings-g7azure': { b: [-9, 0, 34, 24], c: ['#2a7bff', '#0a1430'], img: 'assets/cosmetics3d/icons/wings-g7azure.png', ar: 1, glb: true },
     'wings-g4abyss': { b: [-9, 0, 34, 24], c: ['#2a2233', '#9b5cff'], img: 'assets/cosmetics3d/icons/wings-g4abyss.png', ar: 1, glb: true },
     'wings-g4frost': { b: [-9, 0, 34, 24], c: ['#7ff0ff', '#0b3a55'], img: 'assets/cosmetics3d/icons/wings-g4frost.png', ar: 1, glb: true },
     'wings-g4amethyst': { b: [-9, 0, 34, 24], c: ['#c084fc', '#2e0854'], img: 'assets/cosmetics3d/icons/wings-g4amethyst.png', ar: 1, glb: true },
