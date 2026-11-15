@@ -10,7 +10,7 @@ permissions:
 jobs:
   client:
     runs-on: ubuntu-latest
-    continue-on-error: true   # Falls die Client-Mod nicht baut, entstehen die Programme trotzdem
+    continue-on-error: false  # Baut die Client-Mod nicht, wird auch nichts veroeffentlicht (sonst landet ein Release ohne Mod bei allen)
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4

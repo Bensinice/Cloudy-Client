@@ -1,5 +1,13 @@
 [
  {
+  "v": "0.9.127",
+  "date": "2026-11-15",
+  "fixed": [
+   "Client-Mod einrichten: Der Notfall-Bau ohne optionale Teile scheiterte immer an „Hotbar“ – behoben",
+   "Ein Release ohne funktionierende Client-Mod (wie 0.9.125) kann nicht mehr erscheinen"
+  ]
+ },
+ {
   "v": "0.9.126",
   "date": "2026-11-15",
   "fixed": [

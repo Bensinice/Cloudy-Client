@@ -1,4 +1,8 @@
 {
+  "0.9.127": [
+    "Client mod setup: the fallback build without optional parts no longer fails on “Hotbar”",
+    "A release without a working client mod (like 0.9.125) can no longer be published"
+  ],
   "0.9.126": [
     "Client mod builds again (0.9.125 had a compile error, so pets and new capes didn't reach the game)"
   ],
