@@ -49,9 +49,9 @@ public final class EmoteWheelScreen extends Screen {
 		super.render(c, mx, my, delta);
 	}
 
-	private void pick() { String id = hover >= 0 ? at(hover) : null; close(); if (id != null) Emotes.play(id); }
+	private void pick() { String id = hover >= 0 ? at(hover) : null; shut(); if (id != null) Emotes.play(id); }
 
-	@Override public boolean mouseClicked(double mx, double my, int b) { if (b == 0) { pick(); return true; } if (b == 1) { close(); return true; } return super.mouseClicked(mx, my, b); }
+	@Override public boolean mouseClicked(double mx, double my, int b) { if (b == 0) { pick(); return true; } if (b == 1) { shut(); return true; } return super.mouseClicked(mx, my, b); }
 	@Override public boolean mouseScrolled(double mx, double my, double h, double v) { if (pages() > 1) page = Math.floorMod(page + (v < 0 ? 1 : -1), pages()); return true; }
 
 	@Override
@@ -60,5 +60,5 @@ public final class EmoteWheelScreen extends Screen {
 		return super.keyReleased(keyCode, scanCode, mods);
 	}
 
-	private void close() { MinecraftClient.getInstance().setScreen(null); }
+	private void shut() { MinecraftClient.getInstance().setScreen(null); }
 }
