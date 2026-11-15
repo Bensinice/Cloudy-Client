@@ -1,5 +1,19 @@
 [
  {
+  "v": "0.9.125",
+  "date": "2026-11-15",
+  "added": [
+   "Neue Kategorie Pets (Shop-Reiter „Pets“ und im Spielmenü): Chamäleon (sitzt auf dem linken Arm und bewegt sich mit), Kleiner Teufel, Tigerkatze, Schattendrache (spuckt Feuer) und Mini-Ich (mit deinem eigenen Skin, auf einem Brett auf der Schulter)",
+   "Neue Umhänge: Cloudy-Glitch, Sturmketten und Frostgebundene Ketten (alle animiert) sowie der Comic-Umhang",
+   "Comic-Set: Comic-Flügel und Comic-Stirnband",
+   "Pets sehen auch andere Cloudy-Spieler"
+  ],
+  "fixed": [
+   "Cloudy+-Items sehen jetzt auch andere Spieler (vorher nur du selbst)",
+   "Ablegen/Anlegen im Spielmenü löscht keine anderen Slots mehr (Himmel, Totem, Hotbar)"
+  ]
+ },
+ {
   "v": "0.9.124",
   "date": "2026-11-15",
   "added": [

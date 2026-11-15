@@ -41,13 +41,13 @@ import java.util.zip.Deflater;
  * Texturen werden im Code gezeichnet (kein AWT), Modelle aus einfachen Quadern gebaut. Umhänge laufen über CapeMixin.
  */
 public final class Cosmetics {
-	public static String cape, hat, wings, shield;
+	public static String cape, hat, wings, shield, pet;
 	public static final List<String> owned = new ArrayList<>();
 	public static ModelPart model;
 	public static final Identifier TEX = Identifier.of("cloudy-client", "cosmetics");
 	private static boolean ready;
 
-	public static boolean any() { return hat != null || wings != null || shield != null || ZZ4.handles(cape); }
+	public static boolean any() { return hat != null || wings != null || shield != null || pet != null || ZZ4.handles(cape); }
 
 	/** Liest Auswahl und Besitz, hängt den Renderer an alle Spieler-Renderer (gezeichnet wird nur für dich) und fügt den Cosmetics-Knopf ein. */
 	public static void init() {
@@ -60,6 +60,7 @@ public final class Cosmetics {
 			hat = str(eq, "hat");
 			wings = str(eq, "wings");
 			shield = str(eq, "shield");
+			pet = str(eq, "pet");
 			if (root.has("owned")) for (var e : root.getAsJsonArray("owned")) owned.add(e.getAsString());
 			LivingEntityFeatureRendererRegistrationCallback.EVENT.register((entityType, entityRenderer, helper, context) -> {
 				if (entityRenderer instanceof PlayerEntityRenderer pr) helper.register(new CosmeticFeature(pr));
@@ -82,20 +83,18 @@ public final class Cosmetics {
 	}
 
 	public static String get(String cat) {
-		return switch (cat) { case "hat" -> hat; case "wings" -> wings; case "shield" -> shield; default -> cape; };
+		return switch (cat) { case "hat" -> hat; case "wings" -> wings; case "shield" -> shield; case "pet" -> pet; default -> cape; };
 	}
 
 	/** Setzt ein Item (oder null = ablegen) und speichert die Auswahl, damit der Launcher sie übernimmt. */
 	public static void set(String cat, String id) {
-		switch (cat) { case "hat" -> hat = id; case "wings" -> wings = id; case "shield" -> shield = id; default -> cape = id; }
+		switch (cat) { case "hat" -> hat = id; case "wings" -> wings = id; case "shield" -> shield = id; case "pet" -> pet = id; default -> cape = id; }
 		try {
 			String p = System.getProperty("cloudy.cosmetics", "");
 			if (p.isEmpty()) return;
-			JsonObject root = JsonParser.parseString(Files.readString(Path.of(p))).getAsJsonObject(), eq = new JsonObject();
-			if (cape != null) eq.addProperty("cape", cape);
-			if (hat != null) eq.addProperty("hat", hat);
-			if (wings != null) eq.addProperty("wings", wings);
-			if (shield != null) eq.addProperty("shield", shield);
+			JsonObject root = JsonParser.parseString(Files.readString(Path.of(p))).getAsJsonObject(), eq = root.has("equip") && root.get("equip").isJsonObject() ? root.getAsJsonObject("equip") : new JsonObject(); // andere Slots (Himmel, Totem, Hotbar …) bleiben erhalten
+			String[][] sl = {{"cape", cape}, {"hat", hat}, {"wings", wings}, {"shield", shield}, {"pet", pet}};
+			for (String[] x : sl) { if (x[1] != null) eq.addProperty(x[0], x[1]); else eq.remove(x[0]); }
 			root.add("equip", eq);
 			Files.writeString(Path.of(p), root.toString());
 		} catch (Exception e) {
@@ -115,7 +114,8 @@ public final class Cosmetics {
 		"wings-g7azure", "wings-g4abyss", "wings-g4frost", "wings-g4amethyst", "wings-g4mono", "wings-g4venom", "cape-g4viper", "cape-g4vortex", "cape-g4glitch", "cape-g4crest", "cape-g4drip",
 		"wings-g5seraph", "wings-g5butterfly", "wings-g5wyvern", "wings-g5mecha", "wings-g5dragonfly", "wings-g5phoenix", "wings-g5volt", "wings-g5leaf", "wings-g5bone", "wings-g5pixel", "cape-g5galaxy", "cape-g5sakura", "cape-g5magma", "cape-g5wave", "cape-g5racing", "cape-g5aurora", "cape-g5circuit", "cape-g5royal", "cape-g5synth", "cape-g5rift", "cape-g5aurorafx", "cape-g5warp", "cape-g6pulse", "cape-g6gradient", "cape-g6silk", "cape-g6orbit", "cape-g6scan", "cape-g6rain", "cape-g6fire", "cape-g6ocean", "cape-g6code", "cape-g6galaxy",
 		"wings-pgcrystal", "wings-pgfiligree", "wings-pgdragon", "wings-pgobsidian", "wings-pgcloud", "cape-pgpulse", "cape-pgliquid", "cape-pgnight", "cape-pgprestige", "cape-pgaurora", "hat-pgcrown", "hat-pgtophat", "hat-pghalo", "hat-pglaurel", "hat-pgpuff",
-		"wings-owcrimson", "wings-owphoenix", "wings-owprism", "wings-owstorm", "wings-owvoid", "cape-owthrone", "cape-owblackhole", "cape-owsigil", "cape-owprism", "cape-owstorm", "hat-owcrown", "hat-owinferno", "hat-owhorns", "hat-owarcane", "hat-owcrystal", "hat-adhalo"}; // letzte Zeile: 3D-Modelle aus .glb (GLB.java)
+		"wings-owcrimson", "wings-owphoenix", "wings-owprism", "wings-owstorm", "wings-owvoid", "cape-owthrone", "cape-owblackhole", "cape-owsigil", "cape-owprism", "cape-owstorm", "hat-owcrown", "hat-owinferno", "hat-owhorns", "hat-owarcane", "hat-owcrystal", "hat-adhalo",
+		"pet-chameleon", "pet-devil", "pet-cat", "pet-dragon", "pet-minime", "cape-g7glitch", "cape-g7storm", "cape-g7frost", "cape-g7comic", "wings-g7comic", "hat-g7comic"}; // letzte Zeile: 3D-Modelle aus .glb (GLB.java)
 
 	/** Aus dem Shop genommene einfache Farbverlauf-Umhaenge: im Menue nur noch sichtbar, solange angelegt. */
 	public static final java.util.Set<String> GONE = java.util.Set.of("cape-cloud", "cape-aurora", "cape-sunset", "cape-galaxy", "cape-fire", "cape-ocean", "cape-sakura", "cape-nebula", "cape-emerald", "cape-royal",
@@ -312,6 +312,17 @@ public final class Cosmetics {
 			case "hat-owarcane" -> "Arcane Hat (Owner)";
 			case "hat-owcrystal" -> "Crystal Crown (Owner)";
 			case "hat-adhalo" -> "Admin Halo (Admin)";
+			case "pet-chameleon" -> "Chameleon";
+			case "pet-devil" -> "Little Devil";
+			case "pet-cat" -> "Tabby Cat";
+			case "pet-dragon" -> "Shadow Dragon";
+			case "pet-minime" -> "Mini Me";
+			case "cape-g7glitch" -> "Cloudy Glitch Cape";
+			case "cape-g7storm" -> "Storm Chain Cape";
+			case "cape-g7frost" -> "Frostbound Chains Cape";
+			case "cape-g7comic" -> "Comic Cape";
+			case "wings-g7comic" -> "Comic Wings";
+			case "hat-g7comic" -> "Comic Headband";
 
 			default -> id;
 		};

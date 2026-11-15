@@ -81,6 +81,17 @@
     'hat-owinferno': { file: 'owner_inferno_halo_hat.glb', kind: 'hat', name: 'Inferno-Heiligenschein (animiert)', view: 'front' },
     'hat-owhorns': { file: 'owner_demon_horns_hat.glb', kind: 'hat', name: 'Dämonenhörner (animiert)', view: 'front' },
     'hat-owarcane': { file: 'owner_arcane_hat.glb', kind: 'hat', name: 'Arkaner Hut (animiert)', view: 'front' },
+    'pet-chameleon': { file: 'pet_chameleon.glb', kind: 'pet', name: 'Chamäleon', view: 'front' },
+    'pet-devil': { file: 'pet_little_devil.glb', kind: 'pet', name: 'Kleiner Teufel', view: 'front' },
+    'pet-cat': { file: 'pet_tabby_cat.glb', kind: 'pet', name: 'Tigerkatze', view: 'front' },
+    'pet-dragon': { file: 'pet_shadow_dragon.glb', kind: 'pet', name: 'Schattendrache', view: 'front' },
+    'pet-minime': { file: 'pet_mini_me.glb', kind: 'pet', name: 'Mini-Ich', view: 'front' },
+    'cape-g7glitch': { file: 'cloudy_glitch_cape.glb', kind: 'cape', name: 'Cloudy-Glitch-Umhang (animiert)', view: 'back' },
+    'cape-g7storm': { file: 'storm_chain_cape.glb', kind: 'cape', name: 'Sturmketten-Umhang (animiert)', view: 'back' },
+    'cape-g7frost': { file: 'frostbound_chains_cape.glb', kind: 'cape', name: 'Frostgebundene Ketten (animiert)', view: 'back' },
+    'cape-g7comic': { file: 'comic_cape.glb', kind: 'cape', name: 'Comic-Umhang', view: 'back' },
+    'wings-g7comic': { file: 'comic_wings.glb', kind: 'wings', name: 'Comic-Flügel', view: 'back' },
+    'hat-g7comic': { file: 'comic_headband_hat.glb', kind: 'hat', name: 'Comic-Stirnband', view: 'front' },
     'wings-g7azure': { file: 'azure_eclipse_wings.glb', kind: 'wings', name: 'Azure Eclipse Wings', view: 'back' },
     'hat-adhalo': { file: 'admin_halo_hat.glb', kind: 'hat', name: 'Admin-Heiligenschein', view: 'front' },
     'hat-owcrystal': { file: 'owner_crystal_crown_hat.glb', kind: 'hat', name: 'Kristallkrone (animiert)', view: 'front' },
@@ -91,13 +102,14 @@
     hat: { pos: [0, 0, 0], scale: 1 },
     cape: { pos: [0, 0, -0.155], scale: 1, tilt: 0.05 },
     wings: { pos: [0, -0.22, -0.15], scale: 0.62 },
+    pet: { pos: [0.8, 0.05, 0.1], scale: 1 }, shoulder: { pos: [-0.52, 0, 0], scale: 1 }, armL: [5 / 16, -2 / 16, 0], // Pets: wie GLB.java (PET_X/Y/Z, SHOULDER_X, Schultergelenk links)
     halo: [0, 0.66, 0], // Heiligenschein der Seraph-Fluegel: ueber der Kopfmitte (Ursprung = Halsgelenk)
   };
   const NECK = 1.5; // Hoehe des Halsgelenks ueber den Fuessen
   const cache = new Map(); // id -> Promise<gltf scene>
 
   const has = id => !!MODELS[id];
-  const usesGlb = eq => !!eq && ['hat', 'cape', 'wings'].some(k => eq[k] && MODELS[eq[k]]);
+  const usesGlb = eq => !!eq && ['hat', 'cape', 'wings', 'pet'].some(k => eq[k] && MODELS[eq[k]]);
   const NONGLB = (eq, k) => !!(eq && eq[k] && !MODELS[eq[k]]);
 
   async function bytes(file) {
@@ -135,7 +147,7 @@
     root.add(skinBox(tex, W, H, 40, 16, aw, 12, 4, -(4 + aw / 2), y - 6, 0, 0)); root.add(skinBox(tex, W, H, tall ? 32 : 40, tall ? 48 : 16, aw, 12, 4, 4 + aw / 2, y - 6, 0, 0));
     root.add(skinBox(tex, W, H, 0, 16, 4, 12, 4, -2, 6, 0, 0)); root.add(skinBox(tex, W, H, tall ? 16 : 0, tall ? 48 : 16, 4, 12, 4, 2, 6, 0, 0));
     if (tall) { body.add(skinBox(tex, W, H, 16, 32, 8, 12, 4, 0, -6, 0, 0.8)); root.add(skinBox(tex, W, H, 40, 32, aw, 12, 4, -(4 + aw / 2), y - 6, 0, 0.8)); root.add(skinBox(tex, W, H, 48, 48, aw, 12, 4, 4 + aw / 2, y - 6, 0, 0.8)); root.add(skinBox(tex, W, H, 0, 32, 4, 12, 4, -2, 6, 0, 0.8)); root.add(skinBox(tex, W, H, 0, 48, 4, 12, 4, 2, 6, 0, 0.8)); }
-    return { root, head, body };
+    return { root, head, body, tex };
   }
   function fallbackSkin() { // einfache Steve-aehnliche Figur, falls noch kein Skin geladen ist
     const c = document.createElement('canvas'); c.width = 64; c.height = 64; const g = c.getContext('2d');
@@ -147,9 +159,22 @@
   // ---- Platzierung + Animation ----
   function dress(parts, eq, t) { // haengt die Modelle an Kopf/Koerper; gibt Animations-Funktion zurueck
     const anim = [];
-    return Promise.all(['hat', 'cape', 'wings'].filter(k => eq[k] && MODELS[eq[k]]).map(async k => {
+    return Promise.all(['hat', 'cape', 'wings', 'pet'].filter(k => eq[k] && MODELS[eq[k]]).map(async k => {
       const m = await clone(eq[k]), P = PLACE[k], g = new THREE.Group(); g.add(m); g.position.set(P.pos[0], P.pos[1], P.pos[2]); g.scale.setScalar(P.scale);
       (k === 'hat' ? parts.head : parts.body).add(g);
+      if (k === 'pet') { // Pets: Befestigung aus extras.cloudyPet, Bewegung je Teil (cloudyMove), Mini-Ich mit dem Skin des Spielers (cloudySkin)
+        let mt = 'float', off = [0, 0, 0]; m.traverse(o => { const c = o.userData && o.userData.cloudyPet; if (c) { if (c.mount) mt = c.mount; if (c.offset) off = c.offset; } });
+        if (mt === 'shoulder') g.position.set(PLACE.shoulder.pos[0], PLACE.shoulder.pos[1], PLACE.shoulder.pos[2]);
+        else if (mt === 'arm_left') g.position.set(PLACE.armL[0] + off[0], PLACE.armL[1] + off[1], PLACE.armL[2] + off[2]);
+        if (parts.tex) { const st = parts.tex.clone(); st.flipY = false; st.needsUpdate = true; m.traverse(o => { if (o.userData && o.userData.cloudySkin) o.traverse(x => { if (x.isMesh) { x.material = x.material.clone(); x.material.map = st; x.material.alphaTest = 0.5; } }); }); } // glTF-UVs: Bild nicht spiegeln
+        const L = []; m.traverse(o => { if (o.userData && o.userData.cloudyMove) { o.matrixAutoUpdate = false; L.push(o); } });
+        if (L.length) anim.push(now => { for (const o of L) { const W = o.userData.cloudyMove, Pv = W.pivot || [0, 0, 0], per = W.periodMs || 2000, t = (now % per) / per * Math.PI * 2;
+          const w = v => v ? v[0] + v[1] * Math.sin(t + (v[2] || 0)) : 0, bob = W.bob ? W.bob[0] * Math.sin((now % W.bob[1]) / W.bob[1] * Math.PI * 2 + (W.bob[2] || 0)) : 0, sc = W.s ? Math.max(0, w(W.s)) : 1;
+          const M = new THREE.Matrix4().makeTranslation(Pv[0], Pv[1] + bob, Pv[2]);
+          M.multiply(new THREE.Matrix4().makeRotationY(w(W.ry))).multiply(new THREE.Matrix4().makeRotationX(w(W.rx))).multiply(new THREE.Matrix4().makeRotationZ(w(W.rz)));
+          M.multiply(new THREE.Matrix4().makeScale(sc || 1e-4, sc || 1e-4, sc || 1e-4)).multiply(new THREE.Matrix4().makeTranslation(-Pv[0], -Pv[1], -Pv[2]));
+          o.matrix.copy(M); o.matrixWorldNeedsUpdate = true; } });
+      }
       if (k === 'wings') m.traverse(o => { if (o.name && /halo/i.test(o.name)) { const h = new THREE.Group(); o.parent.remove(o); h.add(o); o.position.set(0, 0, 0); h.position.set(PLACE.halo[0], PLACE.halo[1], PLACE.halo[2]); parts.head.add(h); } }); // Heiligenschein haengt am Kopf, nicht an den Fluegeln
       if (k === 'cape') anim.push(now => { g.rotation.x = P.tilt + 0.03 * Math.sin(now / 900); g.position.z = P.pos[2]; });
       m.traverse(o => { const A = o.userData && o.userData.cloudyAnim; if (!A) return; // animierte Umhaenge/Fluegel/Huete: Bilder im 4x4-Raster durchschalten

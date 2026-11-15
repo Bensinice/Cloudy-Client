@@ -107,8 +107,8 @@ public final class CosmeticNet {
 						try { if (e.has("cl") && e.get("cl").getAsInt() == 1) lv.add(en.getKey().toLowerCase()); } catch (Throwable ignored) {}
 						try { if (e.has("tg") && e.get("tg").isJsonArray()) { List<String> tl = new ArrayList<>(); for (JsonElement x : e.getAsJsonArray("tg")) tl.add(x.getAsString()); if (!tl.isEmpty()) tm.put(en.getKey().toLowerCase(), tl); } } catch (Throwable ignored) {}
 						if (en.getKey().equalsIgnoreCase(selfN)) continue;
-						String c = e.has("cape") ? e.get("cape").getAsString() : null, h = e.has("hat") ? e.get("hat").getAsString() : null, w = e.has("wings") ? e.get("wings").getAsString() : null;
-						nm.put(en.getKey().toLowerCase(), new String[] { okId(c, "cape") ? c : null, okId(h, "hat") ? h : null, okId(w, "wings") ? w : null });
+						String c = e.has("cape") ? e.get("cape").getAsString() : null, h = e.has("hat") ? e.get("hat").getAsString() : null, w = e.has("wings") ? e.get("wings").getAsString() : null, pt = e.has("pet") ? e.get("pet").getAsString() : null;
+						nm.put(en.getKey().toLowerCase(), new String[] { okId(c, "cape") ? c : null, okId(h, "hat") ? h : null, okId(w, "wings") ? w : null, okId(pt, "pet") ? pt : null });
 					}
 					if (nm.size() != others.size()) CloudyClient.LOG.info("Cloudy: Cosmetics von {} Mitspielern geladen", nm.size());
 					others = nm; tagMap = tm; live = lv;

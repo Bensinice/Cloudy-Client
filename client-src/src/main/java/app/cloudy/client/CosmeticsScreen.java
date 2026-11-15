@@ -10,8 +10,8 @@ import java.util.List;
 
 /** Cloudy Cosmetics: Kategorien, Item-Karten und eine drehbare 3D-Vorschau mit deinem Skin. Hover = anprobieren, Klick = anziehen/ausziehen. */
 public class CosmeticsScreen extends Screen {
-	private static final String[] CATS = {"hat", "wings", "shield", "cape"}, LABEL = {"Hats", "Wings", "Shields", "Capes"};
-	private static final String[] TAB_ICON = {"hat-top", "wings-angel", "shield-sun", "cape-aurora"};
+	private static final String[] CATS = {"hat", "wings", "shield", "cape", "pet"}, LABEL = {"Hats", "Wings", "Shields", "Capes", "Pets"};
+	private static final String[] TAB_ICON = {"hat-g3crown", "wings-g7azure", "shield-sun", "cape-g7storm", "pet-cat"};
 	private static int tab = 0;
 	private record Hit(int x, int y, int w, int h, Runnable run) {}
 	private final List<Hit> hits = new ArrayList<>();
@@ -66,7 +66,7 @@ public class CosmeticsScreen extends Screen {
 			boolean on = i == tab, hv = Ui.in(mx, my, tx, ty, tw, 24);
 			c.fill(tx, ty, tx + tw, ty + 24, on ? Ui.mix(0xFF0C1224, Theme.accent, 0.55f) : hv ? 0xCC2A3558 : 0xAA151D38);
 			if (on) c.fill(tx, ty + 22, tx + tw, ty + 24, Theme.accent);
-			Ui.icon(c, TAB_ICON[i], tx + 4, ty + 4, 16);
+			if (!Ui.sprite(c, TAB_ICON[i], tx + 4, ty + 4, 16)) Ui.icon(c, TAB_ICON[i], tx + 4, ty + 4, 16);
 			if (tw > 52) Ui.txt(c, LABEL[i], tx + 24, ty + 8, on ? 0xFFFFFFFF : 0xFFB8C6E8);
 			hits.add(new Hit(tx, ty, tw, 24, () -> { tab = ii; scroll = 0; }));
 			tx += tw + 4;
@@ -106,6 +106,7 @@ public class CosmeticsScreen extends Screen {
 		String h = Cosmetics.hat, w = Cosmetics.wings, s = Cosmetics.shield, cp = Cosmetics.cape;
 		String hcat = hover != null ? Cosmetics.catOf(hover) : null;
 		if (hover != null) { if ("hat".equals(hcat)) h = hover; else if ("wings".equals(hcat)) w = hover; else if ("shield".equals(hcat)) s = hover; else if ("cape".equals(hcat)) cp = hover; }
+		PlayerPreview.petId = "pet".equals(hcat) ? hover : Cosmetics.pet;
 		if (!drag && ("cape".equals(hcat) || "wings".equals(hcat))) { float tgt = (float) (Math.PI + Math.round((spin - Math.PI) / (2 * Math.PI)) * 2 * Math.PI); spin += (tgt - spin) * 0.15f; lastInput = now; } // Umhang/Fluegel: Figur zeigt den Ruecken
 		else if (!drag && now - lastInput > 1500) spin += 0.012f;
 		boolean ok = false;

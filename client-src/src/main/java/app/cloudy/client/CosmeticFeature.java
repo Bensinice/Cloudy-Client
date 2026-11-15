@@ -36,6 +36,7 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 			net.minecraft.client.network.ClientPlayerEntity me = net.minecraft.client.MinecraftClient.getInstance().player;
 			boolean ely = me != null && me.getEquippedStack(net.minecraft.entity.EquipmentSlot.CHEST).isOf(net.minecraft.item.Items.ELYTRA); // mit Elytra: Fluegel und Umhang ausblenden (sonst doppelt)
 			drawAll(matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV, m.head, m.body, m.leftArm, m.rightArm, Cosmetics.hat, ely ? null : Cosmetics.wings, Cosmetics.shield, held, !ely && ZZ4.handles(Cosmetics.cape) ? Cosmetics.cape : null, limbDistance);
+			drawPet(matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV, m.body, m.leftArm, Cosmetics.pet, state.skinTextures != null ? state.skinTextures.texture() : null);
 		} catch (RuntimeException e) { /* Cosmetics duerfen das Spiel nie zum Absturz bringen */ }
 	}
 
@@ -43,14 +44,26 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 	private void renderOther(MatrixStack matrices, VertexConsumerProvider vcp, int light, net.minecraft.client.network.AbstractClientPlayerEntity who, float limb) {
 		if (who == null || who.isInvisible() || !Cosmetics.ensure()) return;
 		String[] eq = CosmeticNet.get(who.getName().getString());
-		if (eq == null || (eq[1] == null && eq[2] == null && !ZZ4.handles(eq[0]))) return;
+		if (eq == null || (eq[1] == null && eq[2] == null && (eq.length < 4 || eq[3] == null) && !ZZ4.handles(eq[0]))) return;
 		PlayerEntityModel m = this.getContextModel();
 		boolean ely = who.getEquippedStack(net.minecraft.entity.EquipmentSlot.CHEST).isOf(net.minecraft.item.Items.ELYTRA);
 		drawAll(matrices, vcp, light, OverlayTexture.DEFAULT_UV, m.head, m.body, m.leftArm, m.rightArm, eq[1], ely ? null : eq[2], null, 0, !ely && ZZ4.handles(eq[0]) ? eq[0] : null, limb);
+		if (eq.length > 3 && eq[3] != null) drawPet(matrices, vcp, light, OverlayTexture.DEFAULT_UV, m.body, m.leftArm, eq[3], who.getSkinTextures().texture());
 	}
 
 	/** Gemeinsamer Zeichencode (Spiel und Vorschau). held: 0 = kein Schild, 1 = links, 2 = rechts. */
 	public static boolean PREVIEW;
+
+	/** Pet: am Koerper (schwebend/Schulter) oder am linken Arm (bewegt sich mit). skin = Skin des Spielers (Mini-Ich). */
+	public static void drawPet(MatrixStack matrices, VertexConsumerProvider vcp, int light, int ov, ModelPart body, ModelPart leftArm, String pet, net.minecraft.util.Identifier skin) {
+		if (pet == null || !GLB.handles(pet)) return;
+		try {
+			matrices.push();
+			if ("arm_left".equals(GLB.petMount(pet))) { leftArm.rotate(matrices); GLB.petOnArm(matrices, vcp, light, ov, pet, skin); }
+			else { body.rotate(matrices); GLB.pet(matrices, vcp, light, ov, pet, skin); }
+			matrices.pop();
+		} catch (RuntimeException e) { /* nie abstuerzen */ }
+	}
 
 	public static void drawAll(MatrixStack matrices, VertexConsumerProvider vcp, int light, int ov, ModelPart head, ModelPart body, ModelPart leftArm, ModelPart rightArm,
 			String hat, String wings, String shield, int held, String cape, float limb) {

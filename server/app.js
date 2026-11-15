@@ -330,8 +330,8 @@ app.post('/gift', auth(async (req, res, me) => { // Item verschenken
 let COS = {}; // Minecraft-Name -> { u: Konto, equip } (Cosmetics, die andere Cloudy-Spieler sehen)
 app.post('/cos/reg', auth(async (req, res, me) => {
   const b = req.body || {}, mc = String(b.mc || '').toLowerCase(); if (!/^\w{3,16}$/.test(mc)) return res.status(400).json({ error: 'Ungueltiger Spielername.' });
-  const own = isAdm(me) ? null : parse(me.owned, []), eq = {};
-  for (const c of ['cape', 'hat', 'wings']) { const v = b.equip && b.equip[c]; if (typeof v === 'string' && /^[a-z0-9-]{3,30}$/.test(v) && v.startsWith(c + '-') && (!own || own.includes(v))) eq[c] = v; }
+  const own = isAdm(me) ? null : parse(me.owned, []), eq = {}; let plus = false; try { plus = !!PS.view(PDATA, QDATA, me.name_key).plus; } catch {}
+  for (const c of ['cape', 'hat', 'wings', 'pet']) { const v = b.equip && b.equip[c]; if (typeof v === 'string' && /^[a-z0-9-]{3,30}$/.test(v) && v.startsWith(c + '-') && (!own || own.includes(v) || (plus && /^[a-z]+-pg[a-z0-9]+$/.test(v)))) eq[c] = v; } // Cloudy+-Kollektion gehoert Cloudy+-Spielern automatisch
   for (const k of Object.keys(COS)) if (COS[k].u === me.name_key && k !== mc) delete COS[k];
   COS[mc] = { u: me.name_key, equip: eq, t: Date.now() }; await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['cos', JSON.stringify(COS)]); res.json({ ok: true });
 }));

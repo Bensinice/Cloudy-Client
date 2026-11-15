@@ -857,7 +857,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.124'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.125'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1136,7 +1136,7 @@ const cosWant = path.join(app.getPath('userData'), 'cloudy-cos-want.json'), cosO
 let cosMc = '', cosTimer = null, cosLast = '';
 const cosLogFile = path.join(app.getPath('userData'), 'cloudy-cos.log');
 function cosLog(m) { try { let t = ''; try { t = fs.readFileSync(cosLogFile, 'utf8'); } catch {} t = (t + new Date().toISOString().slice(11, 19) + ' ' + m + '\n').split('\n').slice(-80).join('\n'); fs.writeFileSync(cosLogFile, t); } catch {} }
-function cosReg(u) { try { if (!cosMc || !srvCfg() || !srvTok || !u) return; const eq = {}; for (const c of ['cape', 'hat', 'wings']) if (u.equip && u.equip[c]) eq[c] = u.equip[c]; const k = cosMc + JSON.stringify(eq); if (k === cosLast) return; cosLast = k; srvCall('/cos/reg', { mc: cosMc, equip: eq }, srvTok).then(r => { cosLog('reg ' + cosMc + ' ' + JSON.stringify(eq) + ' -> ' + (r && (r.status || '') + ' ' + (r.ok === true ? 'ok' : (r.error || 'fehlgeschlagen')))); if (!r || r.ok !== true) cosLast = ''; }).catch(e => { cosLog('reg Fehler: ' + (e && e.message)); cosLast = ''; }); } catch {} }
+function cosReg(u) { try { if (!cosMc || !srvCfg() || !srvTok || !u) return; const eq = {}; for (const c of ['cape', 'hat', 'wings', 'pet']) if (u.equip && u.equip[c]) eq[c] = u.equip[c]; const k = cosMc + JSON.stringify(eq); if (k === cosLast) return; cosLast = k; srvCall('/cos/reg', { mc: cosMc, equip: eq }, srvTok).then(r => { cosLog('reg ' + cosMc + ' ' + JSON.stringify(eq) + ' -> ' + (r && (r.status || '') + ' ' + (r.ok === true ? 'ok' : (r.error || 'fehlgeschlagen')))); if (!r || r.ok !== true) cosLast = ''; }).catch(e => { cosLog('reg Fehler: ' + (e && e.message)); cosLast = ''; }); } catch {} }
 function cosNetStart(mcName) {
   try {
     cosNetStop(); cosMc = /^\w{3,16}$/.test(String(mcName || '')) ? String(mcName) : ''; if (!cosMc || !srvCfg() || !srvTok) { cosLog('nicht aktiv: ' + (!cosMc ? 'Spielername ungueltig' : !srvCfg() ? 'kein Konto-Server' : 'nicht beim Konto-Server angemeldet')); return; }
@@ -1477,6 +1477,17 @@ const CATALOG = [
   { id: 'wings-g3seraph', cat: 'wings', name: 'Seraph-Flügel (3D)', price: 1800 },
   { id: 'wings-g3prism', cat: 'wings', name: 'Prismensplitter-Flügel (3D)', price: 1800 },
   { id: 'wings-g3void', cat: 'wings', name: 'Leere-Drachenflügel (3D)', price: 1800 },
+  { id: 'pet-chameleon', cat: 'pet', name: 'Chamäleon', price: 1500 },
+  { id: 'pet-devil', cat: 'pet', name: 'Kleiner Teufel', price: 1500 },
+  { id: 'pet-cat', cat: 'pet', name: 'Tigerkatze', price: 1200 },
+  { id: 'pet-dragon', cat: 'pet', name: 'Schattendrache', price: 2000 },
+  { id: 'pet-minime', cat: 'pet', name: 'Mini-Ich', price: 1800 },
+  { id: 'cape-g7glitch', cat: 'cape', name: 'Cloudy-Glitch-Umhang (animiert)', price: 1800 },
+  { id: 'cape-g7storm', cat: 'cape', name: 'Sturmketten-Umhang (animiert)', price: 1800 },
+  { id: 'cape-g7frost', cat: 'cape', name: 'Frostgebundene Ketten (animiert)', price: 1800 },
+  { id: 'cape-g7comic', cat: 'cape', name: 'Comic-Umhang', price: 1200 },
+  { id: 'wings-g7comic', cat: 'wings', name: 'Comic-Flügel', price: 1500 },
+  { id: 'hat-g7comic', cat: 'hat', name: 'Comic-Stirnband', price: 800 },
   { id: 'wings-g7azure', cat: 'wings', name: 'Azure-Eclipse-Flügel (3D, animiert)', price: 2400 },
   { id: 'wings-g4abyss', cat: 'wings', name: 'Abgrund-Fledermausflügel (3D)', price: 1800 },
   { id: 'wings-g4frost', cat: 'wings', name: 'Frostfeder-Flügel (3D)', price: 1800 },

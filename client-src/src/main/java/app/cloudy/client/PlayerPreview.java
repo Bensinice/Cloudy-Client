@@ -42,6 +42,8 @@ public final class PlayerPreview {
 
 	/** Zeichnet die Figur: cx = Mitte, feetY = Fusshoehe, scale = Pixel pro Block, yaw = Drehung in Radiant (0 = von vorn). Gibt false zurueck, wenn der Skin fehlt. */
 	public static boolean draw(DrawContext c, int cx, int feetY, float scale, float yaw, String hat, String wings, String shield) { return draw(c, cx, feetY, scale, yaw, hat, wings, shield, Cosmetics.cape); }
+	/** Pet in der Vorschau (null = keins); setzt das Cosmetics-Menue vor dem Zeichnen. */
+	public static String petId;
 	/** capeId: angelegter oder (beim Drueberfahren im Menue) angesehener Umhang. */
 	public static boolean draw(DrawContext c, int cx, int feetY, float scale, float yaw, String hat, String wings, String shield, String capeId) {
 		MinecraftClient mc = MinecraftClient.getInstance();
@@ -75,7 +77,7 @@ public final class PlayerPreview {
 				ms.pop();
 			}
 			CosmeticFeature.PREVIEW = true;
-			try { CosmeticFeature.drawAll(ms, vcp, light, ov, head, body, lArm, rArm, hat, wings, shield, shield != null ? 1 : 0, meshCape ? capeId : null, 0f); } finally { CosmeticFeature.PREVIEW = false; }
+			try { CosmeticFeature.drawAll(ms, vcp, light, ov, head, body, lArm, rArm, hat, wings, shield, shield != null ? 1 : 0, meshCape ? capeId : null, 0f); CosmeticFeature.drawPet(ms, vcp, light, ov, body, lArm, petId, skin); } finally { CosmeticFeature.PREVIEW = false; }
 			vcp.draw();
 			ms.pop();
 			return true;

@@ -115,6 +115,17 @@ public final class GLB {
 		FILES.put("hat-owarcane", "owner_arcane_hat.glb");
 		FILES.put("hat-owcrystal", "owner_crystal_crown_hat.glb");
 		FILES.put("hat-adhalo", "admin_halo_hat.glb");
+		FILES.put("pet-chameleon", "pet_chameleon.glb");
+		FILES.put("pet-devil", "pet_little_devil.glb");
+		FILES.put("pet-cat", "pet_tabby_cat.glb");
+		FILES.put("pet-dragon", "pet_shadow_dragon.glb");
+		FILES.put("pet-minime", "pet_mini_me.glb");
+		FILES.put("cape-g7glitch", "cloudy_glitch_cape.glb");
+		FILES.put("cape-g7storm", "storm_chain_cape.glb");
+		FILES.put("cape-g7frost", "frostbound_chains_cape.glb");
+		FILES.put("cape-g7comic", "comic_cape.glb");
+		FILES.put("wings-g7comic", "comic_wings.glb");
+		FILES.put("hat-g7comic", "comic_headband_hat.glb");
 	}
 
 	// Platzierung (glTF-Raum, Ursprung = Halsgelenk). Gleiche Zahlen wie PLACE in assets/js/glb3d.js.
@@ -124,9 +135,12 @@ public final class GLB {
 
 	private static final class Part { String name; float[] v; int[] idx; float tx, ty, tz, yaw; int side, img; boolean halo; int aFrames, aCols = 1, aRows = 1, aMs = 100;
 		// Fluegelschlag aus dem Modell (extras.cloudyWing): Rollen um die Fluegelwurzel, Ketten pendeln nach
-		boolean mot, chain; float[] piv, cpiv; float roll0, rollA, yawA, follow, lag, sway; int per = 3000; }
+		boolean mot, chain; float[] piv, cpiv; float roll0, rollA, yawA, follow, lag, sway; int per = 3000;
+		// Pets: eigene Bewegung je Teil (extras.cloudyMove) und Spieler-Skin (extras.cloudySkin, Mini-Ich)
+		boolean cm, skin; float[] mPiv, mRx, mRy, mRz, mS, mBob; float mPer = 2000f; }
+	private static float[] arr3(JsonObject o, String k) { if (!o.has(k)) return null; JsonArray a = o.getAsJsonArray(k); return new float[] {a.get(0).getAsFloat(), a.size() > 1 ? a.get(1).getAsFloat() : 0f, a.size() > 2 ? a.get(2).getAsFloat() : 0f}; }
 	private static float[] vec3(JsonArray a) { return new float[] {a.get(0).getAsFloat(), a.get(1).getAsFloat(), a.get(2).getAsFloat()}; }
-	private static final class Model { Part[] parts; Identifier[] tex; Identifier tex(Part p) { return tex[Math.max(0, Math.min(tex.length - 1, p.img))]; } }
+	private static final class Model { String mount = "float"; float[] off; Part[] parts; Identifier[] tex; Identifier tex(Part p) { return tex[Math.max(0, Math.min(tex.length - 1, p.img))]; } }
 
 	private static final Map<String, Model> MODELS = new HashMap<>();
 	private static final Set<String> FAILED = new HashSet<>();
@@ -160,6 +174,9 @@ public final class GLB {
 		int bin = 20 + jl + 8; // Anfang der BIN-Daten
 		JsonArray nodes = j.getAsJsonArray("nodes"), meshes = j.getAsJsonArray("meshes");
 		java.util.ArrayList<Part> parts = new java.util.ArrayList<>();
+		String mount = "float"; float[] off = null; // Pets: Befestigung aus extras.cloudyPet (Wurzelknoten)
+		for (int ni = 0; ni < nodes.size(); ni++) { JsonObject n = nodes.get(ni).getAsJsonObject();
+			try { if (n.has("extras") && n.getAsJsonObject("extras").has("cloudyPet")) { JsonObject cp = n.getAsJsonObject("extras").getAsJsonObject("cloudyPet"); if (cp.has("mount")) mount = cp.get("mount").getAsString(); if (cp.has("offset")) off = vec3(cp.getAsJsonArray("offset")); } } catch (Exception ignored) {} }
 		for (int ni = 0; ni < nodes.size(); ni++) {
 			JsonObject n = nodes.get(ni).getAsJsonObject();
 			if (!n.has("mesh")) continue;
@@ -169,10 +186,17 @@ public final class GLB {
 			String name = n.has("name") ? n.get("name").getAsString() : "";
 			JsonObject anim = n.has("extras") && n.getAsJsonObject("extras").has("cloudyAnim") ? n.getAsJsonObject("extras").getAsJsonObject("cloudyAnim") : null; // animierter Umhang: Bilder im Raster
 			JsonObject cw = n.has("extras") && n.getAsJsonObject("extras").has("cloudyWing") ? n.getAsJsonObject("extras").getAsJsonObject("cloudyWing") : null;
+			JsonObject cmv = n.has("extras") && n.getAsJsonObject("extras").has("cloudyMove") ? n.getAsJsonObject("extras").getAsJsonObject("cloudyMove") : null;
+			boolean useSkin = false; try { useSkin = n.has("extras") && n.getAsJsonObject("extras").has("cloudySkin") && n.getAsJsonObject("extras").get("cloudySkin").getAsBoolean(); } catch (Exception ignored) {}
 			for (var pe : meshes.get(n.get("mesh").getAsInt()).getAsJsonObject().getAsJsonArray("primitives")) {
 				JsonObject prim = pe.getAsJsonObject(), at = prim.getAsJsonObject("attributes");
 				float[] pos = floats(j, d, bin, at.get("POSITION").getAsInt(), 3), nor = floats(j, d, bin, at.get("NORMAL").getAsInt(), 3), uv = floats(j, d, bin, at.get("TEXCOORD_0").getAsInt(), 2);
 				Part p = new Part();
+				p.skin = useSkin;
+				if (cmv != null) try {
+					p.mPiv = cmv.has("pivot") ? vec3(cmv.getAsJsonArray("pivot")) : new float[3]; p.mPer = cmv.has("periodMs") ? Math.max(100f, cmv.get("periodMs").getAsFloat()) : 2000f;
+					p.mRx = arr3(cmv, "rx"); p.mRy = arr3(cmv, "ry"); p.mRz = arr3(cmv, "rz"); p.mS = arr3(cmv, "s"); p.mBob = arr3(cmv, "bob"); p.cm = true;
+				} catch (Exception ignored) { p.cm = false; }
 				if (cw != null) try {
 					p.piv = vec3(cw.getAsJsonArray("pivot")); JsonArray r = cw.getAsJsonArray("roll");
 					p.roll0 = r.get(0).getAsFloat(); p.rollA = r.get(1).getAsFloat(); p.yawA = cw.has("yaw") ? cw.get("yaw").getAsFloat() : 0f;
@@ -208,7 +232,7 @@ public final class GLB {
 		}
 		Model m = new Model();
 		m.parts = parts.toArray(new Part[0]);
-		m.tex = texs;
+		m.tex = texs; m.mount = mount; m.off = off;
 		return m;
 	}
 
@@ -263,6 +287,58 @@ public final class GLB {
 	}
 
 	private static void begin(MatrixStack ms) { ms.push(); ms.multiply(new Quaternionf().rotationX((float) Math.PI)); } // glTF-Raum (Y oben, +Z vorne)
+
+	// ---------------------------------------------------------------- Pets
+	private static float wave(float[] v, double t) { return v == null ? 0f : v[0] + v[1] * (float) Math.sin(t + v[2]); }
+
+	/** Bewegung eines Teils (extras.cloudyMove); false = Teil gerade unsichtbar (Groesse 0, z. B. Feueratem aus). */
+	private static boolean move(MatrixStack ms, Part p, long now) {
+		double t = (now % (long) p.mPer) / (double) p.mPer * Math.PI * 2;
+		float bob = 0f; if (p.mBob != null) { float per = Math.max(100f, p.mBob[1]); bob = p.mBob[0] * (float) Math.sin((now % (long) per) / (double) per * Math.PI * 2 + p.mBob[2]); }
+		float sc = p.mS == null ? 1f : Math.max(0f, wave(p.mS, t));
+		if (sc < 0.01f) return false;
+		ms.translate(p.mPiv[0], p.mPiv[1] + bob, p.mPiv[2]);
+		if (p.mRy != null) ms.multiply(new Quaternionf().rotationY(wave(p.mRy, t)));
+		if (p.mRx != null) ms.multiply(new Quaternionf().rotationX(wave(p.mRx, t)));
+		if (p.mRz != null) ms.multiply(new Quaternionf().rotationZ(wave(p.mRz, t)));
+		if (sc != 1f) ms.scale(sc, sc, sc);
+		ms.translate(-p.mPiv[0], -p.mPiv[1], -p.mPiv[2]);
+		return true;
+	}
+
+	public static final float PET_X = 0.8f, PET_Y = 0.05f, PET_Z = 0.1f, SHOULDER_X = -0.52f;
+
+	/** Befestigung eines Pets: "float" (neben der linken Schulter), "shoulder" (Brett auf der rechten Schulter) oder "arm_left" (am linken Arm). */
+	public static String petMount(String id) { Model m = model(id); return m == null ? "" : m.mount; }
+
+	private static void petParts(MatrixStack ms, VertexConsumerProvider vcp, int light, int ov, Model m, Identifier skin) {
+		long now = System.currentTimeMillis();
+		for (Part p : m.parts) {
+			ms.push();
+			if (!p.cm || move(ms, p, now)) drawPart(ms, vcp.getBuffer(RenderLayer.getEntityCutoutNoCull(p.skin && skin != null ? skin : m.tex(p))), light, ov, p, p.tx, p.ty, p.tz, p.yaw);
+			ms.pop();
+		}
+	}
+
+	/** Pet am Koerper (Aufruf nach body.rotate, wie wings). skin = Skin des Spielers fuers Mini-Ich (darf null sein). */
+	public static void pet(MatrixStack ms, VertexConsumerProvider vcp, int light, int ov, String id, Identifier skin) {
+		Model m = model(id);
+		if (m == null || "arm_left".equals(m.mount)) return;
+		begin(ms);
+		if ("shoulder".equals(m.mount)) ms.translate(SHOULDER_X, 0f, 0f); else ms.translate(PET_X, PET_Y, PET_Z);
+		petParts(ms, vcp, light, ov, m, skin);
+		ms.pop();
+	}
+
+	/** Pet am linken Arm (Aufruf NACH leftArm.rotate): bewegt sich mit dem Arm; Ursprung = Schultergelenk, verschoben um extras.cloudyPet.offset. */
+	public static void petOnArm(MatrixStack ms, VertexConsumerProvider vcp, int light, int ov, String id, Identifier skin) {
+		Model m = model(id);
+		if (m == null || !"arm_left".equals(m.mount)) return;
+		begin(ms);
+		if (m.off != null) ms.translate(m.off[0], m.off[1], m.off[2]);
+		petParts(ms, vcp, light, ov, m, skin);
+		ms.pop();
+	}
 
 	/** Hut/Krone: am Kopf, Ursprung = Halsgelenk (Aufruf nach head.rotate). */
 	public static void hat(MatrixStack ms, VertexConsumerProvider vcp, int light, int ov, String id) {

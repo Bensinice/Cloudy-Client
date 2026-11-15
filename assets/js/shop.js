@@ -55,6 +55,17 @@
     'wings-g3seraph': { b: [-9, 0, 34, 24], c: ['#f4ecd8', '#c9a24a'], img: 'assets/cosmetics3d/icons/wings-g3seraph.png', ar: 1, glb: true },
     'wings-g3prism': { b: [-9, 0, 34, 24], c: ['#3be0d0', '#7a5cff'], img: 'assets/cosmetics3d/icons/wings-g3prism.png', ar: 1, glb: true },
     'wings-g3void': { b: [-9, 0, 34, 24], c: ['#5a2aa0', '#14081f'], img: 'assets/cosmetics3d/icons/wings-g3void.png', ar: 1, glb: true },
+    'pet-chameleon': { b: [0, 0, 16, 16], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/pet-chameleon.png', ar: 1, glb: true },
+    'pet-devil': { b: [0, 0, 16, 16], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/pet-devil.png', ar: 1, glb: true },
+    'pet-cat': { b: [0, 0, 16, 16], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/pet-cat.png', ar: 1, glb: true },
+    'pet-dragon': { b: [0, 0, 16, 16], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/pet-dragon.png', ar: 1, glb: true },
+    'pet-minime': { b: [0, 0, 16, 16], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/pet-minime.png', ar: 1, glb: true },
+    'cape-g7glitch': { b: [0, 8, 16, 24], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/cape-g7glitch.png', ar: 1, glb: true },
+    'cape-g7storm': { b: [0, 8, 16, 24], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/cape-g7storm.png', ar: 1, glb: true },
+    'cape-g7frost': { b: [0, 8, 16, 24], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/cape-g7frost.png', ar: 1, glb: true },
+    'cape-g7comic': { b: [0, 8, 16, 24], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/cape-g7comic.png', ar: 1, glb: true },
+    'wings-g7comic': { b: [-9, 0, 34, 24], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/wings-g7comic.png', ar: 1, glb: true },
+    'hat-g7comic': { b: [0, -12, 16, 14], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/hat-g7comic.png', ar: 1, glb: true },
     'wings-g7azure': { b: [-9, 0, 34, 24], c: ['#2a7bff', '#0a1430'], img: 'assets/cosmetics3d/icons/wings-g7azure.png', ar: 1, glb: true },
     'wings-g4abyss': { b: [-9, 0, 34, 24], c: ['#2a2233', '#9b5cff'], img: 'assets/cosmetics3d/icons/wings-g4abyss.png', ar: 1, glb: true },
     'wings-g4frost': { b: [-9, 0, 34, 24], c: ['#7ff0ff', '#0b3a55'], img: 'assets/cosmetics3d/icons/wings-g4frost.png', ar: 1, glb: true },
@@ -437,7 +448,7 @@
   $$('[data-skn]').forEach(b => b.onclick = () => add(window.cloudy.skinAddName(b.dataset.skn)));
 
   // ---------- Shop ----------
-  const CATS = [['cape', 'Umhänge'], ['wings', 'Flügel'], ['shield', 'Schilde'], ['hat', 'Hüte']];
+  const CATS = [['cape', 'Umhänge'], ['wings', 'Flügel'], ['shield', 'Schilde'], ['hat', 'Hüte'], ['pet', 'Pets']];
   function paintCoins() {
     const t = shop ? cc(shop.coins) : ''; const a = $('#accCC'); if (a) a.textContent = t; const b = $('#shopCC'); if (b) b.textContent = t;
     const d = $('#shopDaily'); if (d) { d.style.display = shop && !shop.admin ? '' : 'none'; d.disabled = !shop || !shop.dailyReady; }
@@ -559,9 +570,9 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
     paint3d(eqView()); loop3(); paintHero(); tryBar();
     // ---- Navigation: eine Kategorie auf einmal (statt alles untereinander), Suche, Filter ----
     let nav = $('#shopNav'); if (!nav) { nav = document.createElement('div'); nav.id = 'shopNav'; box.parentNode.insertBefore(nav, box); }
-    const TABS = [['cape', '🧥 ' + L('Umhänge')], ['wings', '🪽 ' + L('Flügel')], ['hat', '🎩 ' + L('Hüte')], ['shield', '🛡 ' + L('Schilde')], ['bundles', '🎁 ' + L('Pakete')], ['lim', '⏳ Limited'], ['plus', '✨ Cloudy+'], ['skins', '👤 Skins'], ['quests', '🎯 Quests']].concat(shop.admin ? [['owner', '👑 Owner']] : []);
+    const TABS = [['cape', '🧥 ' + L('Umhänge')], ['wings', '🪽 ' + L('Flügel')], ['hat', '🎩 ' + L('Hüte')], ['shield', '🛡 ' + L('Schilde')], ['pet', '🐾 Pets'], ['bundles', '🎁 ' + L('Pakete')], ['lim', '⏳ Limited'], ['plus', '✨ Cloudy+'], ['skins', '👤 Skins'], ['quests', '🎯 Quests']].concat(shop.admin ? [['owner', '👑 Owner']] : []);
     if (!TABS.some(t => t[0] === shopTab)) shopTab = 'cape';
-    const itemTab = ['cape', 'wings', 'hat', 'shield', 'owner'].includes(shopTab), side = ['plus', 'skins', 'quests'].includes(shopTab);
+    const itemTab = ['cape', 'wings', 'hat', 'shield', 'pet', 'owner'].includes(shopTab), side = ['plus', 'skins', 'quests'].includes(shopTab);
     nav.innerHTML = `<div class="shnav">${TABS.map(([k, l]) => `<button class="shtab ${k === shopTab ? 'on' : ''}" data-stab="${k}">${l}</button>`).join('')}</div>` +
       (itemTab ? `<div class="shsub"><div class="seg">${[['all', L('Alle')], ['new', L('Nicht gekauft')], ['own', L('Gekauft')]].map(([k, l]) => `<button class="${shopFilt === k ? 'on' : ''}" data-sf2="${k}">${l}</button>`).join('')}</div><input class="field shq" id="shopQ" placeholder="🔎 ${L('Suchen …')}" value="${escL(shopQ)}" autocomplete="off" spellcheck="false"></div>` : '');
     nav.querySelectorAll('[data-stab]').forEach(b => b.onclick = () => { shopTab = b.dataset.stab; try { localStorage.setItem('cloudy.shopTab', shopTab); } catch {} paintShop(); });
