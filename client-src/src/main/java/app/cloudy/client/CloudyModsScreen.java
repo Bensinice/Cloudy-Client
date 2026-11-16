@@ -120,8 +120,8 @@ public class CloudyModsScreen extends Screen {
 
 	private void mods(DrawContext c, int mx, int my) {
 		int fy = py + 34, fx = px + 12;
-		for (String f : new String[]{"ALL", "HUD", "QoL"}) {
-			int w = f.equals("ALL") ? 44 : 52; final String ff = f;
+		for (String f : new String[]{"ALL", "HUD", "QoL", "Social"}) {
+			int w = f.equals("ALL") ? 44 : f.equals("Social") ? 60 : 52; final String ff = f;
 			pill(c, mx, my, fx, fy, w, 20, f.toUpperCase(), filter.equals(f), () -> { filter = ff; scroll = 0; });
 			fx += w + 6;
 		}

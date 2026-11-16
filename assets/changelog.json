@@ -1,5 +1,19 @@
 [
  {
+  "v": "0.9.131",
+  "date": "2026-11-16",
+  "added": [
+   "Party: unter Freunde Freunde einladen (max. 8), Party-Chat im Launcher und im Spiel (/pc Nachricht, /party, /party invite Name, /party leave). „Alle auf meinen Server holen“: die anderen bekommen eine Anfrage und joinen nach Bestätigung",
+   "Profilkarte: Spieler anschauen + G (in den Steuerungen änderbar) zeigt Level, Spielzeit, Cloudy+, Lieblings-Cosmetic und Abzeichen – mit „Freund hinzufügen“, Party-Einladung und Wolken-Post. Auch per /cprofile Name",
+   "Wolken-Post: /post Name Text schickt einem Freund eine Nachricht, die im Spiel als kleine Wolke angeflogen kommt (Y = öffnen, Antworten). Landet zusätzlich im Direktchat",
+   "Combo-Emotes High-Five (kostenlos) und Tanz-Duett: zwei Cloudy-Spieler nah beieinander starten dasselbe innerhalb von 2 s → gemeinsame Animation mit Effekt",
+   "Pet-Emotes: dein Pet hüpft und tanzt mit, wenn du ein Emote spielst",
+   "Song-Bubbles: wer will (Einstellungen → Social im Spiel, Standard aus), zeigt seinen Spotify-Song über dem Kopf; /song Name öffnet ihn in Spotify",
+   "Alle Social-Funktionen einzeln abschaltbar im Spiel (H → Social) und im Launcher"
+  ],
+  "fixed": []
+ },
+ {
   "v": "0.9.130",
   "date": "2026-11-16",
   "added": [

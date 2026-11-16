@@ -1,4 +1,13 @@
 {
+  "0.9.131": [
+    "Party: invite friends (max 8) in Friends, party chat in the launcher and in game (/pc, /party, /party invite, /party leave); “Bring everyone to my server” with confirmation",
+    "Profile card: look at a player + G – level, play time, Cloudy+, favourite cosmetic, badges, add friend",
+    "Cloud mail: /post name text flies in as a little cloud (Y = open)",
+    "Combo emotes High five (free) and Dance duet",
+    "Pet emotes: your pet hops along",
+    "Song bubbles (opt-in): your Spotify song above your head, /song name opens it",
+    "Every social feature can be switched off"
+  ],
   "0.9.130": [
     "Outfits: save up to 5 looks in the shop and in game (K: click 1–5 = wear, Shift+click = save)",
     "Performance profiles Battery / Balanced / Max FPS (Settings → Performance in game, or in game in the Cloudy Mods menu)",

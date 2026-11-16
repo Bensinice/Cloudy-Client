@@ -875,7 +875,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.130'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.131'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1154,10 +1154,41 @@ const cosWant = path.join(app.getPath('userData'), 'cloudy-cos-want.json'), cosO
 let cosMc = '', cosTimer = null, cosLast = '';
 const cosLogFile = path.join(app.getPath('userData'), 'cloudy-cos.log');
 function cosLog(m) { try { let t = ''; try { t = fs.readFileSync(cosLogFile, 'utf8'); } catch {} t = (t + new Date().toISOString().slice(11, 19) + ' ' + m + '\n').split('\n').slice(-80).join('\n'); fs.writeFileSync(cosLogFile, t); } catch {} }
-function cosReg(u) { try { if (!cosMc || !srvCfg() || !srvTok || !u) return; const eq = {}; for (const c of ['cape', 'hat', 'wings', 'pet']) if (u.equip && u.equip[c]) eq[c] = u.equip[c]; const k = cosMc + JSON.stringify(eq); if (k === cosLast) return; cosLast = k; srvCall('/cos/reg', { mc: cosMc, equip: eq }, srvTok).then(r => { cosLog('reg ' + cosMc + ' ' + JSON.stringify(eq) + ' -> ' + (r && (r.status || '') + ' ' + (r.ok === true ? 'ok' : (r.error || 'fehlgeschlagen')))); if (!r || r.ok !== true) cosLast = ''; }).catch(e => { cosLog('reg Fehler: ' + (e && e.message)); cosLast = ''; }); } catch {} }
+function cosReg(u) { try { if (!cosMc || !srvCfg() || !srvTok || !u) return; const eq = {}; for (const c of ['cape', 'hat', 'wings', 'pet']) if (u.equip && u.equip[c]) eq[c] = u.equip[c]; const k = cosMc + JSON.stringify(eq); if (k === cosLast) return; cosLast = k; srvCall('/cos/reg', { mc: cosMc, equip: eq, pt: Math.round((play.ms || 0) / 60000) }, srvTok).then(r => { cosLog('reg ' + cosMc + ' ' + JSON.stringify(eq) + ' -> ' + (r && (r.status || '') + ' ' + (r.ok === true ? 'ok' : (r.error || 'fehlgeschlagen')))); if (!r || r.ok !== true) cosLast = ''; }).catch(e => { cosLog('reg Fehler: ' + (e && e.message)); cosLast = ''; }); } catch {} }
+// ---- Brücke Spiel <-> Konto-Server: Party-Chat, Wolken-Post, Profilkarte, Freund hinzufügen (Mod schreibt Aufträge in coswant, Antworten kommen über cosoth) ----
+const socCfg = () => { const c = cfgPatch({}); return { song: c.socSong === true, bridge: c.socBridge !== false }; };
+ipcMain.handle('socCfg', (_e, v) => { if (v && typeof v === 'object') { const p = {}; if (typeof v.song === 'boolean') p.socSong = v.song; if (typeof v.bridge === 'boolean') p.socBridge = v.bridge; cfgPatch(p); } return socCfg(); });
+const brg = { done: new Map(), tick: 0, after: 0, party: null, msgs: [], posts: [] };
+function brgReset() { brg.done.clear(); brg.tick = 0; brg.after = 0; brg.party = null; brg.msgs = []; brg.posts = []; }
+async function cosBridge(w) {
+  const fr = (p, b) => srvCall('/fr/' + p, b || {}, srvTok).catch(() => ({ status: 0, error: 'Konto-Server nicht erreichbar.' }));
+  const now = Date.now(), rpc = Array.isArray(w.rpc) ? w.rpc.slice(-8) : [];
+  for (const q of rpc) {
+    const id = String(q && q.id || ''); if (!/^[a-z0-9]{4,20}$/i.test(id) || brg.done.has(id)) continue;
+    const a = q.a && typeof q.a === 'object' ? q.a : {}, nm = String(a.name || '').slice(0, 32), tx = String(a.text || '').slice(0, 300); let r;
+    if (q.op === 'profile') r = await fr('profile', { name: nm });
+    else if (q.op === 'friendAdd') r = await fr('friend/add', { name: nm });
+    else if (q.op === 'partyMsg') r = await fr('party/msg', { text: tx });
+    else if (q.op === 'partyInvite') r = await fr('party/invite', { name: nm });
+    else if (q.op === 'partyLeave') r = await fr('party/leave', {});
+    else if (q.op === 'post') r = await fr('post', { to: nm, text: tx });
+    else r = { status: 400, error: 'Unbekannt.' };
+    const { status, ...d } = r || {}; brg.done.set(id, { t: now, ok: status === 200, ...d });
+    if (q.op === 'partyMsg' || q.op === 'partyInvite' || q.op === 'partyLeave') brg.tick = 0; // gleich neu laden
+  }
+  for (const [k, v] of brg.done) if (now - v.t > 60000) brg.done.delete(k);
+  if (brg.tick++ % 3 === 0) { // alle ~7,5 s: Party + Wolken-Post
+    const ps = await fr('party/state', { after: brg.after });
+    if (ps.status === 200) { const pa = ps.party; if (!pa) { brg.party = null; brg.msgs = []; brg.after = 0; } else { brg.party = { leader: pa.leader, members: pa.members.map(m => m.name) }; for (const m of pa.msgs || []) { brg.msgs.push({ id: m.id, from: m.from, text: m.text }); brg.after = Math.max(brg.after, m.id); } brg.msgs = brg.msgs.slice(-15); } }
+    const pi = await fr('post/inbox', { take: 1 }); if (pi.status === 200) for (const x of pi.posts || []) brg.posts.push({ id: x.id, from: x.from, text: x.text, t: now });
+    brg.posts = brg.posts.filter(x => now - x.t < 120000).slice(-10);
+  }
+  const rp = {}; for (const [k, v] of brg.done) rp[k] = v;
+  return { rpc: rp, party: brg.party, pmsgs: brg.msgs, posts: brg.posts };
+}
 function cosNetStart(mcName) {
   try {
-    cosNetStop(); cosMc = /^\w{3,16}$/.test(String(mcName || '')) ? String(mcName) : ''; if (!cosMc || !srvCfg() || !srvTok) { cosLog('nicht aktiv: ' + (!cosMc ? 'Spielername ungueltig' : !srvCfg() ? 'kein Konto-Server' : 'nicht beim Konto-Server angemeldet')); return; }
+    cosNetStop(); brgReset(); cosMc = /^\w{3,16}$/.test(String(mcName || '')) ? String(mcName) : ''; if (!cosMc || !srvCfg() || !srvTok) { cosLog('nicht aktiv: ' + (!cosMc ? 'Spielername ungueltig' : !srvCfg() ? 'kein Konto-Server' : 'nicht beim Konto-Server angemeldet')); return; }
     try { fs.rmSync(cosWant, { force: true }); fs.rmSync(cosOth, { force: true }); } catch {}
     cosLog('Spiel gestartet als ' + cosMc + ' (Konto ' + currentUser + ')');
     const a = readAuth(), u = currentUser && a.users[currentUser.toLowerCase()]; cosReg(u);
@@ -1167,8 +1198,10 @@ function cosNetStart(mcName) {
       try {
         const w = JSON.parse(fs.readFileSync(cosWant, 'utf8')), names = (w.names || []).filter(n => typeof n === 'string' && /^\w{3,16}$/.test(n)).slice(0, 80);
         const em = w.em && /^emote-[a-z0-9]+$/.test(String(w.em.id)) && Date.now() - (+w.em.t || 0) < 15000 ? { id: String(w.em.id), age: Math.max(0, Date.now() - (+w.em.t || 0)) } : null; // eigenes Emote fuer die Mitspieler
-        const r = names.length ? await srvCall('/cos/get', { names, em }, srvTok) : { ok: true, players: {} };
-        if (r && r.ok === true) { const nn = Object.keys(r.players || {}).length; if (nn !== cosPrev) { cosPrev = nn; cosLog('get ' + names.length + ' Namen -> ' + nn + ' mit Cosmetics'); } const tmp = cosOth + '.tmp'; fs.writeFileSync(tmp, JSON.stringify({ ts: Date.now(), players: r.players || {} })); fs.renameSync(tmp, cosOth); }
+        const sc = socCfg(), ly = lyricsLast, song = sc.song && ly && ly.playing && ly.title && Date.now() - (ly.ts || 0) < 30000 ? { t: String(ly.title).slice(0, 60), a: String(ly.artist || '').slice(0, 40) } : null; // Song-Bubble: nur wenn selbst eingeschaltet
+        const r = names.length || song ? await srvCall('/cos/get', { names, em, song }, srvTok) : { ok: true, players: {} };
+        const br = sc.bridge ? await cosBridge(w) : {};
+        if (r && r.ok === true) { const nn = Object.keys(r.players || {}).length; if (nn !== cosPrev) { cosPrev = nn; cosLog('get ' + names.length + ' Namen -> ' + nn + ' mit Cosmetics'); } const tmp = cosOth + '.tmp'; fs.writeFileSync(tmp, JSON.stringify({ ts: Date.now(), players: r.players || {}, ...br })); fs.renameSync(tmp, cosOth); }
       } catch (e) { if (!/ENOENT/.test(String(e && e.message))) cosLog('get Fehler: ' + (e && e.message)); } finally { busy = false; }
     }, 2500); // kurz, damit Emotes bei den Mitspielern fast gleichzeitig laufen
   } catch {}
@@ -1511,6 +1544,8 @@ const CATALOG = [
   { id: 'emote-shrug', cat: 'emote', name: 'Schulterzucken', price: 300 },
   { id: 'emote-point', cat: 'emote', name: 'Zeigen', price: 300 },
   { id: 'emote-floss', cat: 'emote', name: 'Floss', price: 600 },
+  { id: 'emote-highfive', cat: 'emote', name: 'High-Five (Combo)', price: 0 },
+  { id: 'emote-duet', cat: 'emote', name: 'Tanz-Duett (Combo)', price: 500 },
   { id: 'pet-chameleon', cat: 'pet', name: 'Chamäleon', price: 1500 },
   { id: 'pet-devil', cat: 'pet', name: 'Kleiner Teufel', price: 1500 },
   { id: 'pet-cat', cat: 'pet', name: 'Tigerkatze', price: 1200 },

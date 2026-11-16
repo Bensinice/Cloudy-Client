@@ -277,6 +277,54 @@ async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
     }
     if (p === 'call/poll') { if (!c.m.has(me)) return [200, { ok: true, left: true, peers: [], signals: [] }]; c.m.set(me, now); const sig = c.q.get(me) || []; c.q.set(me, []); return [200, { ok: true, peers: (await callNames(g.id)).filter(n => key(n) !== me), signals: sig }]; }
   }
+  // ---- Party: bis zu 8 Freunde, Party-Chat (auch im Spiel), der Anführer kann alle auf seinen Server holen ----
+  FR.party = FR.party || {}; FR.pin = FR.pin || {}; const PT = FR.party;
+  const myParty = () => { const id = FR.pin[me], pa = id && PT[id]; return pa && pa.members.includes(me) ? pa : null; };
+  const partyLeave = k => { const pa = PT[FR.pin[k]]; delete FR.pin[k]; if (!pa) return; pa.members = pa.members.filter(x => x !== k); if (!pa.members.length) delete PT[pa.id]; else if (pa.leader === k) pa.leader = pa.members[0]; };
+  for (const [id, pa] of Object.entries(PT)) if (now - (pa.t || 0) > 24 * 3600e3) { for (const k of pa.members) if (FR.pin[k] === id) delete FR.pin[k]; delete PT[id]; } // alte Partys aufräumen
+  if (p.startsWith('party/')) {
+    if (p === 'party/state') {
+      const pa = myParty(), inv = []; for (const x of Object.values(PT)) if ((x.inv || []).includes(me) && !x.members.includes(me)) inv.push({ id: x.id, from: await nameOf(x.leader) });
+      let party = null;
+      if (pa) { const ms = []; for (const k of pa.members) { const n = await nameOf(k); if (n) ms.push({ name: n, online: online(k), leader: k === pa.leader }); } party = { id: pa.id, leader: await nameOf(pa.leader), me: myName, isLeader: pa.leader === me, members: ms, invited: await Promise.all((pa.inv || []).map(nameOf)), play: pa.play || null, msgs: (pa.msgs || []).filter(m => m.id > (+b.after || 0)).slice(-60).map(({ id, from, text, t }) => ({ id, from, text, t })) }; }
+      return [200, { ok: true, party, invites: inv }];
+    }
+    if (p === 'party/invite') {
+      const k = key(b.name); if (!u.friends.includes(k)) return [403, { error: 'Du kannst nur Freunde einladen.' }];
+      let pa = myParty(); if (!pa) { const id = 'p' + (FR.seq++).toString(36) + Math.random().toString(36).slice(2, 5); pa = PT[id] = { id, leader: me, members: [me], inv: [], msgs: [], t: now }; FR.pin[me] = id; }
+      if (pa.members.includes(k)) return [200, { ok: true }]; if (pa.members.length + pa.inv.length >= 8) return [400, { error: 'Die Party ist voll (8).' }];
+      if (!pa.inv.includes(k)) pa.inv.push(k); pa.t = now; await save(); return [200, { ok: true }];
+    }
+    if (p === 'party/accept') { const pa = PT[String(b.id || '')]; if (!pa || !(pa.inv || []).includes(me)) return [404, { error: 'Die Einladung gibt es nicht mehr.' }]; partyLeave(me); pa.inv = pa.inv.filter(x => x !== me); pa.members.push(me); FR.pin[me] = pa.id; pa.t = now; await save(); return [200, { ok: true }]; }
+    if (p === 'party/decline') { const pa = PT[String(b.id || '')]; if (pa) pa.inv = (pa.inv || []).filter(x => x !== me); await save(); return [200, { ok: true }]; }
+    const pa = myParty(); if (!pa) return [404, { error: 'Du bist in keiner Party.' }];
+    if (p === 'party/leave') { partyLeave(me); await save(); return [200, { ok: true }]; }
+    if (p === 'party/kick') { if (pa.leader !== me) return [403, { error: 'Nur der Anführer kann jemanden entfernen.' }]; const k = key(b.name); if (k === me) return [400, { error: 'Nutze „Party verlassen“.' }]; pa.inv = (pa.inv || []).filter(x => x !== k); if (pa.members.includes(k)) partyLeave(k); await save(); return [200, { ok: true }]; }
+    if (p === 'party/msg') { const text = String(b.text || '').trim().slice(0, 300); if (!text) return [400, { error: 'Leere Nachricht.' }]; const m = { id: FR.seq++, from: myName, text, t: now }; pa.msgs = (pa.msgs || []).concat(m).slice(-100); pa.t = now; await save(); return [200, { ok: true, id: m.id }]; }
+    if (p === 'party/play') { // Anführer: alle auf diesen Server holen (die anderen bestätigen im Launcher)
+      if (pa.leader !== me) return [403, { error: 'Nur der Anführer kann alle mitnehmen.' }];
+      const v = b.srv || {}, val = String(v.v || '').trim().slice(0, 90);
+      if (!((v.kind === 'code' && /^CLD(-[A-Za-z0-9]{4}){4}$/i.test(val)) || (v.kind === 'addr' && /^[A-Za-z0-9.\-]{3,70}(:\d{2,5})?$/.test(val)))) return [400, { error: 'Ungültige Server-Adresse.' }];
+      pa.play = { srv: { kind: v.kind, v: val, label: String(v.label || '').slice(0, 40) }, n: FR.seq++, t: now, ver: String(b.ver || '').slice(0, 40) }; pa.t = now; await save(); return [200, { ok: true }];
+    }
+    return [404, { error: 'Unbekannt.' }];
+  }
+  // ---- Profilkarte (im Spiel: Blick auf einen Cloudy-Spieler + Taste) ----
+  if (p === 'profile') {
+    const raw = String(b.name || '').trim().toLowerCase(); const ce = COS[raw]; const k = ce ? ce.u : key(raw); const n = await nameOf(k); if (!n) return [404, { error: 'Kein Cloudy-Spieler.' }];
+    let level = 0, plus = false; try { const v = PS.view(PDATA, QDATA, k); level = v.level || 0; plus = !!v.plus; } catch {}
+    const eq = ce ? ce.equip : (Object.values(COS).find(e => e.u === k) || {}).equip || {};
+    return [200, { ok: true, name: n, mc: ce ? raw : '', level, plus, tags: tagsOf(k).concat(clanOf(k)), equip: eq, playMin: Math.round(((ce || Object.values(COS).find(e => e.u === k) || {}).pt || 0)), friend: u.friends.includes(k), self: k === me, pending: u.out.includes(k), online: online(k), badges: (FR.badges || {})[k] || [] }];
+  }
+  // Wolken-Post: kurze Nachricht an einen Freund, die im Spiel als kleine Wolke angeflogen kommt (landet zusätzlich im Direktchat)
+  if (p === 'post') {
+    const raw = key(b.to), ce = COS[raw], ok = u.friends.includes(raw) ? raw : ce && u.friends.includes(ce.u) ? ce.u : '';
+    const text = String(b.text || '').trim().slice(0, 200); if (!ok) return [403, { error: 'Wolken-Post geht nur an Freunde.' }]; if (!text) return [400, { error: 'Leere Nachricht.' }];
+    FR.post = FR.post || {}; const box = FR.post[ok] = (FR.post[ok] || []).filter(x => now - x.t < 7 * 864e5); if (box.length >= 30) return [429, { error: 'Der Briefkasten ist voll.' }];
+    const k = frPair(me, ok), l = FR.msgs[k] = FR.msgs[k] || [], m = { id: FR.seq++, from: myName, fk: me, text: '☁ ' + text, t: now }; l.push(m); if (l.length > 300) l.splice(0, l.length - 300);
+    box.push({ id: m.id, from: myName, text, t: now }); await save(); return [200, { ok: true }];
+  }
+  if (p === 'post/inbox') { FR.post = FR.post || {}; const box = (FR.post[me] || []).filter(x => now - x.t < 7 * 864e5); if (b.take) { delete FR.post[me]; if (box.length) await save(); } return [200, { ok: true, posts: box.slice(0, 30) }]; }
   if (p === 'msg') {
     const ok = key(b.to), text = String(b.text || '').trim().slice(0, 500);
     if (!u.friends.includes(ok)) return [403, { error: 'Ihr seid keine Freunde.' }]; if (!text) return [400, { error: 'Leere Nachricht.' }];
@@ -333,11 +381,11 @@ app.post('/cos/reg', auth(async (req, res, me) => {
   const own = isAdm(me) ? null : parse(me.owned, []), eq = {}; let plus = false; try { plus = !!PS.view(PDATA, QDATA, me.name_key).plus; } catch {}
   for (const c of ['cape', 'hat', 'wings', 'pet']) { const v = b.equip && b.equip[c]; if (typeof v === 'string' && /^[a-z0-9-]{3,30}$/.test(v) && v.startsWith(c + '-') && (!own || own.includes(v) || (plus && /^[a-z]+-pg[a-z0-9]+$/.test(v)))) eq[c] = v; } // Cloudy+-Kollektion gehoert Cloudy+-Spielern automatisch
   for (const k of Object.keys(COS)) if (COS[k].u === me.name_key && k !== mc) delete COS[k];
-  COS[mc] = { u: me.name_key, equip: eq, t: Date.now() }; await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['cos', JSON.stringify(COS)]); res.json({ ok: true });
+  COS[mc] = { u: me.name_key, equip: eq, t: Date.now(), pt: Math.max(0, Math.min(1e7, Math.round(+b.pt || 0))) }; /* pt = Spielzeit in Minuten (fuer die Profilkarte) */ await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['cos', JSON.stringify(COS)]); res.json({ ok: true });
 }));
 app.post('/cos/get', auth(async (req, res, me) => {
-  const now = Date.now(), em = (req.body || {}).em; for (const k of Object.keys(COS)) if (COS[k].u === me.name_key) { COS[k].t = now; COS[k].em = em && /^emote-[a-z0-9]{1,24}$/.test(String(em.id)) && +em.age >= 0 && +em.age < 15000 ? { id: String(em.id), s: now - Math.round(+em.age) } : null; } // Emote: Startzeit auf Server-Uhr // Herzschlag: wer fragt, spielt gerade mit Cloudy (Launcher fragt alle 6 s, solange Minecraft laeuft)
-  const out = {}; for (const n of (Array.isArray((req.body || {}).names) ? req.body.names : []).slice(0, 80)) { const k = String(n).toLowerCase(), e = COS[k]; if (!e) continue; const tg = tagsOf(e.u).concat(TAGLIVE(e.u)), cl = now - (e.t || 0) < 90000 ? 1 : 0; const ea = e.em && now - e.em.s < 15000 ? { id: e.em.id, a: now - e.em.s } : null; if (Object.keys(e.equip).length || tg.length || cl || ea) out[k] = { ...e.equip, tg, cl, ...(ea ? { em: ea } : {}) }; }
+  const now = Date.now(), em = (req.body || {}).em; for (const k of Object.keys(COS)) if (COS[k].u === me.name_key) { COS[k].t = now; COS[k].em = em && /^emote-[a-z0-9]{1,24}$/.test(String(em.id)) && +em.age >= 0 && +em.age < 15000 ? { id: String(em.id), s: now - Math.round(+em.age) } : null; const sg = (req.body || {}).song; COS[k].song = sg && typeof sg.t === 'string' && sg.t.trim() ? { t: sg.t.trim().slice(0, 60), a: String(sg.a || '').slice(0, 40), u: /^https:\/\/open\.spotify\.com\/[a-z]+\/[A-Za-z0-9]{10,40}$/.test(String(sg.u || '')) ? sg.u : '' } : null; } // Emote: Startzeit auf Server-Uhr // Herzschlag: wer fragt, spielt gerade mit Cloudy (Launcher fragt alle 6 s, solange Minecraft laeuft)
+  const out = {}; for (const n of (Array.isArray((req.body || {}).names) ? req.body.names : []).slice(0, 80)) { const k = String(n).toLowerCase(), e = COS[k]; if (!e) continue; const tg = tagsOf(e.u).concat(TAGLIVE(e.u)), cl = now - (e.t || 0) < 90000 ? 1 : 0; const ea = e.em && now - e.em.s < 15000 ? { id: e.em.id, a: now - e.em.s } : null, sg = cl && e.song ? e.song : null; if (Object.keys(e.equip).length || tg.length || cl || ea) out[k] = { ...e.equip, tg, cl, ...(ea ? { em: ea } : {}), ...(sg ? { song: sg } : {}) }; }
   res.json({ ok: true, players: out });
 }));
 // ---- Quests & Cloudy Stars: Fortschritt, Ziele und Belohnungen entscheidet nur der Server ----

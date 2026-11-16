@@ -70,3 +70,11 @@
   window.cloudy.perfProfile().then(paint).catch(() => {});
   card.querySelectorAll('[data-perf]').forEach(b => b.onclick = async () => paint(await window.cloudy.perfProfile(+b.dataset.perf)));
 })();
+
+// ---- Social im Spiel: Brücke + Song-Bubble ----
+(function () {
+  const b = document.getElementById('socBridge'), s = document.getElementById('socSong'); if (!b || !s || !window.cloudy || !window.cloudy.socCfg) return;
+  const paint = c => { if (!c) return; b.checked = !!c.bridge; s.checked = !!c.song; };
+  window.cloudy.socCfg().then(paint).catch(() => {});
+  b.onchange = async () => paint(await window.cloudy.socCfg({ bridge: b.checked })); s.onchange = async () => paint(await window.cloudy.socCfg({ song: s.checked }));
+})();

@@ -11,5 +11,7 @@
   "key.cloudy.cinematic": "Cinematic camera",
   "key.cloudy.photo": "Photo mode",
   "key.cloudy.outfit": "Next outfit",
-  "key.cloudy.hudedit": "Edit HUD layout"
+  "key.cloudy.hudedit": "Edit HUD layout",
+  "key.cloudy.profile": "Cloudy profile of the player you look at",
+  "key.cloudy.post": "Open cloud mail"
 }

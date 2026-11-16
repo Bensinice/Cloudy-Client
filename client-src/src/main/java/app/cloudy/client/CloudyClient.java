@@ -19,7 +19,8 @@ public class CloudyClient implements ClientModInitializer {
 	public static boolean TITLE = !"0".equals(System.getProperty("cloudy.title"));
 	private static boolean shiftDown;
 	public static boolean CAPE, HUD, CHEATS, HUD_FPS, HUD_PING, HUD_ARMOR, HUD_COORDS;
-	private static KeyBinding menuKey, reloadKey, cosKey, zoomKey, modsKey, emoteKey;
+	private static KeyBinding menuKey, reloadKey, cosKey, zoomKey, modsKey, emoteKey, postKey;
+	public static String postKeyName() { try { return postKey.getBoundKeyLocalizedText().getString(); } catch (Throwable t) { return "Y"; } }
 	static KeyBinding spotKey;
 	public static boolean STYLE = true;
 
@@ -118,6 +119,15 @@ public class CloudyClient implements ClientModInitializer {
 			KeyBinding togKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.cloudy.freelook_toggle", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F8, "category.cloudy"));
 			FreeCam.init(lookKey, freeKey, togKey);
 		} catch (Throwable t) { LOG.warn("Freelook/Freecam nicht verfuegbar", t); }
+		try { // Social: Profilkarte (G), Wolken-Post (Y), /pc /party /post /song
+			Social.init();
+			KeyBinding profKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.cloudy.profile", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_G, "category.cloudy"));
+			postKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.cloudy.post", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_Y, "category.cloudy"));
+			ClientTickEvents.END_CLIENT_TICK.register(mc -> {
+				while (profKey.wasPressed()) if (mc.currentScreen == null && ModConfig.isOn("profilecard")) { String n = Social.lookedAt(mc); if (n != null) mc.setScreen(new ProfileScreen(n)); else if (mc.player != null) mc.player.sendMessage(net.minecraft.text.Text.literal("Look at a player to open their Cloudy profile"), true); }
+				while (postKey.wasPressed()) if (mc.currentScreen == null && ModConfig.isOn("post")) Social.openMail(mc);
+			});
+		} catch (Throwable t) { LOG.warn("Social nicht verfuegbar", t); }
 		try { SpotifyCmd.init(); } catch (Throwable t) { LOG.warn("Spotify-Befehle nicht verfuegbar", t); }
 		LOG.info("Cloudy Client geladen (cape={}, hud={}, cheats={})", CAPE, HUD, CHEATS);
 	}

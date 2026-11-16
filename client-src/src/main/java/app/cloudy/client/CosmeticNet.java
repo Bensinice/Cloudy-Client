@@ -79,7 +79,7 @@ public final class CosmeticNet {
 		String want = System.getProperty("cloudy.coswant", ""), oth = System.getProperty("cloudy.cosoth", "");
 		if (want.isEmpty() || oth.isEmpty() || mc.world == null || mc.player == null || mc.getNetworkHandler() == null) return;
 		long now = System.currentTimeMillis();
-		if (now - lastWant > 4000 || Emotes.dirty) {
+		if (now - lastWant > 4000 || Emotes.dirty || Social.dirty) {
 			lastWant = now;
 			try {
 				List<String> names = new ArrayList<>();
@@ -87,10 +87,11 @@ public final class CosmeticNet {
 				for (PlayerListEntry e : mc.getNetworkHandler().getPlayerList()) { String n = e.getProfile().getName(); if (n != null) names.add(n); }
 				java.util.Collections.sort(names);
 				String joined = String.join(",", names);
-				if (!joined.equals(lastNames) || now - lastRead > 20000 || Emotes.dirty) { Emotes.dirty = false; // geaendert oder alle 20 s auffrischen (Mitspieler wechseln ihre Cosmetics)
+				if (!joined.equals(lastNames) || now - lastRead > 20000 || Emotes.dirty || Social.dirty) { Emotes.dirty = false; Social.dirty = false; // geaendert oder alle 20 s auffrischen (Mitspieler wechseln ihre Cosmetics)
 					lastNames = joined; lastRead = now;
 					JsonObject o = new JsonObject(); com.google.gson.JsonArray a = new com.google.gson.JsonArray(); for (String n : names) a.add(n); o.add("names", a);
 					JsonObject em = Emotes.wantJson(); if (em != null) o.add("em", em); // eigenes Emote fuer die Mitspieler
+					com.google.gson.JsonArray rq = Social.rpcJson(); if (rq.size() > 0) o.add("rpc", rq); // Auftraege (Profil, Party-Chat, Wolken-Post ...)
 					Files.writeString(Path.of(want), o.toString());
 				}
 			} catch (Throwable ignored) {}
@@ -114,7 +115,7 @@ public final class CosmeticNet {
 						nm.put(en.getKey().toLowerCase(), new String[] { okId(c, "cape") ? c : null, okId(h, "hat") ? h : null, okId(w, "wings") ? w : null, okId(pt, "pet") ? pt : null });
 					}
 					if (nm.size() != others.size()) CloudyClient.LOG.info("Cloudy: Cosmetics von {} Mitspielern geladen", nm.size());
-					others = nm; tagMap = tm; live = lv; Emotes.setOthers(emm);
+					others = nm; tagMap = tm; live = lv; Emotes.setOthers(emm); Social.read(root, pl);
 				}
 			}
 		} catch (Throwable ignored) {}

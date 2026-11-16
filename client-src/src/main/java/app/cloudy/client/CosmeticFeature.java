@@ -36,7 +36,7 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 			net.minecraft.client.network.ClientPlayerEntity me = net.minecraft.client.MinecraftClient.getInstance().player;
 			boolean ely = me != null && me.getEquippedStack(net.minecraft.entity.EquipmentSlot.CHEST).isOf(net.minecraft.item.Items.ELYTRA); // mit Elytra: Fluegel und Umhang ausblenden (sonst doppelt)
 			drawAll(matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV, m.head, m.body, m.leftArm, m.rightArm, Cosmetics.hat, ely ? null : Cosmetics.wings, Cosmetics.shield, held, !ely && ZZ4.handles(Cosmetics.cape) ? Cosmetics.cape : null, limbDistance);
-			drawPet(matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV, m.body, m.leftArm, Cosmetics.pet, state.skinTextures != null ? state.skinTextures.texture() : null);
+			drawPet(matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV, m.body, m.leftArm, Cosmetics.pet, state.skinTextures != null ? state.skinTextures.texture() : null, Emotes.progress(null));
 		} catch (RuntimeException e) { /* Cosmetics duerfen das Spiel nie zum Absturz bringen */ }
 	}
 
@@ -48,19 +48,28 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 		PlayerEntityModel m = this.getContextModel();
 		boolean ely = who.getEquippedStack(net.minecraft.entity.EquipmentSlot.CHEST).isOf(net.minecraft.item.Items.ELYTRA);
 		drawAll(matrices, vcp, light, OverlayTexture.DEFAULT_UV, m.head, m.body, m.leftArm, m.rightArm, eq[1], ely ? null : eq[2], null, 0, !ely && ZZ4.handles(eq[0]) ? eq[0] : null, limb);
-		if (eq.length > 3 && eq[3] != null) drawPet(matrices, vcp, light, OverlayTexture.DEFAULT_UV, m.body, m.leftArm, eq[3], who.getSkinTextures().texture());
+		if (eq.length > 3 && eq[3] != null) drawPet(matrices, vcp, light, OverlayTexture.DEFAULT_UV, m.body, m.leftArm, eq[3], who.getSkinTextures().texture(), Emotes.progress(who.getName().getString()));
 	}
 
 	/** Gemeinsamer Zeichencode (Spiel und Vorschau). held: 0 = kein Schild, 1 = links, 2 = rechts. */
 	public static boolean PREVIEW;
 
 	/** Pet: am Koerper (schwebend/Schulter) oder am linken Arm (bewegt sich mit). skin = Skin des Spielers (Mini-Ich). */
-	public static void drawPet(MatrixStack matrices, VertexConsumerProvider vcp, int light, int ov, ModelPart body, ModelPart leftArm, String pet, net.minecraft.util.Identifier skin) {
+	public static void drawPet(MatrixStack matrices, VertexConsumerProvider vcp, int light, int ov, ModelPart body, ModelPart leftArm, String pet, net.minecraft.util.Identifier skin) { drawPet(matrices, vcp, light, ov, body, leftArm, pet, skin, -1f); }
+	/** emo = Fortschritt (0..1) des Emotes, das der Besitzer gerade spielt, sonst -1: dann huepft das Pet mit (Schalter "Pet emotes"). */
+	public static void drawPet(MatrixStack matrices, VertexConsumerProvider vcp, int light, int ov, ModelPart body, ModelPart leftArm, String pet, net.minecraft.util.Identifier skin, float emo) {
 		if (pet == null || !GLB.handles(pet)) return;
 		try {
 			matrices.push();
-			if ("arm_left".equals(GLB.petMount(pet))) { leftArm.rotate(matrices); GLB.petOnArm(matrices, vcp, light, ov, pet, skin); }
-			else { body.rotate(matrices); GLB.pet(matrices, vcp, light, ov, pet, skin); }
+			boolean arm = "arm_left".equals(GLB.petMount(pet));
+			if (arm) leftArm.rotate(matrices); else body.rotate(matrices);
+			if (emo >= 0f && emo <= 1f && ModConfig.isOn("petemote")) {
+				float env = Math.min(1f, Math.min(emo, 1f - emo) * 8f); // weich rein und raus
+				float hop = Math.abs(net.minecraft.util.math.MathHelper.sin(emo * (float) Math.PI * 6f)) * env;
+				matrices.translate(0f, -hop * (arm ? 0.08f : 0.22f), 0f); // Modellraum: y nach unten
+				if (!arm) matrices.multiply(net.minecraft.util.math.RotationAxis.POSITIVE_Y.rotation(emo * (float) Math.PI * 2f * env));
+			}
+			if (arm) GLB.petOnArm(matrices, vcp, light, ov, pet, skin); else GLB.pet(matrices, vcp, light, ov, pet, skin);
 			matrices.pop();
 		} catch (RuntimeException e) { /* nie abstuerzen */ }
 	}

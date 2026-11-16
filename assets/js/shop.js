@@ -65,6 +65,8 @@
     'emote-shrug': { b: [0, 0, 16, 16], c: ['#ff8ad8', '#2a1030'], img: 'assets/cosmetics3d/icons/emote-shrug.png', ar: 1, glb: true },
     'emote-point': { b: [0, 0, 16, 16], c: ['#ff8ad8', '#2a1030'], img: 'assets/cosmetics3d/icons/emote-point.png', ar: 1, glb: true },
     'emote-floss': { b: [0, 0, 16, 16], c: ['#ff8ad8', '#2a1030'], img: 'assets/cosmetics3d/icons/emote-floss.png', ar: 1, glb: true },
+    'emote-highfive': { b: [0, 0, 16, 16], c: ['#ff8ad8', '#2a1030'], img: 'assets/cosmetics3d/icons/emote-highfive.png', ar: 1, glb: true },
+    'emote-duet': { b: [0, 0, 16, 16], c: ['#ff8ad8', '#2a1030'], img: 'assets/cosmetics3d/icons/emote-duet.png', ar: 1, glb: true },
     'pet-chameleon': { b: [0, 0, 16, 16], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/pet-chameleon.png', ar: 1, glb: true },
     'pet-devil': { b: [0, 0, 16, 16], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/pet-devil.png', ar: 1, glb: true },
     'pet-cat': { b: [0, 0, 16, 16], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/pet-cat.png', ar: 1, glb: true },

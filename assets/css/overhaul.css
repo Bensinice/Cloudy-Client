@@ -77,3 +77,22 @@ html.perf.os-darwin .glass{-webkit-backdrop-filter:none!important;backdrop-filte
 .perfseg{display:inline-flex;flex-wrap:wrap;gap:4px;padding:4px;border-radius:14px;background:var(--chip);border:1px solid var(--gb);margin:4px 0 6px}
 .perfseg button{height:34px;padding:0 14px;border:0;border-radius:10px;background:transparent;font:inherit;font-weight:700;color:var(--ink2);cursor:pointer}
 .perfseg button.on{background:var(--accent);color:#fff}
+
+/* Party (Freunde-Seite) */
+.partycard{display:grid;gap:10px;margin:0 0 12px;padding:16px 18px;border-radius:22px;max-width:760px}
+.partycard .pthd h3{font-size:17px;font-weight:800;display:flex;align-items:baseline;gap:6px;background:none;width:auto;height:auto;padding:0;box-shadow:none;color:var(--ink)}
+.partycard .pthd{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.partycard .pthd h3{margin:0}
+.partycard .prow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.partycard .prow .field{flex:1;min-width:160px;height:38px}
+.partycard .pinsel{max-width:260px}
+.partycard .pmem{display:flex;gap:6px;flex-wrap:wrap}
+.partycard .pm{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:999px;background:var(--chip);border:1px solid var(--gb);font-weight:700;font-size:13px;opacity:.7}
+.partycard .pm.on{opacity:1;border-color:rgba(80,200,120,.6)}
+.partycard .pm.inv{font-style:italic;font-weight:500}
+.partycard .pk{border:0;background:transparent;color:var(--ink2);cursor:pointer;padding:0 2px;font-size:12px}
+.partycard .pchat{max-height:150px;overflow:auto;padding:8px 10px;border-radius:12px;background:var(--chip);border:1px solid var(--gb);font-size:13.5px;display:grid;gap:3px}
+.partycard .pinv{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;border-radius:12px;background:rgba(255,210,74,.15);border:1px solid rgba(255,210,74,.5)}
+.partycard .pnote{color:var(--accent)}
+.partyask{position:fixed;right:22px;top:22px;z-index:9999;display:grid;gap:8px;max-width:340px;padding:16px 18px;border-radius:18px;box-shadow:0 20px 50px -20px rgba(0,0,0,.5)}
+.partyask div{display:flex;gap:8px}

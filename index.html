@@ -179,6 +179,9 @@
       <div class="glass set" id="perfCard"><h3>Leistung im Spiel</h3><p class="muted">Ein Klick stellt die Effekte der Cloudy-Mod passend ein. Gilt ab dem nächsten Spielstart, einzelne Schalter kannst du im Spiel (Taste H) trotzdem ändern.</p>
         <div class="seg perfseg"><button data-perf="0">🔋 Akku</button><button data-perf="1">⚖️ Ausgewogen</button><button data-perf="2">🚀 Max FPS</button></div>
         <small class="muted" id="perfInfo"></small></div>
+      <div class="glass set" id="socCard"><h3>Social im Spiel</h3><p class="muted">Party-Chat (/pc), Wolken-Post (/post), Profilkarte (Taste in den Steuerungen) und Song-Bubbles laufen über deinen Cloudy-Konto-Server.</p>
+        <div class="tools"><label class="cb"><input type="checkbox" id="socBridge"> Party-Chat, Wolken-Post und Profilkarten im Spiel</label><label class="cb"><input type="checkbox" id="socSong"> Meinen gerade gehörten Song über meinem Kopf zeigen (Song-Bubble)</label></div>
+        <small class="muted">Song-Bubble ist standardmäßig aus. Mitspieler sehen nur Titel und Künstler; ein Klick (/song Name) öffnet die Spotify-Suche – gemeinsames Mithören erlaubt Spotify für Apps wie Cloudy nicht.</small></div>
       <div class="glass set"><h3>Spiel</h3>
         <label>Leistungs-Preset<select id="preset" class="field"><option value="">Eigene Einstellungen</option><option value="lowend">Low-End-PC</option><option value="performance">Leistung</option><option value="balanced">Ausgewogen</option><option value="quality">Qualität</option></select></label>
         <label>Arbeitsspeicher<div class="ram"><input id="ram" type="range" min="2" max="16" value="4"><b id="ramv">4 GB</b></div></label>
@@ -687,6 +690,7 @@ window.cloudy.versions(true).then(l=>{all=l;if(!version||!all.find(v=>v.id===bvr
 <script src="assets/js/gate.js"></script>
 <script src="assets/js/music.js"></script>
 <script src="assets/js/social.js"></script>
+<script src="assets/js/party.js"></script>
 <script src="assets/js/cream.js"></script>
 <script src="assets/js/home.js"></script>
 <script src="assets/js/extras.js"></script>

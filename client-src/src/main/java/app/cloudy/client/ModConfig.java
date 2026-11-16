@@ -62,7 +62,13 @@ public final class ModConfig {
 		new Def("autogg", "Auto GG", "QoL", "Writes your GG message once when a game ends (set the message in Options)"),
 		new Def("fullbright", "Fullbright", "QoL", "Lets you see clearly in caves and at night"),
 		new Def("skybox", "Skybox", "QoL", "Replaces the sky with a painted sky (Cloudy Dusk). Sun and moon are part of the picture"),
-		new Def("clouds3d", "Volumetric clouds", "QoL", "Soft, fluffy 3D clouds that drift in the wind instead of the flat block clouds"));
+		new Def("clouds3d", "Volumetric clouds", "QoL", "Soft, fluffy 3D clouds that drift in the wind instead of the flat block clouds"),
+		new Def("partychat", "Party chat", "Social", "Shows your Cloudy party chat in the game. Write with /pc <message>, invite with /party invite <name>"),
+		new Def("post", "Cloud mail", "Social", "Messages from friends fly in as a little cloud. Press the Cloud mail key (default Y) to open, send with /post <name> <text>"),
+		new Def("profilecard", "Profile card", "Social", "Look at a Cloudy player and press the profile key (default G) to see level, play time, badges and add them as a friend"),
+		new Def("emotecombo", "Emote combos", "Social", "Two Cloudy players close together start the same combo emote within 2 seconds = shared animation"),
+		new Def("petemote", "Pet emotes", "Social", "Your pet hops and spins along when you play an emote"),
+		new Def("songbubble", "Song bubbles", "Social", "Shows the song other Cloudy players listen to above their heads (they have to share it in the launcher). /song <name> opens it"));
 	private static final Map<String, Boolean> on = new HashMap<>();
 	/** Eigene Position je Widget: {x, y} als Anteil der Fenstergroesse (0..1, linke obere Ecke), {s} Groesse. */
 	public static final Map<String, float[]> pos = new HashMap<>();
@@ -121,7 +127,7 @@ public final class ModConfig {
 
 	private static Path file() { return FabricLoader.getInstance().getConfigDir().resolve("cloudy-mods.json"); }
 
-	public static boolean isOn(String id) { load(); Boolean b = on.get(id); return b == null ? (id.equals("lyrics") || id.equals("sky") || id.equals("freelook") || id.equals("freecam") || id.startsWith("mousefx") || id.equals("itemphysics") || id.equals("lyricscard") || id.equals("playerhead") || id.equals("clouds3d")) : b; } // Lyrics und die volumetrischen Wolken sind standardmaessig an
+	public static boolean isOn(String id) { load(); Boolean b = on.get(id); return b == null ? (id.equals("lyrics") || id.equals("sky") || id.equals("freelook") || id.equals("freecam") || id.startsWith("mousefx") || id.equals("itemphysics") || id.equals("lyricscard") || id.equals("playerhead") || id.equals("clouds3d") || id.equals("partychat") || id.equals("post") || id.equals("profilecard") || id.equals("emotecombo") || id.equals("petemote")) : b; } // Lyrics und die volumetrischen Wolken sind standardmaessig an
 	public static void set(String id, boolean v) { load(); on.put(id, v); save(); }
 	public static boolean anyHud() { for (Def d : DEFS) if (d.cat().equals("HUD") && isOn(d.id())) return true; return false; }
 

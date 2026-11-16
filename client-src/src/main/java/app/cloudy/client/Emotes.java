@@ -26,7 +26,7 @@ import java.util.Map;
 public final class Emotes {
 	private Emotes() {}
 
-	public static final class Emote { public String id, name, en; public int dur; final Map<String, float[][]> parts = new HashMap<>(); }
+	public static final class Emote { public String id, name, en; public int dur; public boolean duo; final Map<String, float[][]> parts = new HashMap<>(), combo = new HashMap<>(); }
 	private static final Map<String, Emote> ALL = new LinkedHashMap<>();
 	private static boolean loaded;
 
@@ -48,21 +48,64 @@ public final class Emotes {
 				JsonObject o = el.getAsJsonObject(); Emote e = new Emote();
 				e.id = o.get("id").getAsString(); e.name = o.has("name") ? o.get("name").getAsString() : e.id; e.en = o.has("en") ? o.get("en").getAsString() : e.name;
 				e.dur = Math.max(300, o.has("dur") ? o.get("dur").getAsInt() : 2000);
-				JsonObject ps = o.getAsJsonObject("parts");
-				for (Map.Entry<String, JsonElement> pe : ps.entrySet()) {
-					JsonArray ks = pe.getValue().getAsJsonArray(); float[][] k = new float[ks.size()][4];
-					for (int i = 0; i < ks.size(); i++) { JsonArray a = ks.get(i).getAsJsonArray(); for (int j = 0; j < 4 && j < a.size(); j++) k[i][j] = a.get(j).getAsFloat(); }
-					e.parts.put(pe.getKey(), k);
-				}
+				e.duo = o.has("duo") && o.get("duo").getAsBoolean();
+				keys(o.getAsJsonObject("parts"), e.parts); if (o.has("combo")) keys(o.getAsJsonObject("combo"), e.combo);
 				ALL.put(e.id, e);
 			}
 		} catch (Throwable t) { CloudyClient.LOG.warn("Emotes nicht geladen", t); }
 	}
 
+	private static void keys(JsonObject ps, Map<String, float[][]> into) {
+		if (ps == null) return;
+		for (Map.Entry<String, JsonElement> pe : ps.entrySet()) {
+			JsonArray ks = pe.getValue().getAsJsonArray(); float[][] k = new float[ks.size()][4];
+			for (int i = 0; i < ks.size(); i++) { JsonArray a = ks.get(i).getAsJsonArray(); for (int j = 0; j < 4 && j < a.size(); j++) k[i][j] = a.get(j).getAsFloat(); }
+			into.put(pe.getKey(), k);
+		}
+	}
+
+	// ---- Combo-Emotes: zwei Cloudy-Spieler (max. 4 Bloecke) starten dasselbe Combo-Emote innerhalb von 2 s -> beide spielen die gemeinsame Animation ----
+	private static volatile java.util.Set<String> comboNames = new java.util.HashSet<>(); // klein; "" = ich selbst
+	private static String comboAnnounced = "";
+	private static void comboCheck(MinecraftClient mc) {
+		java.util.Set<String> out = new java.util.HashSet<>();
+		if (mc.world == null || mc.player == null || !ModConfig.isOn("emotecombo")) { comboNames = out; return; }
+		long now = System.currentTimeMillis();
+		Map<String, Object[]> o = others;
+		// alle aktiven Combo-Emotes (ich + andere) mit Position
+		java.util.List<Object[]> act = new java.util.ArrayList<>(); // {name, id, start, entity}
+		if (selfId != null) { Emote e = all().get(selfId); if (e != null && e.duo) act.add(new Object[] { "", selfId, selfStart, mc.player }); }
+		if (!o.isEmpty()) for (net.minecraft.client.network.AbstractClientPlayerEntity p : mc.world.getPlayers()) {
+			if (p == mc.player) continue; Object[] v = o.get(p.getName().getString().toLowerCase()); if (v == null) continue;
+			Emote e = all().get((String) v[0]); if (e == null || !e.duo || now - (Long) v[1] > e.dur) continue;
+			act.add(new Object[] { p.getName().getString().toLowerCase(), v[0], v[1], p });
+		}
+		for (int i = 0; i < act.size(); i++) for (int j = i + 1; j < act.size(); j++) {
+			Object[] a = act.get(i), b = act.get(j);
+			if (!a[1].equals(b[1]) || Math.abs((Long) a[2] - (Long) b[2]) > 2000) continue;
+			if (((net.minecraft.entity.Entity) a[3]).squaredDistanceTo((net.minecraft.entity.Entity) b[3]) > 16.0) continue;
+			out.add((String) a[0]); out.add((String) b[0]);
+			if (a[0].equals("") || b[0].equals("")) { String partner = a[0].equals("") ? (String) b[0] : (String) a[0], key = partner + selfStart;
+				if (!key.equals(comboAnnounced)) { comboAnnounced = key; try { mc.player.sendMessage(net.minecraft.text.Text.literal("\u2728 Combo! " + label((String) a[1]) + " with " + ((net.minecraft.entity.Entity) (a[0].equals("") ? b[3] : a[3])).getName().getString()).styled(st -> st.withColor(0xFFD866)), true);
+					var w = mc.world; var pa = mc.player.getPos().add(((net.minecraft.entity.Entity) (a[0].equals("") ? b[3] : a[3])).getPos()).multiply(0.5);
+					for (int k = 0; k < 12; k++) w.addParticle(net.minecraft.particle.ParticleTypes.HAPPY_VILLAGER, pa.x + (Math.random() - 0.5), pa.y + 1.6 + Math.random() * 0.6, pa.z + (Math.random() - 0.5), 0, 0.05, 0); } catch (Throwable ignored) {} }
+			}
+		}
+		comboNames = out;
+	}
+
+	/** Fortschritt 0..1 des Emotes, das dieser Spieler gerade spielt (null = ich selbst), sonst -1. Fuer Pet-Emotes. */
+	public static float progress(String name) {
+		String id; long start;
+		if (name == null) { id = selfId; start = selfStart; } else { Object[] o = others.get(name.toLowerCase()); if (o == null) return -1f; id = (String) o[0]; start = (Long) o[1]; }
+		if (id == null) return -1f; Emote e = all().get(id); if (e == null) return -1f;
+		float t = (System.currentTimeMillis() - start) / (float) e.dur; return t < 0f || t > 1f ? -1f : t;
+	}
+
 	/** Emotes, die der Spieler besitzt (kostenlose zaehlen immer), in der Reihenfolge der Datei. */
 	public static List<String> owned() {
 		List<String> l = new ArrayList<>();
-		for (String id : all().keySet()) if (Cosmetics.owned.contains(id) || id.equals("emote-wave") || id.equals("emote-clap")) l.add(id);
+		for (String id : all().keySet()) if (Cosmetics.owned.contains(id) || id.equals("emote-wave") || id.equals("emote-clap") || id.equals("emote-highfive")) l.add(id);
 		return l;
 	}
 
@@ -87,6 +130,7 @@ public final class Emotes {
 
 	/** Jeden Tick: Ende erkennen, beim Laufen abbrechen. */
 	public static void tick(MinecraftClient mc) {
+		if (mc.world != null && mc.world.getTime() % 4 == 0) comboCheck(mc); // 5x pro Sekunde reicht
 		if (selfId == null) return;
 		Emote e = all().get(selfId);
 		if (e == null || mc.player == null || System.currentTimeMillis() - selfStart > e.dur) { stop(); return; }
@@ -120,17 +164,18 @@ public final class Emotes {
 	/** Aus PlayerEntityModel.setAngles (Mixin): Emote-Pose ueber die normale Pose legen. */
 	public static void pose(PlayerEntityModel model, PlayerEntityRenderState state) {
 		try {
-			String id = null; long start = 0;
-			if (state.skinTextures != null && Cosmetics.isSelf(state.skinTextures)) { id = selfId; start = selfStart; }
+			String id = null, who = null; long start = 0;
+			if (state.skinTextures != null && Cosmetics.isSelf(state.skinTextures)) { id = selfId; start = selfStart; who = ""; }
 			else {
 				var ent = CosmeticNet.entityOf(state);
-				if (ent != null) { Object[] o = others.get(ent.getName().getString().toLowerCase()); if (o != null) { id = (String) o[0]; start = (Long) o[1]; } }
+				if (ent != null) { who = ent.getName().getString().toLowerCase(); Object[] o = others.get(who); if (o != null) { id = (String) o[0]; start = (Long) o[1]; } }
 			}
 			if (id == null) return;
 			Emote e = all().get(id); if (e == null) return;
 			float t = (System.currentTimeMillis() - start) / (float) e.dur;
 			if (t < 0f || t > 1f) return;
-			for (Map.Entry<String, float[][]> pe : e.parts.entrySet()) {
+			Map<String, float[][]> src = e.duo && !e.combo.isEmpty() && who != null && comboNames.contains(who) ? e.combo : e.parts; // gemeinsame Combo-Animation
+			for (Map.Entry<String, float[][]> pe : src.entrySet()) {
 				float[] v = sample(pe.getValue(), t);
 				switch (pe.getKey()) {
 					case "head" -> { model.head.pitch += v[1] * D; model.head.yaw += v[2] * D; model.head.roll += v[3] * D; }
