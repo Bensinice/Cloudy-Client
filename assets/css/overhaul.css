@@ -149,3 +149,20 @@ html.perf .fxprev span{animation-duration:4s}
 .crst{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
 .admrow{display:grid;gap:6px;margin:10px 0;padding:10px 12px;border-radius:14px;border:1px dashed var(--gb)}
 .admrow .tools{flex-wrap:wrap}
+
+/* Phase 5: Server-Browser */
+.sbbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px}
+.sbbar .seg{display:inline-flex;padding:3px;border-radius:12px;background:var(--chip);border:1px solid var(--gb)}
+.sbbar .seg button{height:30px;padding:0 12px;border:0;border-radius:9px;background:transparent;font:inherit;font-weight:600;font-size:13px;color:var(--ink2);cursor:pointer}
+.sbbar .seg button.on{background:var(--accent);color:#fff}
+.sbbar .field{height:36px;max-width:240px}
+.sbrow{display:flex;align-items:center;gap:14px;padding:12px 14px;margin:0 0 8px;border-radius:18px}
+.sbic{width:48px;height:48px;flex:none;border-radius:12px;image-rendering:pixelated}
+.sbph{display:grid;place-items:center;background:var(--chip);font-weight:800;font-size:20px}
+.sbinfo{flex:1;min-width:0;display:grid;gap:3px}.sbinfo small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sbfr{font-size:12.5px;font-weight:700;color:var(--accent)}
+.sbstat{display:grid;justify-items:end;gap:1px;min-width:110px;text-align:right}.sbstat b{font-size:17px}
+.sbping{font-weight:800;font-size:12px}.sbping.good{color:#2ea86a}.sbping.mid{color:#d99a00}.sbping.bad{color:#e0564a}
+.sboff{color:#e0564a;font-weight:700}
+.sbbtn{display:flex;gap:6px;flex-wrap:wrap}.sbbtn .btn{height:34px;padding:0 12px;font-size:13px}
+@media (max-width:900px){.sbrow{flex-wrap:wrap}.sbstat{justify-items:start;text-align:left}}

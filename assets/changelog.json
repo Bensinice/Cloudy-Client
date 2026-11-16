@@ -1,5 +1,13 @@
 [
  {
+  "v": "0.9.134",
+  "date": "2026-11-16",
+  "added": [
+   "Server-Browser (Server → 🌍 Server-Browser): Live-Spielerzahl, Ping, Version, Server-Bild und „Freunde dort“ für bekannte Server, mit Filter (Deutsch, Minispiele, PvP …), Suche und Sortierung"
+  ],
+  "fixed": []
+ },
+ {
   "v": "0.9.133",
   "date": "2026-11-16",
   "added": [

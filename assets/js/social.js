@@ -209,6 +209,7 @@
   $$('#srvTabs [data-ss]').forEach(b => b.onclick = () => ssTab(b.dataset.ss));
   $('#pubList').innerHTML = PUB.map(([n, h, d]) => `<div class="glass set" style="display:flex;gap:12px;align-items:center;margin-bottom:10px"><div style="flex:1"><b>${n}</b><div class="muted">${h} · <span>${d}</span></div></div><button class="btn" data-pj="${h}">Beitreten</button><button class="btn ghost" data-pa="${h}" data-pn="${n}">Zu meinen Servern</button></div>`).join('');
   $$('#pubList [data-pj]').forEach(b => b.onclick = () => play({ name: b.dataset.pj, host: b.dataset.pj, port: 25565 }));
+  window.addServer = sv => { if (!servers.some(s => s.host === sv.host)) { servers.push(sv); st.set('servers', servers); if (typeof renderServers === 'function') renderServers(); } };
   $$('#pubList [data-pa]').forEach(b => b.onclick = () => { if (!servers.some(s => s.host === b.dataset.pa)) { servers.push({ name: b.dataset.pn, host: b.dataset.pa, port: 25565 }); st.set('servers', servers); if (typeof renderServers === 'function') renderServers(); } b.textContent = L('Hinzugefügt ✓'); });
   let plReady = false;
   function plInit() {

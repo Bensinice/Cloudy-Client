@@ -875,7 +875,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.133'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.134'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -2294,6 +2294,33 @@ let presTimer = null;
 async function presence(on) { // Freunde im Freundesserver sehen deinen Server und können mit einem Klick beitreten
   const c = frConn(); if (!c) return; try { const pub = await NET.publicIp(); await frFetch(c.url, 'POST', '/presence', on && srvInfo ? { port: srvInfo.port, version: srvInfo.version, hosts: [...(pub ? [pub] : []), ...lanIps()] } : { port: 0 }, c.token); } catch {} }
 ipcMain.handle('serverStatus', () => srvState());
+// ---- Server-Browser (Phase 5): Minecraft "Server List Ping" – Spieler, Ping, Version, Beschreibung, Bild. Nur lesen, kein Beitritt. ----
+const slpCache = new Map();
+function slp(host, port) {
+  return new Promise(async res => {
+    const net = require('net'), dns = require('dns').promises; let h = host, p = port || 25565, done = false;
+    try { if (!port) { const r = await Promise.race([dns.resolveSrv('_minecraft._tcp.' + host), new Promise((_, j) => setTimeout(() => j(new Error('t')), 1500))]); if (r && r[0]) { h = r[0].name; p = r[0].port; } } } catch {}
+    const vi = n => { const b = []; do { let x = n & 0x7f; n >>>= 7; if (n) x |= 0x80; b.push(x); } while (n); return Buffer.from(b); };
+    const pk = (...parts) => { const body = Buffer.concat(parts); return Buffer.concat([vi(body.length), body]); };
+    const hb = Buffer.from(host, 'utf8'), pb = Buffer.alloc(2); pb.writeUInt16BE(p);
+    const t0 = Date.now(); const so = net.connect({ host: h, port: p }); let buf = Buffer.alloc(0), conMs = 0;
+    const fin = v => { if (done) return; done = true; try { so.destroy(); } catch {} res(v); };
+    so.setTimeout(4000, () => fin({ ok: false, error: 'Zeitüberschreitung' })); so.on('error', e => fin({ ok: false, error: e.code || 'Fehler' }));
+    so.on('connect', () => { conMs = Date.now() - t0; so.write(pk(vi(0), vi(769), vi(hb.length), hb, pb, vi(1))); so.write(pk(vi(0))); });
+    so.on('data', d => {
+      buf = Buffer.concat([buf, d]); if (buf.length > 2e6) return fin({ ok: false, error: 'zu groß' });
+      try { let o = 0; const rv = () => { let n = 0, sh = 0, b; do { if (o >= buf.length) throw new Error('more'); b = buf[o++]; n |= (b & 0x7f) << sh; sh += 7; } while (b & 0x80); return n; };
+        const len = rv(); if (buf.length < o + len) return; rv(); const sl = rv(); const j = JSON.parse(buf.slice(o, o + sl).toString('utf8'));
+        const txt = x => typeof x === 'string' ? x : x ? (x.text || '') + (Array.isArray(x.extra) ? x.extra.map(txt).join('') : '') : '';
+        fin({ ok: true, ping: conMs, online: (j.players && j.players.online) || 0, max: (j.players && j.players.max) || 0, version: String((j.version && j.version.name) || '').slice(0, 40), motd: txt(j.description).replace(/§./g, '').slice(0, 160), icon: /^data:image\/png;base64,/.test(j.favicon || '') && j.favicon.length < 40000 ? j.favicon : '' });
+      } catch (e) { if (e.message !== 'more') fin({ ok: false, error: 'Antwort unlesbar' }); }
+    });
+  });
+}
+ipcMain.handle('srvBrowse', async (_e, list) => {
+  const L0 = (Array.isArray(list) ? list : []).slice(0, 30).filter(x => x && /^[A-Za-z0-9.\-]{3,80}$/.test(String(x.host || ''))); const now = Date.now();
+  return Promise.all(L0.map(async x => { const k = x.host + ':' + (x.port || ''); const c = slpCache.get(k); if (c && now - c.t < 60000) return { host: x.host, ...c.v }; const v = await slp(x.host, +x.port || 0); slpCache.set(k, { t: now, v }); return { host: x.host, ...v }; }));
+});
 ipcMain.handle('serverFolder', (_e, v, type) => { const d = srvDir(v, type); fs.mkdirSync(d, { recursive: true }); return shell.openPath(d); });
 ipcMain.handle('serverStart', async (_e, { version, ram = 2, port = 25565, online = false, eula, motd, type = 'vanilla' }) => {
   type = type === 'paper' ? 'paper' : 'vanilla';
