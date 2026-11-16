@@ -30,7 +30,7 @@ import java.util.UUID;
 public final class Effects {
 	private Effects() {}
 
-	public static final Set<String> TRAILS = Set.of("trail-stars", "trail-clouds", "trail-gold", "trail-hearts", "trail-notes"), WINFX = Set.of("winfx-firework", "winfx-cloud");
+	public static final Set<String> TRAILS = Set.of("trail-stars", "trail-clouds", "trail-gold", "trail-hearts", "trail-notes", "trail-runes", "trail-soul", "trail-cherry", "trail-snow"), WINFX = Set.of("winfx-firework", "winfx-cloud");
 	public static boolean known(String id) { return id != null && (TRAILS.contains(id) || WINFX.contains(id) || id.equals("foot-prints")); }
 
 	// ---- Fussspuren: Ringpuffer ----
@@ -54,6 +54,7 @@ public final class Effects {
 	public static void tick(MinecraftClient mc) {
 		if (mc.world == null || mc.player == null) { LAST.clear(); return; }
 		tick++;
+		if (tick % 40 == 0) journal(mc);
 		boolean trails = ModConfig.isOn("trails"), feet = ModConfig.isOn("footprints"), petfx = ModConfig.isOn("petemote");
 		if (!trails && !feet && !petfx) return;
 		Vec3d cam = mc.player.getPos();
@@ -79,6 +80,16 @@ public final class Effects {
 		if (tick % 200 == 0) LAST.keySet().removeIf(u -> mc.world.getPlayerByUuid(u) == null);
 	}
 
+	private static boolean jDia, jNether, jEnd; // pro Sitzung einmal melden (der Launcher merkt sich die "ersten Male")
+	private static void journal(MinecraftClient mc) {
+		try {
+			var key = mc.world.getRegistryKey();
+			if (!jNether && key == net.minecraft.world.World.NETHER) { jNether = true; Social.journal("nether"); }
+			if (!jEnd && key == net.minecraft.world.World.END) { jEnd = true; Social.journal("end"); }
+			if (!jDia && mc.player.getInventory().count(net.minecraft.item.Items.DIAMOND) > 0) { jDia = true; Social.journal("diamond"); }
+		} catch (Throwable ignored) {}
+	}
+
 	private static void trail(MinecraftClient mc, Entity p, String id, double dx, double dz, boolean fly) {
 		double x = p.getX() - dx * 1.5 + (Math.random() - 0.5) * 0.3, y = p.getY() + (fly ? 0.4 : 0.15) + Math.random() * 0.2, z = p.getZ() - dz * 1.5 + (Math.random() - 0.5) * 0.3;
 		ParticleEffect t; double vx = 0, vy = 0.01, vz = 0;
@@ -88,6 +99,10 @@ public final class Effects {
 			case "trail-gold" -> t = ParticleTypes.WAX_ON;
 			case "trail-hearts" -> { t = ParticleTypes.HEART; y += 0.3; }
 			case "trail-notes" -> { t = ParticleTypes.NOTE; vx = Math.random(); vy = 0; y += 0.4; } // NOTE: vx = Farbe
+			case "trail-runes" -> { t = ParticleTypes.ENCHANT; y += 0.6; vy = -0.3; } // Wochenaufgaben-Belohnungen
+			case "trail-soul" -> { t = ParticleTypes.SOUL_FIRE_FLAME; vy = 0.01; }
+			case "trail-cherry" -> { t = ParticleTypes.CHERRY_LEAVES; y += 0.5; vy = 0; }
+			case "trail-snow" -> { t = ParticleTypes.SNOWFLAKE; vy = -0.01; }
 			default -> { return; }
 		}
 		mc.world.addParticle(t, x, y, z, vx, vy, vz);
@@ -145,6 +160,7 @@ public final class Effects {
 		if (Cosmetics.winfx == null || !ModConfig.isOn("winfx") || s == null) return;
 		boolean win = s.contains("you won") || s.contains("you win") || s.contains("victory") || (s.contains(me) && (s.contains("won the game") || s.contains("wins the game") || s.contains("winner")));
 		boolean kill = !win && !title && (s.contains(" by " + me) || s.contains(" von " + me) || s.contains("killed by " + me) || s.contains(me + " killed ") || s.contains("slain by " + me));
+		if (win) Social.journal("win");
 		if (win || kill) burst(win);
 	}
 

@@ -22,6 +22,8 @@ public final class CosmeticNet {
 	private static volatile Map<String, String[]> others = new HashMap<>(); // Name (klein) -> {cape, hat, wings, pet, trail, winfx, foot}
 	private static volatile Map<String, Map<String, int[]>> dyes = new HashMap<>(); // Name -> Item -> {Haupt, Leucht}
 	private static volatile Map<String, Integer> petLvs = new HashMap<>();
+	private static volatile Map<String, String> badges = new HashMap<>(); // Name -> Abzeichen-Zeichen (Erfolge)
+	private static boolean evShown;
 	public static int[] dyeOf(String name, String id) { Map<String, int[]> m = name == null || id == null ? null : dyes.get(name.toLowerCase()); return m == null ? null : m.get(id); }
 	public static int dyeMain(String name, String id, int def) { int[] d = dyeOf(name, id); return d != null && d[0] != -1 ? d[0] : def; }
 	public static int petLv(String name) { Integer v = name == null ? null : petLvs.get(name.toLowerCase()); return v == null ? 1 : v; }
@@ -63,6 +65,8 @@ public final class CosmeticNet {
 	public static net.minecraft.text.MutableText tagPrefix(String name) {
 		List<String> l = tagsOf(name);
 		net.minecraft.text.MutableText out = isCloudy(name) ? net.minecraft.text.Text.literal("\u2601 ").styled(st -> st.withColor(0x9FD3FF)) : null; // Cloudy-Wolke: bestaetigter Cloudy-Spieler
+		String bd = name == null || !ModConfig.isOn("badges") ? null : badges.get(name.toLowerCase()); // Abzeichen (Erfolg) neben dem Namen
+		if (bd != null && !bd.isEmpty()) { net.minecraft.text.MutableText b = net.minecraft.text.Text.literal(bd + " ").styled(st -> st.withColor(0xFFD24A)); if (out == null) out = b; else out.append(b); }
 		if (l == null || l.isEmpty()) return out;
 		for (String t : l) {
 			String label; int col;
@@ -96,7 +100,7 @@ public final class CosmeticNet {
 					lastNames = joined; lastRead = now;
 					JsonObject o = new JsonObject(); com.google.gson.JsonArray a = new com.google.gson.JsonArray(); for (String n : names) a.add(n); o.add("names", a);
 					JsonObject em = Emotes.wantJson(); if (em != null) o.add("em", em); // eigenes Emote fuer die Mitspieler
-					com.google.gson.JsonArray rq = Social.rpcJson(); if (rq.size() > 0) o.add("rpc", rq); // Auftraege (Profil, Party-Chat, Wolken-Post ...)
+					com.google.gson.JsonArray rq = Social.rpcJson(); if (rq.size() > 0) o.add("rpc", rq); com.google.gson.JsonArray jr = Social.journalJson(); if (jr.size() > 0) o.add("jr", jr); // Auftraege (Profil, Party-Chat, Wolken-Post ...)
 					Files.writeString(Path.of(want), o.toString());
 				}
 			} catch (Throwable ignored) {}
@@ -109,7 +113,7 @@ public final class CosmeticNet {
 					otherMod = m;
 					JsonObject root = JsonParser.parseString(Files.readString(p)).getAsJsonObject(), pl = root.getAsJsonObject("players");
 					long fts = root.has("ts") ? root.get("ts").getAsLong() : m; Map<String, Object[]> emm = new HashMap<>();
-					Map<String, String[]> nm = new HashMap<>(); Map<String, Map<String, int[]>> dm = new HashMap<>(); Map<String, Integer> plm = new HashMap<>(); Map<String, List<String>> tm = new HashMap<>(); java.util.Set<String> lv = new java.util.HashSet<>(); String selfN = mc.player.getName().getString();
+					Map<String, String[]> nm = new HashMap<>(); Map<String, Map<String, int[]>> dm = new HashMap<>(); Map<String, Integer> plm = new HashMap<>(); Map<String, String> bdm = new HashMap<>(); Map<String, List<String>> tm = new HashMap<>(); java.util.Set<String> lv = new java.util.HashSet<>(); String selfN = mc.player.getName().getString();
 					if (pl != null) for (Map.Entry<String, JsonElement> en : pl.entrySet()) {
 						JsonObject e = en.getValue().getAsJsonObject();
 						try { if (e.has("cl") && e.get("cl").getAsInt() == 1) lv.add(en.getKey().toLowerCase()); } catch (Throwable ignored) {}
@@ -121,9 +125,16 @@ public final class CosmeticNet {
 						nm.put(en.getKey().toLowerCase(), new String[] { okId(c, "cape") ? c : null, okId(h, "hat") ? h : null, okId(w, "wings") ? w : null, okId(pt, "pet") ? pt : null, Effects.known(tr) ? tr : null, Effects.known(wf) ? wf : null, Effects.known(ft) ? ft : null });
 						try { if (e.has("dye") && e.get("dye").isJsonObject()) { Map<String, int[]> one = new HashMap<>(); for (Map.Entry<String, JsonElement> de : e.getAsJsonObject("dye").entrySet()) { JsonObject x = de.getValue().getAsJsonObject(); one.put(de.getKey(), new int[] { Cosmetics.hex(x.has("c") ? x.get("c").getAsString() : null), Cosmetics.hex(x.has("g") ? x.get("g").getAsString() : null) }); } dm.put(en.getKey().toLowerCase(), one); } } catch (Throwable ignored) {}
 						try { if (e.has("plv")) plm.put(en.getKey().toLowerCase(), e.get("plv").getAsInt()); } catch (Throwable ignored) {}
+						try { if (e.has("bd")) { String b = e.get("bd").getAsString(); if (b.length() <= 2) bdm.put(en.getKey().toLowerCase(), b); } } catch (Throwable ignored) {}
 					}
 					if (nm.size() != others.size()) CloudyClient.LOG.info("Cloudy: Cosmetics von {} Mitspielern geladen", nm.size());
-					others = nm; dyes = dm; petLvs = plm; tagMap = tm; live = lv; Emotes.setOthers(emm); Social.read(root, pl);
+					others = nm; dyes = dm; petLvs = plm; badges = bdm; tagMap = tm; live = lv; Emotes.setOthers(emm); Social.read(root, pl);
+					try { // Cloudy-Event am Himmel (fuer alle gleichzeitig)
+						boolean on = root.has("ev") && root.get("ev").isJsonObject() && root.getAsJsonObject("ev").get("on").getAsBoolean();
+						SkyBox.event = on;
+						if (on && !evShown && mc.player != null) { evShown = true; String nm0 = root.getAsJsonObject("ev").has("name") ? root.getAsJsonObject("ev").get("name").getAsString() : "Cloudy event"; mc.player.sendMessage(net.minecraft.text.Text.literal("\u2604 " + nm0 + " – look at the sky! Stay online for your reward (+150 CC).").styled(st -> st.withColor(0xFFD866)), false); }
+						if (!on) evShown = false;
+					} catch (Throwable ignored) {}
 				}
 			}
 		} catch (Throwable ignored) {}

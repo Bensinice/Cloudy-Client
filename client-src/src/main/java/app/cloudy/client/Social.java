@@ -45,6 +45,10 @@ public final class Social {
 		synchronized (PENDING) { PENDING.put(id, q); SENT.put(id, System.currentTimeMillis()); if (cb != null) CB.put(id, cb); while (PENDING.size() > 8) { String k = PENDING.keySet().iterator().next(); PENDING.remove(k); CB.remove(k); SENT.remove(k); } }
 		dirty = true;
 	}
+	// ---- Tagebuch: Ereignisse fuer die Timeline im Launcher (erster Diamant, Nether, End, Sieg) ----
+	private static final List<JsonObject> JR = new ArrayList<>();
+	public static void journal(String k) { if (!launcher()) return; JsonObject o = new JsonObject(); o.addProperty("k", k); o.addProperty("t", System.currentTimeMillis()); synchronized (JR) { JR.add(o); while (JR.size() > 6) JR.remove(0); } dirty = true; }
+	public static JsonArray journalJson() { JsonArray a = new JsonArray(); long now = System.currentTimeMillis(); synchronized (JR) { JR.removeIf(o -> now - o.get("t").getAsLong() > 60000); for (JsonObject o : JR) a.add(o); } return a; }
 	public static boolean launcher() { return !System.getProperty("cloudy.coswant", "").isEmpty(); }
 
 	/** Fuer coswant. */

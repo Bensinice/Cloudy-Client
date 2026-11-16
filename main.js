@@ -875,7 +875,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.132'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.133'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1176,6 +1176,7 @@ async function cosBridge(w) {
     const { status, ...d } = r || {}; brg.done.set(id, { t: now, ok: status === 200, ...d });
     if (q.op === 'partyMsg' || q.op === 'partyInvite' || q.op === 'partyLeave') brg.tick = 0; // gleich neu laden
   }
+  for (const q of Array.isArray(w.jr) ? w.jr.slice(-6) : []) { const k = String(q && q.k || ''), key = k + ':' + (+q.t || 0); if (!JR[k] || jrSeen.has(key)) continue; jrSeen.add(key); tlAdd({ k: 'jr-' + k, once: JR[k][2], text: JR[k][0], en: JR[k][1] }); }
   for (const [k, v] of brg.done) if (now - v.t > 60000) brg.done.delete(k);
   if (brg.tick++ % 3 === 0) { // alle ~7,5 s: Party + Wolken-Post
     const ps = await fr('party/state', { after: brg.after });
@@ -1554,6 +1555,10 @@ const CATALOG = [
   { id: 'winfx-firework', cat: 'winfx', name: 'Sieg-Feuerwerk', price: 500 },
   { id: 'winfx-cloud', cat: 'winfx', name: 'Wolken-Puff', price: 300 },
   { id: 'foot-prints', cat: 'foot', name: 'Fußspuren', price: 300 },
+  { id: 'trail-runes', cat: 'trail', name: 'Runenspur', price: 0, excl: 'weekly' }, // nur als Belohnung der Wochenaufgabe
+  { id: 'trail-soul', cat: 'trail', name: 'Seelenflammen', price: 0, excl: 'weekly' },
+  { id: 'trail-cherry', cat: 'trail', name: 'Kirschblüten', price: 0, excl: 'weekly' },
+  { id: 'trail-snow', cat: 'trail', name: 'Schneeflocken', price: 0, excl: 'weekly' },
   { id: 'pet-chameleon', cat: 'pet', name: 'Chamäleon', price: 1500 },
   { id: 'pet-devil', cat: 'pet', name: 'Kleiner Teufel', price: 1500 },
   { id: 'pet-cat', cat: 'pet', name: 'Tigerkatze', price: 1200 },
@@ -1866,7 +1871,7 @@ const rotSt = { day: '', ends: 0, offers: [], t: 0 };
 async function rotFresh(u) {
   if (!srvCfg() || Date.now() - rotSt.t < 10 * 60e3 && rotSt.ends > Date.now()) return;
   try {
-    if (u && u.admin && srvTok) { const pool = CATALOG.filter(c => !c.gone && !c.plus && !c.owner && c.price > 0 && !shopHidden.includes(c.id) && !limList.some(l => l.id === c.id)).map(c => ({ id: c.id })); srvCall('/admin/rotpool', { pool }, srvTok).catch(() => {}); } // Admin-Launcher hält die Auswahl des Servers aktuell
+    if (u && u.admin && srvTok) { const pool = CATALOG.filter(c => !c.gone && !c.plus && !c.owner && !c.excl && !p4St.plusAll.includes(c.id) && c.price > 0 && !shopHidden.includes(c.id) && !limList.some(l => l.id === c.id)).map(c => ({ id: c.id })); srvCall('/admin/rotpool', { pool }, srvTok).catch(() => {}); } // Admin-Launcher hält die Auswahl des Servers aktuell
     const r = await Promise.race([srvCall('/shop/rotation', {}, srvTok || undefined), new Promise(res => setTimeout(() => res(null), 4000))]);
     if (r && r.ok) { rotSt.day = r.day; rotSt.ends = +r.ends || 0; rotSt.offers = (r.offers || []).filter(o => CATALOG.some(c => c.id === o.id)); rotSt.t = Date.now(); }
   } catch {}
@@ -1885,11 +1890,57 @@ ipcMain.handle('shopDye', (_e, { id, c, g }) => shopWrite(u => {
   if (/^pet-/.test(id) && hx(c) && !PET_COLORS.some(p => p[1] === hx(c) && petLvOf(id) >= p[0])) return { ok: false, error: 'Diese Farbe schaltet dein Pet erst mit einer höheren Stufe frei.' };
   if (!hx(c) && !hx(g)) delete u.dye[id]; else u.dye[id] = { c: hx(c), g: hx(g) }; return { ok: true };
 }));
+
+// ---- Phase 4: Erfolge, Streak, Wochenaufgabe, Cloudy+-Monatsitem, Creator-Codes, Event, Tagebuch ----
+const p4St = { user: '', data: null, t: 0, ping: '', plusAll: [], achSeen: null };
+const tlFile = path.join(app.getPath('userData'), 'cloudy-timeline.json');
+function tlRead() { try { const a = JSON.parse(fs.readFileSync(tlFile, 'utf8')); return Array.isArray(a) ? a : []; } catch { return []; } }
+function tlAdd(e) { // Tagebuch-Eintrag (nur auf diesem PC): { t, k, text, ver?, shots? }
+  try { const a = tlRead(); if (e.once && a.some(x => x.k === e.k && x.user === currentUser)) return; a.unshift({ t: Date.now(), user: currentUser || '', ...e }); fs.writeFileSync(tlFile, JSON.stringify(a.slice(0, 400))); send('timeline', {}); } catch {}
+}
+async function p4Claim() { try { const r = await srvCall('/p4/claim', {}, srvTok); if (r && r.ok && r.coins > 0) { earnPlay(currentUser, r.coins); return r.coins; } } catch {} return 0; }
+ipcMain.handle('p4State', async (_e, force) => {
+  if (!currentUser || !srvCfg() || !srvTok) return null;
+  if (!force && p4St.user === currentUser && p4St.data && Date.now() - p4St.t < 30000) return p4St.data;
+  try {
+    let bonus = 0, streakUp = 0; const today = todayStr();
+    if (p4St.ping !== currentUser + today) { const pr = await srvCall('/p4/ping', { pt: Math.round((play.ms || 0) / 60000) }, srvTok); if (pr && pr.ok) { p4St.ping = currentUser + today; bonus = pr.bonus || 0; streakUp = pr.bonus ? pr.streak : 0; } }
+    const r = await srvCall('/p4/state', {}, srvTok); if (!r || !r.ok) return p4St.data;
+    const got = r.pend > 0 ? await p4Claim() : 0;
+    const done = (r.ach || []).filter(a => a.done).map(a => a.id), seenKey = 'ach:' + currentUser;
+    if (p4St.achSeen && p4St.achSeen.k === seenKey) for (const a of r.ach || []) if (a.done && !p4St.achSeen.ids.includes(a.id)) tlAdd({ k: 'ach-' + a.id, once: true, text: `Erfolg freigeschaltet: ${a.sym} ${a.name}`, en: `Achievement unlocked: ${a.sym} ${a.en}` });
+    p4St.achSeen = { k: seenKey, ids: done };
+    if (streakUp && [3, 7, 14, 30, 50, 100].includes(streakUp)) tlAdd({ k: 'streak' + streakUp, text: `${streakUp} Tage Login-Streak 🔥`, en: `${streakUp} day login streak 🔥` });
+    p4St.user = currentUser; p4St.t = Date.now(); p4St.data = { ...r, bonus, claimed: got };
+    try { const pm = await srvCall('/p4/plusmonth', {}, srvTok); if (pm && pm.ok) { p4St.plusAll = pm.all || []; p4St.data.plusMonth = pm; if (pm.got && pm.id) await srvPull(); } } catch {}
+    return p4St.data;
+  } catch { return p4St.data; }
+});
+ipcMain.handle('p4Weekly', async () => { try { const r = await srvCall('/p4/weekly', {}, srvTok); if (!r || !r.ok) return { ok: false, error: (r && r.error) || 'Fehler' }; await srvPull(); await p4Claim(); const it = CATALOG.find(c => c.id === r.item); tlAdd({ k: 'weekly', text: `Wochenaufgabe geschafft${it ? ': ' + it.name + ' bekommen' : ''} 🏆`, en: `Weekly challenge done${it ? ': got ' + it.name : ''} 🏆` }); p4St.t = 0; return { ok: true, item: r.item, state: shopWrite(() => ({}), true).state }; } catch { return { ok: false, error: 'Konto-Server nicht erreichbar.' }; } });
+ipcMain.handle('p4Badge', async (_e, id) => { try { const r = await srvCall('/p4/badge', { id: String(id || '') }, srvTok); p4St.t = 0; return r && r.ok ? { ok: true } : { ok: false, error: (r && r.error) || 'Fehler' }; } catch { return { ok: false }; } });
+ipcMain.handle('p4Admin', async (_e, { what, body }) => { // nur Admin: Creator-Codes, Cloudy+-Monatsitem, Event
+  const P = { creator: '/admin/creator', creators: '/admin/creators', plusmonth: '/admin/plusmonth', event: '/admin/event' }[what]; if (!P || !srvTok) return { ok: false, error: 'Unbekannt.' };
+  try { const r = await srvCall(P, body || {}, srvTok); const { status, ...d } = r || {}; p4St.t = 0; return { ok: status === 200, ...d }; } catch { return { ok: false, error: 'Konto-Server nicht erreichbar.' }; }
+});
+ipcMain.handle('timeline', () => { // Tagebuch mit Vorschaubildern der Screenshots
+  const all = tlRead().filter(e => !e.user || e.user === currentUser).slice(0, 60); let thumbs = 0;
+  return all.map(e => ({ ...e, shots: (e.shots || []).slice(0, 4).map(f => { let thumb = null; if (thumbs < 40 && e.ver) { try { const im = nativeImage.createFromPath(path.join(shotDir(e.ver), path.basename(f))); if (!im.isEmpty()) { thumb = im.resize({ width: 220 }).toDataURL(); thumbs++; } } catch {} } return { file: f, thumb }; }).filter(x => x.thumb) }));
+});
+let diaSess = null;
+function diaStart(ver, server) { diaSess = { t0: Date.now(), ver: String(ver || ''), srv: server && server.host ? String(server.name || server.host).slice(0, 40) : '' }; }
+function diaEnd() {
+  const d = diaSess; diaSess = null; if (!d || !currentUser) return; const min = Math.round((Date.now() - d.t0) / 60000); if (min < 2) return;
+  let shots = []; try { shots = fs.readdirSync(shotDir(d.ver)).filter(n => /\.(png|jpe?g)$/i.test(n)).map(n => ({ n, m: fs.statSync(path.join(shotDir(d.ver), n)).mtimeMs })).filter(x => x.m >= d.t0 - 5000).sort((a, b) => a.m - b.m).map(x => x.n).slice(0, 4); } catch {}
+  const mates = brg.party ? brg.party.members.filter(n => n.toLowerCase() !== String(currentUser).toLowerCase()) : [];
+  tlAdd({ k: 'play', ver: d.ver, shots, text: `${min} Minuten gespielt${d.srv ? ' auf ' + d.srv : ' (Einzelspieler)'}${mates.length ? ' mit ' + mates.join(', ') : ''}`, en: `Played ${min} minutes${d.srv ? ' on ' + d.srv : ' (singleplayer)'}${mates.length ? ' with ' + mates.join(', ') : ''}` });
+}
+const JR = { diamond: ['Erster Diamant gefunden 💎', 'Found your first diamond 💎', true], nether: ['Zum ersten Mal im Nether 🔥', 'First time in the Nether 🔥', true], end: ['Zum ersten Mal im End 🌌', 'First time in the End 🌌', true], win: ['Ein Spiel gewonnen 🏆', 'Won a game 🏆', false] };
+const jrSeen = new Set();
 function shopOf(u) {
   if (u.coins == null) u.coins = 100; if (!u.owned) u.owned = []; if (!u.equip) u.equip = {};
   for (const k of Object.keys(u.equip)) { const c = CATALOG.find(x => x.id === u.equip[k]); if (!c || (!u.admin && ((c.owner) || (c.plus && plusKnown(u) && !plusSt.on)))) delete u.equip[k]; } // entfernte Items (alte Z4-/Galaxie-Sachen) nicht mehr ausrüsten
   const nm = shopNames(), pr = shopPrices();
-  return { limited: limList.map(l => { const c = CATALOG.find(x => x.id === l.id); return { ...l, name: nm[l.id] || (c && c.name) || l.id, cat: c ? c.cat : l.id.split('-')[0] }; }), catalog: CATALOG.filter(c => (!c.owner || u.admin) && (!c.gone || (u.equip || {})[c.cat] === c.id) && (u.admin || !shopHidden.includes(c.id) || (u.owned || []).includes(c.id)) && (u.admin || !limList.some(l => l.id === c.id) || (u.owned || []).includes(c.id))).map(c => { const o = nm[c.id] ? { ...c, name: nm[c.id] } : { ...c }; o.price = priceOf(c, pr); const off = rotOff(c.id); if (off) { o.was = o.price; o.price = dealPrice(c, pr); o.deal = off; } if (dyeable(c.id)) o.dye = true; if (shopHidden.includes(c.id)) o.hidden = true; return o; }), admin: !!u.admin, bundles: bundlesView(u), coins: u.admin || u.infCoins ? null : u.coins, owned: ownedEff(u), plus: plusOn(u), equip: u.equip, outfits: outfitsOf(u), dye: dyeOf(u), rotation: rotSt.ends > Date.now() ? { ends: rotSt.ends, offers: rotSt.offers } : null, pets: Object.fromEntries(CATALOG.filter(c => c.cat === 'pet').map(c => [c.id, { lv: petLvOf(c.id), min: (petSt.user === currentUser && petSt.pets[c.id] && petSt.pets[c.id].min) || 0 }])), petSteps: petSt.steps, petColors: PET_COLORS, dailyReady: !u.admin && !u.infCoins && u.daily !== todayStr() };
+  return { limited: limList.map(l => { const c = CATALOG.find(x => x.id === l.id); return { ...l, name: nm[l.id] || (c && c.name) || l.id, cat: c ? c.cat : l.id.split('-')[0] }; }), catalog: CATALOG.filter(c => (!c.owner || u.admin) && (!c.gone || (u.equip || {})[c.cat] === c.id) && (u.admin || !shopHidden.includes(c.id) || (u.owned || []).includes(c.id)) && (u.admin || !limList.some(l => l.id === c.id) || (u.owned || []).includes(c.id))).map(c => { const o = nm[c.id] ? { ...c, name: nm[c.id] } : { ...c }; o.price = priceOf(c, pr); const off = rotOff(c.id); if (off) { o.was = o.price; o.price = dealPrice(c, pr); o.deal = off; } if (dyeable(c.id)) o.dye = true; if (c.excl) o.excl = c.excl; else if (p4St.plusAll.includes(c.id)) o.excl = 'plus'; if (shopHidden.includes(c.id)) o.hidden = true; return o; }), admin: !!u.admin, bundles: bundlesView(u), coins: u.admin || u.infCoins ? null : u.coins, owned: ownedEff(u), plus: plusOn(u), equip: u.equip, outfits: outfitsOf(u), dye: dyeOf(u), rotation: rotSt.ends > Date.now() ? { ends: rotSt.ends, offers: rotSt.offers } : null, pets: Object.fromEntries(CATALOG.filter(c => c.cat === 'pet').map(c => [c.id, { lv: petLvOf(c.id), min: (petSt.user === currentUser && petSt.pets[c.id] && petSt.pets[c.id].min) || 0 }])), petSteps: petSt.steps, petColors: PET_COLORS, dailyReady: !u.admin && !u.infCoins && u.daily !== todayStr() };
 }
 const plusSt = { user: '', on: false, t: 0 }; // Cloudy+-Stand des angemeldeten Kontos (vom Server, kurz zwischengespeichert)
 async function plusFresh(force) {
@@ -1998,10 +2049,11 @@ const shopBuyWrite = id => shopWrite(u => {
   if (u.admin) return {}; if (u.owned.includes(id)) return { ok: false, error: 'Das besitzt du schon.' };
   if (shopHidden.includes(id)) return { ok: false, error: 'Dieses Item ist nicht mehr erhältlich.' };
   if (limList.some(l => l.id === id)) return { ok: false, error: 'Dieses Item gibt es nur als Limited-Item (ganz unten im Shop).' };
+  if (it.excl || p4St.plusAll.includes(id)) return { ok: false, error: it.excl === 'weekly' ? 'Dieses Item gibt es nur als Belohnung der Wochenaufgabe.' : 'Dieses Item gibt es nur mit Cloudy+ im jeweiligen Monat.' };
   const price = dealPrice(it, shopPrices()); // Tagesangebot: Rabatt vom Server
   if (u.infCoins) { u.owned.push(id); return {}; } // Tester: unendlich Coins, nichts wird abgezogen
   if (u.coins < price) return { ok: false, error: `Dir fehlen ${price - u.coins} CC.` };
-  u.coins -= price; u.owned.push(id);
+  u.coins -= price; u.owned.push(id); tlAdd({ k: 'buy', text: `Gekauft: ${it.name}`, en: `Bought: ${it.name}` });
 });
 ipcMain.handle('bundleBuy', async (_e, id, code) => { // Limited-Pakete: Der Server zählt den Bestand (erst reservieren, bei Fehlschlag wieder freigeben)
   const bb = shopBundles()[id]; let claimed = false;
@@ -2891,7 +2943,7 @@ ipcMain.handle('launch', async (_e, { username, version, type, ram, server, fabr
     });
     if (!proc) throw new Error('Start fehlgeschlagen.');
     if (launchCancelled) { try { proc.kill(); } catch {} throw new Error('Start abgebrochen.'); }
-    mcProc = proc; try { fs.rmSync(qstatFile, { force: true }); } catch {} qsLast = { sid: '', d: {} }; qsMp = false; qSend('/quests/event', { type: 'launch' }); playSess = { who: currentUser, t: Date.now(), coinMs: 0, earned: 0 }; try { send('gameStart', {}); } catch {} try { if (win && !win.isDestroyed()) win.webContents.setFrameRate(15); } catch {} try { dcGame = { version: bv(version), server: server && server.host ? String(server.name || server.host).slice(0, 30) : '' }; dcStart = Date.now(); dcUpdate(); } catch {} try { cosNetStart(auth && auth.name); } catch {} proc.on('close', () => { playTick(true); if (mcProc === proc) { mcProc = null; cosNetStop(); dcGame = null; dcStart = Date.now(); dcUpdate(); } });
+    mcProc = proc; try { fs.rmSync(qstatFile, { force: true }); } catch {} qsLast = { sid: '', d: {} }; qsMp = false; qSend('/quests/event', { type: 'launch' }); playSess = { who: currentUser, t: Date.now(), coinMs: 0, earned: 0 }; try { send('gameStart', {}); } catch {} try { if (win && !win.isDestroyed()) win.webContents.setFrameRate(15); } catch {} try { dcGame = { version: bv(version), server: server && server.host ? String(server.name || server.host).slice(0, 30) : '' }; dcStart = Date.now(); dcUpdate(); } catch {} try { cosNetStart(auth && auth.name); } catch {} try { diaStart(version, server); } catch {} proc.on('close', () => { try { diaEnd(); } catch {} playTick(true); if (mcProc === proc) { mcProc = null; cosNetStop(); dcGame = null; dcStart = Date.now(); dcUpdate(); } });
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err.message };

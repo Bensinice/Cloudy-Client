@@ -1,5 +1,20 @@
 [
  {
+  "v": "0.9.133",
+  "date": "2026-11-16",
+  "added": [
+   "Erfolge mit Abzeichen: 12 Erfolge (z. B. 10/100 Stunden, 50 Emotes, erstes Pet, Pet auf Stufe 5, 7-Tage-Streak) im Cloudy Pass. Ein geschaffter Erfolg wird dein Abzeichen neben dem Namen im Spiel und auf der Profilkarte",
+   "Login-Streak: jeden Tag Cloudy öffnen = Bonus-CC (10 CC pro Streak-Tag, bis 70 CC)",
+   "Wochenaufgabe auf der Startseite: jede Woche eine große Aufgabe mit exklusiver Spur (Runen, Seelenflammen, Kirschblüten, Schneeflocken) + 100 CC",
+   "Cloudy+-Monatsitem: der Admin legt im Cloudy Pass fest, welches Item alle mit Cloudy+ in diesem Monat bekommen",
+   "Creator-Codes: Admin legt Codes für Creator an, Spieler lösen sie unter Shop → Code einlösen ein und bekommen ein Item; Creator sehen ihre Unterstützer im Cloudy Pass",
+   "Tagebuch auf der Startseite: Spielrunden mit deinen Screenshots, erster Diamant, erstes Mal Nether/End, Siege, Käufe, Erfolge",
+   "Lebende Skybox (H → QoL): der Himmel folgt deiner echten Tages- und Jahreszeit, nachts Sternschnuppen",
+   "Cloudy-Events: einmal im Monat (erster Samstag, 20 Uhr) ein Sternschnuppen-Regen am Himmel für alle gleichzeitig – wer dabei ist, bekommt 150 CC und einen Erfolg"
+  ],
+  "fixed": []
+ },
+ {
   "v": "0.9.132",
   "date": "2026-11-16",
   "added": [

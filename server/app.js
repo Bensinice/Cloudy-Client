@@ -301,7 +301,7 @@ async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
     const pa = myParty(); if (!pa) return [404, { error: 'Du bist in keiner Party.' }];
     if (p === 'party/leave') { partyLeave(me); await save(); return [200, { ok: true }]; }
     if (p === 'party/kick') { if (pa.leader !== me) return [403, { error: 'Nur der Anführer kann jemanden entfernen.' }]; const k = key(b.name); if (k === me) return [400, { error: 'Nutze „Party verlassen“.' }]; pa.inv = (pa.inv || []).filter(x => x !== k); if (pa.members.includes(k)) partyLeave(k); await save(); return [200, { ok: true }]; }
-    if (p === 'party/msg') { const text = String(b.text || '').trim().slice(0, 300); if (!text) return [400, { error: 'Leere Nachricht.' }]; const m = { id: FR.seq++, from: myName, text, t: now }; pa.msgs = (pa.msgs || []).concat(m).slice(-100); pa.t = now; await save(); return [200, { ok: true, id: m.id }]; }
+    if (p === 'party/msg') { const text = String(b.text || '').trim().slice(0, 300); if (!text) return [400, { error: 'Leere Nachricht.' }]; statBump(me, 'partyMsgs'); const m = { id: FR.seq++, from: myName, text, t: now }; pa.msgs = (pa.msgs || []).concat(m).slice(-100); pa.t = now; await save(); return [200, { ok: true, id: m.id }]; }
     if (p === 'party/play') { // Anführer: alle auf diesen Server holen (die anderen bestätigen im Launcher)
       if (pa.leader !== me) return [403, { error: 'Nur der Anführer kann alle mitnehmen.' }];
       const v = b.srv || {}, val = String(v.v || '').trim().slice(0, 90);
@@ -315,7 +315,7 @@ async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
     const raw = String(b.name || '').trim().toLowerCase(); const ce = COS[raw]; const k = ce ? ce.u : key(raw); const n = await nameOf(k); if (!n) return [404, { error: 'Kein Cloudy-Spieler.' }];
     let level = 0, plus = false; try { const v = PS.view(PDATA, QDATA, k); level = v.level || 0; plus = !!v.plus; } catch {}
     const eq = ce ? ce.equip : (Object.values(COS).find(e => e.u === k) || {}).equip || {};
-    return [200, { ok: true, name: n, mc: ce ? raw : '', level, plus, tags: tagsOf(k).concat(clanOf(k)), equip: eq, playMin: Math.round(((ce || Object.values(COS).find(e => e.u === k) || {}).pt || 0)), friend: u.friends.includes(k), self: k === me, pending: u.out.includes(k), online: online(k), badges: (FR.badges || {})[k] || [] }];
+    return [200, { ok: true, name: n, mc: ce ? raw : '', level, plus, tags: tagsOf(k).concat(clanOf(k)), equip: eq, playMin: Math.round(((ce || Object.values(COS).find(e => e.u === k) || {}).pt || 0)), friend: u.friends.includes(k), self: k === me, pending: u.out.includes(k), online: online(k), badges: (await achView(k, await get(k))).filter(a => a.done).map(a => ({ id: a.id, name: a.name, en: a.en, sym: a.sym })) }];
   }
   // Wolken-Post: kurze Nachricht an einen Freund, die im Spiel als kleine Wolke angeflogen kommt (landet zusätzlich im Direktchat)
   if (p === 'post') {
@@ -323,7 +323,7 @@ async function frHandle(FR, p, me, myName, b, q, nameOf, save) {
     const text = String(b.text || '').trim().slice(0, 200); if (!ok) return [403, { error: 'Wolken-Post geht nur an Freunde.' }]; if (!text) return [400, { error: 'Leere Nachricht.' }];
     FR.post = FR.post || {}; const box = FR.post[ok] = (FR.post[ok] || []).filter(x => now - x.t < 7 * 864e5); if (box.length >= 30) return [429, { error: 'Der Briefkasten ist voll.' }];
     const k = frPair(me, ok), l = FR.msgs[k] = FR.msgs[k] || [], m = { id: FR.seq++, from: myName, fk: me, text: '☁ ' + text, t: now }; l.push(m); if (l.length > 300) l.splice(0, l.length - 300);
-    box.push({ id: m.id, from: myName, text, t: now }); await save(); return [200, { ok: true }];
+    box.push({ id: m.id, from: myName, text, t: now }); statBump(me, 'posts'); await save(); return [200, { ok: true }];
   }
   if (p === 'post/inbox') { FR.post = FR.post || {}; const box = (FR.post[me] || []).filter(x => now - x.t < 7 * 864e5); if (b.take) { delete FR.post[me]; if (box.length) await save(); } return [200, { ok: true, posts: box.slice(0, 30) }]; }
   if (p === 'msg') {
@@ -355,7 +355,15 @@ app.post('/redeem', auth(async (req, res, me) => { // Code einlösen
   if (limited(req.ip)) return res.status(429).json({ error: 'Zu viele Versuche, warte kurz.' });
   if (me.admin) return res.status(400).json({ error: 'Admins brauchen keine Codes.' });
   const code = fk(CODES, req.body.code), c = CODES[code];
-  if (!c) return res.status(404).json({ error: 'Diesen Code gibt es nicht.' });
+  if (!c) { // Creator-Code?
+    const cc = String(req.body.code || '').trim().toUpperCase(), cr = (EXTRA.cc || {})[cc]; if (!cr) return res.status(404).json({ error: 'Diesen Code gibt es nicht.' });
+    EXTRA.ccBy = EXTRA.ccBy || {}; if (cr.by === me.name_key) return res.status(400).json({ error: 'Deinen eigenen Creator-Code kannst du nicht einlösen.' });
+    if (EXTRA.ccBy[me.name_key]) return res.status(409).json({ error: 'Du unterstützt schon einen Creator (' + EXTRA.ccBy[me.name_key] + ').' });
+    EXTRA.ccBy[me.name_key] = cc; cr.sup = [...new Set([...(cr.sup || []), me.name_key])];
+    const u = { ...me }, owned = parse(me.owned, []); let coins = 0; if (cr.coins > 0 && !me.inf_coins) { u.coins = Math.min(1e9, (me.coins == null ? 100 : me.coins) + cr.coins); coins = cr.coins; }
+    const items = cr.item && !owned.includes(cr.item) ? [cr.item] : []; u.owned = [...owned, ...items]; await put(u); await saveExtra(true);
+    return res.json({ ok: true, coins, items, skipped: 0, creator: (await get(cr.by) || {}).name || cr.by });
+  }
   c.used = c.used || [];
   if (c.used.includes(me.name.toLowerCase())) return res.status(409).json({ error: 'Diesen Code hast du schon eingelöst.' });
   if (c.exp && c.exp < Date.now()) return res.status(410).json({ error: 'Dieser Code ist abgelaufen.' });
@@ -382,13 +390,14 @@ app.post('/cos/reg', auth(async (req, res, me) => {
   const own = isAdm(me) ? null : parse(me.owned, []), eq = {}; let plus = false; try { plus = !!PS.view(PDATA, QDATA, me.name_key).plus; } catch {}
   for (const c of ['cape', 'hat', 'wings', 'pet', 'trail', 'winfx', 'foot']) { const v = b.equip && b.equip[c]; if (typeof v === 'string' && /^[a-z0-9-]{3,30}$/.test(v) && v.startsWith(c + '-') && (!own || own.includes(v) || (plus && /^[a-z]+-pg[a-z0-9]+$/.test(v)))) eq[c] = v; } // Cloudy+-Kollektion gehoert Cloudy+-Spielern automatisch
   for (const k of Object.keys(COS)) if (COS[k].u === me.name_key && k !== mc) delete COS[k];
+  { const s0 = stOf(me.name_key), ptm = Math.max(0, Math.min(1e7, Math.round(+b.pt || 0))); if (ptm > (s0.playMin || 0)) { s0.playMin = ptm; saveExtra(); } }
   const dye = {}; if (b.dye && typeof b.dye === 'object') for (const id of Object.values(eq)) { const d = b.dye[id]; if (d && typeof d === 'object') { const c = /^#[0-9a-f]{6}$/i.test(d.c) ? d.c.toLowerCase() : '', g = /^#[0-9a-f]{6}$/i.test(d.g) ? d.g.toLowerCase() : ''; if (c || g) dye[id] = { c, g }; } } // Färbung der angelegten Items (Phase 3)
   COS[mc] = { u: me.name_key, equip: eq, dye, t: Date.now(), pt: Math.max(0, Math.min(1e7, Math.round(+b.pt || 0))) }; /* pt = Spielzeit in Minuten (fuer die Profilkarte) */ await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['cos', JSON.stringify(COS)]); res.json({ ok: true });
 }));
 app.post('/cos/get', auth(async (req, res, me) => {
-  const now = Date.now(), em = (req.body || {}).em; for (const k of Object.keys(COS)) if (COS[k].u === me.name_key) { petTick(me.name_key, COS[k], now); COS[k].t = now; COS[k].em = em && /^emote-[a-z0-9]{1,24}$/.test(String(em.id)) && +em.age >= 0 && +em.age < 15000 ? { id: String(em.id), s: now - Math.round(+em.age) } : null; const sg = (req.body || {}).song; COS[k].song = sg && typeof sg.t === 'string' && sg.t.trim() ? { t: sg.t.trim().slice(0, 60), a: String(sg.a || '').slice(0, 40), u: /^https:\/\/open\.spotify\.com\/[a-z]+\/[A-Za-z0-9]{10,40}$/.test(String(sg.u || '')) ? sg.u : '' } : null; } // Emote: Startzeit auf Server-Uhr // Herzschlag: wer fragt, spielt gerade mit Cloudy (Launcher fragt alle 6 s, solange Minecraft laeuft)
-  const out = {}; for (const n of (Array.isArray((req.body || {}).names) ? req.body.names : []).slice(0, 80)) { const k = String(n).toLowerCase(), e = COS[k]; if (!e) continue; const tg = tagsOf(e.u).concat(TAGLIVE(e.u)), cl = now - (e.t || 0) < 90000 ? 1 : 0; const ea = e.em && now - e.em.s < 15000 ? { id: e.em.id, a: now - e.em.s } : null, sg = cl && e.song ? e.song : null; if (Object.keys(e.equip).length || tg.length || cl || ea) out[k] = { ...e.equip, tg, cl, ...(ea ? { em: ea } : {}), ...(sg ? { song: sg } : {}), ...(e.dye && Object.keys(e.dye).length ? { dye: e.dye } : {}), ...(e.equip.pet ? { plv: petLv(e.u, e.equip.pet) } : {}) }; }
-  res.json({ ok: true, players: out });
+  const now = Date.now(), em = (req.body || {}).em; for (const k of Object.keys(COS)) if (COS[k].u === me.name_key) { petTick(me.name_key, COS[k], now); COS[k].t = now; { const pe = COS[k].em, ne = em && /^emote-[a-z0-9]{1,24}$/.test(String(em.id)) ? { id: String(em.id), s: now - Math.round(+em.age || 0) } : null; if (ne && (!pe || pe.id !== ne.id || Math.abs(pe.s - ne.s) > 3000)) statBump(me.name_key, 'emotes'); } COS[k].em = em && /^emote-[a-z0-9]{1,24}$/.test(String(em.id)) && +em.age >= 0 && +em.age < 15000 ? { id: String(em.id), s: now - Math.round(+em.age) } : null; const sg = (req.body || {}).song; COS[k].song = sg && typeof sg.t === 'string' && sg.t.trim() ? { t: sg.t.trim().slice(0, 60), a: String(sg.a || '').slice(0, 40), u: /^https:\/\/open\.spotify\.com\/[a-z]+\/[A-Za-z0-9]{10,40}$/.test(String(sg.u || '')) ? sg.u : '' } : null; } // Emote: Startzeit auf Server-Uhr // Herzschlag: wer fragt, spielt gerade mit Cloudy (Launcher fragt alle 6 s, solange Minecraft laeuft)
+  const out = {}; for (const n of (Array.isArray((req.body || {}).names) ? req.body.names : []).slice(0, 80)) { const k = String(n).toLowerCase(), e = COS[k]; if (!e) continue; const tg = tagsOf(e.u).concat(TAGLIVE(e.u)), cl = now - (e.t || 0) < 90000 ? 1 : 0; const ea = e.em && now - e.em.s < 15000 ? { id: e.em.id, a: now - e.em.s } : null, sg = cl && e.song ? e.song : null; if (Object.keys(e.equip).length || tg.length || cl || ea) out[k] = { ...e.equip, tg, cl, ...(ea ? { em: ea } : {}), ...(sg ? { song: sg } : {}), ...(e.dye && Object.keys(e.dye).length ? { dye: e.dye } : {}), ...(e.equip.pet ? { plv: petLv(e.u, e.equip.pet) } : {}), ...(badgeOf(e.u) ? { bd: badgeOf(e.u) } : {}) }; }
+  const ev = await evTick(me.name_key, now); res.json({ ok: true, players: out, ev: { on: ev.on, name: ev.name, end: ev.end, start: ev.start } });
 }));
 // ---- Phase 3: Pet-Level (Spielzeit mit dem Pet), tägliche Shop-Rotation ----
 let EXTRA = {}, extraDirty = 0;
@@ -410,6 +419,74 @@ function rotation(now) { // 5 Angebote pro Tag (UTC), für alle gleich: Zufall m
   while (a.length && offers.length < 5) { const it = a.splice(Math.floor(rnd() * a.length), 1)[0], c = it.id.split('-')[0]; if ((cats.get(c) || 0) >= 2) continue; cats.set(c, (cats.get(c) || 0) + 1); offers.push({ id: it.id, off: [20, 25, 30, 35, 40][Math.floor(rnd() * 5)] }); }
   return { day, ends, offers };
 }
+
+// ---- Phase 4: Erfolge + Abzeichen, Login-Streak, Wochenaufgabe, Bonus-Coins, Cloudy+-Monatsitem, Creator-Codes, Cloudy-Events ----
+const ACH = [
+  { id: 'play10', name: 'Erste Schritte', en: 'First steps', d: '10 Stunden gespielt', den: 'Play for 10 hours', sym: '☁', key: 'playMin', goal: 600 },
+  { id: 'play100', name: 'Wolkenwanderer', en: 'Cloud wanderer', d: '100 Stunden gespielt', den: 'Play for 100 hours', sym: '✦', key: 'playMin', goal: 6000 },
+  { id: 'emote50', name: 'Showtalent', en: 'Showtime', d: '50 Emotes gespielt', den: 'Play 50 emotes', sym: '♪', key: 'emotes', goal: 50 },
+  { id: 'pet1', name: 'Tierfreund', en: 'Animal friend', d: 'Dein erstes Pet', den: 'Your first pet', sym: '❤', key: 'pets', goal: 1 },
+  { id: 'petmax', name: 'Pet-Profi', en: 'Pet pro', d: 'Ein Pet auf Stufe 5', den: 'A pet at level 5', sym: '✿', key: 'maxPet', goal: 5 },
+  { id: 'friends5', name: 'Gesellig', en: 'Sociable', d: '5 Freunde', den: '5 friends', sym: '☺', key: 'friends', goal: 5 },
+  { id: 'party20', name: 'Partylöwe', en: 'Party animal', d: '20 Nachrichten im Party-Chat', den: '20 party chat messages', sym: '♫', key: 'partyMsgs', goal: 20 },
+  { id: 'post5', name: 'Wolkenbote', en: 'Cloud courier', d: '5 Wolken-Posts verschickt', den: 'Send 5 cloud mails', sym: '✉', key: 'posts', goal: 5 },
+  { id: 'streak7', name: 'Treue Wolke', en: 'Loyal cloud', d: '7 Tage Login-Streak', den: '7 day login streak', sym: '☀', key: 'best', goal: 7 },
+  { id: 'collect25', name: 'Sammler', en: 'Collector', d: '25 Items besessen', den: 'Own 25 items', sym: '♛', key: 'owned', goal: 25 },
+  { id: 'weekly1', name: 'Wochenheld', en: 'Weekly hero', d: 'Eine Wochenaufgabe geschafft', den: 'Finish a weekly challenge', sym: '⚑', key: 'weekly', goal: 1 },
+  { id: 'event1', name: 'Sternschnuppen-Jäger', en: 'Star chaser', d: 'Bei einem Cloudy-Event dabei', den: 'Join a Cloudy event', sym: '☄', key: 'events', goal: 1 }];
+const WEEKLY = [{ id: 'play', d: 'Spiele 5 Stunden', en: 'Play for 5 hours', key: 'playMin', goal: 300 }, { id: 'emotes', d: 'Spiele 30 Emotes', en: 'Play 30 emotes', key: 'emotes', goal: 30 }, { id: 'posts', d: 'Schicke 5 Wolken-Posts', en: 'Send 5 cloud mails', key: 'posts', goal: 5 }, { id: 'party', d: 'Schreibe 20 Nachrichten im Party-Chat', en: 'Write 20 party chat messages', key: 'partyMsgs', goal: 20 }];
+const WEEKLY_ITEMS = ['trail-runes', 'trail-soul', 'trail-cherry', 'trail-snow']; // gibt es nur als Belohnung der Wochenaufgabe
+const stOf = acct => { EXTRA.stats = EXTRA.stats || {}; return EXTRA.stats[acct] = EXTRA.stats[acct] || { emotes: 0, partyMsgs: 0, posts: 0, streak: 0, best: 0, last: '', weekly: 0, events: 0, playMin: 0 }; };
+function statBump(acct, k, n) { const s = stOf(acct); s[k] = (s[k] || 0) + (n == null ? 1 : n); saveExtra(); }
+const pend = (acct, n) => { EXTRA.pend = EXTRA.pend || {}; EXTRA.pend[acct] = (EXTRA.pend[acct] || 0) + n; saveExtra(true); };
+async function grantItem(acct, id) { const u = await get(acct); if (!u) return false; const o = parse(u.owned, []); if (o.includes(id)) return false; u.owned = [...o, id]; await put(u); return true; }
+async function achView(acct, user) {
+  const s = stOf(acct), owned = user ? parse(user.owned, []) : [], fr = FR.f && FR.f[acct] ? FR.f[acct].friends.length : 0;
+  const pl = Object.keys((EXTRA.petxp || {})[acct] || {}), val = { playMin: s.playMin || 0, emotes: s.emotes || 0, pets: owned.filter(i => /^pet-/.test(i)).length, maxPet: pl.length ? Math.max(...pl.map(p => petLv(acct, p))) : 0, friends: fr, partyMsgs: s.partyMsgs || 0, posts: s.posts || 0, best: s.best || 0, owned: owned.length, weekly: s.weekly || 0, events: s.events || 0 };
+  EXTRA.ach = EXTRA.ach || {}; const got = EXTRA.ach[acct] = EXTRA.ach[acct] || {}; let ch = false;
+  const list = ACH.map(a => { const v = val[a.key] || 0; if (v >= a.goal && !got[a.id]) { got[a.id] = Date.now(); ch = true; } return { ...a, v: Math.min(v, a.goal), done: !!got[a.id], t: got[a.id] || 0 }; });
+  if (ch) saveExtra(true); return list;
+}
+const badgeOf = acct => { const got = (EXTRA.ach || {})[acct] || {}, pick = (EXTRA.badge || {})[acct]; if (pick === '-') return ''; const id = pick && got[pick] ? pick : Object.keys(got).sort((a, b) => got[b] - got[a])[0]; const a = ACH.find(x => x.id === id); return a ? a.sym : ''; };
+const wkKey = t => { const d = new Date(t), day = (d.getUTCDay() + 6) % 7; return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - day)).toISOString().slice(0, 10); };
+function weekly(acct) {
+  const wk = wkKey(Date.now()), n = Math.floor(Date.parse(wk) / (7 * 864e5)), ch = WEEKLY[n % WEEKLY.length], item = WEEKLY_ITEMS[n % WEEKLY_ITEMS.length], s = stOf(acct);
+  EXTRA.wk = EXTRA.wk || {}; let w = EXTRA.wk[acct];
+  if (!w || w.week !== wk) { w = EXTRA.wk[acct] = { week: wk, base: { playMin: s.playMin || 0, emotes: s.emotes || 0, posts: s.posts || 0, partyMsgs: s.partyMsgs || 0 }, done: 0 }; saveExtra(); }
+  const v = Math.max(0, (s[ch.key] || 0) - (w.base[ch.key] || 0));
+  return { week: wk, ends: Date.parse(wk) + 7 * 864e5, id: ch.id, d: ch.d, en: ch.en, goal: ch.goal, v: Math.min(v, ch.goal), item, done: !!w.done, ready: v >= ch.goal && !w.done };
+}
+function evNow(now) { // Cloudy-Event: Admin legt fest, sonst jeden ersten Samstag im Monat 19:00–19:30 UTC (20 Uhr deutscher Winterzeit)
+  const ov = EXTRA.event; if (ov && ov.end > now) return { on: now >= ov.start, start: ov.start, end: ov.end, name: ov.name || 'Sternschnuppen-Nacht', id: 'x' + ov.start };
+  const at = (y, m) => { const d = new Date(Date.UTC(y, m, 1)); const off = (6 - d.getUTCDay() + 7) % 7; return Date.UTC(y, m, 1 + off, 19, 0); };
+  const d = new Date(now); let st = at(d.getUTCFullYear(), d.getUTCMonth()); if (st + 30 * 60e3 <= now) st = at(d.getUTCFullYear(), d.getUTCMonth() + 1);
+  return { on: now >= st && now < st + 30 * 60e3, start: st, end: st + 30 * 60e3, name: 'Sternschnuppen-Nacht', id: 'm' + st };
+}
+async function evTick(acct, now) { const ev = evNow(now); if (!ev.on) return ev; EXTRA.evGot = EXTRA.evGot || {}; const g = EXTRA.evGot[acct] = EXTRA.evGot[acct] || {}; if (!g[ev.id]) { g[ev.id] = now; statBump(acct, 'events'); pend(acct, 150); } return ev; }
+app.post('/p4/state', auth(async (req, res, me) => { // alles für Startseite/Pass: Streak, Woche, Erfolge, Event, Bonus
+  const acct = me.name_key, s = stOf(acct), list = await achView(acct, me);
+  res.json({ ok: true, streak: s.streak || 0, best: s.best || 0, last: s.last || '', weekly: weekly(acct), ach: list, badge: (EXTRA.badge || {})[acct] || '', badgeSym: badgeOf(acct), event: evNow(Date.now()), pend: (EXTRA.pend || {})[acct] || 0, creator: Object.entries(EXTRA.cc || {}).filter(([, c]) => c.by === acct).map(([code, c]) => ({ code, count: (c.sup || []).length })) });
+}));
+app.post('/p4/ping', auth(async (req, res, me) => { // einmal pro Tag: Login-Streak (UTC-Tage) + Bonus-Coins
+  const acct = me.name_key, s = stOf(acct), day = dayKey(Date.now()), y = dayKey(Date.now() - 864e5); let bonus = 0;
+  if (s.last !== day) { s.streak = s.last === y ? (s.streak || 0) + 1 : 1; s.best = Math.max(s.best || 0, s.streak); s.last = day; bonus = 10 * Math.min(s.streak, 7); pend(acct, bonus); saveExtra(true); }
+  const pt = Math.max(0, Math.min(1e7, Math.round(+req.body.pt || 0))); if (pt > (s.playMin || 0)) { s.playMin = pt; saveExtra(); }
+  res.json({ ok: true, streak: s.streak, best: s.best, bonus });
+}));
+app.post('/p4/claim', auth(async (req, res, me) => { // Bonus-Coins abholen (Streak, Event) – der Launcher schreibt sie gut
+  const acct = me.name_key; EXTRA.pend = EXTRA.pend || {}; const c = Math.max(0, Math.min(100000, EXTRA.pend[acct] || 0)); delete EXTRA.pend[acct]; if (c) await saveExtra(true); res.json({ ok: true, coins: c });
+}));
+app.post('/p4/weekly', auth(async (req, res, me) => {
+  const acct = me.name_key, w = weekly(acct); if (!w.ready) return res.status(400).json({ error: w.done ? 'Diese Woche schon abgeholt.' : 'Die Wochenaufgabe ist noch nicht geschafft.' });
+  EXTRA.wk[acct].done = Date.now(); statBump(acct, 'weekly'); pend(acct, 100); const gotItem = await grantItem(acct, w.item); await saveExtra(true); res.json({ ok: true, item: gotItem ? w.item : '', coins: 100 });
+}));
+app.post('/p4/badge', auth(async (req, res, me) => { const id = String(req.body.id || ''); EXTRA.badge = EXTRA.badge || {}; if (id === '-' || id === '' || ((EXTRA.ach || {})[me.name_key] || {})[id]) { EXTRA.badge[me.name_key] = id; await saveExtra(true); return res.json({ ok: true }); } res.status(400).json({ error: 'Dieses Abzeichen hast du noch nicht.' }); }));
+const monKey = t => new Date(t).toISOString().slice(0, 7);
+app.post('/p4/plusmonth', auth(async (req, res, me) => { // Cloudy+-Monatsitem: wer diesen Monat Cloudy+ hat, bekommt es dauerhaft
+  const m = monKey(Date.now()), id = (EXTRA.plusMonth || {})[m] || ''; let plus = false; try { plus = !!PS.view(PDATA, QDATA, me.name_key).plus; } catch {}
+  let got = false; if (id && (plus || isAdm(me))) got = isAdm(me) ? true : (await grantItem(me.name_key, id)) || parse(me.owned, []).includes(id);
+  res.json({ ok: true, month: m, id, got, plus, all: Object.values(EXTRA.plusMonth || {}) });
+}));
 app.post('/shop/rotation', (req, res) => res.json({ ok: true, ...rotation(Date.now()) }));
 // ---- Quests & Cloudy Stars: Fortschritt, Ziele und Belohnungen entscheidet nur der Server ----
 let qT = null; const saveQ = (now) => { clearTimeout(qT); const run = () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['quests', JSON.stringify(QDATA)]); if (now) return run(); qT = setTimeout(() => run().catch(e => console.log('[quests] ' + e.message)), 1500); };
@@ -433,6 +510,18 @@ app.post('/state', auth(async (req, res, me) => { // Shop-Stand des Kontos speic
   await put(u); res.json({ ok: true });
 }));
 const admin = f => auth(async (req, res, me) => { if (!isAdm(me)) return res.status(403).json({ error: 'Nur für Admins.' }); await f(req, res, me); });
+app.post('/admin/plusmonth', admin(async (req, res) => { const id = String(req.body.id || ''); if (id && !/^[a-z]+-[a-z0-9-]{1,30}$/.test(id)) return res.status(400).json({ error: 'Ungueltiges Item.' }); const m = /^\d{4}-\d{2}$/.test(String(req.body.month || '')) ? req.body.month : monKey(Date.now()); EXTRA.plusMonth = EXTRA.plusMonth || {}; if (id) EXTRA.plusMonth[m] = id; else delete EXTRA.plusMonth[m]; await saveExtra(true); res.json({ ok: true, plusMonth: EXTRA.plusMonth }); }));
+app.post('/admin/creator', admin(async (req, res) => { // Creator-Code anlegen/löschen: wer ihn eingibt, bekommt das Item (+ Coins), der Creator sieht die Zahl seiner Unterstützer
+  const code = String(req.body.code || '').trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 20); if (code.length < 3) return res.status(400).json({ error: 'Code: mindestens 3 Zeichen (A–Z, 0–9).' }); EXTRA.cc = EXTRA.cc || {};
+  if (req.body.del) { delete EXTRA.cc[code]; await saveExtra(true); return res.json({ ok: true, list: ccList() }); }
+  if (CODES[fk(CODES, code)]) return res.status(409).json({ error: 'Diesen Code gibt es schon als normalen Code.' });
+  const by = String(req.body.creator || '').trim().toLowerCase(), t = await get(by); if (!t) return res.status(404).json({ error: 'Creator-Konto nicht gefunden.' });
+  const item = String(req.body.item || ''); if (item && !/^[a-z]+-[a-z0-9-]{1,30}$/.test(item)) return res.status(400).json({ error: 'Ungueltiges Item.' });
+  const old = EXTRA.cc[code]; EXTRA.cc[code] = { by, item, coins: Math.max(0, Math.min(5000, Math.round(+req.body.coins || 0))), sup: old ? old.sup || [] : [] }; await saveExtra(true); res.json({ ok: true, list: ccList() });
+}));
+const ccList = () => Object.entries(EXTRA.cc || {}).map(([code, c]) => ({ code, creator: c.by, item: c.item, coins: c.coins, count: (c.sup || []).length }));
+app.post('/admin/creators', admin(async (req, res) => res.json({ ok: true, list: ccList(), plusMonth: EXTRA.plusMonth || {}, event: EXTRA.event || null })));
+app.post('/admin/event', admin(async (req, res) => { const st = +req.body.start, en = +req.body.end; if (req.body.clear) EXTRA.event = null; else { if (!(st > 0 && en > st && en - st <= 6 * 36e5)) return res.status(400).json({ error: 'Start/Ende ungültig (höchstens 6 Stunden).' }); EXTRA.event = { start: st, end: en, name: String(req.body.name || 'Cloudy-Event').slice(0, 40) }; } await saveExtra(true); res.json({ ok: true, event: evNow(Date.now()) }); }));
 app.post('/admin/rotpool', admin(async (req, res) => { const l = Array.isArray(req.body.pool) ? req.body.pool.filter(x => x && /^[a-z]+-[a-z0-9-]{1,30}$/.test(String(x.id))).slice(0, 600).map(x => ({ id: String(x.id) })) : null; if (l && l.length) { EXTRA.rotpool = l; await saveExtra(true); } if (req.body.fix !== undefined) { const f = Array.isArray(req.body.fix) ? req.body.fix.filter(x => x && /^[a-z]+-[a-z0-9-]{1,30}$/.test(String(x.id))).slice(0, 6).map(x => ({ id: String(x.id), off: Math.max(5, Math.min(90, Math.round(+x.off || 25))) })) : null; EXTRA.rotfix = f && f.length ? { day: dayKey(Date.now()), offers: f } : null; await saveExtra(true); } res.json({ ok: true, pool: (EXTRA.rotpool || []).length, ...rotation(Date.now()) }); }));
 const saveLim = () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['lim', JSON.stringify(LIM)]);
 app.post('/limited', auth(async (req, res, me) => res.json({ ok: true, items: limView(me.name_key, isAdm(me)) })));

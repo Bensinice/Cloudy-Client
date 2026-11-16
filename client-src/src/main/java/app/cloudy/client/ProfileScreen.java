@@ -45,7 +45,7 @@ public final class ProfileScreen extends SocialScreen {
 			String fav = ""; if (data.has("equip") && data.get("equip").isJsonObject()) { JsonObject eq = data.getAsJsonObject("equip"); for (String k : new String[] { "wings", "cape", "pet", "hat" }) if (eq.has(k)) { fav = Cosmetics.nameOf(eq.get(k).getAsString()); break; } }
 			Ui.txt(c, "Favourite cosmetic: ", cx + 14, y, 0xFF7F8CB0); Ui.txt(c, fav.isEmpty() ? "-" : fav, cx + 14 + Ui.w("Favourite cosmetic: "), y, 0xFFFFFFFF); y += 14;
 			List<String> badges = new ArrayList<>();
-			for (String k : new String[] { "tags", "badges" }) if (data.has(k) && data.get(k).isJsonArray()) for (JsonElement e : data.getAsJsonArray(k)) { String t = e.isJsonObject() ? str(e.getAsJsonObject(), "name") : e.getAsString(); if (t.startsWith("clan:")) t = "[" + t.split(":")[1] + "]"; if (!t.isEmpty()) badges.add(t.equals("plus") ? "Cloudy+" : t); }
+			for (String k : new String[] { "tags", "badges" }) if (data.has(k) && data.get(k).isJsonArray()) for (JsonElement e : data.getAsJsonArray(k)) { String t = e.isJsonObject() ? (str(e.getAsJsonObject(), "sym") + " " + (str(e.getAsJsonObject(), "en").isEmpty() ? str(e.getAsJsonObject(), "name") : str(e.getAsJsonObject(), "en"))).trim() : e.getAsString(); if (t.startsWith("clan:")) t = "[" + t.split(":")[1] + "]"; if (!t.isEmpty()) badges.add(t.equals("plus") ? "Cloudy+" : t); }
 			Ui.txt(c, "Badges: ", cx + 14, y, 0xFF7F8CB0); int x = cx + 14 + Ui.w("Badges: ");
 			if (badges.isEmpty()) Ui.txt(c, "-", x, y, 0xFFFFFFFF);
 			for (String b : badges) { int w = Ui.w(b) + 8; if (x + w > cx + cw - 12) break; c.fill(x, y - 2, x + w, y + 10, 0x553A6AB0); Ui.txt(c, b, x + 4, y, 0xFFFFE08A); x += w + 4; }

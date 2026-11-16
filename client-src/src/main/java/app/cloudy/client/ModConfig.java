@@ -72,6 +72,8 @@ public final class ModConfig {
 		new Def("footprints", "Footprints", "Social", "Fading footprints in your color behind you and other Cloudy players who wear them"),
 		new Def("winfx", "Win effects", "Social", "Fireworks or a cloud puff when you win a game or beat someone (needs a win effect from the shop)"),
 		new Def("reactivecapes", "Reactive capes", "Social", "3D capes look wet in rain and water, icy in snow and glow in fire and lava"),
+		new Def("badges", "Badges", "Social", "Shows the achievement badge of Cloudy players next to their name (pick yours in the launcher: Cloudy Pass → Achievements)"),
+		new Def("livingsky", "Living skybox", "QoL", "The skybox follows your real time of day and season; shooting stars at night (needs Skybox)"),
 		new Def("songbubble", "Song bubbles", "Social", "Shows the song other Cloudy players listen to above their heads (they have to share it in the launcher). /song <name> opens it"));
 	private static final Map<String, Boolean> on = new HashMap<>();
 	/** Eigene Position je Widget: {x, y} als Anteil der Fenstergroesse (0..1, linke obere Ecke), {s} Groesse. */
@@ -131,7 +133,7 @@ public final class ModConfig {
 
 	private static Path file() { return FabricLoader.getInstance().getConfigDir().resolve("cloudy-mods.json"); }
 
-	public static boolean isOn(String id) { load(); Boolean b = on.get(id); return b == null ? (id.equals("lyrics") || id.equals("sky") || id.equals("freelook") || id.equals("freecam") || id.startsWith("mousefx") || id.equals("itemphysics") || id.equals("lyricscard") || id.equals("playerhead") || id.equals("clouds3d") || id.equals("partychat") || id.equals("post") || id.equals("profilecard") || id.equals("emotecombo") || id.equals("petemote") || id.equals("trails") || id.equals("footprints") || id.equals("winfx") || id.equals("reactivecapes")) : b; } // Lyrics und die volumetrischen Wolken sind standardmaessig an
+	public static boolean isOn(String id) { load(); Boolean b = on.get(id); return b == null ? (id.equals("lyrics") || id.equals("sky") || id.equals("freelook") || id.equals("freecam") || id.startsWith("mousefx") || id.equals("itemphysics") || id.equals("lyricscard") || id.equals("playerhead") || id.equals("clouds3d") || id.equals("partychat") || id.equals("post") || id.equals("profilecard") || id.equals("emotecombo") || id.equals("petemote") || id.equals("trails") || id.equals("footprints") || id.equals("winfx") || id.equals("reactivecapes") || id.equals("badges") || id.equals("livingsky")) : b; } // Lyrics und die volumetrischen Wolken sind standardmaessig an
 	public static void set(String id, boolean v) { load(); on.put(id, v); save(); }
 	public static boolean anyHud() { for (Def d : DEFS) if (d.cat().equals("HUD") && isOn(d.id())) return true; return false; }
 
