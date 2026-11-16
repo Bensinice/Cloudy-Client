@@ -1,5 +1,19 @@
 [
  {
+  "v": "0.9.130",
+  "date": "2026-11-16",
+  "added": [
+   "Outfits: bis zu 5 Kombis aus Umhang, Hut, Flügeln, Schild und Pet speichern – im Shop unter der Vorschau (💾 speichern, Anziehen, Namen anklicken = umbenennen) und im Spiel im Cosmetics-Menü (K): Klick auf 1–5 = anziehen, Shift+Klick = speichern. Taste „Next outfit“ frei belegbar",
+   "Leistungsprofile Akku / Ausgewogen / Max FPS: in den Einstellungen unter „Leistung im Spiel“ oder im Spiel unten im Cloudy-Mods-Menü (H)",
+   "Cinematic-Kamera (F9): weiche Kamerafahrt um deinen Spieler mit Filmbalken",
+   "Fotomodus (F10): freie Kamera ohne HUD, Filter (Warm, Kalt, Traum, Vintage, Nacht), Vignette, Foto mit Enter – die Bilder findest du unter Einstellungen → Screenshots",
+   "HUD-Editor jetzt auch per eigener Taste (frei belegbar)"
+  ],
+  "fixed": [
+   "Cosmetics-Menü im Spiel: die Kategorie-Reiter passen wieder in die Breite (seit den Pets ragten sie hinaus)"
+  ]
+ },
+ {
   "v": "0.9.129",
   "date": "2026-11-15",
   "added": [

@@ -1,10 +1,15 @@
 {
- "key.cloudy.menu": "Open Cloudy menu",
- "key.cloudy.cosmetics": "Open cosmetics menu",
- "key.cloudy.spotify": "Open Cloudify (music & lyrics)",
- "key.cloudy.reload": "Reload resource packs and shaders",
- "category.cloudy": "Cloudy Client",
- "key.cloudy.freelook": "Freelook (hold)",
- "key.cloudy.freecam": "Freecam (toggle)",
- "key.cloudy.freelook_toggle": "Freelook (toggle)"
+  "key.cloudy.menu": "Open Cloudy menu",
+  "key.cloudy.cosmetics": "Open cosmetics menu",
+  "key.cloudy.spotify": "Open Cloudify (music & lyrics)",
+  "key.cloudy.reload": "Reload resource packs and shaders",
+  "category.cloudy": "Cloudy Client",
+  "key.cloudy.freelook": "Freelook (hold)",
+  "key.cloudy.freecam": "Freecam (toggle)",
+  "key.cloudy.freelook_toggle": "Freelook (toggle)",
+  "key.cloudy.emotes": "Emote wheel",
+  "key.cloudy.cinematic": "Cinematic camera",
+  "key.cloudy.photo": "Photo mode",
+  "key.cloudy.outfit": "Next outfit",
+  "key.cloudy.hudedit": "Edit HUD layout"
 }

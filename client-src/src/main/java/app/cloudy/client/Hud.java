@@ -67,6 +67,7 @@ public final class Hud {
 
 	public static void render(DrawContext c, RenderTickCounter tick) {
 		MinecraftClient mc = MinecraftClient.getInstance();
+		if (FreeCam.cinematic()) { int bh = c.getScaledWindowHeight() / 9; c.fill(0, 0, c.getScaledWindowWidth(), bh, 0xFF000000); c.fill(0, c.getScaledWindowHeight() - bh, c.getScaledWindowWidth(), c.getScaledWindowHeight(), 0xFF000000); } // Filmbalken
 		if (mc.player == null || mc.options.hudHidden) return;
 		Theme.load();
 		float s = ModConfig.scale;

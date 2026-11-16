@@ -103,6 +103,13 @@ public class CloudyModsScreen extends Screen {
 			Ui.sp(c, si == 0 ? "PACK STORE" : "SHADER STORE", sx2 + 47, ly + 5, 0xFFFFFFFF);
 			hits.add(new Hit(sx2, ly, 94, 18, () -> openStore(ty)));
 		}
+		{ // Leistungsprofil: Klick wechselt Akku -> Ausgewogen -> Max FPS
+			int qx = px + 338, cur = Perf.current();
+			boolean hq = Ui.in(mx, my, qx, ly, 132, 18) && optId == null;
+			c.fill(qx, ly, qx + 132, ly + 18, hq ? Ui.mix(Theme.accent, 0xFFFFFFFF, 0.2f) : Ui.mix(0xFF1B2A55, Theme.accent, cur == 0 ? 0.35f : cur == 2 ? 0.65f : 0.5f));
+			Ui.sp(c, "PERF: " + Perf.NAMES[cur].toUpperCase(), qx + 66, ly + 5, 0xFFFFFFFF);
+			hits.add(new Hit(qx, ly, 132, 18, () -> Perf.apply((Perf.current() + 1) % 3)));
+		}
 		poll(mx, my);
 	}
 

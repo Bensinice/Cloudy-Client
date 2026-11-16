@@ -580,6 +580,17 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
     paintCoins(); paintCl(); const box = $('#shopItems'); if (!box || !shop) return; regCustom();
     const adm = $('#shopAdmin'); if (adm) adm.style.display = shop.admin ? '' : 'none';
     paint3d(eqView()); loop3(); paintHero(); tryBar();
+    // ---- Outfits (unter der 3D-Vorschau): anziehen, aktuelles Aussehen speichern, umbenennen, löschen ----
+    { const host = $('#shop3d') && $('#shop3d').parentNode; if (host) { let ob = $('#shopOutfits'); if (!ob) { ob = document.createElement('div'); ob.id = 'shopOutfits'; ob.className = 'outfits'; host.appendChild(ob); }
+      const of = shop.outfits || [], eqNow = JSON.stringify(['cape', 'hat', 'wings', 'shield', 'pet'].map(k => shop.equip[k] || ''));
+      ob.innerHTML = `<div class="ofh"><b>👕 Outfits</b><small class="muted">${L('Speichern = dein aktuelles Aussehen')}</small></div><div class="ofl">${[0, 1, 2, 3, 4].map(i => { const o = of[i]; const on = o && JSON.stringify(['cape', 'hat', 'wings', 'shield', 'pet'].map(k => o.equip[k] || '')) === eqNow;
+        return `<div class="ofc ${o ? '' : 'empty'} ${on ? 'on' : ''}"><span class="ofn" ${o ? `data-ofr="${i}" title="${L('Klicken zum Umbenennen')}"` : ''}>${o ? escL(o.name) : L('Leer')}</span><span class="ofb">${o ? `<button class="btn" data-ofw="${i}">${on ? '✓' : L('Anziehen')}</button>` : ''}<button class="btn ghost" data-ofs="${i}" title="${L('Aktuelles Aussehen hier speichern')}">💾</button>${o ? `<button class="btn ghost" data-ofd="${i}" title="${L('Löschen')}">✕</button>` : ''}</span></div>`; }).join('')}</div>`;
+      const after = async r => { await act(Promise.resolve(r || { ok: false })); try { paint3d(eqView()); } catch {} };
+      ob.querySelectorAll('[data-ofw]').forEach(b => b.onclick = async () => after(await window.cloudy.outfitWear(+b.dataset.ofw)));
+      ob.querySelectorAll('[data-ofs]').forEach(b => b.onclick = async () => after(await window.cloudy.outfitSave({ i: +b.dataset.ofs })));
+      ob.querySelectorAll('[data-ofd]').forEach(b => b.onclick = async () => after(await window.cloudy.outfitDelete(+b.dataset.ofd)));
+      ob.querySelectorAll('[data-ofr]').forEach(sp => sp.onclick = () => { const i = +sp.dataset.ofr, inp = document.createElement('input'); inp.className = 'field ofi'; inp.maxLength = 24; inp.value = sp.textContent; sp.replaceWith(inp); inp.focus(); inp.select(); let done = false; const fin = async ok => { if (done) return; done = true; if (ok) after(await window.cloudy.outfitRename({ i, name: inp.value })); else paintShop(); }; inp.onkeydown = e => { if (e.key === 'Enter') fin(true); if (e.key === 'Escape') fin(false); }; inp.onblur = () => fin(true); });
+    } }
     // ---- Navigation: eine Kategorie auf einmal (statt alles untereinander), Suche, Filter ----
     let nav = $('#shopNav'); if (!nav) { nav = document.createElement('div'); nav.id = 'shopNav'; box.parentNode.insertBefore(nav, box); }
     const TABS = [['cape', '🧥 ' + L('Umhänge')], ['wings', '🪽 ' + L('Flügel')], ['hat', '🎩 ' + L('Hüte')], ['shield', '🛡 ' + L('Schilde')], ['pet', '🐾 Pets'], ['emote', '💃 Emotes'], ['bundles', '🎁 ' + L('Pakete')], ['lim', '⏳ Limited'], ['plus', '✨ Cloudy+'], ['skins', '👤 Skins'], ['quests', '🎯 Quests']].concat(shop.admin ? [['owner', '👑 Owner']] : []);

@@ -1,4 +1,12 @@
 {
+  "0.9.130": [
+    "Outfits: save up to 5 looks in the shop and in game (K: click 1–5 = wear, Shift+click = save)",
+    "Performance profiles Battery / Balanced / Max FPS (Settings → Performance in game, or in game in the Cloudy Mods menu)",
+    "Cinematic camera (F9) with film bars",
+    "Photo mode (F10): free camera, filters, vignette, photo with Enter",
+    "HUD editor on its own key",
+    "In-game cosmetics tabs fit again"
+  ],
   "0.9.129": [
     "Emotes: hold B in game for the emote wheel; other Cloudy players see your emote. 10 emotes, Wave and Clap free",
     "Shop tab “Emotes” with animated preview",

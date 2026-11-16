@@ -61,3 +61,12 @@
   const ps = window.paintSub; window.paintSub = p => { if (ps) ps(p); if (p === 'settings') { buildSettingsNav(); filterSettings(); } if (p === 'home') clock(); };
   window.settingsCat = setCat;
 })();
+
+// ---- Leistungsprofil der Mod (Einstellungen -> Spiel) ----
+(function () {
+  const INFO = { 0: 'Akku: volumetrische Wolken, Skybox und Menü-Effekte aus, einfache Lyrics, höchstens 60 FPS, Sichtweite höchstens 8 – ideal für Mac/Laptop unterwegs.', 1: 'Ausgewogen: Wolken und Effekte an, auf dem Mac automatisch sparsamer.', 2: 'Max FPS: alle Zusatzeffekte aus, keine FPS-Grenze – für PvP und schwache PCs.' };
+  const card = document.getElementById('perfCard'); if (!card || !window.cloudy || !window.cloudy.perfProfile) return;
+  const paint = v => { card.querySelectorAll('[data-perf]').forEach(b => b.classList.toggle('on', +b.dataset.perf === v)); const i = card.querySelector('#perfInfo'); if (i) i.textContent = (window.t ? window.t(INFO[v]) : INFO[v]); };
+  window.cloudy.perfProfile().then(paint).catch(() => {});
+  card.querySelectorAll('[data-perf]').forEach(b => b.onclick = async () => paint(await window.cloudy.perfProfile(+b.dataset.perf)));
+})();

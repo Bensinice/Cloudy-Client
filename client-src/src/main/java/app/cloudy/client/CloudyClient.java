@@ -85,6 +85,21 @@ public class CloudyClient implements ClientModInitializer {
 		ClientTickEvents.END_CLIENT_TICK.register(mc -> { try { CosmeticNet.tick(mc); } catch (Throwable ignored) {} });
 		// B: Emote-Rad (gedrueckt halten, Maus auf ein Emote, loslassen – oder klicken)
 		emoteKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.cloudy.emotes", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_B, "category.cloudy"));
+		// F9 Cinematic-Kamera, F10 Fotomodus, Outfit wechseln und HUD-Editor ohne Standardtaste (in den Steuerungs-Einstellungen belegbar)
+		KeyBinding cineKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.cloudy.cinematic", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F9, "category.cloudy"));
+		KeyBinding photoKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.cloudy.photo", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F10, "category.cloudy"));
+		KeyBinding outfitKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.cloudy.outfit", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, "category.cloudy"));
+		KeyBinding hudKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.cloudy.hudedit", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, "category.cloudy"));
+		final boolean[] perfDone = {false};
+		ClientTickEvents.END_CLIENT_TICK.register(mc -> {
+			try {
+				if (!perfDone[0]) { perfDone[0] = true; Perf.fromLauncher(); } // Leistungsprofil aus dem Launcher
+				while (cineKey.wasPressed()) if (mc.currentScreen == null) FreeCam.toggleCinematic(mc);
+				while (photoKey.wasPressed()) if (mc.currentScreen == null) PhotoScreen.open(mc);
+				while (outfitKey.wasPressed()) { String n = Cosmetics.nextOutfit(); if (mc.player != null) mc.player.sendMessage(net.minecraft.text.Text.literal(n != null ? "Outfit: " + n : "No outfits saved yet – Shift+click a slot in the cosmetics menu (K)"), true); }
+				while (hudKey.wasPressed()) if (mc.currentScreen == null) mc.setScreen(new HudEditorScreen(null));
+			} catch (Throwable ignored) {}
+		});
 		ClientTickEvents.END_CLIENT_TICK.register(mc -> {
 			try { Emotes.tick(mc); } catch (Throwable ignored) {}
 			while (emoteKey.wasPressed()) if (mc.currentScreen == null && mc.player != null) mc.setScreen(new EmoteWheelScreen(emoteKey));

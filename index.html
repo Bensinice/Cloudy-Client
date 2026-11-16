@@ -176,6 +176,9 @@
         <label>Spielername (nur offline)<input id="name" class="field" maxlength="16" placeholder="Steve" autocomplete="off"></label>
         <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="msBtn">Bei Microsoft anmelden</button></div>
         <small class="muted">Microsoft abmelden ändert nur, mit welchem Minecraft-Konto du spielst – dein Cloudy-Konto bleibt angemeldet.</small></div></div>
+      <div class="glass set" id="perfCard"><h3>Leistung im Spiel</h3><p class="muted">Ein Klick stellt die Effekte der Cloudy-Mod passend ein. Gilt ab dem nächsten Spielstart, einzelne Schalter kannst du im Spiel (Taste H) trotzdem ändern.</p>
+        <div class="seg perfseg"><button data-perf="0">🔋 Akku</button><button data-perf="1">⚖️ Ausgewogen</button><button data-perf="2">🚀 Max FPS</button></div>
+        <small class="muted" id="perfInfo"></small></div>
       <div class="glass set"><h3>Spiel</h3>
         <label>Leistungs-Preset<select id="preset" class="field"><option value="">Eigene Einstellungen</option><option value="lowend">Low-End-PC</option><option value="performance">Leistung</option><option value="balanced">Ausgewogen</option><option value="quality">Qualität</option></select></label>
         <label>Arbeitsspeicher<div class="ram"><input id="ram" type="range" min="2" max="16" value="4"><b id="ramv">4 GB</b></div></label>

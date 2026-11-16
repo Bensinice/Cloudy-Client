@@ -219,6 +219,8 @@ ipcMain.handle('gateDelete', async (_e, code, revoke) => (srvCfg() && adminOnly(
 // Entzogener Zugang: Der Launcher fragt beim Start und danach alle 5 Minuten, ob sein Zugang noch gilt (nur bei erreichbarem Server; alte Installationen ohne Zugangs-Kennung bleiben freigeschaltet)
 async function gateCheck() { try { const c = cfgPatch({}); if (!srvCfg() || c.gateOk !== true || !c.gateTok) return; const r = await srvCall('/gatecheck', { grant: c.gateTok }).catch(() => null); if (r && r.ok === false) { cfgPatch({ gateOk: false, gateTok: '' }); send('gateRevoked'); } } catch {} }
 setTimeout(gateCheck, 6000); setInterval(gateCheck, 300000);
+// Leistungsprofil fuer die Mod (0 Akku, 1 Ausgewogen, 2 Max FPS): landet in cloudy.cfg, die Mod uebernimmt es beim naechsten Start
+ipcMain.handle('perfProfile', (_e, v) => { if (v === 0 || v === 1 || v === 2) cfgPatch({ perfProfile: v }); const c = cfgPatch({}); return typeof c.perfProfile === 'number' ? c.perfProfile : 1; });
 ipcMain.handle('toolTex', (_e, v) => { if (typeof v === 'boolean') cfgPatch({ toolTex: v }); return cfgPatch({}).toolTex !== false; });
 ipcMain.handle('texCfg', (_e, v) => { const ok = ['toolTex', 'texTotem', 'texInv', 'texTheme']; if (v && typeof v === 'object') { const p = {}; for (const k of ok) if (typeof v[k] === 'boolean') p[k] = v[k]; if (typeof v.texColor === 'string' && /^#[0-9a-f]{6}$/i.test(v.texColor)) p.texColor = v.texColor; cfgPatch(p); } const c = cfgPatch({}); return { toolTex: c.toolTex !== false, texTotem: c.texTotem !== false, texInv: c.texInv !== false, texTheme: c.texTheme !== false, texColor: c.texColor || '#4aa3ff' }; });
 ipcMain.handle('clientCfg', (_e, p) => { if (!p || typeof p !== 'object') return false; const o = {}; if (Array.isArray(p.widgets)) o.widgets = p.widgets.slice(0, 12).map(w => ({ text: String(w.text || '').slice(0, 80), x: Math.max(0, Math.min(100, +w.x || 0)), on: w.on !== false })); if (typeof p.top === 'boolean') o.top = p.top; if (Number.isFinite(+p.lyricsSize)) o.lyricsSize = Math.max(50, Math.min(200, Math.round(+p.lyricsSize))); if (Number.isInteger(p.lyricsFont) && p.lyricsFont >= 0 && p.lyricsFont <= 9) o.lyricsFont = p.lyricsFont; cfgPatch(o); return true; });
@@ -873,7 +875,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.129'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.130'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1820,7 +1822,7 @@ function shopOf(u) {
   if (u.coins == null) u.coins = 100; if (!u.owned) u.owned = []; if (!u.equip) u.equip = {};
   for (const k of Object.keys(u.equip)) { const c = CATALOG.find(x => x.id === u.equip[k]); if (!c || (!u.admin && ((c.owner) || (c.plus && plusKnown(u) && !plusSt.on)))) delete u.equip[k]; } // entfernte Items (alte Z4-/Galaxie-Sachen) nicht mehr ausrüsten
   const nm = shopNames(), pr = shopPrices();
-  return { limited: limList.map(l => { const c = CATALOG.find(x => x.id === l.id); return { ...l, name: nm[l.id] || (c && c.name) || l.id, cat: c ? c.cat : l.id.split('-')[0] }; }), catalog: CATALOG.filter(c => (!c.owner || u.admin) && (!c.gone || (u.equip || {})[c.cat] === c.id) && (u.admin || !shopHidden.includes(c.id) || (u.owned || []).includes(c.id)) && (u.admin || !limList.some(l => l.id === c.id) || (u.owned || []).includes(c.id))).map(c => { const o = nm[c.id] ? { ...c, name: nm[c.id] } : { ...c }; o.price = priceOf(c, pr); if (shopHidden.includes(c.id)) o.hidden = true; return o; }), admin: !!u.admin, bundles: bundlesView(u), coins: u.admin || u.infCoins ? null : u.coins, owned: ownedEff(u), plus: plusOn(u), equip: u.equip, dailyReady: !u.admin && !u.infCoins && u.daily !== todayStr() };
+  return { limited: limList.map(l => { const c = CATALOG.find(x => x.id === l.id); return { ...l, name: nm[l.id] || (c && c.name) || l.id, cat: c ? c.cat : l.id.split('-')[0] }; }), catalog: CATALOG.filter(c => (!c.owner || u.admin) && (!c.gone || (u.equip || {})[c.cat] === c.id) && (u.admin || !shopHidden.includes(c.id) || (u.owned || []).includes(c.id)) && (u.admin || !limList.some(l => l.id === c.id) || (u.owned || []).includes(c.id))).map(c => { const o = nm[c.id] ? { ...c, name: nm[c.id] } : { ...c }; o.price = priceOf(c, pr); if (shopHidden.includes(c.id)) o.hidden = true; return o; }), admin: !!u.admin, bundles: bundlesView(u), coins: u.admin || u.infCoins ? null : u.coins, owned: ownedEff(u), plus: plusOn(u), equip: u.equip, outfits: outfitsOf(u), dailyReady: !u.admin && !u.infCoins && u.daily !== todayStr() };
 }
 const plusSt = { user: '', on: false, t: 0 }; // Cloudy+-Stand des angemeldeten Kontos (vom Server, kurz zwischengespeichert)
 async function plusFresh(force) {
@@ -1834,19 +1836,29 @@ const plusKnown = u => plusSt.user && u && plusSt.user.toLowerCase() === String(
 const plusOn = u => plusKnown(u) && plusSt.on;
 // Besitz inkl. automatischer Items: Admin/Owner hat alles, Cloudy+ hat die Cloudy+-Kollektion (nicht kaufbar, kommt mit dem Abo)
 const ownedEff = u => u.admin ? CATALOG.map(c => c.id) : [...new Set([...(u.owned || []).filter(id => !(CATALOG.find(c => c.id === id) || {}).owner), ...(plusOn(u) ? CATALOG.filter(c => c.plus).map(c => c.id) : []), ...CATALOG.filter(c => c.cat === 'emote' && !c.price).map(c => c.id)])];
+// Outfits: bis zu 5 gespeicherte Kombis (Umhang, Hut, Flügel, Schild, Pet) – im Launcher und im Spiel (Cosmetics-Menü, Shift+Klick speichert)
+const OUTFIT_SLOTS = ['cape', 'hat', 'wings', 'shield', 'pet'];
+function outfitsOf(u) {
+  const a = Array.isArray(u.outfits) ? u.outfits.slice(0, 5) : [];
+  return a.map((o, i) => o && typeof o === 'object' ? { name: String(o.name || `Outfit ${i + 1}`).slice(0, 24), equip: Object.fromEntries(OUTFIT_SLOTS.filter(s => o.equip && typeof o.equip[s] === 'string' && CATALOG.some(c => c.id === o.equip[s] && c.cat === s)).map(s => [s, o.equip[s]])) } : null);
+}
+ipcMain.handle('outfitSave', (_e, { i, name }) => shopWrite(u => { i = Math.max(0, Math.min(4, i | 0)); const a = outfitsOf(u); while (a.length <= i) a.push(null); const eq = {}; for (const s of OUTFIT_SLOTS) if (u.equip && u.equip[s]) eq[s] = u.equip[s]; a[i] = { name: String(name || (a[i] && a[i].name) || `Outfit ${i + 1}`).slice(0, 24), equip: eq }; u.outfits = a; return { ok: true }; }));
+ipcMain.handle('outfitWear', (_e, i) => shopWrite(u => { const o = outfitsOf(u)[i | 0]; if (!o) return { ok: false, error: 'Dieser Outfit-Platz ist leer.' }; const own = ownedEff(u); for (const s of OUTFIT_SLOTS) { const id = o.equip[s]; if (id && own.includes(id)) u.equip[s] = id; else delete u.equip[s]; } return { ok: true }; }));
+ipcMain.handle('outfitRename', (_e, { i, name }) => shopWrite(u => { const a = outfitsOf(u); if (!a[i | 0]) return { ok: false }; a[i | 0].name = String(name || '').trim().slice(0, 24) || `Outfit ${(i | 0) + 1}`; u.outfits = a; return { ok: true }; }));
+ipcMain.handle('outfitDelete', (_e, i) => shopWrite(u => { const a = outfitsOf(u); if (a[i | 0] !== undefined) a[i | 0] = null; u.outfits = a; return { ok: true }; }));
 function syncCosFromGame() { // im Spiel geänderte Auswahl (Cosmetics-Menü) in dein Konto übernehmen
   try {
     const g = JSON.parse(fs.readFileSync(cosFile, 'utf8')), a = readAuth(), u = currentUser && a.users[currentUser.toLowerCase()]; if (!u || g.user !== u.name) return;
     const own = ownedEff(u), ok = id => CATALOG.some(c => c.id === id) && own.includes(id), eq = {};
     for (const [cat, id] of Object.entries(g.equip || {})) if (ok(id) && CATALOG.find(c => c.id === id).cat === cat) eq[cat] = id;
-    u.equip = eq; saveAuth(a); srvPush(u);
+    u.equip = eq; if (Array.isArray(g.outfits)) u.outfits = outfitsOf({ outfits: g.outfits }); saveAuth(a); srvPush(u);
   } catch {}
 }
 function equipNow() { try { shopWrite(() => ({}), true); return JSON.parse(fs.readFileSync(cosFile, 'utf8')).equip || {}; } catch { return {}; } }
 function shopWrite(fn, quiet) { // Änderung am Konto des angemeldeten Nutzers speichern und neuen Stand zurückgeben
   const a = readAuth(), u = currentUser && a.users[currentUser.toLowerCase()]; if (!u) return { ok: false, error: 'Bitte zuerst bei Cloudy anmelden.' };
   shopOf(u); const r = fn(u) || {}; saveAuth(a); if (!quiet) srvPush(u);
-  try { fs.writeFileSync(cosFile, JSON.stringify({ user: u.name, equip: u.equip || {}, owned: ownedEff(u) })); } catch {}
+  try { fs.writeFileSync(cosFile, JSON.stringify({ user: u.name, equip: u.equip || {}, owned: ownedEff(u), outfits: outfitsOf(u) })); } catch {}
   return { ...r, ok: r.ok !== false, state: shopOf(u) };
 }
 ipcMain.handle('limClaim', async (_e, { id, code }) => { // Limited-Item holen: Der Server zaehlt den Bestand und prueft den Code, der Launcher zieht die Coins ab

@@ -10,6 +10,7 @@ import java.util.List;
 
 /** Cloudy Cosmetics: Kategorien, Item-Karten und eine drehbare 3D-Vorschau mit deinem Skin. Hover = anprobieren, Klick = anziehen/ausziehen. */
 public class CosmeticsScreen extends Screen {
+	private int outfitHover = -1;
 	private static final String[] CATS = {"hat", "wings", "shield", "cape", "pet"}, LABEL = {"Hats", "Wings", "Shields", "Capes", "Pets"};
 	private static final String[] TAB_ICON = {"hat-g3crown", "wings-g7azure", "shield-sun", "cape-g7storm", "pet-cat"};
 	private static int tab = 0;
@@ -59,8 +60,21 @@ public class CosmeticsScreen extends Screen {
 		c.fill(px, py, px + pw, py + 2, Theme.accent);
 		Ui.txt(c, "CLOUDY", px + 12, py + 11, Theme.accent);
 		Ui.txt(c, "Cosmetics", px + 12 + Ui.w("CLOUDY") + 6, py + 11, 0xFFFFFFFF);
+		// Outfits: Klick = anziehen, Shift+Klick = aktuelle Auswahl speichern
+		outfitHover = -1;
+		{ int ox = px + 12 + Ui.w("CLOUDY Cosmetics") + 18;
+			Ui.txt(c, "Outfits", ox, py + 11, 0xFF8794B8); ox += Ui.w("Outfits") + 6;
+			for (int i = 0; i < Cosmetics.OUTFITS && ox + 18 < prevX; i++) {
+				final int ii = i; boolean has = Cosmetics.outfitName(i) != null, hv = Ui.in(mx, my, ox, py + 7, 18, 16);
+				if (hv) outfitHover = i;
+				c.fill(ox, py + 7, ox + 18, py + 23, hv ? Theme.accent : has ? Ui.mix(0xFF1B2A55, Theme.accent, 0.6f) : 0x88202C4C);
+				Ui.ctr(c, String.valueOf(i + 1), ox + 9, py + 11, has || hv ? 0xFFFFFFFF : 0xFF8794B8);
+				hits.add(new Hit(ox, py + 7, 18, 16, () -> { if (hasShiftDown()) Cosmetics.saveOutfit(ii); else Cosmetics.wearOutfit(ii); }));
+				ox += 21;
+			}
+		}
 		// Kategorien
-		int tw = (prevX - px - 24 - 3 * 4) / 4, tx = px + 12, ty = py + 28;
+		int tw = (prevX - px - 24 - (CATS.length - 1) * 4) / CATS.length, tx = px + 12, ty = py + 28;
 		for (int i = 0; i < CATS.length; i++) {
 			final int ii = i;
 			boolean on = i == tab, hv = Ui.in(mx, my, tx, ty, tw, 24);
@@ -117,7 +131,7 @@ public class CosmeticsScreen extends Screen {
 		String line = hover != null ? Cosmetics.nameOf(hover) : "Drag to rotate";
 		Ui.ctr(c, line, pcx, py + ph - 36 - 14, hover != null ? 0xFFFFFFFF : 0xFF8794B8);
 		// Fusszeile
-		String info = hover != null && !owned(hover) ? "Buy this item in the Cloudy launcher shop" : Cosmetics.owned.isEmpty() ? "Buy cosmetics in the Cloudy launcher shop" : CATS[tab].equals("cape") ? "Capes apply on the next game start" : "Click an item to equip or unequip it";
+		String info = outfitHover >= 0 ? (Cosmetics.outfitName(outfitHover) != null ? Cosmetics.outfitName(outfitHover) + ": click = wear, Shift+click = save your current look here" : "Empty outfit slot: Shift+click = save your current look here") : hover != null && !owned(hover) ? "Buy this item in the Cloudy launcher shop" : Cosmetics.owned.isEmpty() ? "Buy cosmetics in the Cloudy launcher shop" : CATS[tab].equals("cape") ? "Capes apply on the next game start" : "Click an item to equip or unequip it";
 		Ui.txt(c, Ui.trim(info, prevX - px - 100), px + 12, py + ph - 20, 0xFF9FB0D8);
 		int bw = 64, by2 = py + ph - 26;
 		boolean hvD = Ui.in(mx, my, px + pw - bw - 8, by2, bw, 18), hvU = Ui.in(mx, my, px + pw - bw * 2 - 14, by2, bw + 6, 18);

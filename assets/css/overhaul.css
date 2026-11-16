@@ -61,3 +61,19 @@ html.os-darwin .hero .orb,html.os-darwin .hero .chip,html.os-darwin .wc,html.os-
 html.os-darwin .glass .glass{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 html.os-darwin .sky .blob{animation:none!important} /* weiche Farbflecken bleiben, werden aber nicht mehr jedes Bild neu weichgezeichnet */
 html.perf.os-darwin .glass{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+
+/* Outfits unter der Shop-Vorschau */
+.outfits{margin-top:10px;display:grid;gap:6px}
+.outfits .ofh{display:flex;align-items:baseline;gap:8px;justify-content:space-between}
+.outfits .ofh small{font-size:11.5px}
+.outfits .ofl{display:grid;gap:5px}
+.outfits .ofc{display:flex;align-items:center;gap:6px;justify-content:space-between;padding:5px 6px 5px 10px;border-radius:12px;background:var(--chip);border:1px solid var(--gb)}
+.outfits .ofc.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.outfits .ofc.empty .ofn{opacity:.55;font-style:italic}
+.outfits .ofn{font-weight:700;font-size:13px;cursor:text;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.outfits .ofb{display:flex;gap:4px}
+.outfits .ofb .btn{height:28px;padding:0 10px;font-size:12px;min-width:0}
+.outfits .ofi{height:28px;max-width:130px;font-size:13px}
+.perfseg{display:inline-flex;flex-wrap:wrap;gap:4px;padding:4px;border-radius:14px;background:var(--chip);border:1px solid var(--gb);margin:4px 0 6px}
+.perfseg button{height:34px;padding:0 14px;border:0;border-radius:10px;background:transparent;font:inherit;font-weight:700;color:var(--ink2);cursor:pointer}
+.perfseg button.on{background:var(--accent);color:#fff}

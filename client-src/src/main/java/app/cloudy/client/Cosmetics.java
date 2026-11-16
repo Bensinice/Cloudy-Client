@@ -86,6 +86,50 @@ public final class Cosmetics {
 		return switch (cat) { case "hat" -> hat; case "wings" -> wings; case "shield" -> shield; case "pet" -> pet; default -> cape; };
 	}
 
+	// ---------------------------------------------------------------- Outfits (bis zu 5 gespeicherte Kombis, gemeinsam mit dem Launcher)
+	public static final String[] SLOTS = {"cape", "hat", "wings", "shield", "pet"};
+	public static final int OUTFITS = 5;
+	private static int lastOutfit = -1;
+
+	private static JsonObject readRoot() throws Exception { String p = System.getProperty("cloudy.cosmetics", ""); if (p.isEmpty()) return null; return JsonParser.parseString(Files.readString(Path.of(p))).getAsJsonObject(); }
+	private static com.google.gson.JsonArray outfitArr(JsonObject root) { return root != null && root.has("outfits") && root.get("outfits").isJsonArray() ? root.getAsJsonArray("outfits") : new com.google.gson.JsonArray(); }
+
+	/** Name des Outfits i oder null, wenn der Platz leer ist. */
+	public static String outfitName(int i) {
+		try { var a = outfitArr(readRoot()); if (i < a.size() && a.get(i).isJsonObject()) { JsonObject o = a.get(i).getAsJsonObject(); return o.has("name") ? o.get("name").getAsString() : "Outfit " + (i + 1); } } catch (Exception ignored) {}
+		return null;
+	}
+
+	/** Outfit i anziehen (nur Items, die man besitzt). */
+	public static boolean wearOutfit(int i) {
+		try {
+			var a = outfitArr(readRoot()); if (i >= a.size() || !a.get(i).isJsonObject()) return false;
+			JsonObject eq = a.get(i).getAsJsonObject().has("equip") ? a.get(i).getAsJsonObject().getAsJsonObject("equip") : new JsonObject();
+			for (String s : SLOTS) { String id = str(eq, s); set(s, id != null && (owned.contains(id) || owned.isEmpty()) ? id : null); }
+			lastOutfit = i; return true;
+		} catch (Exception e) { return false; }
+	}
+
+	/** Aktuelle Auswahl als Outfit i speichern. */
+	public static void saveOutfit(int i) {
+		try {
+			String p = System.getProperty("cloudy.cosmetics", ""); if (p.isEmpty()) return;
+			JsonObject root = readRoot(); var a = outfitArr(root);
+			while (a.size() <= i) a.add(com.google.gson.JsonNull.INSTANCE);
+			JsonObject o = new JsonObject(), eq = new JsonObject();
+			String old = outfitName(i); o.addProperty("name", old != null ? old : "Outfit " + (i + 1));
+			for (String s : SLOTS) { String id = get(s); if (id != null) eq.addProperty(s, id); }
+			o.add("equip", eq); a.set(i, o); root.add("outfits", a);
+			Files.writeString(Path.of(p), root.toString());
+		} catch (Exception e) { CloudyClient.LOG.warn("Outfit nicht gespeichert", e); }
+	}
+
+	/** Taste: naechstes gespeichertes Outfit. */
+	public static String nextOutfit() {
+		for (int k = 1; k <= OUTFITS; k++) { int i = (lastOutfit + k) % OUTFITS; if (outfitName(i) != null && wearOutfit(i)) return outfitName(i); }
+		return null;
+	}
+
 	/** Setzt ein Item (oder null = ablegen) und speichert die Auswahl, damit der Launcher sie übernimmt. */
 	public static void set(String cat, String id) {
 		switch (cat) { case "hat" -> hat = id; case "wings" -> wings = id; case "shield" -> shield = id; case "pet" -> pet = id; default -> cape = id; }
