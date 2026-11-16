@@ -35,9 +35,12 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 			}
 			net.minecraft.client.network.ClientPlayerEntity me = net.minecraft.client.MinecraftClient.getInstance().player;
 			boolean ely = me != null && me.getEquippedStack(net.minecraft.entity.EquipmentSlot.CHEST).isOf(net.minecraft.item.Items.ELYTRA); // mit Elytra: Fluegel und Umhang ausblenden (sonst doppelt)
+			// Kamera hinter dir stoesst an Boden/Wand (z. B. beim Nach-oben-Schauen in F5): dann ist sie direkt am Umhang und er verdeckt riesig das Bild -> Umhang so lange ausblenden
+			boolean camNear = false;
+			try { var mcx = net.minecraft.client.MinecraftClient.getInstance(); if (me != null && !mcx.options.getPerspective().isFirstPerson() && !FreeCam.isFree()) { var cp = mcx.gameRenderer.getCamera().getPos(); camNear = cp.squaredDistanceTo(me.getX(), me.getY() + 1.1, me.getZ()) < 1.9 * 1.9; } } catch (Throwable ignored) {}
 			DYE = Cosmetics::dye; REACT = Effects.react(me);
 			try {
-			drawAll(matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV, m.head, m.body, m.leftArm, m.rightArm, Cosmetics.hat, ely ? null : Cosmetics.wings, Cosmetics.shield, held, !ely && ZZ4.handles(Cosmetics.cape) ? Cosmetics.cape : null, limbDistance);
+			drawAll(matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV, m.head, m.body, m.leftArm, m.rightArm, Cosmetics.hat, ely ? null : Cosmetics.wings, Cosmetics.shield, held, !ely && !camNear && ZZ4.handles(Cosmetics.cape) ? Cosmetics.cape : null, limbDistance);
 			drawPet(matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV, m.body, m.leftArm, Cosmetics.pet, state.skinTextures != null ? state.skinTextures.texture() : null, Emotes.progress(null));
 			} finally { DYE = null; REACT = null; }
 		} catch (RuntimeException e) { /* Cosmetics duerfen das Spiel nie zum Absturz bringen */ }

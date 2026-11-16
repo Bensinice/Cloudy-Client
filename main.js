@@ -875,7 +875,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.134'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.135'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -2560,10 +2560,53 @@ ipcMain.handle('webTitle', async (_e, u) => { // Titel eines YouTube-/SoundCloud
 try { app.whenReady().then(() => { // YouTube verlangt für eingebettete Player einen Referer (sonst „Fehler 153“)
   require('electron').session.defaultSession.webRequest.onBeforeSendHeaders({ urls: ['https://www.youtube.com/embed/*', 'https://www.youtube-nocookie.com/embed/*'] }, (d, cb) => { const h = { ...d.requestHeaders }; if (!h.Referer) h.Referer = 'https://cloudy-launcher.app/'; cb({ requestHeaders: h }); });
 }); } catch {}
+// ---- YouTube Music für die Lyrics ----
+// Windows: Windows-Mediensteuerung (dieselbe Anzeige wie im Lautstärke-Popup) – Titel, Künstler und genaue Position von YouTube Music im Browser oder der YouTube-Music-App.
+// Mac: Titel aus dem YouTube-Music-Tab in Chrome/Safari (macOS gibt die Mediensteuerung nicht frei) – Position wird ab Liedwechsel geschätzt.
+const ytmOn = () => cfgPatch({}).ytmOn !== false;
+ipcMain.handle('ytmCfg', (_e, v) => { if (typeof v === 'boolean') { cfgPatch({ ytmOn: v }); if (!v) ytmStop(); } return ytmOn(); });
+const ytm = { proc: null, last: null, used: 0, macT: '', macStart: 0, macAt: 0, macV: null };
+const YTM_PS = `$ErrorActionPreference='SilentlyContinue'
+Add-Type -AssemblyName System.Runtime.WindowsRuntime
+$at=([System.WindowsRuntimeSystemExtensions].GetMethods()|?{$_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation\`1'})[0]
+function AW($o,[Type]$t){$k=$at.MakeGenericMethod($t).Invoke($null,@($o));$k.Wait(-1)|Out-Null;$k.Result}
+[Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager,Windows.Media.Control,ContentType=WindowsRuntime]|Out-Null
+$m=AW ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager]::RequestAsync()) ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager])
+while($true){$o=@();foreach($x in $m.GetSessions()){$p=AW ($x.TryGetMediaPropertiesAsync()) ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties]);$t=$x.GetTimelineProperties();$o+=[pscustomobject]@{app=$x.SourceAppUserModelId;title=$p.Title;artist=$p.Artist;st=[string]$x.GetPlaybackInfo().PlaybackStatus;pos=[long]$t.Position.TotalMilliseconds;dur=[long]$t.EndTime.TotalMilliseconds;upd=$t.LastUpdatedTime.ToUnixTimeMilliseconds()}};[Console]::Out.WriteLine((ConvertTo-Json -Compress -InputObject @($o)));[Console]::Out.Flush();Start-Sleep -Milliseconds 1500}`;
+function ytmStop() { try { if (ytm.proc) ytm.proc.kill(); } catch {} ytm.proc = null; ytm.last = null; }
+function ytmStart() {
+  if (ytm.proc || !IS_WIN) return;
+  try {
+    const p = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', Buffer.from(YTM_PS, 'utf16le').toString('base64')], { windowsHide: true }); ytm.proc = p; let buf = '';
+    p.stdout.on('data', d => { buf += d; let i; while ((i = buf.indexOf('\n')) >= 0) { const l = buf.slice(0, i).trim(); buf = buf.slice(i + 1); if (l.startsWith('[') || l.startsWith('{')) { try { const a = JSON.parse(l); ytm.last = { t: Date.now(), list: Array.isArray(a) ? a : [a] }; } catch {} } } });
+    p.on('exit', () => { if (ytm.proc === p) ytm.proc = null; }); p.on('error', () => { if (ytm.proc === p) ytm.proc = null; });
+  } catch { ytm.proc = null; }
+}
+setInterval(() => { if (ytm.proc && Date.now() - ytm.used > 30000) ytmStop(); }, 10000); // nur laufen lassen, solange Lyrics gebraucht werden
+async function ytmNow() {
+  if (!ytmOn()) return null; ytm.used = Date.now();
+  if (IS_WIN) {
+    ytmStart(); const L0 = ytm.last && Date.now() - ytm.last.t < 6000 ? ytm.last.list : []; if (!L0.length) return null;
+    const ok = L0.filter(x => x && x.title && !/spotify/i.test(x.app || ''));
+    const pick = ok.find(x => /youtube|ytmusic|th-ch|pear/i.test(x.app || '') && x.st === 'Playing') || ok.find(x => x.st === 'Playing') || ok.find(x => /youtube|ytmusic|th-ch|pear/i.test(x.app || '')); if (!pick) return null;
+    const c = cleanTrack(pick.title, pick.artist), playing = pick.st === 'Playing', pos = Math.max(0, (+pick.pos || 0) + (playing && pick.upd > 0 ? Math.max(0, Math.min(15000, Date.now() - pick.upd)) : 0));
+    return { running: true, playing, title: c.title, artist: c.artist, posMs: pick.dur > 0 || pick.pos > 0 ? pos : undefined, durMs: +pick.dur || 0, src: 'ytm' };
+  }
+  if (IS_MAC) {
+    if (Date.now() - ytm.macAt < 2500) return ytm.macV; ytm.macAt = Date.now();
+    const sc = 'set r to ""\nif application "Google Chrome" is running then\ntell application "Google Chrome"\nrepeat with w in windows\nrepeat with t in tabs of w\nif URL of t contains "music.youtube.com" then set r to title of t\nend repeat\nend repeat\nend tell\nend if\nif r is "" and application "Safari" is running then\ntell application "Safari"\nrepeat with w in windows\nrepeat with t in tabs of w\nif URL of t contains "music.youtube.com" then set r to name of t\nend repeat\nend repeat\nend tell\nend if\nreturn r';
+    const t = await new Promise(res => execFile('osascript', ['-e', sc], { timeout: 4000 }, (e, out) => res(e ? '' : String(out).trim())));
+    const raw = t.replace(/\s*[-–]\s*YouTube Music\s*$/i, '').trim(); if (!raw || /^YouTube Music$/i.test(t)) { ytm.macV = null; return null; }
+    if (raw !== ytm.macT) { ytm.macT = raw; ytm.macStart = Date.now() - 1500; }
+    const c = cleanTrack(raw, ''); ytm.macV = { running: true, playing: true, title: c.title, artist: c.artist, posMs: undefined, src: 'ytm' }; return ytm.macV;
+  }
+  return null;
+}
 const mediaNowP = async () => {
   try { const v = await spotifyNow(); if (v && v.playing) return v; } catch {}
   const l = await mediaNowLocal();
   if (l && l.playing) return l;
+  try { const y = await ytmNow(); if (y && y.playing) return y; } catch {}
   if (webNow && webNow.playing && Date.now() - webNow.t < 6000 && webNow.title) return { running: true, playing: true, title: webNow.title, artist: webNow.artist, posMs: webNow.posMs + (Date.now() - webNow.t), src: 'web' };
   return l;
 };

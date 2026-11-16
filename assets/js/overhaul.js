@@ -78,3 +78,14 @@
   window.cloudy.socCfg().then(paint).catch(() => {});
   b.onchange = async () => paint(await window.cloudy.socCfg({ bridge: b.checked })); s.onchange = async () => paint(await window.cloudy.socCfg({ song: s.checked }));
 })();
+
+// ---- YouTube Music als Lyrics-Quelle (Einstellungen -> Sound & Musik) ----
+(function () {
+  if (!window.cloudy || !window.cloudy.ytmCfg) return;
+  const grid = document.querySelector('#p-settings .sgrid'); if (!grid || document.getElementById('ytmCard')) return;
+  const mac = document.documentElement.classList.contains('os-darwin');
+  const c = document.createElement('div'); c.id = 'ytmCard'; c.className = 'glass set';
+  c.innerHTML = `<h3>YouTube Music (Lyrics)</h3><p class="muted">${mac ? 'Läuft YouTube Music in Chrome oder Safari, zeigt Cloudy die Lyrics dazu im Spiel. Auf dem Mac kennt Cloudy nur den Titel – die Zeilen laufen ab Liedbeginn mit und können etwas versetzt sein. Beim ersten Mal fragt macOS, ob Cloudy Chrome/Safari steuern darf.' : 'Läuft YouTube Music im Browser oder als App, zeigt Cloudy die Lyrics dazu im Spiel – mit genauer Position, wie bei Spotify. Spotify hat Vorrang, wenn beides spielt.'}</p><label class="cb"><input type="checkbox" id="ytmOn"> YouTube Music für Lyrics verwenden</label>`;
+  grid.appendChild(c);
+  const cb = c.querySelector('#ytmOn'); window.cloudy.ytmCfg().then(v => cb.checked = !!v).catch(() => {}); cb.onchange = async () => { cb.checked = !!(await window.cloudy.ytmCfg(cb.checked)); };
+})();

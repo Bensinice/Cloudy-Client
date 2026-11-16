@@ -1,5 +1,8 @@
 // Cloudy – zusätzliche englische Texte (werden von i18n.js zu EN dazugemischt). Format: "Deutsch": "English"
 window.CLOUDY_EN_EXTRA = {
+  "YouTube Music für Lyrics verwenden": "Use YouTube Music for lyrics",
+  "Läuft YouTube Music im Browser oder als App, zeigt Cloudy die Lyrics dazu im Spiel – mit genauer Position, wie bei Spotify. Spotify hat Vorrang, wenn beides spielt.": "When YouTube Music plays in your browser or app, Cloudy shows its lyrics in game – with exact timing, like Spotify. Spotify wins if both play.",
+  "Läuft YouTube Music in Chrome oder Safari, zeigt Cloudy die Lyrics dazu im Spiel. Auf dem Mac kennt Cloudy nur den Titel – die Zeilen laufen ab Liedbeginn mit und können etwas versetzt sein. Beim ersten Mal fragt macOS, ob Cloudy Chrome/Safari steuern darf.": "When YouTube Music plays in Chrome or Safari, Cloudy shows its lyrics in game. On Mac Cloudy only knows the title – lines run from the song start and can be slightly off. The first time, macOS asks whether Cloudy may control Chrome/Safari.",
   "Server-Browser": "Server browser",
   "Live-Spielerzahl, Ping und Version der bekannten Server – und wo deine Freunde gerade spielen. Die meisten großen Server verlangen ein echtes Minecraft-Konto.": "Live player count, ping and version of well-known servers – and where your friends are playing. Most big servers need a real Minecraft account.",
   "Alle": "All",

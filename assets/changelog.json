@@ -1,5 +1,15 @@
 [
  {
+  "v": "0.9.135",
+  "date": "2026-11-16",
+  "added": [
+   "Lyrics auch mit YouTube Music (Einstellungen → YouTube Music): unter Windows mit genauer Position aus Browser oder App, auf dem Mac aus dem Chrome-/Safari-Tab"
+  ],
+  "fixed": [
+   "3D-Umhang verdeckte beim Nach-oben-Schauen in F5 das Bild: Stößt die Kamera hinter dir an Boden oder Wand, wird der Umhang kurz ausgeblendet"
+  ]
+ },
+ {
   "v": "0.9.134",
   "date": "2026-11-16",
   "added": [

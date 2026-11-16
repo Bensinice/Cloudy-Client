@@ -1,4 +1,8 @@
 {
+  "0.9.135": [
+    "Lyrics with YouTube Music (Windows: exact timing; Mac: from the Chrome/Safari tab)",
+    "Fixed: 3D cape covering the view when looking up in F5"
+  ],
   "0.9.134": [
     "Server browser: live players, ping, version, server icon and “friends there”, with filters, search and sorting"
   ],
