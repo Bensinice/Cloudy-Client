@@ -22,6 +22,7 @@ public final class Perf {
 		ModConfig.set("clouds3d", fx);
 		ModConfig.set("skybox", fx && ModConfig.isOn("skybox"));
 		ModConfig.set("mousefx", p != 2 && p != 0);
+		ModConfig.set("trails", p != 2); ModConfig.set("footprints", p != 2); // Max FPS: keine Spuren
 		if (p != 1) ModConfig.lyricsReveal = 1; // ganze Zeile: weniger Einzelteile
 		ModConfig.perfProfile = p;
 		ModConfig.save();

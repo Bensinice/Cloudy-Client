@@ -266,7 +266,16 @@ public final class GLB {
 	}
 
 	// ---------------------------------------------------------------- Zeichnen
-	private static void drawPart(MatrixStack ms, VertexConsumer vc, int light, int ov, Part p, float tx, float ty, float tz, float yaw) { drawPart(ms, vc, light, ov, p, tx, ty, tz, yaw, 255, 255, 255, 255); }
+	// Faerben (Phase 3): Hauptfarbe fuer alle Teile, Leuchtfarbe fuer leuchtende Teile (Name enthaelt glow/emis/light/aura/flame/fire/gem/crystal/eye) – gleiche Regel wie glb3d.js
+	private static int tMain = -1, tGlow = -1; private static boolean tFull;
+	public static void tint(int main, int glow, boolean full) { tMain = main; tGlow = glow; tFull = full; }
+	public static void untint() { tMain = -1; tGlow = -1; tFull = false; }
+	private static boolean glowPart(Part p) { String n = p.name == null ? "" : p.name.toLowerCase(java.util.Locale.ROOT); return n.contains("glow") || n.contains("emis") || n.contains("light") || n.contains("aura") || n.contains("flame") || n.contains("fire") || n.contains("gem") || n.contains("crystal") || n.contains("eye"); }
+	private static void drawPart(MatrixStack ms, VertexConsumer vc, int light, int ov, Part p, float tx, float ty, float tz, float yaw) {
+		int c = -1; boolean full = tFull;
+		if ((tMain != -1 || tGlow != -1) && !p.skin) { boolean g = glowPart(p); c = g ? tGlow : tMain; if (g && tGlow != -1) full = true; }
+		drawPart(ms, vc, full ? 0xF000F0 : light, ov, p, tx, ty, tz, yaw, c == -1 ? 255 : (c >> 16) & 255, c == -1 ? 255 : (c >> 8) & 255, c == -1 ? 255 : c & 255, 255);
+	}
 
 	private static void drawPart(MatrixStack ms, VertexConsumer vc, int light, int ov, Part p, float tx, float ty, float tz, float yaw, int cr, int cg, int cb, int ca) {
 		float du = 0f, dv = 0f;

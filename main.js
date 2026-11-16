@@ -875,7 +875,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.131'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.132'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1154,7 +1154,7 @@ const cosWant = path.join(app.getPath('userData'), 'cloudy-cos-want.json'), cosO
 let cosMc = '', cosTimer = null, cosLast = '';
 const cosLogFile = path.join(app.getPath('userData'), 'cloudy-cos.log');
 function cosLog(m) { try { let t = ''; try { t = fs.readFileSync(cosLogFile, 'utf8'); } catch {} t = (t + new Date().toISOString().slice(11, 19) + ' ' + m + '\n').split('\n').slice(-80).join('\n'); fs.writeFileSync(cosLogFile, t); } catch {} }
-function cosReg(u) { try { if (!cosMc || !srvCfg() || !srvTok || !u) return; const eq = {}; for (const c of ['cape', 'hat', 'wings', 'pet']) if (u.equip && u.equip[c]) eq[c] = u.equip[c]; const k = cosMc + JSON.stringify(eq); if (k === cosLast) return; cosLast = k; srvCall('/cos/reg', { mc: cosMc, equip: eq, pt: Math.round((play.ms || 0) / 60000) }, srvTok).then(r => { cosLog('reg ' + cosMc + ' ' + JSON.stringify(eq) + ' -> ' + (r && (r.status || '') + ' ' + (r.ok === true ? 'ok' : (r.error || 'fehlgeschlagen')))); if (!r || r.ok !== true) cosLast = ''; }).catch(e => { cosLog('reg Fehler: ' + (e && e.message)); cosLast = ''; }); } catch {} }
+function cosReg(u) { try { if (!cosMc || !srvCfg() || !srvTok || !u) return; const eq = {}; for (const c of ['cape', 'hat', 'wings', 'pet', 'trail', 'winfx', 'foot']) if (u.equip && u.equip[c]) eq[c] = u.equip[c]; const dy = {}; { const all = dyeOf(u); for (const id of Object.values(eq)) if (all[id]) dy[id] = all[id]; } const k = cosMc + JSON.stringify(eq) + JSON.stringify(dy); if (k === cosLast) return; cosLast = k; srvCall('/cos/reg', { mc: cosMc, equip: eq, dye: dy, pt: Math.round((play.ms || 0) / 60000) }, srvTok).then(r => { cosLog('reg ' + cosMc + ' ' + JSON.stringify(eq) + ' -> ' + (r && (r.status || '') + ' ' + (r.ok === true ? 'ok' : (r.error || 'fehlgeschlagen')))); if (!r || r.ok !== true) cosLast = ''; }).catch(e => { cosLog('reg Fehler: ' + (e && e.message)); cosLast = ''; }); } catch {} }
 // ---- Brücke Spiel <-> Konto-Server: Party-Chat, Wolken-Post, Profilkarte, Freund hinzufügen (Mod schreibt Aufträge in coswant, Antworten kommen über cosoth) ----
 const socCfg = () => { const c = cfgPatch({}); return { song: c.socSong === true, bridge: c.socBridge !== false }; };
 ipcMain.handle('socCfg', (_e, v) => { if (v && typeof v === 'object') { const p = {}; if (typeof v.song === 'boolean') p.socSong = v.song; if (typeof v.bridge === 'boolean') p.socBridge = v.bridge; cfgPatch(p); } return socCfg(); });
@@ -1546,6 +1546,14 @@ const CATALOG = [
   { id: 'emote-floss', cat: 'emote', name: 'Floss', price: 600 },
   { id: 'emote-highfive', cat: 'emote', name: 'High-Five (Combo)', price: 0 },
   { id: 'emote-duet', cat: 'emote', name: 'Tanz-Duett (Combo)', price: 500 },
+  { id: 'trail-stars', cat: 'trail', name: 'Sternenspur', price: 450 },
+  { id: 'trail-clouds', cat: 'trail', name: 'Wolkenspur', price: 350 },
+  { id: 'trail-gold', cat: 'trail', name: 'Gold-Funken', price: 600 },
+  { id: 'trail-hearts', cat: 'trail', name: 'Herzchen-Spur', price: 450 },
+  { id: 'trail-notes', cat: 'trail', name: 'Notenspur', price: 500 },
+  { id: 'winfx-firework', cat: 'winfx', name: 'Sieg-Feuerwerk', price: 500 },
+  { id: 'winfx-cloud', cat: 'winfx', name: 'Wolken-Puff', price: 300 },
+  { id: 'foot-prints', cat: 'foot', name: 'Fußspuren', price: 300 },
   { id: 'pet-chameleon', cat: 'pet', name: 'Chamäleon', price: 1500 },
   { id: 'pet-devil', cat: 'pet', name: 'Kleiner Teufel', price: 1500 },
   { id: 'pet-cat', cat: 'pet', name: 'Tigerkatze', price: 1200 },
@@ -1853,11 +1861,35 @@ const bundlesView = u => Object.entries(shopBundles()).map(([id, b]) => { const 
 const shopPrices = () => { try { const j = JSON.parse(fs.readFileSync(pricesFile, 'utf8')); return j && typeof j === 'object' ? j : {}; } catch { return {}; } };
 const priceOf = (c, pr) => Number.isFinite(+pr[c.id]) && pr[c.id] !== null ? Math.max(0, Math.round(+pr[c.id])) : c.price;
 const shopNames = () => { try { const j = JSON.parse(fs.readFileSync(namesFile, 'utf8')); return j && typeof j === 'object' ? j : {}; } catch { return {}; } };
+// ---- Phase 3: tägliche Shop-Rotation (Server bestimmt), Pet-Level, Färben ----
+const rotSt = { day: '', ends: 0, offers: [], t: 0 };
+async function rotFresh(u) {
+  if (!srvCfg() || Date.now() - rotSt.t < 10 * 60e3 && rotSt.ends > Date.now()) return;
+  try {
+    if (u && u.admin && srvTok) { const pool = CATALOG.filter(c => !c.gone && !c.plus && !c.owner && c.price > 0 && !shopHidden.includes(c.id) && !limList.some(l => l.id === c.id)).map(c => ({ id: c.id })); srvCall('/admin/rotpool', { pool }, srvTok).catch(() => {}); } // Admin-Launcher hält die Auswahl des Servers aktuell
+    const r = await Promise.race([srvCall('/shop/rotation', {}, srvTok || undefined), new Promise(res => setTimeout(() => res(null), 4000))]);
+    if (r && r.ok) { rotSt.day = r.day; rotSt.ends = +r.ends || 0; rotSt.offers = (r.offers || []).filter(o => CATALOG.some(c => c.id === o.id)); rotSt.t = Date.now(); }
+  } catch {}
+}
+const rotOff = id => { if (rotSt.ends < Date.now()) return 0; const o = rotSt.offers.find(x => x.id === id); return o ? Math.max(0, Math.min(90, +o.off || 0)) : 0; };
+const dealPrice = (c, pr) => { const p = priceOf(c, pr), off = rotOff(c.id); return off ? Math.round(p * (100 - off) / 100) : p; };
+const petSt = { user: '', pets: {}, steps: [0, 60, 300, 900, 2400], t: 0 };
+async function petFresh() { if (!currentUser || !srvCfg() || !srvTok || (petSt.user === currentUser && Date.now() - petSt.t < 60000)) return; try { const r = await srvCall('/cos/petxp', {}, srvTok); if (r && r.ok) { petSt.user = currentUser; petSt.pets = r.pets || {}; petSt.steps = r.steps || petSt.steps; petSt.t = Date.now(); } } catch {} }
+const petLvOf = id => (petSt.user === currentUser && petSt.pets[id] && petSt.pets[id].lv) || 1;
+const PET_COLORS = [[2, '#9fd3ff', 'Frost'], [3, '#ff9ecf', 'Rosé'], [4, '#8cf5c8', 'Mint'], [5, '#ffd24a', 'Gold']]; // Farben, die Pets mit der Stufe freischalten
+const dyeable = id => /^(cape|hat|wings)-g\d/.test(id) || id === 'foot-prints' || /^pet-/.test(id);
+const dyeOf = u => { const d = u && u.dye && typeof u.dye === 'object' ? u.dye : {}; const own = ownedEff(u); const out = {}; for (const [id, v] of Object.entries(d)) if (own.includes(id) && dyeable(id) && v) { if (/^pet-/.test(id)) { const ok = PET_COLORS.find(p => p[1] === v.c && petLvOf(id) >= p[0]); if (ok) out[id] = { c: v.c, g: '' }; } else out[id] = { c: /^#[0-9a-f]{6}$/.test(v.c) ? v.c : '', g: /^#[0-9a-f]{6}$/.test(v.g) ? v.g : '' }; } return out; };
+ipcMain.handle('shopDye', (_e, { id, c, g }) => shopWrite(u => {
+  id = String(id || ''); if (!dyeable(id)) return { ok: false, error: 'Dieses Item kann man nicht färben.' }; if (!ownedEff(u).includes(id)) return { ok: false, error: 'Das besitzt du noch nicht.' };
+  const hx = v => /^#[0-9a-fA-F]{6}$/.test(String(v || '')) ? String(v).toLowerCase() : ''; u.dye = u.dye && typeof u.dye === 'object' ? u.dye : {};
+  if (/^pet-/.test(id) && hx(c) && !PET_COLORS.some(p => p[1] === hx(c) && petLvOf(id) >= p[0])) return { ok: false, error: 'Diese Farbe schaltet dein Pet erst mit einer höheren Stufe frei.' };
+  if (!hx(c) && !hx(g)) delete u.dye[id]; else u.dye[id] = { c: hx(c), g: hx(g) }; return { ok: true };
+}));
 function shopOf(u) {
   if (u.coins == null) u.coins = 100; if (!u.owned) u.owned = []; if (!u.equip) u.equip = {};
   for (const k of Object.keys(u.equip)) { const c = CATALOG.find(x => x.id === u.equip[k]); if (!c || (!u.admin && ((c.owner) || (c.plus && plusKnown(u) && !plusSt.on)))) delete u.equip[k]; } // entfernte Items (alte Z4-/Galaxie-Sachen) nicht mehr ausrüsten
   const nm = shopNames(), pr = shopPrices();
-  return { limited: limList.map(l => { const c = CATALOG.find(x => x.id === l.id); return { ...l, name: nm[l.id] || (c && c.name) || l.id, cat: c ? c.cat : l.id.split('-')[0] }; }), catalog: CATALOG.filter(c => (!c.owner || u.admin) && (!c.gone || (u.equip || {})[c.cat] === c.id) && (u.admin || !shopHidden.includes(c.id) || (u.owned || []).includes(c.id)) && (u.admin || !limList.some(l => l.id === c.id) || (u.owned || []).includes(c.id))).map(c => { const o = nm[c.id] ? { ...c, name: nm[c.id] } : { ...c }; o.price = priceOf(c, pr); if (shopHidden.includes(c.id)) o.hidden = true; return o; }), admin: !!u.admin, bundles: bundlesView(u), coins: u.admin || u.infCoins ? null : u.coins, owned: ownedEff(u), plus: plusOn(u), equip: u.equip, outfits: outfitsOf(u), dailyReady: !u.admin && !u.infCoins && u.daily !== todayStr() };
+  return { limited: limList.map(l => { const c = CATALOG.find(x => x.id === l.id); return { ...l, name: nm[l.id] || (c && c.name) || l.id, cat: c ? c.cat : l.id.split('-')[0] }; }), catalog: CATALOG.filter(c => (!c.owner || u.admin) && (!c.gone || (u.equip || {})[c.cat] === c.id) && (u.admin || !shopHidden.includes(c.id) || (u.owned || []).includes(c.id)) && (u.admin || !limList.some(l => l.id === c.id) || (u.owned || []).includes(c.id))).map(c => { const o = nm[c.id] ? { ...c, name: nm[c.id] } : { ...c }; o.price = priceOf(c, pr); const off = rotOff(c.id); if (off) { o.was = o.price; o.price = dealPrice(c, pr); o.deal = off; } if (dyeable(c.id)) o.dye = true; if (shopHidden.includes(c.id)) o.hidden = true; return o; }), admin: !!u.admin, bundles: bundlesView(u), coins: u.admin || u.infCoins ? null : u.coins, owned: ownedEff(u), plus: plusOn(u), equip: u.equip, outfits: outfitsOf(u), dye: dyeOf(u), rotation: rotSt.ends > Date.now() ? { ends: rotSt.ends, offers: rotSt.offers } : null, pets: Object.fromEntries(CATALOG.filter(c => c.cat === 'pet').map(c => [c.id, { lv: petLvOf(c.id), min: (petSt.user === currentUser && petSt.pets[c.id] && petSt.pets[c.id].min) || 0 }])), petSteps: petSt.steps, petColors: PET_COLORS, dailyReady: !u.admin && !u.infCoins && u.daily !== todayStr() };
 }
 const plusSt = { user: '', on: false, t: 0 }; // Cloudy+-Stand des angemeldeten Kontos (vom Server, kurz zwischengespeichert)
 async function plusFresh(force) {
@@ -1893,7 +1925,7 @@ function equipNow() { try { shopWrite(() => ({}), true); return JSON.parse(fs.re
 function shopWrite(fn, quiet) { // Änderung am Konto des angemeldeten Nutzers speichern und neuen Stand zurückgeben
   const a = readAuth(), u = currentUser && a.users[currentUser.toLowerCase()]; if (!u) return { ok: false, error: 'Bitte zuerst bei Cloudy anmelden.' };
   shopOf(u); const r = fn(u) || {}; saveAuth(a); if (!quiet) srvPush(u);
-  try { fs.writeFileSync(cosFile, JSON.stringify({ user: u.name, equip: u.equip || {}, owned: ownedEff(u), outfits: outfitsOf(u) })); } catch {}
+  try { fs.writeFileSync(cosFile, JSON.stringify({ user: u.name, equip: u.equip || {}, owned: ownedEff(u), outfits: outfitsOf(u), dye: dyeOf(u), petlv: Object.fromEntries(Object.keys(petSt.user === currentUser ? petSt.pets : {}).map(k => [k, petLvOf(k)])) })); } catch {}
   return { ...r, ok: r.ok !== false, state: shopOf(u) };
 }
 ipcMain.handle('limClaim', async (_e, { id, code }) => { // Limited-Item holen: Der Server zaehlt den Bestand und prueft den Code, der Launcher zieht die Coins ab
@@ -1948,7 +1980,7 @@ ipcMain.handle('shopRename', async (_e, { id, name }) => {
     try { fs.writeFileSync(namesFile, JSON.stringify(nm, null, 1)); } catch { return { ok: false, error: 'Name konnte nicht gespeichert werden.' }; }
   });
 });
-ipcMain.handle('shopState', async () => { await srvPull(); await limPull(); await plusFresh(); const r = shopWrite(() => ({}), true); return r.ok ? r.state : null; });
+ipcMain.handle('shopState', async () => { await srvPull(); await limPull(); await plusFresh(); { const a0 = readAuth(), u0 = currentUser && a0.users[currentUser.toLowerCase()]; await Promise.all([rotFresh(u0), petFresh()]); } const r = shopWrite(() => ({}), true); return r.ok ? r.state : null; });
 { const _ih = ipcMain.handle.bind(ipcMain); ipcMain.handle = (n, f) => _ih(n, ['shopBuy', 'shopEquip', 'shopDaily', 'shopGift', 'limClaim'].includes(n) ? async (...a) => { await srvPull(); return f(...a); } : f); } // vor jeder Shop-Aktion den neuesten Stand vom Server holen (Geschenke, Admin-Änderungen)
 async function plusNow() { // hat das angemeldete Konto gerade Cloudy+? (Server entscheidet)
   if (!currentUser || !srvCfg() || !srvTok) return false;
@@ -1966,7 +1998,7 @@ const shopBuyWrite = id => shopWrite(u => {
   if (u.admin) return {}; if (u.owned.includes(id)) return { ok: false, error: 'Das besitzt du schon.' };
   if (shopHidden.includes(id)) return { ok: false, error: 'Dieses Item ist nicht mehr erhältlich.' };
   if (limList.some(l => l.id === id)) return { ok: false, error: 'Dieses Item gibt es nur als Limited-Item (ganz unten im Shop).' };
-  const price = priceOf(it, shopPrices());
+  const price = dealPrice(it, shopPrices()); // Tagesangebot: Rabatt vom Server
   if (u.infCoins) { u.owned.push(id); return {}; } // Tester: unendlich Coins, nichts wird abgezogen
   if (u.coins < price) return { ok: false, error: `Dir fehlen ${price - u.coins} CC.` };
   u.coins -= price; u.owned.push(id);
@@ -2742,6 +2774,7 @@ ipcMain.handle('launch', async (_e, { username, version, type, ram, server, fabr
   if (off) { server = null; cheats = false; syncOpts = false; username = /^[A-Za-z0-9_]{3,16}$/.test(String(username || '')) ? username : 'Player'; }
   if (safe >= 1) { fabric = false; perf = false; clientMods = []; cheats = false; } // Sicherer Start: reines Vanilla, ohne Mods und ohne Client
   if (safe >= 2) { syncOpts = false; preset = ''; ram = Math.min(+ram || 4, 4); jvm = (jvm || '').split(/\s+/).filter(a => a && !/ZGC|Shenandoah|Parallel/.test(a)).concat('-XX:+UseG1GC').join(' '); }
+  if (!safe && !off) await Promise.race([petFresh(), new Promise(r => setTimeout(r, 2500))]); // Pet-Stufen fuer die Mod
   const cosEq = (safe || off) ? {} : equipNow(); // gekaufte Cosmetics, die im Spiel gezeigt werden sollen
   if (cosEq.cape && !clientMods.includes('cape')) clientMods = [...clientMods, 'cape'];
   const snd = safe ? { enabled: false } : sndWriteActive(); const sndOn = !!(snd.enabled && snd.ingame); // Creamkeys

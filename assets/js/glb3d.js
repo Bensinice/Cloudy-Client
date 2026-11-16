@@ -180,6 +180,8 @@
     return Promise.all(['hat', 'cape', 'wings', 'pet'].filter(k => eq[k] && MODELS[eq[k]]).map(async k => {
       const m = await clone(eq[k]), P = PLACE[k], g = new THREE.Group(); g.add(m); g.position.set(P.pos[0], P.pos[1], P.pos[2]); g.scale.setScalar(P.scale);
       (k === 'hat' ? parts.head : parts.body).add(g);
+      { const dy = eq.dye && eq.dye[eq[k]]; if (dy && (dy.c || dy.g)) { const GL = /glow|emis|light|aura|flame|fire|gem|crystal|eye/i; // Färben (Phase 3): Hauptfarbe auf alles, Leuchtfarbe auf leuchtende Teile – gleiche Regel wie GLB.java
+        m.traverse(x => { if (!x.isMesh || !x.material) return; let n = ''; for (let q = x; q && q !== m; q = q.parent) n += ' ' + (q.name || ''); if (/skin/i.test(n)) return; const glow = GL.test(n), col = glow ? dy.g : dy.c; if (!col) return; x.material = x.material.clone(); x.material.color = new THREE.Color(col); if (glow && x.material.emissive) { x.material.emissive = new THREE.Color(col); x.material.emissiveIntensity = 0.45; } }); } }
       if (k === 'pet') { // Pets: Befestigung aus extras.cloudyPet, Bewegung je Teil (cloudyMove), Mini-Ich mit dem Skin des Spielers (cloudySkin)
         let mt = 'float', off = [0, 0, 0]; m.traverse(o => { const c = o.userData && o.userData.cloudyPet; if (c) { if (c.mount) mt = c.mount; if (c.offset) off = c.offset; } });
         if (mt === 'shoulder') g.position.set(PLACE.shoulder.pos[0], PLACE.shoulder.pos[1], PLACE.shoulder.pos[2]);

@@ -42,6 +42,13 @@ import java.util.zip.Deflater;
  */
 public final class Cosmetics {
 	public static String cape, hat, wings, shield, pet;
+	public static String trail, winfx, foot; // Phase 3 (im Launcher-Shop ausgeruestet)
+	private static final java.util.Map<String, int[]> DYE = new java.util.HashMap<>(); // Item -> {Hauptfarbe, Leuchtfarbe} (-1 = keine)
+	private static final java.util.Map<String, Integer> PETLV = new java.util.HashMap<>();
+	public static int[] dye(String id) { return id == null ? null : DYE.get(id); }
+	public static int dyeMain(String id, int def) { int[] d = DYE.get(id); return d != null && d[0] != -1 ? d[0] : def; }
+	public static int petLv(String id) { Integer v = id == null ? null : PETLV.get(id); return v == null ? 1 : v; }
+	static int hex(String v) { try { return v != null && v.matches("#[0-9a-fA-F]{6}") ? Integer.parseInt(v.substring(1), 16) : -1; } catch (Exception e) { return -1; } }
 	public static final List<String> owned = new ArrayList<>();
 	public static ModelPart model;
 	public static final Identifier TEX = Identifier.of("cloudy-client", "cosmetics");
@@ -61,6 +68,9 @@ public final class Cosmetics {
 			wings = str(eq, "wings");
 			shield = str(eq, "shield");
 			pet = str(eq, "pet");
+			trail = Effects.known(str(eq, "trail")) ? str(eq, "trail") : null; winfx = Effects.known(str(eq, "winfx")) ? str(eq, "winfx") : null; foot = Effects.known(str(eq, "foot")) ? str(eq, "foot") : null;
+			try { if (root.has("dye") && root.get("dye").isJsonObject()) for (var en : root.getAsJsonObject("dye").entrySet()) { JsonObject d = en.getValue().getAsJsonObject(); DYE.put(en.getKey(), new int[] { hex(str(d, "c")), hex(str(d, "g")) }); } } catch (Exception ignored) {}
+			try { if (root.has("petlv") && root.get("petlv").isJsonObject()) for (var en : root.getAsJsonObject("petlv").entrySet()) PETLV.put(en.getKey(), en.getValue().getAsInt()); } catch (Exception ignored) {}
 			if (root.has("owned")) for (var e : root.getAsJsonArray("owned")) owned.add(e.getAsString());
 			LivingEntityFeatureRendererRegistrationCallback.EVENT.register((entityType, entityRenderer, helper, context) -> {
 				if (entityRenderer instanceof PlayerEntityRenderer pr) helper.register(new CosmeticFeature(pr));

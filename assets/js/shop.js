@@ -67,6 +67,14 @@
     'emote-floss': { b: [0, 0, 16, 16], c: ['#ff8ad8', '#2a1030'], img: 'assets/cosmetics3d/icons/emote-floss.png', ar: 1, glb: true },
     'emote-highfive': { b: [0, 0, 16, 16], c: ['#ff8ad8', '#2a1030'], img: 'assets/cosmetics3d/icons/emote-highfive.png', ar: 1, glb: true },
     'emote-duet': { b: [0, 0, 16, 16], c: ['#ff8ad8', '#2a1030'], img: 'assets/cosmetics3d/icons/emote-duet.png', ar: 1, glb: true },
+    'trail-stars': { b: [0, 0, 16, 16], c: ['#ffe08a', '#2a2040'], img: 'assets/cosmetics3d/icons/trail-stars.png', ar: 1, glb: true },
+    'trail-clouds': { b: [0, 0, 16, 16], c: ['#ffe08a', '#2a2040'], img: 'assets/cosmetics3d/icons/trail-clouds.png', ar: 1, glb: true },
+    'trail-gold': { b: [0, 0, 16, 16], c: ['#ffe08a', '#2a2040'], img: 'assets/cosmetics3d/icons/trail-gold.png', ar: 1, glb: true },
+    'trail-hearts': { b: [0, 0, 16, 16], c: ['#ffe08a', '#2a2040'], img: 'assets/cosmetics3d/icons/trail-hearts.png', ar: 1, glb: true },
+    'trail-notes': { b: [0, 0, 16, 16], c: ['#ffe08a', '#2a2040'], img: 'assets/cosmetics3d/icons/trail-notes.png', ar: 1, glb: true },
+    'winfx-firework': { b: [0, 0, 16, 16], c: ['#ffe08a', '#2a2040'], img: 'assets/cosmetics3d/icons/winfx-firework.png', ar: 1, glb: true },
+    'winfx-cloud': { b: [0, 0, 16, 16], c: ['#ffe08a', '#2a2040'], img: 'assets/cosmetics3d/icons/winfx-cloud.png', ar: 1, glb: true },
+    'foot-prints': { b: [0, 0, 16, 16], c: ['#ffe08a', '#2a2040'], img: 'assets/cosmetics3d/icons/foot-prints.png', ar: 1, glb: true },
     'pet-chameleon': { b: [0, 0, 16, 16], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/pet-chameleon.png', ar: 1, glb: true },
     'pet-devil': { b: [0, 0, 16, 16], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/pet-devil.png', ar: 1, glb: true },
     'pet-cat': { b: [0, 0, 16, 16], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/pet-cat.png', ar: 1, glb: true },
@@ -247,6 +255,7 @@
   }
   function itemCanvas(id, x0, y0, w, h, k) { const c = document.createElement('canvas'); c.width = w * k; c.height = h * k; const g = c.getContext('2d'); g.setTransform(k, 0, 0, k, -x0 * k, -y0 * k); drawItem(g, id); return c.toDataURL(); }
   function paint3d(equip, hostSel) {
+    if (!hostSel) try { fxOverlay(equip); } catch {}
     const host = $(hostSel || '#shop3d'); if (!host) return; host.innerHTML = ''; const rig = document.createElement('div'); rig.className = 'rig3'; host.appendChild(rig);
     const sk = skins.find(x => x.id === sel) || skins[0], im0 = sk && load(sk.data), ok = im0 && im0.complete && im0.naturalWidth, im = ok ? im0 : steve(), tall = ok ? im0.naturalHeight >= 64 : true, slim = sk && sk.model === 'slim', aw = slim ? 3 : 4;
     if (window.Glb3d && Glb3d.usesGlb(equip)) { Glb3d.mount(host, { equip, extra: glbExtra, skin: ok ? im0 : null, slim, angle: hostSel === '#heroSkin' ? () => heroAng : () => ang3 }); return; } // 3D-Modelle (.glb) brauchen echtes 3D (three.js)
@@ -523,7 +532,7 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
   }
   // ---- Pakete (Bundles): vom Admin zusammengestellt, ein Preis für mehrere Items ----
   const bundleOpen = new Set(), bndSel = new Set(), bndDraft = { name: '', price: '', stock: '', hours: '', hidden: false, codes: '' };
-  let tryOn = null; const eqView = () => ({ ...shop.equip, ...(tryOn || {}) }); // Anprobe: nur in der Vorschau, nichts wird gekauft oder angelegt
+  let tryOn = null; const eqView = () => ({ ...shop.equip, ...(tryOn || {}), dye: dyeTry ? { ...(shop.dye || {}), ...dyeTry } : (shop.dye || {}) }); let dyeTry = null; // Anprobe: nur in der Vorschau, nichts wird gekauft oder angelegt
   const canPay = p => !shop || shop.admin || shop.coins === null || shop.coins >= p;
   const rndCode = () => { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c = ''; for (const b of crypto.getRandomValues(new Uint8Array(8))) c += A[b % A.length]; return c; };
   function bundlesHtml() {
@@ -578,6 +587,45 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
     bar.innerHTML = `<span>👁 ${L('Anprobe')}: <b>${Object.values(tryOn).map(i => escL(nm(i))).join(' · ')}</b></span><button class="btn ghost" id="tryOff">${L('Zurücksetzen')}</button>`;
     $('#tryOff').onclick = () => { tryOn = null; paint3d(eqView()); tryBar(); };
   }
+  // ---- Phase 3: Effekte-Reiter, Tagesangebote, Pet-Stufen, Färben ----
+  const FX_CATS = ['trail', 'winfx', 'foot'];
+  const FX_INFO = { trail: 'Spur beim Laufen, Springen und Elytra-Fliegen', winfx: 'Effekt, wenn du ein Spiel gewinnst oder jemanden besiegst', foot: 'Verblassende Fußspuren in deiner Farbe (🎨 Färben)' };
+  const FX_EMO = { 'trail-stars': '✦', 'trail-clouds': '☁', 'trail-gold': '•', 'trail-hearts': '♥', 'trail-notes': '♪' };
+  function petLvHtml(id) {
+    const p = (shop.pets || {})[id] || { lv: 1, min: 0 }, st = shop.petSteps || [0, 60, 300, 900, 2400], nx = st[p.lv] ; const pct = nx ? Math.min(100, Math.round((p.min - st[p.lv - 1]) / (nx - st[p.lv - 1]) * 100)) : 100;
+    return `<small class="petlv">⭐ ${L('Stufe')} ${p.lv}${nx ? ` · ${p.min}/${nx} min` : ' · MAX'}<span class="pbar"><i style="width:${pct}%"></i></span></small>`;
+  }
+  function fxOverlay(eq) { // kleine Partikel in der Vorschau, wenn eine Spur angelegt/anprobiert ist
+    const host = $('#shop3d'); if (!host) return; let o = $('#fxPrev'); const e = FX_EMO[eq.trail];
+    if (!e) { if (o) o.remove(); return; }
+    if (!o) { o = document.createElement('div'); o.id = 'fxPrev'; o.className = 'fxprev'; host.parentNode.style.position = 'relative'; host.parentNode.appendChild(o); }
+    o.style.cssText = `top:${host.offsetTop}px;left:${host.offsetLeft}px;width:${host.offsetWidth}px;height:${host.offsetHeight}px;inset:auto`; o.innerHTML = Array.from({ length: 7 }, (_, k) => `<span style="left:${20 + k * 9}%;animation-delay:${(k * 0.37).toFixed(2)}s">${e}</span>`).join(''); o.dataset.k = eq.trail;
+  }
+  function dealsHtml() {
+    const r = shop.rotation; if (!r || !r.offers || !r.offers.length) return '';
+    const items = r.offers.map(o => shop.catalog.find(c => c.id === o.id)).filter(Boolean); if (!items.length) return '';
+    return `<div class="deals"><div class="dealh"><b>🔥 ${L('Tagesangebote')}</b><small class="muted">${L('Für alle gleich · wechseln in')} <span id="dealCd" data-end="${r.ends}"></span></small></div><div class="row shrow">${items.map(i => window.__shopCard(i, i.cat)).join('')}</div></div>`;
+  }
+  let cdT = 0; function cd() { const e = $('#dealCd'); if (!e) return; const ms = Math.max(0, +e.dataset.end - Date.now()), h = Math.floor(ms / 36e5), m = Math.floor(ms / 6e4) % 60, s = Math.floor(ms / 1e3) % 60; e.textContent = `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`; if (ms <= 0 && !cd.re) { cd.re = 1; setTimeout(async () => { cd.re = 0; try { shop = await window.cloudy.shopState(); paintShop(); } catch {} }, 4000); } }
+  function dyeBox(id) {
+    const it = shop.catalog.find(c => c.id === id); if (!it) return; const cur = (shop.dye || {})[id] || { c: '', g: '' }; let d = $('#dyeBox'); if (d) d.remove();
+    d = document.createElement('div'); d.id = 'dyeBox'; d.className = 'glass dyebox'; const pet = /^pet-/.test(id);
+    const PRE = ['#ffffff', '#ff6b6b', '#ffa45c', '#ffe866', '#8cf5c8', '#4aa3ff', '#9fd3ff', '#c09cff', '#ff9ecf', '#1b2236'];
+    const lv = ((shop.pets || {})[id] || {}).lv || 1, pal = (shop.petColors || []);
+    d.innerHTML = `<b>🎨 ${escL(it.name)}</b>` + (pet ? `<small class="muted">${L('Pets schalten mit Spielzeit neue Farben frei.')}</small><div class="dyesw">${[['', L('Original'), 1], ...pal.map(p => [p[1], p[2], p[0]])].map(([c, n, need]) => `<button class="dsw ${cur.c === c ? 'on' : ''}" data-dc="${c}" ${lv < need ? 'disabled title="' + L('ab Stufe') + ' ' + need + '"' : ''} style="--c:${c || 'transparent'}">${lv < need ? '🔒' : ''}<span>${escL(n)}</span></button>`).join('')}</div>`
+      : `<label>${L('Hauptfarbe')} <input type="color" id="dyC" value="${cur.c || '#ffffff'}"></label>${id !== 'foot-prints' ? `<label>${L('Leuchtfarbe')} <input type="color" id="dyG" value="${cur.g || '#ffffff'}"></label>` : ''}<div class="dyesw">${PRE.map(c => `<button class="dsw" data-pc="${c}" style="--c:${c}"></button>`).join('')}</div>`)
+      + `<div class="tools"><button class="btn" id="dySave">${L('Speichern')}</button><button class="btn ghost" id="dyReset">${L('Original')}</button><button class="btn ghost" id="dyClose">${L('Schließen')}</button></div><small class="muted" id="dyMsg"></small>`;
+    const host = $('#shop3d'); if (host) host.insertAdjacentElement('afterend', d); else document.body.appendChild(d);
+    let val = { c: cur.c, g: cur.g }; const prev = () => { dyeTry = { [id]: val }; if (!tryOn || !Object.values(tryOn).includes(id)) startTry([id]); else paint3d(eqView()); };
+    d.querySelectorAll('[data-dc]').forEach(b => b.onclick = () => { val = { c: b.dataset.dc, g: '' }; d.querySelectorAll('[data-dc]').forEach(x => x.classList.toggle('on', x === b)); prev(); });
+    const ci = d.querySelector('#dyC'), gi = d.querySelector('#dyG'); if (ci) ci.oninput = () => { val.c = ci.value; prev(); }; if (gi) gi.oninput = () => { val.g = gi.value; prev(); };
+    d.querySelectorAll('[data-pc]').forEach(b => b.onclick = () => { val.c = b.dataset.pc; if (ci) ci.value = val.c; prev(); });
+    const done = () => { dyeTry = null; d.remove(); paint3d(eqView()); };
+    d.querySelector('#dyClose').onclick = done;
+    d.querySelector('#dyReset').onclick = async () => { const r = await window.cloudy.shopDye({ id, c: '', g: '' }); if (r && r.state) shop = r.state; done(); paintShop(); };
+    d.querySelector('#dySave').onclick = async () => { const r = await window.cloudy.shopDye({ id, c: val.c, g: val.g }); if (r && r.ok) { if (r.state) shop = r.state; done(); paintShop(); } else d.querySelector('#dyMsg').textContent = L((r && r.error) || 'Fehler'); };
+    prev();
+  }
   function paintShop() {
     paintCoins(); paintCl(); const box = $('#shopItems'); if (!box || !shop) return; regCustom();
     const adm = $('#shopAdmin'); if (adm) adm.style.display = shop.admin ? '' : 'none';
@@ -595,9 +643,9 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
     } }
     // ---- Navigation: eine Kategorie auf einmal (statt alles untereinander), Suche, Filter ----
     let nav = $('#shopNav'); if (!nav) { nav = document.createElement('div'); nav.id = 'shopNav'; box.parentNode.insertBefore(nav, box); }
-    const TABS = [['cape', '🧥 ' + L('Umhänge')], ['wings', '🪽 ' + L('Flügel')], ['hat', '🎩 ' + L('Hüte')], ['shield', '🛡 ' + L('Schilde')], ['pet', '🐾 Pets'], ['emote', '💃 Emotes'], ['bundles', '🎁 ' + L('Pakete')], ['lim', '⏳ Limited'], ['plus', '✨ Cloudy+'], ['skins', '👤 Skins'], ['quests', '🎯 Quests']].concat(shop.admin ? [['owner', '👑 Owner']] : []);
+    const TABS = [['cape', '🧥 ' + L('Umhänge')], ['wings', '🪽 ' + L('Flügel')], ['hat', '🎩 ' + L('Hüte')], ['shield', '🛡 ' + L('Schilde')], ['pet', '🐾 Pets'], ['emote', '💃 Emotes'], ['fx', '✨ ' + L('Effekte')], ['bundles', '🎁 ' + L('Pakete')], ['lim', '⏳ Limited'], ['plus', '✨ Cloudy+'], ['skins', '👤 Skins'], ['quests', '🎯 Quests']].concat(shop.admin ? [['owner', '👑 Owner']] : []);
     if (!TABS.some(t => t[0] === shopTab)) shopTab = 'cape';
-    const itemTab = ['cape', 'wings', 'hat', 'shield', 'pet', 'emote', 'owner'].includes(shopTab), side = ['plus', 'skins', 'quests'].includes(shopTab);
+    const itemTab = ['cape', 'wings', 'hat', 'shield', 'pet', 'emote', 'fx', 'owner'].includes(shopTab), side = ['plus', 'skins', 'quests'].includes(shopTab);
     nav.innerHTML = `<div class="shnav">${TABS.map(([k, l]) => `<button class="shtab ${k === shopTab ? 'on' : ''}" data-stab="${k}">${l}</button>`).join('')}</div>` +
       (itemTab ? `<div class="shsub"><div class="seg">${[['all', L('Alle')], ['new', L('Nicht gekauft')], ['own', L('Gekauft')]].map(([k, l]) => `<button class="${shopFilt === k ? 'on' : ''}" data-sf2="${k}">${l}</button>`).join('')}</div><input class="field shq" id="shopQ" placeholder="🔎 ${L('Suchen …')}" value="${escL(shopQ)}" autocomplete="off" spellcheck="false"></div>` : '');
     nav.querySelectorAll('[data-stab]').forEach(b => b.onclick = () => { shopTab = b.dataset.stab; try { localStorage.setItem('cloudy.shopTab', shopTab); } catch {} paintShop(); });
@@ -606,13 +654,14 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
     try { window.shopOpenTab && window.shopOpenTab(side ? shopTab : null); } catch {}
     if (shopFilt !== 'all' && shopFilt !== 'new' && shopFilt !== 'own') shopFilt = 'all';
     const qq = shopQ.trim().toLowerCase();
-    const fl = cat => shop.catalog.filter(i => (cat === 'owner' ? i.owner : i.cat === cat && !i.plus && !i.owner) && (shopFilt === 'all' || (shopFilt === 'own') === shop.owned.includes(i.id)) && (!qq || String(i.name).toLowerCase().includes(qq)));
+    const fl = cat => shop.catalog.filter(i => (cat === 'owner' ? i.owner : (cat === 'fx' ? FX_CATS.includes(i.cat) : i.cat === cat) && !i.plus && !i.owner) && (shopFilt === 'all' || (shopFilt === 'own') === shop.owned.includes(i.id)) && (!qq || String(i.name).toLowerCase().includes(qq)));
     const card = (i, cat) => {
       const own = shop.owned.includes(i.id), on = shop.equip[cat] === i.id;
-      return `<div class="glass shi ${on ? 'sel' : ''}"><div class="i3h" data-i3="${i.id}"></div><b ${shop.admin ? `contenteditable="plaintext-only" spellcheck="false" title="Admin: Namen anklicken und ändern" data-rn="${i.id}"` : ''}>${i.name}</b><small>${i.owner ? '👑 Owner' : i.plus ? '✨ ' + L('Mit Cloudy+ inklusive') : i.cat === 'emote' && !i.price ? L('Für alle kostenlos') : shop.admin ? `<span contenteditable="plaintext-only" spellcheck="false" title="Admin: Preis anklicken und ändern (leer = Standardpreis)" data-pr="${i.id}" style="border-bottom:1px dashed currentColor;padding:0 2px">${i.price}</span> CC · gratis (Admin)` : cc(i.price)}</small>
-        ${shop.admin && !i.plus && !i.owner ? `<button class="btn ghost ${i.hidden ? 'tagon' : ''}" data-hide="${i.id}|${i.hidden ? 0 : 1}" title="Admin: ${i.hidden ? 'Wieder im Shop anzeigen' : 'Im Shop verstecken (niemand kann es mehr kaufen)'}">${i.hidden ? '🙈 Versteckt – zeigen' : '👁 Verstecken'}</button>` : ''}        ${shop.admin && i.custom ? `<button class="btn ghost" data-ci-del="${i.id}">Löschen</button>` : ''}${own && i.cat === 'emote' ? `<button class="btn ghost" disabled title="${L('Im Spiel B gedrückt halten und das Emote wählen')}">🎮 ${L('Im Spiel: Taste B')}</button><button class="btn ghost" data-try="${i.id}">▶ ${L('Ansehen')}</button>` : own ? `<button class="btn ${on ? 'ghost' : ''}" data-eq="${i.id}" data-cat="${i.cat}">${on ? 'Ablegen' : 'Anlegen'}</button>${!shop.admin && !i.custom && !i.plus && !i.owner ? `<button class="btn ghost" data-gift="${i.id}">🎁 Verschenken</button>` : ''}` : i.plus || i.owner ? `<button class="btn ghost" disabled>${i.plus ? '✨ ' + L('Kommt mit Cloudy+') : '👑 Owner'}</button><button class="btn ghost" data-try="${i.id}">👁 ${L('Anprobieren')}</button>` : (canPay(i.price) ? `<button class="btn" data-buy="${i.id}">Kaufen</button>` : `<button class="btn ghost" disabled>${L('Dir fehlen')} ${i.price - shop.coins} CC</button>`) + `<button class="btn ghost" data-try="${i.id}">👁 ${L('Anprobieren')}</button>`}</div>`;
+      return `<div class="glass shi ${on ? 'sel' : ''}"><div class="i3h" data-i3="${i.id}"></div><b ${shop.admin ? `contenteditable="plaintext-only" spellcheck="false" title="Admin: Namen anklicken und ändern" data-rn="${i.id}"` : ''}>${i.name}</b><small>${i.owner ? '👑 Owner' : i.plus ? '✨ ' + L('Mit Cloudy+ inklusive') : i.cat === 'emote' && !i.price ? L('Für alle kostenlos') : shop.admin ? `<span contenteditable="plaintext-only" spellcheck="false" title="Admin: Preis anklicken und ändern (leer = Standardpreis)" data-pr="${i.id}" style="border-bottom:1px dashed currentColor;padding:0 2px">${i.was || i.price}</span> CC · gratis (Admin)` : i.deal && !own ? `<s class="muted">${i.was}</s> <b>${cc(i.price)}</b> <span class="dealtag">−${i.deal}%</span>` : cc(i.price)}</small>${FX_INFO[i.cat] ? `<small class="muted">${L(FX_INFO[i.cat])}</small>` : ''}${i.cat === 'pet' && own ? petLvHtml(i.id) : ''}
+        ${shop.admin && !i.plus && !i.owner ? `<button class="btn ghost ${i.hidden ? 'tagon' : ''}" data-hide="${i.id}|${i.hidden ? 0 : 1}" title="Admin: ${i.hidden ? 'Wieder im Shop anzeigen' : 'Im Shop verstecken (niemand kann es mehr kaufen)'}">${i.hidden ? '🙈 Versteckt – zeigen' : '👁 Verstecken'}</button>` : ''}        ${shop.admin && i.custom ? `<button class="btn ghost" data-ci-del="${i.id}">Löschen</button>` : ''}${own && i.cat === 'emote' ? `<button class="btn ghost" disabled title="${L('Im Spiel B gedrückt halten und das Emote wählen')}">🎮 ${L('Im Spiel: Taste B')}</button><button class="btn ghost" data-try="${i.id}">▶ ${L('Ansehen')}</button>` : own ? `<button class="btn ${on ? 'ghost' : ''}" data-eq="${i.id}" data-cat="${i.cat}">${on ? 'Ablegen' : 'Anlegen'}</button>${i.dye ? `<button class="btn ghost" data-dye="${i.id}">🎨 ${L('Färben')}</button>` : ''}${!shop.admin && !i.custom && !i.plus && !i.owner ? `<button class="btn ghost" data-gift="${i.id}">🎁 Verschenken</button>` : ''}` : i.plus || i.owner ? `<button class="btn ghost" disabled>${i.plus ? '✨ ' + L('Kommt mit Cloudy+') : '👑 Owner'}</button><button class="btn ghost" data-try="${i.id}">👁 ${L('Anprobieren')}</button>` : (canPay(i.price) ? `<button class="btn" data-buy="${i.id}">Kaufen</button>` : `<button class="btn ghost" disabled>${L('Dir fehlen')} ${i.price - shop.coins} CC</button>`) + `<button class="btn ghost" data-try="${i.id}">👁 ${L('Anprobieren')}</button>`}</div>`;
     };
     window.__shopCard = card;
+    { let dl = $('#shopDeals'); if (!dl) { dl = document.createElement('div'); dl.id = 'shopDeals'; nav.parentNode.insertBefore(dl, nav); } dl.innerHTML = itemTab || shopTab === 'bundles' ? dealsHtml() : ''; cd(); clearInterval(cdT); if (dl.innerHTML) cdT = setInterval(() => { if (!document.hidden && $('#dealCd')) cd(); else if (!$('#dealCd')) clearInterval(cdT); }, 1000); }
     if (itemTab) { const L0 = fl(shopTab); box.innerHTML = L0.length ? `<div class="row shrow">${L0.map(i => card(i, i.cat)).join('')}</div>` : `<p class="muted shempty">${qq ? L('Nichts gefunden.') : shopFilt === 'own' ? L('Hier besitzt du noch nichts.') : shopFilt === 'new' ? L('Du hast schon alles aus dieser Kategorie 🎉') : L('Hier gibt es gerade nichts.')}</p>`; }
     else if (shopTab === 'bundles') box.innerHTML = bundlesHtml() || `<p class="muted shempty">${L('Gerade gibt es keine Pakete.')}</p>`;
     else if (shopTab === 'lim') box.innerHTML = limHtml();
@@ -623,8 +672,8 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
     // 3D-Vorschauen erst bauen, wenn sie ins Bild scrollen (sonst hunderte 3D-Elemente auf einmal = Ruckeln)
     if (window._i3io) window._i3io.disconnect();
     const mk = h => { if (h._done) return; h._done = 1; try { const w = item3d(h.dataset.i3); h.appendChild(w); i3s.add(w.firstChild); } catch {} };
-    if ('IntersectionObserver' in window) { const io = window._i3io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { mk(e.target); io.unobserve(e.target); } }), { root: null, rootMargin: '300px 0px' }); $$('#shopItems [data-i3], #shopPlus [data-i3]').forEach(h => io.observe(h)); }
-    else $$('#shopItems [data-i3], #shopPlus [data-i3]').forEach(mk);
+    if ('IntersectionObserver' in window) { const io = window._i3io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { mk(e.target); io.unobserve(e.target); } }), { root: null, rootMargin: '300px 0px' }); $$('#shopItems [data-i3], #shopPlus [data-i3], #shopDeals [data-i3]').forEach(h => io.observe(h)); }
+    else $$('#shopItems [data-i3], #shopPlus [data-i3], #shopDeals [data-i3]').forEach(mk);
     $$('[data-pr]').forEach(b => { b.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); b.blur(); } }; b.onblur = async () => { const t = b.textContent.replace(/[^0-9]/g, ''), it = shop.catalog.find(c => c.id === b.dataset.pr); if (!it) return; if (t !== '' && +t === it.price) { b.textContent = it.price; return; } const r = await window.cloudy.shopPrice({ id: it.id, price: t === '' ? null : +t }); if (r.state) { shop = r.state; window.shopCatalog = shop.catalog; } $('#shopMsg').textContent = r.ok ? '' : L(r.error); paintShop(); }; });
     $$('[data-rn]').forEach(b => { b.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); b.blur(); } }; b.onblur = async () => { const n = b.textContent.trim(), it = shop.catalog.find(c => c.id === b.dataset.rn); if (!it || n === it.name) return; const r = await window.cloudy.shopRename({ id: it.id, name: n }); if (r.state) { shop = r.state; window.shopCatalog = shop.catalog; } $('#shopMsg').textContent = r.ok ? '' : L(r.error); paintShop(); }; });
     $$('[data-hide]').forEach(b => b.onclick = async () => { const [id, on] = b.dataset.hide.split('|'); const r = await window.cloudy.shopHide({ id, on: on === '1' }); if (r.state) { shop = r.state; window.shopCatalog = shop.catalog; } $('#shopMsg').textContent = r.ok ? '' : L(r.error); paintShop(); });
@@ -638,6 +687,7 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
     });
     $$('[data-buy]').forEach(b => b.onclick = async () => { if (b.disabled) return; b.disabled = true; const r = await act(window.cloudy.shopBuy(b.dataset.buy)); if (r && r.ok) buySound(); });
     $$('[data-try]').forEach(b => b.onclick = () => startTry([b.dataset.try]));
+    $$('[data-dye]').forEach(b => b.onclick = () => dyeBox(b.dataset.dye));
     $$('[data-eq]').forEach(b => b.onclick = () => equip(b.dataset.cat, shop.equip[b.dataset.cat] === b.dataset.eq ? null : b.dataset.eq));
     if (window.setLang) window.setLang(document.documentElement.lang || 'de');
   }

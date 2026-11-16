@@ -1,5 +1,20 @@
 [
  {
+  "v": "0.9.132",
+  "date": "2026-11-16",
+  "added": [
+   "Tagesangebote im Shop: jeden Tag 5 Items mit 20–40 % Rabatt, für alle gleich (der Konto-Server würfelt sie), mit Countdown bis zum Wechsel",
+   "Neuer Shop-Reiter ✨ Effekte: Partikel-Spuren (Sterne, Wolken, Gold-Funken, Herzchen, Noten) beim Laufen, Springen und Elytra-Fliegen – sparsam gezeichnet",
+   "Sieg-Effekte: Feuerwerk oder Wolken-Puff, wenn du ein Spiel gewinnst oder jemanden besiegst (wird zusammen mit AutoGG erkannt, funktioniert auch mit AutoGG aus)",
+   "Fußspuren: verblassende Spuren in deiner Farbe – sehen alle Cloudy-Spieler",
+   "Färben: 3D-Umhänge, -Hüte und -Flügel bekommen eine eigene Haupt- und Leuchtfarbe (🎨 Färben, mit Vorschau); sehen auch andere Cloudy-Spieler",
+   "Pet-Stufen: Pets sammeln Spielzeit und steigen bis Stufe 5 auf – neue Farben (Frost, Rosé, Mint, Gold) und ab Stufe 3 Funkeln; Fortschritt auf der Pet-Karte im Shop",
+   "Reaktive Umhänge: 3D-Umhänge wirken nass in Regen/Wasser, eisig auf Schnee/Eis und glühen in Feuer/Lava",
+   "Alles einzeln abschaltbar im Spiel (H → Social); im Profil „Max FPS“ sind Spuren und Fußspuren aus"
+  ],
+  "fixed": []
+ },
+ {
   "v": "0.9.131",
   "date": "2026-11-16",
   "added": [

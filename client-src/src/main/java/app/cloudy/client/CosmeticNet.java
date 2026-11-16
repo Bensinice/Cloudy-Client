@@ -19,7 +19,12 @@ import java.util.WeakHashMap;
 /** Cosmetics anderer Cloudy-Spieler: der Launcher fragt den Konto-Server (Datei cosoth), wir melden ihm die Namen im Spiel (Datei coswant). */
 public final class CosmeticNet {
 	private static final Map<PlayerEntityRenderState, AbstractClientPlayerEntity> STASH = new WeakHashMap<>();
-	private static volatile Map<String, String[]> others = new HashMap<>(); // Name (klein) -> {cape, hat, wings}
+	private static volatile Map<String, String[]> others = new HashMap<>(); // Name (klein) -> {cape, hat, wings, pet, trail, winfx, foot}
+	private static volatile Map<String, Map<String, int[]>> dyes = new HashMap<>(); // Name -> Item -> {Haupt, Leucht}
+	private static volatile Map<String, Integer> petLvs = new HashMap<>();
+	public static int[] dyeOf(String name, String id) { Map<String, int[]> m = name == null || id == null ? null : dyes.get(name.toLowerCase()); return m == null ? null : m.get(id); }
+	public static int dyeMain(String name, String id, int def) { int[] d = dyeOf(name, id); return d != null && d[0] != -1 ? d[0] : def; }
+	public static int petLv(String name) { Integer v = name == null ? null : petLvs.get(name.toLowerCase()); return v == null ? 1 : v; }
 	private static volatile Map<String, List<String>> tagMap = new HashMap<>(); // Name (klein) -> Tags (owner, manager, clan:TAG:farbe ...)
 	private static volatile java.util.Set<String> live = new java.util.HashSet<>(); // Namen (klein), die gerade nachweislich mit Cloudy spielen (Herzschlag am Konto-Server)
 	private static long lastWant, lastRead, otherMod;
@@ -104,7 +109,7 @@ public final class CosmeticNet {
 					otherMod = m;
 					JsonObject root = JsonParser.parseString(Files.readString(p)).getAsJsonObject(), pl = root.getAsJsonObject("players");
 					long fts = root.has("ts") ? root.get("ts").getAsLong() : m; Map<String, Object[]> emm = new HashMap<>();
-					Map<String, String[]> nm = new HashMap<>(); Map<String, List<String>> tm = new HashMap<>(); java.util.Set<String> lv = new java.util.HashSet<>(); String selfN = mc.player.getName().getString();
+					Map<String, String[]> nm = new HashMap<>(); Map<String, Map<String, int[]>> dm = new HashMap<>(); Map<String, Integer> plm = new HashMap<>(); Map<String, List<String>> tm = new HashMap<>(); java.util.Set<String> lv = new java.util.HashSet<>(); String selfN = mc.player.getName().getString();
 					if (pl != null) for (Map.Entry<String, JsonElement> en : pl.entrySet()) {
 						JsonObject e = en.getValue().getAsJsonObject();
 						try { if (e.has("cl") && e.get("cl").getAsInt() == 1) lv.add(en.getKey().toLowerCase()); } catch (Throwable ignored) {}
@@ -112,10 +117,13 @@ public final class CosmeticNet {
 						if (en.getKey().equalsIgnoreCase(selfN)) continue;
 						try { if (e.has("em") && e.get("em").isJsonObject()) { JsonObject x = e.getAsJsonObject("em"); String eid = x.get("id").getAsString(); if (eid.startsWith("emote-")) emm.put(en.getKey().toLowerCase(), new Object[] { eid, fts - x.get("a").getAsLong() }); } } catch (Throwable ignored) {}
 						String c = e.has("cape") ? e.get("cape").getAsString() : null, h = e.has("hat") ? e.get("hat").getAsString() : null, w = e.has("wings") ? e.get("wings").getAsString() : null, pt = e.has("pet") ? e.get("pet").getAsString() : null;
-						nm.put(en.getKey().toLowerCase(), new String[] { okId(c, "cape") ? c : null, okId(h, "hat") ? h : null, okId(w, "wings") ? w : null, okId(pt, "pet") ? pt : null });
+						String tr = e.has("trail") ? e.get("trail").getAsString() : null, wf = e.has("winfx") ? e.get("winfx").getAsString() : null, ft = e.has("foot") ? e.get("foot").getAsString() : null;
+						nm.put(en.getKey().toLowerCase(), new String[] { okId(c, "cape") ? c : null, okId(h, "hat") ? h : null, okId(w, "wings") ? w : null, okId(pt, "pet") ? pt : null, Effects.known(tr) ? tr : null, Effects.known(wf) ? wf : null, Effects.known(ft) ? ft : null });
+						try { if (e.has("dye") && e.get("dye").isJsonObject()) { Map<String, int[]> one = new HashMap<>(); for (Map.Entry<String, JsonElement> de : e.getAsJsonObject("dye").entrySet()) { JsonObject x = de.getValue().getAsJsonObject(); one.put(de.getKey(), new int[] { Cosmetics.hex(x.has("c") ? x.get("c").getAsString() : null), Cosmetics.hex(x.has("g") ? x.get("g").getAsString() : null) }); } dm.put(en.getKey().toLowerCase(), one); } } catch (Throwable ignored) {}
+						try { if (e.has("plv")) plm.put(en.getKey().toLowerCase(), e.get("plv").getAsInt()); } catch (Throwable ignored) {}
 					}
 					if (nm.size() != others.size()) CloudyClient.LOG.info("Cloudy: Cosmetics von {} Mitspielern geladen", nm.size());
-					others = nm; tagMap = tm; live = lv; Emotes.setOthers(emm); Social.read(root, pl);
+					others = nm; dyes = dm; petLvs = plm; tagMap = tm; live = lv; Emotes.setOthers(emm); Social.read(root, pl);
 				}
 			}
 		} catch (Throwable ignored) {}

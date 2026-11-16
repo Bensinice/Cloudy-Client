@@ -83,7 +83,7 @@ public class CloudyClient implements ClientModInitializer {
 			while (spotKey.wasPressed()) if (mc.currentScreen == null) mc.setScreen(new SpotifyScreen(null));
 		});
 		Cosmetics.init();
-		ClientTickEvents.END_CLIENT_TICK.register(mc -> { try { CosmeticNet.tick(mc); } catch (Throwable ignored) {} });
+		ClientTickEvents.END_CLIENT_TICK.register(mc -> { try { CosmeticNet.tick(mc); } catch (Throwable ignored) {} try { Effects.tick(mc); } catch (Throwable ignored) {} });
 		// B: Emote-Rad (gedrueckt halten, Maus auf ein Emote, loslassen – oder klicken)
 		emoteKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.cloudy.emotes", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_B, "category.cloudy"));
 		// F9 Cinematic-Kamera, F10 Fotomodus, Outfit wechseln und HUD-Editor ohne Standardtaste (in den Steuerungs-Einstellungen belegbar)
@@ -110,7 +110,7 @@ public class CloudyClient implements ClientModInitializer {
 		try { net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents.AFTER_TRANSLUCENT.register(ctx -> { try { Lyrics.world(ctx); } catch (Throwable ignored) {} }); } catch (Throwable t) { LOG.warn("3D-Lyrics nicht verfuegbar", t); }
 		try { // Skybox (vor den Entities, nur wo Himmel ist) und volumetrische Wolken
 			net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents.BEFORE_ENTITIES.register(ctx -> { try { SkyBox.render(ctx); } catch (Throwable ignored) {} });
-			net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents.AFTER_ENTITIES.register(ctx -> { try { CloudyClouds.render(ctx); } catch (Throwable ignored) {} });
+			net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents.AFTER_ENTITIES.register(ctx -> { try { CloudyClouds.render(ctx); } catch (Throwable ignored) {} try { Effects.render(ctx); } catch (Throwable ignored) {} });
 		} catch (Throwable t) { LOG.warn("Skybox/Wolken nicht verfuegbar", t); }
 		try { Extras.init(); } catch (Throwable ignored) {}
 		try {

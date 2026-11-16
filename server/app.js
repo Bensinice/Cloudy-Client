@@ -79,6 +79,7 @@ async function init() {
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='prices'"); PRICES = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='tags'"); TAGS = r.length ? parse(r[0].v, {}) : {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='cos'"); COS = r.length ? parse(r[0].v, {}) : {}; }
+  { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='extra'"); EXTRA = r.length ? parse(r[0].v, {}) : {}; if (!EXTRA || typeof EXTRA !== 'object' || Array.isArray(EXTRA)) EXTRA = {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='bundles'"); BUNDLES = r.length ? parse(r[0].v, {}) : {}; if (!BUNDLES || typeof BUNDLES !== 'object' || Array.isArray(BUNDLES)) BUNDLES = {}; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='hide'"); HIDE = r.length ? parse(r[0].v, []) : []; if (!Array.isArray(HIDE)) HIDE = []; }
   { const [r] = await db.query("SELECT v FROM cloudy_kv WHERE k='lim'"); LIM = r.length ? parse(r[0].v, {}) : {}; if (!LIM || typeof LIM !== 'object') LIM = {}; }
@@ -379,15 +380,37 @@ let COS = {}; // Minecraft-Name -> { u: Konto, equip } (Cosmetics, die andere Cl
 app.post('/cos/reg', auth(async (req, res, me) => {
   const b = req.body || {}, mc = String(b.mc || '').toLowerCase(); if (!/^\w{3,16}$/.test(mc)) return res.status(400).json({ error: 'Ungueltiger Spielername.' });
   const own = isAdm(me) ? null : parse(me.owned, []), eq = {}; let plus = false; try { plus = !!PS.view(PDATA, QDATA, me.name_key).plus; } catch {}
-  for (const c of ['cape', 'hat', 'wings', 'pet']) { const v = b.equip && b.equip[c]; if (typeof v === 'string' && /^[a-z0-9-]{3,30}$/.test(v) && v.startsWith(c + '-') && (!own || own.includes(v) || (plus && /^[a-z]+-pg[a-z0-9]+$/.test(v)))) eq[c] = v; } // Cloudy+-Kollektion gehoert Cloudy+-Spielern automatisch
+  for (const c of ['cape', 'hat', 'wings', 'pet', 'trail', 'winfx', 'foot']) { const v = b.equip && b.equip[c]; if (typeof v === 'string' && /^[a-z0-9-]{3,30}$/.test(v) && v.startsWith(c + '-') && (!own || own.includes(v) || (plus && /^[a-z]+-pg[a-z0-9]+$/.test(v)))) eq[c] = v; } // Cloudy+-Kollektion gehoert Cloudy+-Spielern automatisch
   for (const k of Object.keys(COS)) if (COS[k].u === me.name_key && k !== mc) delete COS[k];
-  COS[mc] = { u: me.name_key, equip: eq, t: Date.now(), pt: Math.max(0, Math.min(1e7, Math.round(+b.pt || 0))) }; /* pt = Spielzeit in Minuten (fuer die Profilkarte) */ await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['cos', JSON.stringify(COS)]); res.json({ ok: true });
+  const dye = {}; if (b.dye && typeof b.dye === 'object') for (const id of Object.values(eq)) { const d = b.dye[id]; if (d && typeof d === 'object') { const c = /^#[0-9a-f]{6}$/i.test(d.c) ? d.c.toLowerCase() : '', g = /^#[0-9a-f]{6}$/i.test(d.g) ? d.g.toLowerCase() : ''; if (c || g) dye[id] = { c, g }; } } // Färbung der angelegten Items (Phase 3)
+  COS[mc] = { u: me.name_key, equip: eq, dye, t: Date.now(), pt: Math.max(0, Math.min(1e7, Math.round(+b.pt || 0))) }; /* pt = Spielzeit in Minuten (fuer die Profilkarte) */ await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['cos', JSON.stringify(COS)]); res.json({ ok: true });
 }));
 app.post('/cos/get', auth(async (req, res, me) => {
-  const now = Date.now(), em = (req.body || {}).em; for (const k of Object.keys(COS)) if (COS[k].u === me.name_key) { COS[k].t = now; COS[k].em = em && /^emote-[a-z0-9]{1,24}$/.test(String(em.id)) && +em.age >= 0 && +em.age < 15000 ? { id: String(em.id), s: now - Math.round(+em.age) } : null; const sg = (req.body || {}).song; COS[k].song = sg && typeof sg.t === 'string' && sg.t.trim() ? { t: sg.t.trim().slice(0, 60), a: String(sg.a || '').slice(0, 40), u: /^https:\/\/open\.spotify\.com\/[a-z]+\/[A-Za-z0-9]{10,40}$/.test(String(sg.u || '')) ? sg.u : '' } : null; } // Emote: Startzeit auf Server-Uhr // Herzschlag: wer fragt, spielt gerade mit Cloudy (Launcher fragt alle 6 s, solange Minecraft laeuft)
-  const out = {}; for (const n of (Array.isArray((req.body || {}).names) ? req.body.names : []).slice(0, 80)) { const k = String(n).toLowerCase(), e = COS[k]; if (!e) continue; const tg = tagsOf(e.u).concat(TAGLIVE(e.u)), cl = now - (e.t || 0) < 90000 ? 1 : 0; const ea = e.em && now - e.em.s < 15000 ? { id: e.em.id, a: now - e.em.s } : null, sg = cl && e.song ? e.song : null; if (Object.keys(e.equip).length || tg.length || cl || ea) out[k] = { ...e.equip, tg, cl, ...(ea ? { em: ea } : {}), ...(sg ? { song: sg } : {}) }; }
+  const now = Date.now(), em = (req.body || {}).em; for (const k of Object.keys(COS)) if (COS[k].u === me.name_key) { petTick(me.name_key, COS[k], now); COS[k].t = now; COS[k].em = em && /^emote-[a-z0-9]{1,24}$/.test(String(em.id)) && +em.age >= 0 && +em.age < 15000 ? { id: String(em.id), s: now - Math.round(+em.age) } : null; const sg = (req.body || {}).song; COS[k].song = sg && typeof sg.t === 'string' && sg.t.trim() ? { t: sg.t.trim().slice(0, 60), a: String(sg.a || '').slice(0, 40), u: /^https:\/\/open\.spotify\.com\/[a-z]+\/[A-Za-z0-9]{10,40}$/.test(String(sg.u || '')) ? sg.u : '' } : null; } // Emote: Startzeit auf Server-Uhr // Herzschlag: wer fragt, spielt gerade mit Cloudy (Launcher fragt alle 6 s, solange Minecraft laeuft)
+  const out = {}; for (const n of (Array.isArray((req.body || {}).names) ? req.body.names : []).slice(0, 80)) { const k = String(n).toLowerCase(), e = COS[k]; if (!e) continue; const tg = tagsOf(e.u).concat(TAGLIVE(e.u)), cl = now - (e.t || 0) < 90000 ? 1 : 0; const ea = e.em && now - e.em.s < 15000 ? { id: e.em.id, a: now - e.em.s } : null, sg = cl && e.song ? e.song : null; if (Object.keys(e.equip).length || tg.length || cl || ea) out[k] = { ...e.equip, tg, cl, ...(ea ? { em: ea } : {}), ...(sg ? { song: sg } : {}), ...(e.dye && Object.keys(e.dye).length ? { dye: e.dye } : {}), ...(e.equip.pet ? { plv: petLv(e.u, e.equip.pet) } : {}) }; }
   res.json({ ok: true, players: out });
 }));
+// ---- Phase 3: Pet-Level (Spielzeit mit dem Pet), tägliche Shop-Rotation ----
+let EXTRA = {}, extraDirty = 0;
+async function saveExtra(force) { if (!force && Date.now() - extraDirty < 60000) return; extraDirty = Date.now(); try { await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['extra', JSON.stringify(EXTRA)]); } catch {} }
+const PET_LV = [0, 60, 300, 900, 2400]; // Minuten für Stufe 1..5
+const petMin = (acct, pet) => ((EXTRA.petxp || {})[acct] || {})[pet] || 0;
+const petLv = (acct, pet) => { const m = petMin(acct, pet); let l = 1; for (let i = 1; i < PET_LV.length; i++) if (m >= PET_LV[i]) l = i + 1; return l; };
+function petTick(acct, e, now) { // Herzschlag alle ~2,5 s, solange Minecraft läuft: Zeit dem angelegten Pet gutschreiben
+  const pet = e.equip && e.equip.pet; if (!pet || !e.t) return; const d = now - e.t; if (d <= 0 || d > 15000) return;
+  EXTRA.petxp = EXTRA.petxp || {}; const m = EXTRA.petxp[acct] = EXTRA.petxp[acct] || {}; m[pet] = Math.round(((m[pet] || 0) + d / 60000) * 1000) / 1000; saveExtra();
+}
+app.post('/cos/petxp', auth(async (req, res, me) => { const m = (EXTRA.petxp || {})[me.name_key] || {}; res.json({ ok: true, steps: PET_LV, pets: Object.fromEntries(Object.entries(m).map(([k, v]) => [k, { min: Math.floor(v), lv: petLv(me.name_key, k) }])) }); }));
+const dayKey = t => new Date(t).toISOString().slice(0, 10);
+function rotation(now) { // 5 Angebote pro Tag (UTC), für alle gleich: Zufall mit dem Datum als Startwert
+  const pool = (EXTRA.rotpool || []).filter(x => x && typeof x.id === 'string' && !HIDE.includes(x.id) && !LIM[x.id]); const day = dayKey(now), ends = Date.parse(day + 'T00:00:00Z') + 864e5;
+  if (EXTRA.rotfix && EXTRA.rotfix.day === day && Array.isArray(EXTRA.rotfix.offers)) return { day, ends, offers: EXTRA.rotfix.offers };
+  let h = 2166136261; for (const ch of 'cloudy:' + day) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } const rnd = () => { h ^= h << 13; h >>>= 0; h ^= h >>> 17; h ^= h << 5; h >>>= 0; return h / 4294967296; };
+  const a = pool.slice().sort((x, y) => x.id < y.id ? -1 : 1), offers = []; const cats = new Map();
+  while (a.length && offers.length < 5) { const it = a.splice(Math.floor(rnd() * a.length), 1)[0], c = it.id.split('-')[0]; if ((cats.get(c) || 0) >= 2) continue; cats.set(c, (cats.get(c) || 0) + 1); offers.push({ id: it.id, off: [20, 25, 30, 35, 40][Math.floor(rnd() * 5)] }); }
+  return { day, ends, offers };
+}
+app.post('/shop/rotation', (req, res) => res.json({ ok: true, ...rotation(Date.now()) }));
 // ---- Quests & Cloudy Stars: Fortschritt, Ziele und Belohnungen entscheidet nur der Server ----
 let qT = null; const saveQ = (now) => { clearTimeout(qT); const run = () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['quests', JSON.stringify(QDATA)]); if (now) return run(); qT = setTimeout(() => run().catch(e => console.log('[quests] ' + e.message)), 1500); };
 app.post('/quests/state', auth(async (_req, res, me) => { const v = QS.view(QDATA, me.name_key); saveQ(); res.json({ ok: true, ...v }); }));
@@ -410,6 +433,7 @@ app.post('/state', auth(async (req, res, me) => { // Shop-Stand des Kontos speic
   await put(u); res.json({ ok: true });
 }));
 const admin = f => auth(async (req, res, me) => { if (!isAdm(me)) return res.status(403).json({ error: 'Nur für Admins.' }); await f(req, res, me); });
+app.post('/admin/rotpool', admin(async (req, res) => { const l = Array.isArray(req.body.pool) ? req.body.pool.filter(x => x && /^[a-z]+-[a-z0-9-]{1,30}$/.test(String(x.id))).slice(0, 600).map(x => ({ id: String(x.id) })) : null; if (l && l.length) { EXTRA.rotpool = l; await saveExtra(true); } if (req.body.fix !== undefined) { const f = Array.isArray(req.body.fix) ? req.body.fix.filter(x => x && /^[a-z]+-[a-z0-9-]{1,30}$/.test(String(x.id))).slice(0, 6).map(x => ({ id: String(x.id), off: Math.max(5, Math.min(90, Math.round(+x.off || 25))) })) : null; EXTRA.rotfix = f && f.length ? { day: dayKey(Date.now()), offers: f } : null; await saveExtra(true); } res.json({ ok: true, pool: (EXTRA.rotpool || []).length, ...rotation(Date.now()) }); }));
 const saveLim = () => db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['lim', JSON.stringify(LIM)]);
 app.post('/limited', auth(async (req, res, me) => res.json({ ok: true, items: limView(me.name_key, isAdm(me)) })));
 app.post('/bundle/claim', auth(async (req, res, me) => { const r = bunClaim(BUNDLES, me.name_key, (req.body || {}).id, !!(req.body || {}).undo, (req.body || {}).code); if (r.ok && !r.already) await db.query('REPLACE INTO cloudy_kv (k,v) VALUES (?,?)', ['bundles', JSON.stringify(BUNDLES)]); res.status(r.error ? 400 : 200).json(r); }));

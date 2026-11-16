@@ -35,8 +35,11 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 			}
 			net.minecraft.client.network.ClientPlayerEntity me = net.minecraft.client.MinecraftClient.getInstance().player;
 			boolean ely = me != null && me.getEquippedStack(net.minecraft.entity.EquipmentSlot.CHEST).isOf(net.minecraft.item.Items.ELYTRA); // mit Elytra: Fluegel und Umhang ausblenden (sonst doppelt)
+			DYE = Cosmetics::dye; REACT = Effects.react(me);
+			try {
 			drawAll(matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV, m.head, m.body, m.leftArm, m.rightArm, Cosmetics.hat, ely ? null : Cosmetics.wings, Cosmetics.shield, held, !ely && ZZ4.handles(Cosmetics.cape) ? Cosmetics.cape : null, limbDistance);
 			drawPet(matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV, m.body, m.leftArm, Cosmetics.pet, state.skinTextures != null ? state.skinTextures.texture() : null, Emotes.progress(null));
+			} finally { DYE = null; REACT = null; }
 		} catch (RuntimeException e) { /* Cosmetics duerfen das Spiel nie zum Absturz bringen */ }
 	}
 
@@ -47,12 +50,23 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 		if (eq == null || (eq[1] == null && eq[2] == null && (eq.length < 4 || eq[3] == null) && !ZZ4.handles(eq[0]))) return;
 		PlayerEntityModel m = this.getContextModel();
 		boolean ely = who.getEquippedStack(net.minecraft.entity.EquipmentSlot.CHEST).isOf(net.minecraft.item.Items.ELYTRA);
+		final String wn = who.getName().getString(); DYE = id -> CosmeticNet.dyeOf(wn, id); REACT = Effects.react(who);
+		try {
 		drawAll(matrices, vcp, light, OverlayTexture.DEFAULT_UV, m.head, m.body, m.leftArm, m.rightArm, eq[1], ely ? null : eq[2], null, 0, !ely && ZZ4.handles(eq[0]) ? eq[0] : null, limb);
-		if (eq.length > 3 && eq[3] != null) drawPet(matrices, vcp, light, OverlayTexture.DEFAULT_UV, m.body, m.leftArm, eq[3], who.getSkinTextures().texture(), Emotes.progress(who.getName().getString()));
+		if (eq.length > 3 && eq[3] != null) drawPet(matrices, vcp, light, OverlayTexture.DEFAULT_UV, m.body, m.leftArm, eq[3], who.getSkinTextures().texture(), Emotes.progress(wn));
+		} finally { DYE = null; REACT = null; }
 	}
 
 	/** Gemeinsamer Zeichencode (Spiel und Vorschau). held: 0 = kein Schild, 1 = links, 2 = rechts. */
 	public static boolean PREVIEW;
+	/** Farben des gerade gezeichneten Spielers (null = keine) und reaktiver Umhang-Zustand. */
+	static java.util.function.Function<String, int[]> DYE; static int[] REACT;
+	private static void tintFor(String id, boolean cape) {
+		int[] d = DYE == null || id == null ? null : DYE.apply(id);
+		int main = d == null ? -1 : d[0], glow = d == null ? -1 : d[1]; boolean full = false;
+		if (cape && REACT != null) { main = main == -1 ? REACT[0] : Ui.mix(0xFF000000 | main, 0xFF000000 | REACT[0], 0.55f) & 0xFFFFFF; full = REACT[1] == 1; }
+		if (main == -1 && glow == -1 && !full) GLB.untint(); else GLB.tint(main, glow, full);
+	}
 
 	/** Pet: am Koerper (schwebend/Schulter) oder am linken Arm (bewegt sich mit). skin = Skin des Spielers (Mini-Ich). */
 	public static void drawPet(MatrixStack matrices, VertexConsumerProvider vcp, int light, int ov, ModelPart body, ModelPart leftArm, String pet, net.minecraft.util.Identifier skin) { drawPet(matrices, vcp, light, ov, body, leftArm, pet, skin, -1f); }
@@ -69,7 +83,8 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 				matrices.translate(0f, -hop * (arm ? 0.08f : 0.22f), 0f); // Modellraum: y nach unten
 				if (!arm) matrices.multiply(net.minecraft.util.math.RotationAxis.POSITIVE_Y.rotation(emo * (float) Math.PI * 2f * env));
 			}
-			if (arm) GLB.petOnArm(matrices, vcp, light, ov, pet, skin); else GLB.pet(matrices, vcp, light, ov, pet, skin);
+			tintFor(pet, false);
+			try { if (arm) GLB.petOnArm(matrices, vcp, light, ov, pet, skin); else GLB.pet(matrices, vcp, light, ov, pet, skin); } finally { GLB.untint(); }
 			matrices.pop();
 		} catch (RuntimeException e) { /* nie abstuerzen */ }
 	}
@@ -78,8 +93,8 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 			String hat, String wings, String shield, int held, String cape, float limb) {
 		if (!Cosmetics.ensure()) return;
 		VertexConsumer vc = vcp.getBuffer(RenderLayer.getEntityCutoutNoCull(Cosmetics.TEX));
-		if (cape != null && ZZ4.handles(cape)) { matrices.push(); body.rotate(matrices); ZZ4.cloak(matrices, vcp, light, ov, cape, limb); matrices.pop(); }
-		if (hat != null && GLB.handles(hat)) { matrices.push(); head.rotate(matrices); GLB.hat(matrices, vcp, light, ov, hat); matrices.pop(); }
+		if (cape != null && ZZ4.handles(cape)) { matrices.push(); body.rotate(matrices); tintFor(cape, true); try { ZZ4.cloak(matrices, vcp, light, ov, cape, limb); } finally { GLB.untint(); } matrices.pop(); }
+		if (hat != null && GLB.handles(hat)) { matrices.push(); head.rotate(matrices); tintFor(hat, false); try { GLB.hat(matrices, vcp, light, ov, hat); } finally { GLB.untint(); } matrices.pop(); }
 		else if (hat != null) draw(matrices, vc, light, ov, head, Cosmetics.parts(hat));
 		if (shield != null && held > 0 && ZZ4.handles(shield)) {
 			// Im Spiel liegt das Schild-Design als Textur auf dem normalen Minecraft-Schild (Ressourcenpaket vom Launcher). Nur die Vorschau zeichnet das Modell.
@@ -95,7 +110,7 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 			else { matrices.push(); matrices.translate(-0.125f, 0, 0); drawShield(matrices, vcp, vc, light, ov, rightArm, si, shield); matrices.pop(); }
 		}
 		if (wings != null && ZZ4.handles(wings)) {
-			matrices.push(); body.rotate(matrices); ZZ4.wings(matrices, vcp, light, ov, wings); matrices.pop();
+			matrices.push(); body.rotate(matrices); tintFor(wings, false); try { ZZ4.wings(matrices, vcp, light, ov, wings); } finally { GLB.untint(); } matrices.pop();
 		} else if (wings != null) {
 			long t = System.currentTimeMillis();
 			Cosmetics.Img wi = Cosmetics.imgOf(wings);

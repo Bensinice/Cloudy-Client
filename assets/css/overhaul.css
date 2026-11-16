@@ -96,3 +96,27 @@ html.perf.os-darwin .glass{-webkit-backdrop-filter:none!important;backdrop-filte
 .partycard .pnote{color:var(--accent)}
 .partyask{position:fixed;right:22px;top:22px;z-index:9999;display:grid;gap:8px;max-width:340px;padding:16px 18px;border-radius:18px;box-shadow:0 20px 50px -20px rgba(0,0,0,.5)}
 .partyask div{display:flex;gap:8px}
+
+/* Phase 3: Tagesangebote, Effekte-Vorschau, Pet-Stufen, Färben */
+.deals{margin:0 0 12px;padding:12px 14px;border-radius:20px;background:linear-gradient(135deg,rgba(255,120,80,.16),rgba(255,210,74,.12));border:1px solid rgba(255,150,80,.45)}
+.deals .dealh{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 8px}
+.deals .dealh b{font-size:16px}
+#dealCd{font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink)}
+.dealtag{display:inline-block;padding:1px 7px;border-radius:999px;background:#ff5a4a;color:#fff;font-weight:800;font-size:11.5px}
+.petlv{display:grid;gap:4px}
+.petlv .pbar{display:block;height:5px;border-radius:9px;background:rgba(127,127,127,.2);overflow:hidden}
+.petlv .pbar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent))}
+.fxprev{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.fxprev span{position:absolute;bottom:14%;font-size:18px;color:var(--accent);text-shadow:0 0 8px rgba(255,255,255,.9);opacity:0;animation:fxup 2.6s ease-out infinite}
+@keyframes fxup{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:1}100%{transform:translateY(-120px) scale(1.15);opacity:0}}
+html.perf .fxprev span{animation-duration:4s}
+.dyebox{position:relative;display:grid;gap:8px;margin:10px 0 0;padding:12px 14px;border-radius:16px;border:1px solid var(--gb)}
+.dyebox label{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:600;font-size:13px}
+.dyebox input[type=color]{width:44px;height:28px;border:0;background:none;padding:0;cursor:pointer}
+.dyebox .dyesw{display:flex;flex-wrap:wrap;gap:6px}
+.dyebox .dsw{min-width:26px;height:26px;border-radius:8px;border:1px solid var(--gb);background:var(--c);cursor:pointer;font-size:11px;display:inline-flex;align-items:center;gap:4px;padding:0 6px;color:var(--ink)}
+.dyebox .dsw span{font-weight:700}
+.dyebox .dsw[data-pc]{width:26px;padding:0}
+.dyebox .dsw.on{outline:2px solid var(--accent)}
+.dyebox .dsw:disabled{opacity:.55;cursor:not-allowed}
+.dyebox .tools .btn{height:32px;padding:0 12px;font-size:12.5px}

@@ -53,7 +53,7 @@ public final class Extras {
 
 	/** Chat- oder Titelzeile pruefen. title = grosser Titel in der Bildschirmmitte (dort stehen viele Siegmeldungen). */
 	public static void ggCheck(String raw, boolean title) {
-		if (raw == null || !ModConfig.isOn("autogg")) return;
+		if (raw == null) return;
 		MinecraftClient mc = MinecraftClient.getInstance();
 		if (mc.player == null || mc.getNetworkHandler() == null || mc.isInSingleplayer()) return; // nur auf Servern
 		String s = raw.toLowerCase(Locale.ROOT).replaceAll("\u00a7.", "").trim();
@@ -61,6 +61,8 @@ public final class Extras {
 		if (!title && (s.startsWith("<") || PLAYER_CHAT.matcher(s).find())) return;
 		String me = mc.player.getName().getString().toLowerCase(Locale.ROOT);
 		if (!title && s.contains(me + ":")) return; // eigene Nachricht
+		try { Effects.chat(s, me, title); } catch (Throwable ignored) {} // Sieg-/Kill-Effekt (Phase 3)
+		if (!ModConfig.isOn("autogg")) return;
 		boolean end = false;
 		for (String k : GG_END) if (s.contains(k)) { end = true; break; }
 		if (!end) return;
