@@ -1,4 +1,13 @@
 {
+  "0.9.139": [
+    "Shield designs now really show in game (automatically included)",
+    "Dark inventory: chests, inventory and menus dark instead of grey (Settings → Textures)",
+    "Cloudy Cheats: 23 new modules and new Player/World categories",
+    "Fixed: Steve the Dog cut off in previews and inventory",
+    "Fixed: shop preview overlapping the daily deals",
+    "Fixed: cape clipping into view in F5",
+    "Fixed: Cloudy and Minecraft could be opened twice"
+  ],
   "0.9.138": [
     "New owner pet: Steve the Dog with 13 own emotes (in game: B, then Tab)"
   ],

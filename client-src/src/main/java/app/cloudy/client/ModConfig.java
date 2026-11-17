@@ -112,6 +112,8 @@ public final class ModConfig {
 	public static int lyricsReveal = 0, skyboxId = 0, cloudsAmount = 45, cloudsSize = 100, cloudsLength = 100;
 	/** Leistungsprofil: 0 Akku, 1 Ausgewogen, 2 Max FPS (-1 = nie gewaehlt). perfFromCfg = zuletzt aus dem Launcher uebernommener Wert. */
 	public static int perfProfile = -1, perfFromCfg = -1;
+	/** Dunkles Inventar aus dem Launcher (Einstellung „Dunkles Inventar“, Standard an) – helle Titel in Inventaren. */
+	public static boolean invDark = false;
 	public static boolean lyricsSkyOnly = false;
 	public static final String[] LREVEAL = {"Word by word", "Whole line (classic)"};
 	public static float zoomLevel = 3f;

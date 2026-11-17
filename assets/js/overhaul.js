@@ -89,3 +89,10 @@
   grid.appendChild(c);
   const cb = c.querySelector('#ytmOn'); window.cloudy.ytmCfg().then(v => cb.checked = !!v).catch(() => {}); cb.onchange = async () => { cb.checked = !!(await window.cloudy.ytmCfg(cb.checked)); };
 })();
+
+// ---- Shop: Vorschau nur "klebend", wenn sie neben der Liste steht. Untereinander (schmales Fenster) lag sie sonst beim Scrollen unter den Karten ----
+(function () {
+  const top = document.querySelector('#p-shop .shtop'); if (!top || !window.ResizeObserver) return;
+  const chk = () => { const a = top.children[0], b = top.children[1]; if (!a || !b) return; top.classList.toggle('stack', b.offsetTop > a.offsetTop + 20); };
+  new ResizeObserver(chk).observe(top); setTimeout(chk, 500);
+})();

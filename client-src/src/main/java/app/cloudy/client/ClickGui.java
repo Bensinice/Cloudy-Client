@@ -14,7 +14,7 @@ import java.util.Map;
  * Farben kommen aus dem gewaehlten Launcher-Theme.
  */
 public class ClickGui extends Screen {
-	private static final String[] CATS = {"All", "Combat", "Movement", "Render"};
+	private static final String[] CATS = {"All", "Combat", "Movement", "Player", "World", "Render"};
 	private static int cat = 0, wx = Integer.MIN_VALUE, wy = 0, scroll = 0;
 	private static boolean compact = false;
 	private static String query = "";

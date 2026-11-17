@@ -229,6 +229,7 @@
     host.innerHTML = ''; host._apply = null; const w = host.clientWidth || 260, h = host.clientHeight || 340; const G = renderer(host, w, h), r = G.r, my = ++G.token; host.appendChild(G.cv);
     const scene = new THREE.Scene(), pl = buildPlayer(o.skin, o.slim); scene.add(pl.root);
     const cam = new THREE.PerspectiveCamera(30, w / h, 0.1, 50); cam.position.set(0, 1.12, 5.3); cam.lookAt(0, 1.06, 0); // Figur so gross wie in der normalen Vorschau (vorher viel zu weit weg)
+    if ((o.equip || {}).pet) { cam.position.set(0.3, 1.2, 6.9); cam.lookAt(0.3, 1.12, 0); } // mit Pet etwas weiter weg, damit es ganz zu sehen ist
     let tick = () => {}; try { tick = await dress(pl, o.equip || {}); } catch (e) { console.warn('GLB-Vorschau:', e); }
     let tick2 = () => {}; if (o.extra) try { tick2 = (await o.extra(pl, o.equip || {})) || tick2; } catch (e) { console.warn('Vorschau (Nicht-3D-Items):', e); } // Items ohne .glb (z. B. Heiligenschein) zusaetzlich zeichnen
     if (my !== G.token) return;

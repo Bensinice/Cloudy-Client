@@ -37,7 +37,7 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 			boolean ely = me != null && me.getEquippedStack(net.minecraft.entity.EquipmentSlot.CHEST).isOf(net.minecraft.item.Items.ELYTRA); // mit Elytra: Fluegel und Umhang ausblenden (sonst doppelt)
 			// Kamera hinter dir stoesst an Boden/Wand (z. B. beim Nach-oben-Schauen in F5): dann ist sie direkt am Umhang und er verdeckt riesig das Bild -> Umhang so lange ausblenden
 			boolean camNear = false;
-			try { var mcx = net.minecraft.client.MinecraftClient.getInstance(); if (me != null && !mcx.options.getPerspective().isFirstPerson() && !FreeCam.isFree()) { var cp = mcx.gameRenderer.getCamera().getPos(); camNear = cp.squaredDistanceTo(me.getX(), me.getY() + 1.1, me.getZ()) < 1.9 * 1.9; } } catch (Throwable ignored) {}
+			try { var mcx = net.minecraft.client.MinecraftClient.getInstance(); if (me != null && !mcx.options.getPerspective().isFirstPerson() && !FreeCam.isFree()) { var cp = mcx.gameRenderer.getCamera().getPos(); double dq = cp.squaredDistanceTo(me.getX(), me.getY() + 1.1, me.getZ()); camNear = dq < 1.9 * 1.9 || (mcx.options.getPerspective() == net.minecraft.client.option.Perspective.THIRD_PERSON_BACK && cp.y < me.getY() + 1.15 && dq < 4.6 * 4.6); // auch: F5 hinten und Kamera unter Brusthoehe (Nach-oben-Schauen) -> Umhang laege riesig vor dem Kopf } } catch (Throwable ignored) {}
 			DYE = Cosmetics::dye; REACT = Effects.react(me);
 			try {
 			drawAll(matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV, m.head, m.body, m.leftArm, m.rightArm, Cosmetics.hat, ely ? null : Cosmetics.wings, Cosmetics.shield, held, !ely && !camNear && ZZ4.handles(Cosmetics.cape) ? Cosmetics.cape : null, limbDistance);
@@ -86,6 +86,7 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 				matrices.translate(0f, -hop * (arm ? 0.08f : 0.22f), 0f); // Modellraum: y nach unten
 				if (!arm) matrices.multiply(net.minecraft.util.math.RotationAxis.POSITIVE_Y.rotation(emo * (float) Math.PI * 2f * env));
 			}
+			if (!PREVIEW && net.minecraft.client.MinecraftClient.getInstance().currentScreen instanceof net.minecraft.client.gui.screen.ingame.HandledScreen) matrices.scale(0.55f, 0.55f, 0.55f); // Inventar: Pet kleiner und naeher, sonst ragt es aus dem Bildfeld
 			tintFor(pet, false);
 			try { if (arm) GLB.petOnArm(matrices, vcp, light, ov, pet, skin, peId, peStart); else GLB.pet(matrices, vcp, light, ov, pet, skin, peId, peStart); } finally { GLB.untint(); }
 			matrices.pop();

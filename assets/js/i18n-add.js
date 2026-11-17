@@ -1,5 +1,7 @@
 // Cloudy – zusätzliche englische Texte (werden von i18n.js zu EN dazugemischt). Format: "Deutsch": "English"
 window.CLOUDY_EN_EXTRA = {
+  "Dunkles Inventar (schont die Augen)": "Dark inventory (easier on the eyes)",
+  "Minecraft läuft schon. Schließe es zuerst, bevor du es ein zweites Mal startest.": "Minecraft is already running. Close it before starting it a second time.",
   "Pet-Emotes – im Spiel: Taste B, dann Tab": "Pet emotes – in game: press B, then Tab",
   "Hund Steve": "Steve the Dog",
   "YouTube Music für Lyrics verwenden": "Use YouTube Music for lyrics",

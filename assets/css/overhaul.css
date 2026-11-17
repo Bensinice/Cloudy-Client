@@ -169,3 +169,4 @@ html.perf .fxprev span{animation-duration:4s}
 .petemo{display:grid;gap:6px;margin:10px 0 0}
 .petemo div{display:flex;flex-wrap:wrap;gap:5px}
 .petemo .chip{cursor:pointer;font-size:12.5px;padding:5px 10px}
+.shtop.stack .shp{position:relative;top:auto}

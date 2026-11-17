@@ -1,4 +1,7 @@
 const { app, BrowserWindow, ipcMain, shell, safeStorage, dialog, nativeImage, net, Notification } = require('electron');
+// Nur ein Cloudy-Launcher gleichzeitig: ein zweiter Start holt das offene Fenster nach vorne und beendet sich sofort
+if (!app.requestSingleInstanceLock()) { app.exit(0); process.exit(0); }
+app.on('second-instance', () => { try { const w = BrowserWindow.getAllWindows()[0]; if (w) { if (w.isMinimized()) w.restore(); w.show(); w.focus(); } } catch {} });
 try { app.commandLine.appendSwitch('disk-cache-size', String(32 * 1024 * 1024)); } catch {} // kleinerer Festplatten-Cache
 const REMOTE_H = new Map(); let remoteBus = () => {}; // Handy-Fernsteuerung (lib/remote.js): alle ipcMain.handle-Funktionen merken, damit der Browser sie aufrufen kann
 { const _h0 = ipcMain.handle.bind(ipcMain); ipcMain.handle = (n, f) => { REMOTE_H.set(n, f); return _h0(n, f); }; }
@@ -222,7 +225,7 @@ setTimeout(gateCheck, 6000); setInterval(gateCheck, 300000);
 // Leistungsprofil fuer die Mod (0 Akku, 1 Ausgewogen, 2 Max FPS): landet in cloudy.cfg, die Mod uebernimmt es beim naechsten Start
 ipcMain.handle('perfProfile', (_e, v) => { if (v === 0 || v === 1 || v === 2) cfgPatch({ perfProfile: v }); const c = cfgPatch({}); return typeof c.perfProfile === 'number' ? c.perfProfile : 1; });
 ipcMain.handle('toolTex', (_e, v) => { if (typeof v === 'boolean') cfgPatch({ toolTex: v }); return cfgPatch({}).toolTex !== false; });
-ipcMain.handle('texCfg', (_e, v) => { const ok = ['toolTex', 'texTotem', 'texInv', 'texTheme']; if (v && typeof v === 'object') { const p = {}; for (const k of ok) if (typeof v[k] === 'boolean') p[k] = v[k]; if (typeof v.texColor === 'string' && /^#[0-9a-f]{6}$/i.test(v.texColor)) p.texColor = v.texColor; cfgPatch(p); } const c = cfgPatch({}); return { toolTex: c.toolTex !== false, texTotem: c.texTotem !== false, texInv: c.texInv !== false, texTheme: c.texTheme !== false, texColor: c.texColor || '#4aa3ff' }; });
+ipcMain.handle('texCfg', (_e, v) => { const ok = ['toolTex', 'texTotem', 'texInv', 'texTheme', 'texInvDark']; if (v && typeof v === 'object') { const p = {}; for (const k of ok) if (typeof v[k] === 'boolean') p[k] = v[k]; if (typeof v.texColor === 'string' && /^#[0-9a-f]{6}$/i.test(v.texColor)) p.texColor = v.texColor; cfgPatch(p); } const c = cfgPatch({}); return { toolTex: c.toolTex !== false, texTotem: c.texTotem !== false, texInv: c.texInv !== false, texTheme: c.texTheme !== false, texInvDark: c.texInvDark !== false, texColor: c.texColor || '#4aa3ff' }; });
 ipcMain.handle('clientCfg', (_e, p) => { if (!p || typeof p !== 'object') return false; const o = {}; if (Array.isArray(p.widgets)) o.widgets = p.widgets.slice(0, 12).map(w => ({ text: String(w.text || '').slice(0, 80), x: Math.max(0, Math.min(100, +w.x || 0)), on: w.on !== false })); if (typeof p.top === 'boolean') o.top = p.top; if (Number.isFinite(+p.lyricsSize)) o.lyricsSize = Math.max(50, Math.min(200, Math.round(+p.lyricsSize))); if (Number.isInteger(p.lyricsFont) && p.lyricsFont >= 0 && p.lyricsFont <= 9) o.lyricsFont = p.lyricsFont; cfgPatch(o); return true; });
 const artCache = new Map();
 ipcMain.handle('mediaArt', async (_e, { artist, title }) => { // Cover über die öffentliche iTunes-Suche (die Spotify-App gibt unter Windows kein Bild heraus)
@@ -875,7 +878,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.138'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.139'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1823,6 +1826,15 @@ function recolorGray(img, strength) { // Grautoene (Inventarflaechen, Slots) ein
     for (let k = 0; k < 3; k++) px[i + k] = Math.round(px[i + k] * (1 - strength) + c[k] * strength);
   }
 }
+function recolorDark(img) { // dunkles Inventar: Graeue Flaechen abdunkeln, Abstufungen (Schatten/Lichtkanten) bleiben; leichter Farbstich vom Theme
+  const { px } = img, C = img.C;
+  for (let i = 0; i < px.length; i += 4) {
+    if (px[i + 3] < 8) continue;
+    const [, sa] = rgb2hsv(px[i], px[i + 1], px[i + 2]); if (sa > .16) continue;
+    const lum = (px[i] * .3 + px[i + 1] * .59 + px[i + 2] * .11) / 255, v = (0.05 + lum * 0.26) * 255;
+    for (let k = 0; k < 3; k++) px[i + k] = Math.round(v * 0.88 + C[k] * (0.05 + lum * 0.26) * 0.12);
+  }
+}
 function themedGameZip(accentHex, opt) {
   const hex = String((opt.useTheme === false && opt.color) ? opt.color : accentHex || '#4aa3ff').replace('#', ''), n = parseInt(hex, 16) || 0x4aa3ff, C = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
   const jp = jarPath(); if (!jp) return null;
@@ -1832,7 +1844,7 @@ function themedGameZip(accentHex, opt) {
   if (opt.totem !== false) add('assets/minecraft/textures/item/totem_of_undying.png', img => {
     for (let i = 0; i < img.px.length; i += 4) { if (img.px[i + 3] < 8) continue; const lum = (img.px[i] * .3 + img.px[i + 1] * .59 + img.px[i + 2] * .11) / 255, c = tintLum(C, .12 + lum * .95); for (let k = 0; k < 3; k++) img.px[i + k] = Math.round(c[k]); }
   });
-  if (opt.inv !== false) for (const name of ents.keys()) if (/^assets\/minecraft\/textures\/gui\/container\/[^/]+\.png$/.test(name) || /^assets\/minecraft\/textures\/gui\/container\/creative_inventory\/[^/]+\.png$/.test(name) || /^assets\/minecraft\/textures\/gui\/sprites\/container\/slot[^/]*\.png$/.test(name)) add(name, img => recolorGray(img, .85));
+  if (opt.inv !== false || opt.dark) for (const name of ents.keys()) if (/^assets\/minecraft\/textures\/gui\/container\/[^/]+\.png$/.test(name) || /^assets\/minecraft\/textures\/gui\/container\/creative_inventory\/[^/]+\.png$/.test(name) || /^assets\/minecraft\/textures\/gui\/sprites\/container\/slot[^/]*\.png$/.test(name)) add(name, img => opt.dark ? recolorDark(img) : recolorGray(img, .85));
   return files.length > 1 ? zipStore(files) : null;
 }
 function syncShopPacks(dir, equip) { // gewählte Totem-/Hotbar-Resourcepacks installieren und in options.txt aktivieren; Himmel in die Client-Config
@@ -1840,9 +1852,9 @@ function syncShopPacks(dir, equip) { // gewählte Totem-/Hotbar-Resourcepacks in
     const rp = path.join(dir, 'resourcepacks'); fs.mkdirSync(rp, { recursive: true });
     const want = ['totem', 'hotbar', 'sky', 'shield'].map(c => PACK_FILES[equip[c]]).filter(Boolean);
     for (const f of fs.readdirSync(rp)) if (/^cloudy-(totem|hotbar|sky|shield)-.*\.zip$/.test(f) && !want.includes(f)) try { fs.unlinkSync(path.join(rp, f)); } catch {}
-    for (const f of want) { if (f === 'cloudy-sky-galaxy.zip') continue; const src = path.join(__dirname, 'assets', 'packs', f), dst = path.join(rp, f); if (fs.existsSync(src) && (!fs.existsSync(dst) || fs.statSync(dst).size !== fs.statSync(src).size)) fs.copyFileSync(src, dst); }
+    for (const f of want) { if (f === 'cloudy-sky-galaxy.zip') continue; const src0 = path.join(__dirname, 'assets', 'packs', f), src = fs.existsSync(src0) ? src0 : src0.replace(/\.zip$/, '.pack'), dst = path.join(rp, f); /* Schild-Designs liegen als .pack im Launcher (Build packt keine .zip ein) */ if (fs.existsSync(src) && (!fs.existsSync(dst) || fs.statSync(dst).size !== fs.statSync(src).size)) fs.copyFileSync(src, dst); }
     if (want.includes('cloudy-sky-galaxy.zip')) { try { const th = (cfgPatch({}).theme) || {}; fs.writeFileSync(path.join(rp, 'cloudy-sky-galaxy.zip'), themedSkyZip(th.accent, (th.sky || [])[0])); } catch {} }
-    const tc = cfgPatch({}); let toolsOn = false; try { const z = (tc.toolTex !== false || tc.texTotem !== false || tc.texInv !== false) ? themedGameZip(((tc.theme) || {}).accent, { pick: tc.toolTex !== false, totem: tc.texTotem !== false, inv: tc.texInv !== false, useTheme: tc.texTheme !== false, color: tc.texColor }) : null; if (z) { fs.writeFileSync(path.join(rp, 'cloudy-tools-theme.zip'), z); toolsOn = true; } else fs.rmSync(path.join(rp, 'cloudy-tools-theme.zip'), { force: true }); } catch {}
+    const tc = cfgPatch({}); let toolsOn = false; try { const z = (tc.toolTex !== false || tc.texTotem !== false || tc.texInv !== false || tc.texInvDark !== false) ? themedGameZip(((tc.theme) || {}).accent, { pick: tc.toolTex !== false, totem: tc.texTotem !== false, inv: tc.texInv !== false, dark: tc.texInvDark !== false, useTheme: tc.texTheme !== false, color: tc.texColor }) : null; if (z) { fs.writeFileSync(path.join(rp, 'cloudy-tools-theme.zip'), z); toolsOn = true; } else fs.rmSync(path.join(rp, 'cloudy-tools-theme.zip'), { force: true }); } catch {}
     const of = path.join(dir, 'options.txt'); let lines = []; try { lines = fs.readFileSync(of, 'utf8').split(/\r?\n/).filter(Boolean); } catch {}
     let list = ['vanilla']; const i = lines.findIndex(l => l.startsWith('resourcePacks:'));
     if (i >= 0) try { list = JSON.parse(lines[i].slice(14)); } catch {}
@@ -2893,6 +2905,7 @@ ipcMain.handle('launchCancel', () => { launchCancelled = true; try { if (mcProc)
 const modernQP = v => { const m = /^1\.(\d+)/.exec(String(v)); return (m && +m[1] >= 20) || /^\d{2}\./.test(String(v)) || /^2\d/.test(String(v)); };
 ipcMain.handle('launch', async (_e, { username, version, type, ram, server, fabric, perf, jvm, ww, wh, minimize, clientMods = [], cheats, syncOpts, preset, safe = 0, hud, gfx }) => {
   if (cfgPatch({}).gateOk !== true) throw new Error('Access code required.');
+  if (mcProc) return { ok: false, error: 'Minecraft läuft schon. Schließe es zuerst, bevor du es ein zweites Mal startest.' }; // nie zwei Cloudy-Clients gleichzeitig
   if (!currentUser && !offlineMode) return { ok: false, error: 'Bitte zuerst bei Cloudy anmelden.' };
   const off = !currentUser; // Offline-Modus: nur Einzelspieler, ohne Konto-Funktionen
   if (off) { server = null; cheats = false; syncOpts = false; username = /^[A-Za-z0-9_]{3,16}$/.test(String(username || '')) ? username : 'Player'; }

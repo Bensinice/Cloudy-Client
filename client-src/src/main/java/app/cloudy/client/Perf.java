@@ -42,6 +42,7 @@ public final class Perf {
 			var f = java.nio.file.Path.of(p);
 			if (!java.nio.file.Files.exists(f)) return;
 			var o = com.google.gson.JsonParser.parseString(java.nio.file.Files.readString(f)).getAsJsonObject();
+			ModConfig.invDark = !o.has("texInvDark") || o.get("texInvDark").getAsBoolean();
 			if (!o.has("perfProfile")) return;
 			int v = o.get("perfProfile").getAsInt();
 			ModConfig.load();

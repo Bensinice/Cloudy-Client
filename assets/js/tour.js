@@ -66,7 +66,7 @@
   function wire() {
     const cb = q('#introOn'); if (cb) { cb.checked = !get('introOn', true); cb.onchange = () => set('introOn', !cb.checked); }
     if (window.cloudy && window.cloudy.texCfg) {
-      const ids = { toolTex: '#toolTexOn', texTotem: '#texTotemOn', texInv: '#texInvOn', texTheme: '#texThemeOn' }, col = q('#texColor');
+      const ids = { toolTex: '#toolTexOn', texTotem: '#texTotemOn', texInv: '#texInvOn', texTheme: '#texThemeOn', texInvDark: '#texInvDarkOn' }, col = q('#texColor');
       window.cloudy.texCfg().then(c => { for (const k in ids) { const e = q(ids[k]); if (e) e.checked = !!c[k]; } if (col) { col.value = c.texColor; col.disabled = c.texTheme; } }).catch(() => {});
       for (const k in ids) { const e = q(ids[k]); if (e) e.onchange = () => { window.cloudy.texCfg({ [k]: e.checked }); if (k === 'texTheme' && col) col.disabled = e.checked; }; }
       if (col) col.onchange = () => window.cloudy.texCfg({ texColor: col.value });

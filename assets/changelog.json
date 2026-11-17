@@ -1,5 +1,20 @@
 [
  {
+  "v": "0.9.139",
+  "date": "2026-11-17",
+  "added": [
+   "Schild-Designs werden jetzt im Spiel wirklich angezeigt (die Texturen fehlten bisher ganz) – automatisch dabei, kein Extra-Mod nötig",
+   "Dunkles Inventar: Truhen, Inventar und Menüs dunkel statt grau (Einstellungen → Texturen, standardmäßig an)",
+   "Cloudy Cheats: 23 neue Module (AutoEat, NoFall, Step, AutoTool, AutoRespawn, SafeWalk, AutoFish, ChestStealer, AutoRefill, AutoBow, AutoLog, AntiKnockback, BoatFly, ElytraBoost, AntiVoid u. a.) und neue Kategorien Player/World"
+  ],
+  "fixed": [
+   "Hund Steve war in der Vorschau und im Inventar abgeschnitten – Kamera weiter weg, Pet im Inventar kleiner",
+   "Shop: Die Vorschau lag über den Tagesangeboten",
+   "Umhang ragte in F5 von hinten weiterhin ins Bild",
+   "Cloudy lässt sich nicht mehr zweimal öffnen, und Minecraft startet nicht doppelt"
+  ]
+ },
+ {
   "v": "0.9.138",
   "date": "2026-11-17",
   "added": [
