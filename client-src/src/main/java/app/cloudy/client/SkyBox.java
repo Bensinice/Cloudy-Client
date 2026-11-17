@@ -132,16 +132,12 @@ public final class SkyBox {
 		MinecraftClient mc = MinecraftClient.getInstance();
 		if (!active() || !load()) { // ohne Skybox: beim Event trotzdem Sternschnuppen
 			if (!event || mc.world == null || mc.world.getRegistryKey() != World.OVERWORLD) return;
-			try { MatrixStack ms0 = ctx.matrixStack(); if (ms0 == null) return; Fog of = RenderSystem.getShaderFog(); try { RenderSystem.setShaderFog(Fog.DUMMY); RenderSystem.enableDepthTest(); RenderSystem.depthMask(false); RenderSystem.disableCull(); stars(new Matrix4f(ms0.peek().getPositionMatrix()), Math.max(64f, mc.options.getClampedViewDistance() * 16f * 1.45f), false); } finally { RenderSystem.depthMask(true); RenderSystem.enableCull(); RenderSystem.setShaderFog(of); } } catch (Throwable ignored) {}
+			try { Fog of = RenderSystem.getShaderFog(); var mv0 = RenderSystem.getModelViewStack(); mv0.pushMatrix(); mv0.identity(); try { RenderSystem.setShaderFog(Fog.DUMMY); RenderSystem.enableDepthTest(); RenderSystem.depthMask(false); RenderSystem.disableCull(); stars(view(mc), Math.max(64f, mc.options.getClampedViewDistance() * 16f * 1.45f), false); } finally { mv0.popMatrix(); RenderSystem.depthMask(true); RenderSystem.enableCull(); RenderSystem.setShaderFog(of); } } catch (Throwable ignored) {}
 			return;
 		}
-		MatrixStack ms = null;
-		try { ms = ctx.matrixStack(); } catch (Throwable ignored) {}
-		Matrix4f m;
-		if (ms != null) m = new Matrix4f(ms.peek().getPositionMatrix());
-		else {
-			try { Object pm = WorldRenderContext.class.getMethod("positionMatrix").invoke(ctx); if (!(pm instanceof Matrix4f m4)) return; m = new Matrix4f(m4); } catch (Throwable t) { return; }
-		}
+		// Nur die Blickrichtung der Kamera, unabhaengig davon, was Minecraft/Fabric gerade im Matrix-Stapel haben (sonst drehte sich die Skybox mit der Kamera mit)
+		Matrix4f m = view(mc);
+		var mv = RenderSystem.getModelViewStack(); mv.pushMatrix(); mv.identity();
 		float d = Math.max(64f, mc.options.getClampedViewDistance() * 16f * 1.45f); // hinter dem Gelaende, vor der Sichtgrenze
 		Fog oldFog = RenderSystem.getShaderFog();
 		try {
@@ -166,9 +162,12 @@ public final class SkyBox {
 			boolean night = live ? realNight() : (mc.world != null && (mc.world.getTimeOfDay() % 24000L) > 13000L && (mc.world.getTimeOfDay() % 24000L) < 23000L);
 			stars(m, d, night);
 		} finally {
+			mv.popMatrix();
 			RenderSystem.depthMask(true);
 			RenderSystem.enableCull();
 			RenderSystem.setShaderFog(oldFog);
 		}
 	}
+
+	private static Matrix4f view(MinecraftClient mc) { return new Matrix4f().rotation(mc.gameRenderer.getCamera().getRotation().conjugate(new org.joml.Quaternionf())); }
 }

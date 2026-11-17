@@ -1,5 +1,13 @@
 [
  {
+  "v": "0.9.136",
+  "date": "2026-11-17",
+  "added": [],
+  "fixed": [
+   "Skybox drehte sich mit der Kamera mit – sie steht jetzt fest am Himmel (auch die Sternschnuppen)"
+  ]
+ },
+ {
   "v": "0.9.135",
   "date": "2026-11-16",
   "added": [
