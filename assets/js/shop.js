@@ -391,6 +391,7 @@
     const I = ITEMS[id], W = 14, N = 9;
     for (let i = 0; i < N; i++) { const z = (i - (N - 1) / 2) * .26, b = flat(box3(W, W * I.ar, .1, 0, 16, z, spr(I.img))); if (i === 0 || i === N - 1) b.style.filter = 'brightness(.78)'; else if (i === 1 || i === N - 2) b.style.filter = 'brightness(.9)'; root.appendChild(b); }
   }
+  window.__item3d = id => item3d(id); // für scripts/site-cosmetics.js (Website-Vorschaubilder)
   function item3d(id) {
     if (ITEMS[id] && ITEMS[id].glb) { const w = document.createElement('div'); w.className = 'i3'; w.style.cssText = 'display:flex;align-items:center;justify-content:center'; const im = new Image(); im.src = ITEMS[id].img; im.alt = ''; im.style.cssText = 'width:86%;height:86%;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))'; w.appendChild(im); return w; } // Vorschaubild kommt aus dem .glb selbst (mit three.js gerendert)
     const wrap = document.createElement('div'); wrap.className = 'i3'; const rig = document.createElement('div'); rig.className = 'rig3 i3r'; wrap.appendChild(rig);

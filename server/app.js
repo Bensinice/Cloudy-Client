@@ -112,7 +112,8 @@ app.use('/notes', express.json({ limit: '400kb' })); app.use(cors()); app.use(ex
 require('./site')(app, express, async req => { // Webseite, Downloads, Update-Feed, Upload (site.js); Admin = Konto mit Admin-Recht oder Owner-Tag
   const m = /^Bearer (.+)$/.exec(req.headers.authorization || ''), key = m && (sessions.get(m[1]) || await tokKey(m[1])), me = key && await get(key);
   return !!me && !lockMsg(me) && isAdm(me);
-}, { checks: { db: async () => { await db.query('SELECT 1'); return true; }, online: () => { const n = Date.now(); return [...SEEN.values()].filter(t => n - t < 120000).length; } } });
+}, { checks: { db: async () => { await db.query('SELECT 1'); return true; }, online: () => { const n = Date.now(); return [...SEEN.values()].filter(t => n - t < 120000).length; } },
+  shop: () => { const n = Date.now(), wk = wkKey(n); return { prices: PRICES, hide: HIDE, lim: Object.values(LIM).map(l => ({ id: l.id, mode: l.mode, price: l.price, left: Math.max(0, (l.stock || 0) - (l.sold || 0)), stock: l.stock || 0, until: l.until || 0 })), rotation: rotation(n), plusMonth: (EXTRA.plusMonth || {})[monKey(n)] || '', weekly: WEEKLY_ITEMS[Math.floor(Date.parse(wk) / (7 * 864e5)) % WEEKLY_ITEMS.length] }; } }); // shop: für die Cosmetics-Seite der Website
 const wrap = f => (req, res) => f(req, res).catch(e => { console.error(e.message); res.status(500).json({ error: 'Serverfehler.' }); });
 app.get('/health', (_q, r) => r.json({ ok: true, backup: BACKUP }));
 // Passwort vergessen: legt eine Nachricht im Chat (Freunde) beim Owner ab; der Owner setzt das Konto im Admin-Bereich zurück. Verraet nicht, ob es das Konto gibt.

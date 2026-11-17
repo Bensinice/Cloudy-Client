@@ -44,6 +44,22 @@ module.exports = (app, express, isAdmin, ext = {}) => { // isAdmin(req) -> Promi
     }
     res.set && res.set('Cache-Control', 'public, max-age=300'); res.json({ repo: GH, news: NEWS.list });
   });
+  // ---- Cosmetics-Seite: Katalog + Vorschaubilder kommen aus dem öffentlichen Repo (assets/site-cosmetics.json), Preise/Angebote/Limited live von diesem Server ----
+  const COSC = { t: 0, items: [] };
+  app.get('/api/cosmetics', async (_q, res) => {
+    if (/^[\w.-]+\/[\w.-]+$/.test(GH) && Date.now() - COSC.t > 10 * 60e3) {
+      try {
+        const r = await fetch(`https://raw.githubusercontent.com/${GH}/main/assets/site-cosmetics.json`, { signal: AbortSignal.timeout(8000), headers: { 'User-Agent': 'Cloudy-Site' } });
+        if (r.ok) { const j = await r.json(); if (j && Array.isArray(j.items)) COSC.items = j.items.slice(0, 600).filter(i => i && /^[a-z]+-[a-z0-9-]{1,30}$/.test(String(i.id))).map(i => ({ id: i.id, cat: String(i.cat || '').slice(0, 12), name: String(i.name || '').slice(0, 60), price: Math.max(0, +i.price || 0), plus: !!i.plus, excl: i.excl ? String(i.excl).slice(0, 12) : '', img: /^assets\/site-cos\/[a-z0-9-]+\.png$/.test(i.img || '') ? `https://raw.githubusercontent.com/${GH}/main/${i.img}` : '' })); }
+      } catch {}
+      COSC.t = Date.now() - (COSC.items.length ? 0 : 9 * 60e3);
+    }
+    let sh = {}; try { sh = ext.shop ? ext.shop() : {}; } catch {}
+    const hide = new Set(sh.hide || []), lim = new Map((sh.lim || []).map(l => [l.id, l])), off = new Map(((sh.rotation || {}).offers || []).map(o => [o.id, o.off]));
+    const items = COSC.items.filter(i => !hide.has(i.id) || lim.has(i.id)).map(i => { const base = sh.prices && Number.isFinite(+sh.prices[i.id]) ? +sh.prices[i.id] : i.price, l = lim.get(i.id), o = off.get(i.id);
+      return { ...i, price: l ? l.price || base : o ? Math.round(base * (100 - o) / 100) : base, was: o && !l ? base : 0, deal: o && !l ? o : 0, lim: l ? { left: l.left, stock: l.stock, until: l.until, code: l.mode === 'code' } : null, month: sh.plusMonth === i.id, weekly: sh.weekly === i.id }; });
+    res.set && res.set('Cache-Control', 'public, max-age=60'); res.json({ repo: GH, ends: (sh.rotation || {}).ends || 0, items });
+  });
   app.get('/api/releases', (_q, res) => res.json({ releases: list().map(r => ({ ...r, files: r.files.map(f => ({ ...f, url: `/download/${r.version}/${encodeURIComponent(f.name)}` })) })) }));
   const send = (res, v, f, name) => { const p = path.join(ROOT, v, f); if (!OK_VER.test(v) || !OK_FILE.test(f) || !fs.existsSync(p)) return res.status(404).send('Nicht gefunden.'); res.download(p, name || f); };
   app.get('/download/latest/:plat', (req, res) => { const r = list()[0], f = r && r.files.find(x => x.platform === req.params.plat); if (!f) return res.status(404).send('Noch keine Datei hochgeladen.'); res.redirect(`/download/${r.version}/${encodeURIComponent(f.name)}`); });
