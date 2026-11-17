@@ -12,3 +12,6 @@ server/cloudy.env
 server/node_modules/
 server/package-lock.json
 server/status-config.json
+
+# Konto-Server gehört nur ins private Repo cloudy-server-app (nicht veröffentlichen)
+server/
