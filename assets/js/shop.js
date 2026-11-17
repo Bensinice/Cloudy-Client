@@ -84,6 +84,7 @@
     'pet-cat': { b: [0, 0, 16, 16], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/pet-cat.png', ar: 1, glb: true },
     'pet-dragon': { b: [0, 0, 16, 16], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/pet-dragon.png', ar: 1, glb: true },
     'pet-minime': { b: [0, 0, 16, 16], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/pet-minime.png', ar: 1, glb: true },
+    'pet-owdog': { b: [0, 0, 16, 16], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/pet-owdog.png', ar: 1, glb: true },
     'cape-g7glitch': { b: [0, 8, 16, 24], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/cape-g7glitch.png', ar: 1, glb: true },
     'cape-g7storm': { b: [0, 8, 16, 24], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/cape-g7storm.png', ar: 1, glb: true },
     'cape-g7frost': { b: [0, 8, 16, 24], c: ['#7fd0ff', '#132040'], img: 'assets/cosmetics3d/icons/cape-g7frost.png', ar: 1, glb: true },
@@ -260,6 +261,7 @@
   function itemCanvas(id, x0, y0, w, h, k) { const c = document.createElement('canvas'); c.width = w * k; c.height = h * k; const g = c.getContext('2d'); g.setTransform(k, 0, 0, k, -x0 * k, -y0 * k); drawItem(g, id); return c.toDataURL(); }
   function paint3d(equip, hostSel) {
     if (!hostSel) try { fxOverlay(equip); } catch {}
+    if (!hostSel) try { petEmoBar(equip); } catch {}
     const host = $(hostSel || '#shop3d'); if (!host) return; host.innerHTML = ''; const rig = document.createElement('div'); rig.className = 'rig3'; host.appendChild(rig);
     const sk = skins.find(x => x.id === sel) || skins[0], im0 = sk && load(sk.data), ok = im0 && im0.complete && im0.naturalWidth, im = ok ? im0 : steve(), tall = ok ? im0.naturalHeight >= 64 : true, slim = sk && sk.model === 'slim', aw = slim ? 3 : 4;
     if (window.Glb3d && Glb3d.usesGlb(equip)) { Glb3d.mount(host, { equip, extra: glbExtra, skin: ok ? im0 : null, slim, angle: hostSel === '#heroSkin' ? () => heroAng : () => ang3 }); return; } // 3D-Modelle (.glb) brauchen echtes 3D (three.js)
@@ -599,6 +601,18 @@ const row = (lab, help, field) => `<div class="limrow" style="margin:8px 0"><div
   function petLvHtml(id) {
     const p = (shop.pets || {})[id] || { lv: 1, min: 0 }, st = shop.petSteps || [0, 60, 300, 900, 2400], nx = st[p.lv] ; const pct = nx ? Math.min(100, Math.round((p.min - st[p.lv - 1]) / (nx - st[p.lv - 1]) * 100)) : 100;
     return `<small class="petlv">⭐ ${L('Stufe')} ${p.lv}${nx ? ` · ${p.min}/${nx} min` : ' · MAX'}<span class="pbar"><i style="width:${pct}%"></i></span></small>`;
+  }
+  // Pet-Emotes in der Vorschau (z. B. Hund Steve): Knöpfe unter dem 3D-Bild; das Modell meldet seine Emotes über window.__petEmoteList
+  window.cloudyPetEmote = (pet, id, snd) => { window.__petEmote = { pet, id, start: performance.now() }; if (snd) try { const a = new Audio('assets/sounds/' + snd + '.ogg'); a.volume = 0.7; a.play().catch(() => {}); } catch {} };
+  function petEmoBar(eq, n) {
+    const host = $('#shop3d'); if (!host) return; let b = $('#petEmo');
+    const PL = eq.pet && window.__petEmoteList && window.__petEmoteList.pet === eq.pet ? window.__petEmoteList.list : null;
+    if (!eq.pet) { if (b) b.remove(); return; }
+    if (!PL) { if (b) b.remove(); if ((n || 0) < 8) setTimeout(() => petEmoBar(eqView(), (n || 0) + 1), 500); return; } // Modell lädt noch
+    if (!b) { b = document.createElement('div'); b.id = 'petEmo'; b.className = 'petemo'; host.insertAdjacentElement('afterend', b); }
+    if (b.dataset.pet === eq.pet) return; b.dataset.pet = eq.pet;
+    b.innerHTML = `<small class="muted">🐾 ${L('Pet-Emotes – im Spiel: Taste B, dann Tab')}</small><div>${PL.map(e => `<button class="chip" data-pem="${e.id}" data-snd="${e.sound}">${e.sound ? '🔊 ' : ''}${escL(e.name)}</button>`).join('')}</div>`;
+    b.querySelectorAll('[data-pem]').forEach(x => x.onclick = () => window.cloudyPetEmote(eq.pet, x.dataset.pem, x.dataset.snd));
   }
   function fxOverlay(eq) { // kleine Partikel in der Vorschau, wenn eine Spur angelegt/anprobiert ist
     const host = $('#shop3d'); if (!host) return; let o = $('#fxPrev'); const e = FX_EMO[eq.trail];

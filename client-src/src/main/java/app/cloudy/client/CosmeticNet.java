@@ -88,7 +88,7 @@ public final class CosmeticNet {
 		String want = System.getProperty("cloudy.coswant", ""), oth = System.getProperty("cloudy.cosoth", "");
 		if (want.isEmpty() || oth.isEmpty() || mc.world == null || mc.player == null || mc.getNetworkHandler() == null) return;
 		long now = System.currentTimeMillis();
-		if (now - lastWant > 4000 || Emotes.dirty || Social.dirty) {
+		if (now - lastWant > 4000 || Emotes.dirty || Social.dirty || PetEmote.dirty) {
 			lastWant = now;
 			try {
 				List<String> names = new ArrayList<>();
@@ -96,10 +96,11 @@ public final class CosmeticNet {
 				for (PlayerListEntry e : mc.getNetworkHandler().getPlayerList()) { String n = e.getProfile().getName(); if (n != null) names.add(n); }
 				java.util.Collections.sort(names);
 				String joined = String.join(",", names);
-				if (!joined.equals(lastNames) || now - lastRead > 20000 || Emotes.dirty || Social.dirty) { Emotes.dirty = false; Social.dirty = false; // geaendert oder alle 20 s auffrischen (Mitspieler wechseln ihre Cosmetics)
+				if (!joined.equals(lastNames) || now - lastRead > 20000 || Emotes.dirty || Social.dirty || PetEmote.dirty) { Emotes.dirty = false; Social.dirty = false; PetEmote.dirty = false; // geaendert oder alle 20 s auffrischen (Mitspieler wechseln ihre Cosmetics)
 					lastNames = joined; lastRead = now;
 					JsonObject o = new JsonObject(); com.google.gson.JsonArray a = new com.google.gson.JsonArray(); for (String n : names) a.add(n); o.add("names", a);
 					JsonObject em = Emotes.wantJson(); if (em != null) o.add("em", em); // eigenes Emote fuer die Mitspieler
+					JsonObject pe = PetEmote.want(); if (pe != null) o.add("pe", pe); // Pet-Emote
 					com.google.gson.JsonArray rq = Social.rpcJson(); if (rq.size() > 0) o.add("rpc", rq); com.google.gson.JsonArray jr = Social.journalJson(); if (jr.size() > 0) o.add("jr", jr); // Auftraege (Profil, Party-Chat, Wolken-Post ...)
 					Files.writeString(Path.of(want), o.toString());
 				}
@@ -112,13 +113,14 @@ public final class CosmeticNet {
 				if (m != otherMod) {
 					otherMod = m;
 					JsonObject root = JsonParser.parseString(Files.readString(p)).getAsJsonObject(), pl = root.getAsJsonObject("players");
-					long fts = root.has("ts") ? root.get("ts").getAsLong() : m; Map<String, Object[]> emm = new HashMap<>();
+					long fts = root.has("ts") ? root.get("ts").getAsLong() : m; Map<String, Object[]> emm = new HashMap<>(), pem = new HashMap<>();
 					Map<String, String[]> nm = new HashMap<>(); Map<String, Map<String, int[]>> dm = new HashMap<>(); Map<String, Integer> plm = new HashMap<>(); Map<String, String> bdm = new HashMap<>(); Map<String, List<String>> tm = new HashMap<>(); java.util.Set<String> lv = new java.util.HashSet<>(); String selfN = mc.player.getName().getString();
 					if (pl != null) for (Map.Entry<String, JsonElement> en : pl.entrySet()) {
 						JsonObject e = en.getValue().getAsJsonObject();
 						try { if (e.has("cl") && e.get("cl").getAsInt() == 1) lv.add(en.getKey().toLowerCase()); } catch (Throwable ignored) {}
 						try { if (e.has("tg") && e.get("tg").isJsonArray()) { List<String> tl = new ArrayList<>(); for (JsonElement x : e.getAsJsonArray("tg")) tl.add(x.getAsString()); if (!tl.isEmpty()) tm.put(en.getKey().toLowerCase(), tl); } } catch (Throwable ignored) {}
 						if (en.getKey().equalsIgnoreCase(selfN)) continue;
+						try { if (e.has("pe") && e.get("pe").isJsonObject()) { JsonObject x = e.getAsJsonObject("pe"); String pid = x.get("id").getAsString(); if (pid.matches("[a-z0-9_]{1,24}")) pem.put(en.getKey().toLowerCase(), new Object[] { pid, fts - x.get("a").getAsLong() }); } } catch (Throwable ignored) {}
 						try { if (e.has("em") && e.get("em").isJsonObject()) { JsonObject x = e.getAsJsonObject("em"); String eid = x.get("id").getAsString(); if (eid.startsWith("emote-")) emm.put(en.getKey().toLowerCase(), new Object[] { eid, fts - x.get("a").getAsLong() }); } } catch (Throwable ignored) {}
 						String c = e.has("cape") ? e.get("cape").getAsString() : null, h = e.has("hat") ? e.get("hat").getAsString() : null, w = e.has("wings") ? e.get("wings").getAsString() : null, pt = e.has("pet") ? e.get("pet").getAsString() : null;
 						String tr = e.has("trail") ? e.get("trail").getAsString() : null, wf = e.has("winfx") ? e.get("winfx").getAsString() : null, ft = e.has("foot") ? e.get("foot").getAsString() : null;
@@ -128,7 +130,7 @@ public final class CosmeticNet {
 						try { if (e.has("bd")) { String b = e.get("bd").getAsString(); if (b.length() <= 2) bdm.put(en.getKey().toLowerCase(), b); } } catch (Throwable ignored) {}
 					}
 					if (nm.size() != others.size()) CloudyClient.LOG.info("Cloudy: Cosmetics von {} Mitspielern geladen", nm.size());
-					others = nm; dyes = dm; petLvs = plm; badges = bdm; tagMap = tm; live = lv; Emotes.setOthers(emm); Social.read(root, pl);
+					others = nm; dyes = dm; petLvs = plm; badges = bdm; tagMap = tm; live = lv; Emotes.setOthers(emm); PetEmote.setOthers(pem); Social.read(root, pl);
 					try { // Cloudy-Event am Himmel (fuer alle gleichzeitig)
 						boolean on = root.has("ev") && root.get("ev").isJsonObject() && root.getAsJsonObject("ev").get("on").getAsBoolean();
 						SkyBox.event = on;

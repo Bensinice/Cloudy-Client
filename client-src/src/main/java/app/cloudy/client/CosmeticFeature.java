@@ -41,7 +41,7 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 			DYE = Cosmetics::dye; REACT = Effects.react(me);
 			try {
 			drawAll(matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV, m.head, m.body, m.leftArm, m.rightArm, Cosmetics.hat, ely ? null : Cosmetics.wings, Cosmetics.shield, held, !ely && !camNear && ZZ4.handles(Cosmetics.cape) ? Cosmetics.cape : null, limbDistance);
-			drawPet(matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV, m.body, m.leftArm, Cosmetics.pet, state.skinTextures != null ? state.skinTextures.texture() : null, Emotes.progress(null));
+			drawPet(matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV, m.body, m.leftArm, Cosmetics.pet, state.skinTextures != null ? state.skinTextures.texture() : null, Emotes.progress(null), PetEmote.id(null), PetEmote.start(null));
 			} finally { DYE = null; REACT = null; }
 		} catch (RuntimeException e) { /* Cosmetics duerfen das Spiel nie zum Absturz bringen */ }
 	}
@@ -56,7 +56,7 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 		final String wn = who.getName().getString(); DYE = id -> CosmeticNet.dyeOf(wn, id); REACT = Effects.react(who);
 		try {
 		drawAll(matrices, vcp, light, OverlayTexture.DEFAULT_UV, m.head, m.body, m.leftArm, m.rightArm, eq[1], ely ? null : eq[2], null, 0, !ely && ZZ4.handles(eq[0]) ? eq[0] : null, limb);
-		if (eq.length > 3 && eq[3] != null) drawPet(matrices, vcp, light, OverlayTexture.DEFAULT_UV, m.body, m.leftArm, eq[3], who.getSkinTextures().texture(), Emotes.progress(wn));
+		if (eq.length > 3 && eq[3] != null) drawPet(matrices, vcp, light, OverlayTexture.DEFAULT_UV, m.body, m.leftArm, eq[3], who.getSkinTextures().texture(), Emotes.progress(wn), PetEmote.id(wn), PetEmote.start(wn));
 		} finally { DYE = null; REACT = null; }
 	}
 
@@ -72,9 +72,9 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 	}
 
 	/** Pet: am Koerper (schwebend/Schulter) oder am linken Arm (bewegt sich mit). skin = Skin des Spielers (Mini-Ich). */
-	public static void drawPet(MatrixStack matrices, VertexConsumerProvider vcp, int light, int ov, ModelPart body, ModelPart leftArm, String pet, net.minecraft.util.Identifier skin) { drawPet(matrices, vcp, light, ov, body, leftArm, pet, skin, -1f); }
+	public static void drawPet(MatrixStack matrices, VertexConsumerProvider vcp, int light, int ov, ModelPart body, ModelPart leftArm, String pet, net.minecraft.util.Identifier skin) { drawPet(matrices, vcp, light, ov, body, leftArm, pet, skin, -1f, null, 0L); }
 	/** emo = Fortschritt (0..1) des Emotes, das der Besitzer gerade spielt, sonst -1: dann huepft das Pet mit (Schalter "Pet emotes"). */
-	public static void drawPet(MatrixStack matrices, VertexConsumerProvider vcp, int light, int ov, ModelPart body, ModelPart leftArm, String pet, net.minecraft.util.Identifier skin, float emo) {
+	public static void drawPet(MatrixStack matrices, VertexConsumerProvider vcp, int light, int ov, ModelPart body, ModelPart leftArm, String pet, net.minecraft.util.Identifier skin, float emo, String peId, long peStart) {
 		if (pet == null || !GLB.handles(pet)) return;
 		try {
 			matrices.push();
@@ -87,7 +87,7 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 				if (!arm) matrices.multiply(net.minecraft.util.math.RotationAxis.POSITIVE_Y.rotation(emo * (float) Math.PI * 2f * env));
 			}
 			tintFor(pet, false);
-			try { if (arm) GLB.petOnArm(matrices, vcp, light, ov, pet, skin); else GLB.pet(matrices, vcp, light, ov, pet, skin); } finally { GLB.untint(); }
+			try { if (arm) GLB.petOnArm(matrices, vcp, light, ov, pet, skin, peId, peStart); else GLB.pet(matrices, vcp, light, ov, pet, skin, peId, peStart); } finally { GLB.untint(); }
 			matrices.pop();
 		} catch (RuntimeException e) { /* nie abstuerzen */ }
 	}

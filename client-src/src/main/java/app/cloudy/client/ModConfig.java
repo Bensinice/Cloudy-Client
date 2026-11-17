@@ -67,7 +67,7 @@ public final class ModConfig {
 		new Def("post", "Cloud mail", "Social", "Messages from friends fly in as a little cloud. Press the Cloud mail key (default Y) to open, send with /post <name> <text>"),
 		new Def("profilecard", "Profile card", "Social", "Look at a Cloudy player and press the profile key (default G) to see level, play time, badges and add them as a friend"),
 		new Def("emotecombo", "Emote combos", "Social", "Two Cloudy players close together start the same combo emote within 2 seconds = shared animation"),
-		new Def("petemote", "Pet emotes", "Social", "Your pet hops and spins along when you play an emote"),
+		new Def("petemote", "Pet emotes", "Social", "Your pet hops and spins along when you play an emote. Pets with own emotes (Steve the Dog): press B, then Tab"),
 		new Def("trails", "Particle trails", "Social", "Shows trails (stars, clouds, gold sparks ...) behind you and other Cloudy players who wear one. Equip trails in the launcher shop (Effects)"),
 		new Def("footprints", "Footprints", "Social", "Fading footprints in your color behind you and other Cloudy players who wear them"),
 		new Def("winfx", "Win effects", "Social", "Fireworks or a cloud puff when you win a game or beat someone (needs a win effect from the shop)"),

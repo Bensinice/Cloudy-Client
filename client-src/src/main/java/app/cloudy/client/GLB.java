@@ -1,6 +1,7 @@
 package app.cloudy.client;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.minecraft.client.MinecraftClient;
@@ -120,6 +121,7 @@ public final class GLB {
 		FILES.put("pet-cat", "pet_tabby_cat.glb");
 		FILES.put("pet-dragon", "pet_shadow_dragon.glb");
 		FILES.put("pet-minime", "pet_mini_me.glb");
+		FILES.put("pet-owdog", "pet_dog.glb");
 		FILES.put("cape-g7glitch", "cloudy_glitch_cape.glb");
 		FILES.put("cape-g7storm", "storm_chain_cape.glb");
 		FILES.put("cape-g7frost", "frostbound_chains_cape.glb");
@@ -137,10 +139,16 @@ public final class GLB {
 		// Fluegelschlag aus dem Modell (extras.cloudyWing): Rollen um die Fluegelwurzel, Ketten pendeln nach
 		boolean mot, chain; float[] piv, cpiv; float roll0, rollA, yawA, follow, lag, sway; int per = 3000;
 		// Pets: eigene Bewegung je Teil (extras.cloudyMove) und Spieler-Skin (extras.cloudySkin, Mini-Ich)
-		boolean cm, skin; float[] mPiv, mRx, mRy, mRz, mS, mBob; float mPer = 2000f; }
+		boolean cm, skin; float[] mPiv, mRx, mRy, mRz, mS, mBob, mTy; float mPer = 2000f, mSpin; String emoteOnly; }
+	/** Emote eines Pets (extras.cloudyEmotes am Wurzelknoten): Bewegungen je Teil-Name, Dauer, optionaler Ton. */
+	private static final class PetEmote { String id, name, sound; long dur; final Map<String, Part> moves = new HashMap<>(); }
+	private static void fillMove(Part p, JsonObject cmv) {
+		p.cm = true; p.mPiv = cmv.has("pivot") ? vec3(cmv.getAsJsonArray("pivot")) : new float[3]; p.mPer = cmv.has("periodMs") ? Math.max(100f, cmv.get("periodMs").getAsFloat()) : 2000f;
+		p.mRx = arr3(cmv, "rx"); p.mRy = arr3(cmv, "ry"); p.mRz = arr3(cmv, "rz"); p.mS = arr3(cmv, "s"); p.mBob = arr3(cmv, "bob"); p.mTy = arr3(cmv, "ty"); p.mSpin = cmv.has("spin") ? cmv.get("spin").getAsFloat() : 0f;
+	}
 	private static float[] arr3(JsonObject o, String k) { if (!o.has(k)) return null; JsonArray a = o.getAsJsonArray(k); return new float[] {a.get(0).getAsFloat(), a.size() > 1 ? a.get(1).getAsFloat() : 0f, a.size() > 2 ? a.get(2).getAsFloat() : 0f}; }
 	private static float[] vec3(JsonArray a) { return new float[] {a.get(0).getAsFloat(), a.get(1).getAsFloat(), a.get(2).getAsFloat()}; }
-	private static final class Model { String mount = "float"; float[] off; Part[] parts; Identifier[] tex; Identifier tex(Part p) { return tex[Math.max(0, Math.min(tex.length - 1, p.img))]; } }
+	private static final class Model { String mount = "float"; float[] off; Part[] parts; Map<String, PetEmote> emotes = new java.util.LinkedHashMap<>(); Identifier[] tex; Identifier tex(Part p) { return tex[Math.max(0, Math.min(tex.length - 1, p.img))]; } }
 
 	private static final Map<String, Model> MODELS = new HashMap<>();
 	private static final Set<String> FAILED = new HashSet<>();
@@ -175,8 +183,14 @@ public final class GLB {
 		JsonArray nodes = j.getAsJsonArray("nodes"), meshes = j.getAsJsonArray("meshes");
 		java.util.ArrayList<Part> parts = new java.util.ArrayList<>();
 		String mount = "float"; float[] petOff = null; // Pets: Befestigung aus extras.cloudyPet (Wurzelknoten)
+		Map<String, PetEmote> petEmotes = new java.util.LinkedHashMap<>();
 		for (int ni = 0; ni < nodes.size(); ni++) { JsonObject n = nodes.get(ni).getAsJsonObject();
 			try { if (n.has("extras") && n.getAsJsonObject("extras").has("cloudyPet")) { JsonObject cp = n.getAsJsonObject("extras").getAsJsonObject("cloudyPet"); if (cp.has("mount")) mount = cp.get("mount").getAsString(); if (cp.has("offset")) petOff = vec3(cp.getAsJsonArray("offset")); } } catch (Exception ignored) {} }
+			try { if (n.has("extras") && n.getAsJsonObject("extras").has("cloudyEmotes")) for (JsonElement ee : n.getAsJsonObject("extras").getAsJsonArray("cloudyEmotes")) {
+				JsonObject eo = ee.getAsJsonObject(); PetEmote e = new PetEmote(); e.id = eo.get("id").getAsString(); e.name = eo.has("name") ? eo.get("name").getAsString() : e.id; e.dur = eo.has("durationMs") ? eo.get("durationMs").getAsLong() : 2000L; e.sound = eo.has("sound") ? eo.get("sound").getAsString() : null;
+				if (eo.has("moves")) for (Map.Entry<String, JsonElement> me : eo.getAsJsonObject("moves").entrySet()) { Part mp = new Part(); fillMove(mp, me.getValue().getAsJsonObject()); e.moves.put(me.getKey(), mp); }
+				petEmotes.put(e.id, e);
+			} } catch (Exception ignored) {}
 		for (int ni = 0; ni < nodes.size(); ni++) {
 			JsonObject n = nodes.get(ni).getAsJsonObject();
 			if (!n.has("mesh")) continue;
@@ -193,9 +207,9 @@ public final class GLB {
 				float[] pos = floats(j, d, bin, at.get("POSITION").getAsInt(), 3), nor = floats(j, d, bin, at.get("NORMAL").getAsInt(), 3), uv = floats(j, d, bin, at.get("TEXCOORD_0").getAsInt(), 2);
 				Part p = new Part();
 				p.skin = useSkin;
+				try { if (n.has("extras") && n.getAsJsonObject("extras").has("cloudyEmoteOnly")) p.emoteOnly = "," + n.getAsJsonObject("extras").get("cloudyEmoteOnly").getAsString().replace(" ", "") + ","; } catch (Exception ignored) {}
 				if (cmv != null) try {
-					p.mPiv = cmv.has("pivot") ? vec3(cmv.getAsJsonArray("pivot")) : new float[3]; p.mPer = cmv.has("periodMs") ? Math.max(100f, cmv.get("periodMs").getAsFloat()) : 2000f;
-					p.mRx = arr3(cmv, "rx"); p.mRy = arr3(cmv, "ry"); p.mRz = arr3(cmv, "rz"); p.mS = arr3(cmv, "s"); p.mBob = arr3(cmv, "bob"); p.cm = true;
+					fillMove(p, cmv);
 				} catch (Exception ignored) { p.cm = false; }
 				if (cw != null) try {
 					p.piv = vec3(cw.getAsJsonArray("pivot")); JsonArray r = cw.getAsJsonArray("roll");
@@ -232,7 +246,7 @@ public final class GLB {
 		}
 		Model m = new Model();
 		m.parts = parts.toArray(new Part[0]);
-		m.tex = texs; m.mount = mount; m.off = petOff;
+		m.tex = texs; m.mount = mount; m.off = petOff; m.emotes = petEmotes;
 		return m;
 	}
 
@@ -306,8 +320,8 @@ public final class GLB {
 		float bob = 0f; if (p.mBob != null) { float per = Math.max(100f, p.mBob[1]); bob = p.mBob[0] * (float) Math.sin((now % (long) per) / (double) per * Math.PI * 2 + p.mBob[2]); }
 		float sc = p.mS == null ? 1f : Math.max(0f, wave(p.mS, t));
 		if (sc < 0.01f) return false;
-		ms.translate(p.mPiv[0], p.mPiv[1] + bob, p.mPiv[2]);
-		if (p.mRy != null) ms.multiply(new Quaternionf().rotationY(wave(p.mRy, t)));
+		ms.translate(p.mPiv[0], p.mPiv[1] + bob + (p.mTy == null ? 0f : wave(p.mTy, t)), p.mPiv[2]);
+		if (p.mRy != null || p.mSpin != 0f) ms.multiply(new Quaternionf().rotationY(wave(p.mRy, t) + (float) (p.mSpin * t))); // spin = Umdrehungen pro periodMs
 		if (p.mRx != null) ms.multiply(new Quaternionf().rotationX(wave(p.mRx, t)));
 		if (p.mRz != null) ms.multiply(new Quaternionf().rotationZ(wave(p.mRz, t)));
 		if (sc != 1f) ms.scale(sc, sc, sc);
@@ -320,32 +334,50 @@ public final class GLB {
 	/** Befestigung eines Pets: "float" (neben der linken Schulter), "shoulder" (Brett auf der rechten Schulter) oder "arm_left" (am linken Arm). */
 	public static String petMount(String id) { Model m = model(id); return m == null ? "" : m.mount; }
 
-	private static void petParts(MatrixStack ms, VertexConsumerProvider vcp, int light, int ov, Model m, Identifier skin) {
+	private static void petParts(MatrixStack ms, VertexConsumerProvider vcp, int light, int ov, Model m, Identifier skin, String emote, long emoteStart) {
 		long now = System.currentTimeMillis();
+		PetEmote e = emote == null ? null : m.emotes.get(emote);
+		if (e != null && (now - emoteStart > e.dur || now < emoteStart)) e = null; // vorbei -> wieder normal
 		for (Part p : m.parts) {
+			if (p.emoteOnly != null && (e == null || !p.emoteOnly.contains("," + e.id + ","))) continue; // Effekte (Zzz, Herz …) nur waehrend ihres Emotes
+			Part mv = e != null && e.moves.containsKey(p.name) ? e.moves.get(p.name) : (p.cm ? p : null);
+			long t = mv != null && mv != p ? now - emoteStart : now;
 			ms.push();
-			if (!p.cm || move(ms, p, now)) drawPart(ms, vcp.getBuffer(RenderLayer.getEntityCutoutNoCull(p.skin && skin != null ? skin : m.tex(p))), light, ov, p, p.tx, p.ty, p.tz, p.yaw);
+			if (mv == null || move(ms, mv, t)) drawPart(ms, vcp.getBuffer(RenderLayer.getEntityCutoutNoCull(p.skin && skin != null ? skin : m.tex(p))), light, ov, p, p.tx, p.ty, p.tz, p.yaw);
 			ms.pop();
 		}
 	}
 
 	/** Pet am Koerper (Aufruf nach body.rotate, wie wings). skin = Skin des Spielers fuers Mini-Ich (darf null sein). */
-	public static void pet(MatrixStack ms, VertexConsumerProvider vcp, int light, int ov, String id, Identifier skin) {
+	public static void pet(MatrixStack ms, VertexConsumerProvider vcp, int light, int ov, String id, Identifier skin) { pet(ms, vcp, light, ov, id, skin, null, 0L); }
+	public static void pet(MatrixStack ms, VertexConsumerProvider vcp, int light, int ov, String id, Identifier skin, String emote, long emoteStart) {
 		Model m = model(id);
 		if (m == null || "arm_left".equals(m.mount)) return;
 		begin(ms);
 		if ("shoulder".equals(m.mount)) ms.translate(SHOULDER_X, 0f, 0f); else ms.translate(PET_X, PET_Y, PET_Z);
-		petParts(ms, vcp, light, ov, m, skin);
+		petParts(ms, vcp, light, ov, m, skin, emote, emoteStart);
 		ms.pop();
 	}
 
 	/** Pet am linken Arm (Aufruf NACH leftArm.rotate): bewegt sich mit dem Arm; Ursprung = Schultergelenk, verschoben um extras.cloudyPet.offset. */
-	public static void petOnArm(MatrixStack ms, VertexConsumerProvider vcp, int light, int ov, String id, Identifier skin) {
+	public static void petOnArm(MatrixStack ms, VertexConsumerProvider vcp, int light, int ov, String id, Identifier skin) { petOnArm(ms, vcp, light, ov, id, skin, null, 0L); }
+	public static void petOnArm(MatrixStack ms, VertexConsumerProvider vcp, int light, int ov, String id, Identifier skin, String emote, long emoteStart) {
 		Model m = model(id);
 		if (m == null || !"arm_left".equals(m.mount)) return;
 		begin(ms);
 		if (m.off != null) ms.translate(m.off[0], m.off[1], m.off[2]);
-		petParts(ms, vcp, light, ov, m, skin);
+		petParts(ms, vcp, light, ov, m, skin, emote, emoteStart);
+		ms.pop();
+	}
+
+	/** Emotes eines Pets: {id, Name, Dauer ms, Sound oder ""}; leer, wenn das Pet keine hat. */
+	public static java.util.List<String[]> petEmotes(String id) {
+		java.util.List<String[]> out = new java.util.ArrayList<>(); Model m = id == null || !handles(id) ? null : model(id);
+		if (m != null) for (PetEmote e : m.emotes.values()) out.add(new String[] { e.id, e.name, Long.toString(e.dur), e.sound == null ? "" : e.sound });
+		return out;
+	}
+
+	private static void petOnArmEnd(MatrixStack ms) {
 		ms.pop();
 	}
 

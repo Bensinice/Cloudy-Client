@@ -1,0 +1,10 @@
+{
+  "steve_whine": {
+    "subtitle": "Steve jammert",
+    "sounds": [
+      "cloudy-client:steve_whine_1",
+      "cloudy-client:steve_whine_2",
+      "cloudy-client:steve_whine_3"
+    ]
+  }
+}

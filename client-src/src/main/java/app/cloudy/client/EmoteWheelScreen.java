@@ -11,7 +11,12 @@ import java.util.List;
 /** Emote-Rad (Taste B): bis zu 8 Emotes im Kreis. Maus auf ein Feld und B loslassen oder klicken = abspielen. Mausrad = weitere Seite. */
 public final class EmoteWheelScreen extends Screen {
 	private final KeyBinding key;
-	private final List<String> list = Emotes.owned();
+	private final List<String> mine = Emotes.owned(); private final List<String[]> petList = PetEmote.list();
+	private boolean pet; // Tab: zwischen eigenen Emotes und Pet-Emotes wechseln
+	private List<String> list = mine;
+	private List<String> petIds() { List<String> l = new java.util.ArrayList<>(); for (String[] e : petList) l.add(e[0]); return l; }
+	private String petName(String id) { for (String[] e : petList) if (e[0].equals(id)) return e[1]; return id; }
+	private String lab(String id) { return pet ? petName(id) : Emotes.label(id); }
 	private int page, hover = -1;
 	private final long opened = System.currentTimeMillis();
 
@@ -38,18 +43,20 @@ public final class EmoteWheelScreen extends Screen {
 			c.fill(x - s / 2 - 2, y - s / 2 - 2, x + s / 2 + 2, y + s / 2 + 2, hv ? Ui.ACCENT : 0x99202838);
 			c.fill(x - s / 2, y - s / 2, x + s / 2, y + s / 2, hv ? 0xEE2A3550 : 0xCC141a26);
 			if (id == null) { Ui.ctr(c, "·", x, y - 4, 0xFF556070); continue; }
-			if (!Ui.sprite(c, id, x - s / 2 + 2, y - s / 2 + 2, s - 4)) Ui.ctr(c, Emotes.label(id).substring(0, 1), x, y - 4, 0xFFFFFFFF);
+			if (pet || !Ui.sprite(c, id, x - s / 2 + 2, y - s / 2 + 2, s - 4)) { String l = lab(id); Ui.ctr(c, l.length() > 4 ? l.substring(0, 4) : l, x, y - 4, 0xFFFFFFFF); }
 		}
 		// Mitte
 		c.fill(cx - r0, cy - 10, cx + r0, cy + 10, 0xCC0c1018);
-		String mid = hover >= 0 ? Emotes.label(at(hover)) : list.isEmpty() ? "No emotes" : "Emotes";
+		String mid = hover >= 0 ? lab(at(hover)) : list.isEmpty() ? "No emotes" : pet ? Cosmetics.nameOf(Cosmetics.pet) : "Emotes";
 		Ui.ctr(c, mid, cx, cy - 4, hover >= 0 ? 0xFFFFFFFF : 0xFFAFC4DA);
-		String hint = list.isEmpty() ? "Get emotes in the Cloudy launcher shop" : "Release B or click" + (pages() > 1 ? "  ·  Scroll: page " + (page + 1) + "/" + pages() : "");
+		String hint = (list.isEmpty() ? "Get emotes in the Cloudy launcher shop" : "Release B or click" + (pages() > 1 ? "  ·  Scroll: page " + (page + 1) + "/" + pages() : "")) + (petList.isEmpty() ? "" : "  ·  Tab: " + (pet ? "your emotes" : "pet emotes"));
 		Ui.ctr(c, hint, cx, cy + R + 22, 0xFFAFC4DA);
 		super.render(c, mx, my, delta);
 	}
 
-	private void pick() { String id = hover >= 0 ? at(hover) : null; shut(); if (id != null) Emotes.play(id); }
+	private void pick() { String id = hover >= 0 ? at(hover) : null; shut(); if (id != null) { if (pet) PetEmote.play(id); else Emotes.play(id); } }
+
+	@Override public boolean keyPressed(int keyCode, int scanCode, int mods) { if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_TAB && !petList.isEmpty()) { pet = !pet; list = pet ? petIds() : mine; page = 0; return true; } return super.keyPressed(keyCode, scanCode, mods); }
 
 	@Override public boolean mouseClicked(double mx, double my, int b) { if (b == 0) { pick(); return true; } if (b == 1) { shut(); return true; } return super.mouseClicked(mx, my, b); }
 	@Override public boolean mouseScrolled(double mx, double my, double h, double v) { if (pages() > 1) page = Math.floorMod(page + (v < 0 ? 1 : -1), pages()); return true; }

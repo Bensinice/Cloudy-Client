@@ -84,6 +84,7 @@
     'pet-chameleon': { file: 'pet_chameleon.glb', kind: 'pet', name: 'Chamäleon', view: 'front' },
     'pet-devil': { file: 'pet_little_devil.glb', kind: 'pet', name: 'Kleiner Teufel', view: 'front' },
     'pet-cat': { file: 'pet_tabby_cat.glb', kind: 'pet', name: 'Tigerkatze', view: 'front' },
+    'pet-owdog': { file: 'pet_dog.glb', kind: 'pet', name: 'Hund Steve', view: 'front' },
     'pet-dragon': { file: 'pet_shadow_dragon.glb', kind: 'pet', name: 'Schattendrache', view: 'front' },
     'pet-minime': { file: 'pet_mini_me.glb', kind: 'pet', name: 'Mini-Ich', view: 'front' },
     'cape-g7glitch': { file: 'cloudy_glitch_cape.glb', kind: 'cape', name: 'Cloudy-Glitch-Umhang (animiert)', view: 'back' },
@@ -187,11 +188,17 @@
         if (mt === 'shoulder') g.position.set(PLACE.shoulder.pos[0], PLACE.shoulder.pos[1], PLACE.shoulder.pos[2]);
         else if (mt === 'arm_left') { if (parts.armL) { parts.armL.add(g); g.position.set(off[0], off[1], off[2]); } else g.position.set(PLACE.armL[0] + off[0], PLACE.armL[1] + off[1], PLACE.armL[2] + off[2]); } // am Arm-Gelenk: geht bei Emotes mit
         if (parts.tex) { const st = parts.tex.clone(); st.flipY = false; st.needsUpdate = true; m.traverse(o => { if (o.userData && o.userData.cloudySkin) o.traverse(x => { if (x.isMesh) { x.material = x.material.clone(); x.material.map = st; x.material.alphaTest = 0.5; } }); }); } // glTF-UVs: Bild nicht spiegeln
-        const L = []; m.traverse(o => { if (o.userData && o.userData.cloudyMove) { o.matrixAutoUpdate = false; L.push(o); } });
-        if (L.length) anim.push(now => { for (const o of L) { const W = o.userData.cloudyMove, Pv = W.pivot || [0, 0, 0], per = W.periodMs || 2000, t = (now % per) / per * Math.PI * 2;
-          const w = v => v ? v[0] + v[1] * Math.sin(t + (v[2] || 0)) : 0, bob = W.bob ? W.bob[0] * Math.sin((now % W.bob[1]) / W.bob[1] * Math.PI * 2 + (W.bob[2] || 0)) : 0, sc = W.s ? Math.max(0, w(W.s)) : 1;
-          const M = new THREE.Matrix4().makeTranslation(Pv[0], Pv[1] + bob, Pv[2]);
-          M.multiply(new THREE.Matrix4().makeRotationY(w(W.ry))).multiply(new THREE.Matrix4().makeRotationX(w(W.rx))).multiply(new THREE.Matrix4().makeRotationZ(w(W.rz)));
+        // Bewegung je Teil (cloudyMove) + Pet-Emotes (cloudyEmotes am Wurzelknoten, cloudyEmoteOnly-Effekte) – wie GLB.java. Start über window.cloudyPetEmote(id)
+        const L = [], EM = {}, san = n => THREE.PropertyBinding.sanitizeNodeName(n);
+        m.traverse(o => { const u = o.userData || {}; if (u.cloudyEmotes) u.cloudyEmotes.forEach(e => { const mv = {}; for (const k in e.moves || {}) mv[san(k)] = e.moves[k]; EM[e.id] = Object.assign({}, e, { moves: mv }); }); if (u.cloudyMove || u.cloudyEmoteOnly) { o.matrixAutoUpdate = false; L.push(o); } });
+        if (Object.keys(EM).length) { window.__petEmoteList = { pet: eq.pet, list: Object.values(EM).map(e => ({ id: e.id, name: e.name, sound: e.sound || '' })) }; }
+        if (L.length) anim.push(now => { const PE = window.__petEmote; let E = PE && PE.pet === eq.pet ? EM[PE.id] : null; if (E && now - PE.start > E.durationMs) E = null;
+          for (const o of L) { const only = o.userData.cloudyEmoteOnly; o.visible = !only || !!(E && (',' + String(only).replace(/\s/g, '') + ',').includes(',' + E.id + ','));
+          const own = E && E.moves[o.name], W = own || o.userData.cloudyMove; if (!W) { o.matrix.identity(); o.matrixWorldNeedsUpdate = true; continue; }
+          const tm = own ? now - PE.start : now, Pv = W.pivot || [0, 0, 0], per = W.periodMs || 2000, t = (tm % per) / per * Math.PI * 2;
+          const w = v => v ? v[0] + v[1] * Math.sin(t + (v[2] || 0)) : 0, bob = W.bob ? W.bob[0] * Math.sin((tm % W.bob[1]) / W.bob[1] * Math.PI * 2 + (W.bob[2] || 0)) : 0, sc = W.s ? Math.max(0, w(W.s)) : 1;
+          const M = new THREE.Matrix4().makeTranslation(Pv[0], Pv[1] + bob + (W.ty ? w(W.ty) : 0), Pv[2]);
+          M.multiply(new THREE.Matrix4().makeRotationY(w(W.ry) + (W.spin ? W.spin * t : 0))).multiply(new THREE.Matrix4().makeRotationX(w(W.rx))).multiply(new THREE.Matrix4().makeRotationZ(w(W.rz)));
           M.multiply(new THREE.Matrix4().makeScale(sc || 1e-4, sc || 1e-4, sc || 1e-4)).multiply(new THREE.Matrix4().makeTranslation(-Pv[0], -Pv[1], -Pv[2]));
           o.matrix.copy(M); o.matrixWorldNeedsUpdate = true; } });
       }

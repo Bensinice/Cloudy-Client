@@ -875,7 +875,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.136'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.137'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1200,7 +1200,8 @@ function cosNetStart(mcName) {
         const w = JSON.parse(fs.readFileSync(cosWant, 'utf8')), names = (w.names || []).filter(n => typeof n === 'string' && /^\w{3,16}$/.test(n)).slice(0, 80);
         const em = w.em && /^emote-[a-z0-9]+$/.test(String(w.em.id)) && Date.now() - (+w.em.t || 0) < 15000 ? { id: String(w.em.id), age: Math.max(0, Date.now() - (+w.em.t || 0)) } : null; // eigenes Emote fuer die Mitspieler
         const sc = socCfg(), ly = lyricsLast, song = sc.song && ly && ly.playing && ly.title && Date.now() - (ly.ts || 0) < 30000 ? { t: String(ly.title).slice(0, 60), a: String(ly.artist || '').slice(0, 40) } : null; // Song-Bubble: nur wenn selbst eingeschaltet
-        const r = names.length || song ? await srvCall('/cos/get', { names, em, song }, srvTok) : { ok: true, players: {} };
+        const pe = w.pe && /^[a-z0-9_]{1,24}$/.test(String(w.pe.id)) && Date.now() - (+w.pe.t || 0) < 15000 ? { id: String(w.pe.id), age: Math.max(0, Date.now() - (+w.pe.t || 0)) } : null; // Pet-Emote (z. B. Hund bellt)
+        const r = names.length || song ? await srvCall('/cos/get', { names, em, song, pe }, srvTok) : { ok: true, players: {} };
         const br = sc.bridge ? await cosBridge(w) : {};
         if (r && r.ok === true) { const nn = Object.keys(r.players || {}).length; if (nn !== cosPrev) { cosPrev = nn; cosLog('get ' + names.length + ' Namen -> ' + nn + ' mit Cosmetics'); } const tmp = cosOth + '.tmp'; fs.writeFileSync(tmp, JSON.stringify({ ts: Date.now(), players: r.players || {}, ...br })); fs.renameSync(tmp, cosOth); }
       } catch (e) { if (!/ENOENT/.test(String(e && e.message))) cosLog('get Fehler: ' + (e && e.message)); } finally { busy = false; }
@@ -1564,6 +1565,7 @@ const CATALOG = [
   { id: 'pet-cat', cat: 'pet', name: 'Tigerkatze', price: 1200 },
   { id: 'pet-dragon', cat: 'pet', name: 'Schattendrache', price: 2000 },
   { id: 'pet-minime', cat: 'pet', name: 'Mini-Ich', price: 1800 },
+  { id: 'pet-owdog', cat: 'pet', name: 'Hund Steve (Owner)', price: 0, owner: true },
   { id: 'cape-g7glitch', cat: 'cape', name: 'Cloudy-Glitch-Umhang (animiert)', price: 1800 },
   { id: 'cape-g7storm', cat: 'cape', name: 'Sturmketten-Umhang (animiert)', price: 1800 },
   { id: 'cape-g7frost', cat: 'cape', name: 'Frostgebundene Ketten (animiert)', price: 1800 },

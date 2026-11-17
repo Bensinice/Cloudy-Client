@@ -166,3 +166,6 @@ html.perf .fxprev span{animation-duration:4s}
 .sboff{color:#e0564a;font-weight:700}
 .sbbtn{display:flex;gap:6px;flex-wrap:wrap}.sbbtn .btn{height:34px;padding:0 12px;font-size:13px}
 @media (max-width:900px){.sbrow{flex-wrap:wrap}.sbstat{justify-items:start;text-align:left}}
+.petemo{display:grid;gap:6px;margin:10px 0 0}
+.petemo div{display:flex;flex-wrap:wrap;gap:5px}
+.petemo .chip{cursor:pointer;font-size:12.5px;padding:5px 10px}

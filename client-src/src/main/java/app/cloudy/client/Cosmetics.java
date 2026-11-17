@@ -169,7 +169,7 @@ public final class Cosmetics {
 		"wings-g5seraph", "wings-g5butterfly", "wings-g5wyvern", "wings-g5mecha", "wings-g5dragonfly", "wings-g5phoenix", "wings-g5volt", "wings-g5leaf", "wings-g5bone", "wings-g5pixel", "cape-g5galaxy", "cape-g5sakura", "cape-g5magma", "cape-g5wave", "cape-g5racing", "cape-g5aurora", "cape-g5circuit", "cape-g5royal", "cape-g5synth", "cape-g5rift", "cape-g5aurorafx", "cape-g5warp", "cape-g6pulse", "cape-g6gradient", "cape-g6silk", "cape-g6orbit", "cape-g6scan", "cape-g6rain", "cape-g6fire", "cape-g6ocean", "cape-g6code", "cape-g6galaxy",
 		"wings-pgcrystal", "wings-pgfiligree", "wings-pgdragon", "wings-pgobsidian", "wings-pgcloud", "cape-pgpulse", "cape-pgliquid", "cape-pgnight", "cape-pgprestige", "cape-pgaurora", "hat-pgcrown", "hat-pgtophat", "hat-pghalo", "hat-pglaurel", "hat-pgpuff",
 		"wings-owcrimson", "wings-owphoenix", "wings-owprism", "wings-owstorm", "wings-owvoid", "cape-owthrone", "cape-owblackhole", "cape-owsigil", "cape-owprism", "cape-owstorm", "hat-owcrown", "hat-owinferno", "hat-owhorns", "hat-owarcane", "hat-owcrystal", "hat-adhalo",
-		"pet-chameleon", "pet-devil", "pet-cat", "pet-dragon", "pet-minime", "cape-g7glitch", "cape-g7storm", "cape-g7frost", "cape-g7comic", "wings-g7comic", "hat-g7comic"}; // letzte Zeile: 3D-Modelle aus .glb (GLB.java)
+		"pet-chameleon", "pet-devil", "pet-cat", "pet-dragon", "pet-minime", "pet-owdog", "cape-g7glitch", "cape-g7storm", "cape-g7frost", "cape-g7comic", "wings-g7comic", "hat-g7comic"}; // letzte Zeile: 3D-Modelle aus .glb (GLB.java)
 
 	/** Aus dem Shop genommene einfache Farbverlauf-Umhaenge: im Menue nur noch sichtbar, solange angelegt. */
 	public static final java.util.Set<String> GONE = java.util.Set.of("cape-cloud", "cape-aurora", "cape-sunset", "cape-galaxy", "cape-fire", "cape-ocean", "cape-sakura", "cape-nebula", "cape-emerald", "cape-royal",
@@ -371,6 +371,7 @@ public final class Cosmetics {
 			case "pet-cat" -> "Tabby Cat";
 			case "pet-dragon" -> "Shadow Dragon";
 			case "pet-minime" -> "Mini Me";
+			case "pet-owdog" -> "Steve the Dog (Owner)";
 			case "cape-g7glitch" -> "Cloudy Glitch Cape";
 			case "cape-g7storm" -> "Storm Chain Cape";
 			case "cape-g7frost" -> "Frostbound Chains Cape";
