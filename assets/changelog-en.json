@@ -1,4 +1,7 @@
 {
+  "0.9.140": [
+    "Fixed: shields now show the real 3D shield in your hand instead of a stretched texture"
+  ],
   "0.9.139": [
     "Shield designs now really show in game (automatically included)",
     "Dark inventory: chests, inventory and menus dark instead of grey (Settings → Textures)",

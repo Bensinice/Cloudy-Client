@@ -101,8 +101,8 @@ public class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderState, Pl
 		if (hat != null && GLB.handles(hat)) { matrices.push(); head.rotate(matrices); tintFor(hat, false); try { GLB.hat(matrices, vcp, light, ov, hat); } finally { GLB.untint(); } matrices.pop(); }
 		else if (hat != null) draw(matrices, vc, light, ov, head, Cosmetics.parts(hat));
 		if (shield != null && held > 0 && ZZ4.handles(shield)) {
-			// Im Spiel liegt das Schild-Design als Textur auf dem normalen Minecraft-Schild (Ressourcenpaket vom Launcher). Nur die Vorschau zeichnet das Modell.
-			if (PREVIEW) {
+			// 3D-Schild-Modell in der Hand (Vorschau und im Spiel); das flache Minecraft-Schild blendet ShieldThirdPersonMixin dabei aus
+			{
 				matrices.push();
 				(held == 1 ? leftArm : rightArm).rotate(matrices);
 				ZZ4.shield(matrices, vcp, light, ov, shield, held == 1 ? 0.0625f : -0.0625f, 0.34f, -0.25f);

@@ -1,5 +1,13 @@
 [
  {
+  "v": "0.9.140",
+  "date": "2026-11-17",
+  "added": [],
+  "fixed": [
+   "Schilde: statt der gestreckten Textur auf dem flachen Minecraft-Schild hältst du jetzt das echte 3D-Schild in der Hand – in der Ich-Sicht, in F5 und im Inventar"
+  ]
+ },
+ {
   "v": "0.9.139",
   "date": "2026-11-17",
   "added": [

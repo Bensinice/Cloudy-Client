@@ -878,7 +878,7 @@ const clientJar = mc => { // das Jar mit dem aktuellen Stand gewinnt (z. B. das 
   return c.find(jarFresh) || c[0];
 };
 const isAdminNow = () => { try { const u = currentUser && readAuth().users[currentUser.toLowerCase()]; return !!(u && u.admin); } catch { return false; } };
-const CLIENT_BUILD = '0.9.139'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
+const CLIENT_BUILD = '0.9.140'; // Stand der Client-Mod (nicht die Launcher-Version) – passend zu client-src/.../cloudy-cos/build-<Stand>.txt
 const clientHasCosmetics = mc => { const j = clientJar(mc); return !!j && jarFresh(j); };
 const clientBuildOf = mc => { const j = clientJar(mc); if (!j) return ''; try { const z = openZip(j); try { return zipBuild(z) || '(ohne Stand)'; } finally { z.close(); } } catch { return '(unlesbar)'; } };
 
@@ -1653,8 +1653,7 @@ const CATALOG = [
   { id: 'hat-adhalo', cat: 'hat', name: 'Admin-Heiligenschein (animiert)', price: 0, owner: true },
 
 ];
-const PACK_FILES = {
-  ...Object.fromEntries(['zz4', 'zz4m', 'zz3', 'zz3s', 'zz5', 'yy'].map(k => ['shield-' + k, `cloudy-shield-${k}.zip`])) };
+const PACK_FILES = {}; /* Schilde brauchen kein Ressourcenpaket mehr: die Mod zeichnet das 3D-Schild selbst (alte Pakete werden beim Start entfernt) */
 const SKIES = {};
 
 // ---- Eigene Shop-Items (nur Admin): Umhang aus eigener PNG (64×32-Umhangtextur) oder eigener Himmel aus zwei Farben ----
