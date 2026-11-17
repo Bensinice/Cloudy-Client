@@ -185,12 +185,12 @@ public final class GLB {
 		String mount = "float"; float[] petOff = null; // Pets: Befestigung aus extras.cloudyPet (Wurzelknoten)
 		Map<String, PetEmote> petEmotes = new java.util.LinkedHashMap<>();
 		for (int ni = 0; ni < nodes.size(); ni++) { JsonObject n = nodes.get(ni).getAsJsonObject();
-			try { if (n.has("extras") && n.getAsJsonObject("extras").has("cloudyPet")) { JsonObject cp = n.getAsJsonObject("extras").getAsJsonObject("cloudyPet"); if (cp.has("mount")) mount = cp.get("mount").getAsString(); if (cp.has("offset")) petOff = vec3(cp.getAsJsonArray("offset")); } } catch (Exception ignored) {} }
+			try { if (n.has("extras") && n.getAsJsonObject("extras").has("cloudyPet")) { JsonObject cp = n.getAsJsonObject("extras").getAsJsonObject("cloudyPet"); if (cp.has("mount")) mount = cp.get("mount").getAsString(); if (cp.has("offset")) petOff = vec3(cp.getAsJsonArray("offset")); } } catch (Exception ignored) {}
 			try { if (n.has("extras") && n.getAsJsonObject("extras").has("cloudyEmotes")) for (JsonElement ee : n.getAsJsonObject("extras").getAsJsonArray("cloudyEmotes")) {
 				JsonObject eo = ee.getAsJsonObject(); PetEmote e = new PetEmote(); e.id = eo.get("id").getAsString(); e.name = eo.has("name") ? eo.get("name").getAsString() : e.id; e.dur = eo.has("durationMs") ? eo.get("durationMs").getAsLong() : 2000L; e.sound = eo.has("sound") ? eo.get("sound").getAsString() : null;
 				if (eo.has("moves")) for (Map.Entry<String, JsonElement> me : eo.getAsJsonObject("moves").entrySet()) { Part mp = new Part(); fillMove(mp, me.getValue().getAsJsonObject()); e.moves.put(me.getKey(), mp); }
 				petEmotes.put(e.id, e);
-			} } catch (Exception ignored) {}
+			} } catch (Exception ignored) {} }
 		for (int ni = 0; ni < nodes.size(); ni++) {
 			JsonObject n = nodes.get(ni).getAsJsonObject();
 			if (!n.has("mesh")) continue;
